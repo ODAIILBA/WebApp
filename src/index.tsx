@@ -751,6 +751,8 @@ app.get('/api/init-db', async (c) => {
 
 import { ProductDetail } from './components/product-detail'
 import { CategoryListing } from './components/category-listing'
+import { ShoppingCart } from './components/cart'
+import { Checkout } from './components/checkout'
 
 // Product Detail Page
 app.get('/products/:slug', async (c) => {
@@ -798,6 +800,16 @@ app.get('/categories/:slug', async (c) => {
     console.error('Error loading category:', error)
     return c.notFound()
   }
+})
+
+// Shopping Cart Page
+app.get('/cart', (c) => {
+  return c.html(<ShoppingCart />)
+})
+
+// Checkout Page
+app.get('/checkout', (c) => {
+  return c.html(<Checkout />)
 })
 
 export default app
