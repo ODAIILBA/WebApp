@@ -196,19 +196,19 @@ app.get('/cart', (c) => {
 // ===========================
 
 app.get('/registrieren', (c) => {
-  return c.html(<RegisterPage />)
+  return c.html(RegisterPage())
 })
 
 app.get('/register', (c) => {
-  return c.html(<RegisterPage />)
+  return c.html(RegisterPage())
 })
 
 app.get('/login', (c) => {
-  return c.html(<LoginPage />)
+  return c.html(LoginPage())
 })
 
 app.get('/anmelden', (c) => {
-  return c.html(<LoginPage />)
+  return c.html(LoginPage())
 })
 
 // ===========================
@@ -216,11 +216,11 @@ app.get('/anmelden', (c) => {
 // ===========================
 
 app.get('/kasse', (c) => {
-  return c.html(<CheckoutPage />)
+  return c.html(CheckoutPage())
 })
 
 app.get('/checkout', (c) => {
-  return c.html(<CheckoutPage />)
+  return c.html(CheckoutPage())
 })
 
 // ===========================
