@@ -331,6 +331,26 @@ export class SecurityLogger {
   }
 
   /**
+   * Log security event (generic)
+   */
+  async logSecurityEvent(
+    eventType: string,
+    severity: 'low' | 'medium' | 'high' | 'critical',
+    details: Record<string, any>,
+    ipAddress?: string,
+    userId?: number
+  ): Promise<void> {
+    const logger = new AuditLogger(this.db)
+    await logger.log({
+      action: `security_${eventType}`,
+      resourceType: 'security',
+      userId,
+      changes: { severity, ...details },
+      ipAddress
+    })
+  }
+
+  /**
    * Get security events
    */
   async getSecurityEvents(days: number = 30): Promise<AuditLog[]> {
