@@ -2099,7 +2099,7 @@ export const HomepagePrestaShopEnhanced = () => {
                             </div>
                             <div class="p-4">
                                 <span class="category-badge mb-2">\${product.category || 'Software'}</span>
-                                <h3 class="font-bold text-navy-dark text-lg mb-2 hover:text-gold transition-colors cursor-pointer" onclick="window.location.href='/produkt/\${product.id}'">
+                                <h3 class="font-bold text-navy-dark text-lg mb-2 hover:text-gold transition-colors cursor-pointer" onclick="window.location.href='/produkt/\${product.slug}'">
                                     \${product.name}
                                 </h3>
                                 <p class="text-gray-600 text-sm mb-4 line-clamp-2">
@@ -2126,7 +2126,7 @@ export const HomepagePrestaShopEnhanced = () => {
                                         <i class="fas fa-cart-plus mr-2"></i>In den Warenkorb
                                     </button>
                                     <a 
-                                        href="/produkt/\${product.id}"
+                                        href="/produkt/\${product.slug}"
                                         class="bg-navy-dark hover:bg-navy-medium text-white px-4 py-2 rounded-lg font-bold transition-all"
                                         title="Details ansehen"
                                     >
@@ -2164,7 +2164,7 @@ export const HomepagePrestaShopEnhanced = () => {
                             </div>
                             <div class="p-4">
                                 <span class="category-badge mb-2">\${product.category || 'Software'}</span>
-                                <h3 class="font-bold text-navy-dark text-lg mb-2 hover:text-gold transition-colors cursor-pointer" onclick="window.location.href='/produkt/\${product.id}'">
+                                <h3 class="font-bold text-navy-dark text-lg mb-2 hover:text-gold transition-colors cursor-pointer" onclick="window.location.href='/produkt/\${product.slug}'">
                                     \${product.name}
                                 </h3>
                                 <p class="text-gray-600 text-sm mb-4 line-clamp-2">
@@ -2188,7 +2188,7 @@ export const HomepagePrestaShopEnhanced = () => {
                                         <i class="fas fa-cart-plus mr-2"></i>In den Warenkorb
                                     </button>
                                     <a 
-                                        href="/produkt/\${product.id}"
+                                        href="/produkt/\${product.slug}"
                                         class="bg-navy-dark hover:bg-navy-medium text-white px-4 py-2 rounded-lg font-bold transition-all"
                                         title="Details ansehen"
                                     >
@@ -2226,7 +2226,7 @@ export const HomepagePrestaShopEnhanced = () => {
                             </div>
                             <div class="p-4">
                                 <span class="category-badge mb-2">\${product.category || 'Software'}</span>
-                                <h3 class="font-bold text-navy-dark text-lg mb-2 hover:text-gold transition-colors cursor-pointer" onclick="window.location.href='/produkt/\${product.id}'">
+                                <h3 class="font-bold text-navy-dark text-lg mb-2 hover:text-gold transition-colors cursor-pointer" onclick="window.location.href='/produkt/\${product.slug}'">
                                     \${product.name}
                                 </h3>
                                 <p class="text-gray-600 text-sm mb-4 line-clamp-2">
@@ -2243,7 +2243,7 @@ export const HomepagePrestaShopEnhanced = () => {
                                         <i class="fas fa-cart-plus mr-2"></i>In den Warenkorb
                                     </button>
                                     <a 
-                                        href="/produkt/\${product.id}"
+                                        href="/produkt/\${product.slug}"
                                         class="bg-navy-dark hover:bg-navy-medium text-white px-4 py-2 rounded-lg font-bold transition-all"
                                         title="Details ansehen"
                                     >
