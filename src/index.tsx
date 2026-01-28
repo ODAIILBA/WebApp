@@ -651,4 +651,100 @@ app.get('/admin/licenses/import', (c) => {
   )
 })
 
+// ============================================
+// DATABASE INITIALIZATION (Development Only)
+// ============================================
+
+app.get('/api/init-db', async (c) => {
+  try {
+    const db = c.env.DB
+
+    // Check if already initialized
+    try {
+      const check = await db.prepare('SELECT COUNT(*) as count FROM products').first()
+      if ((check as any)?.count > 0) {
+        return c.json({ success: true, message: 'Database already initialized', count: (check as any).count })
+      }
+    } catch (e) {
+      // Table doesn't exist, continue with initialization
+    }
+
+    // Insert sample products
+    await db.prepare(`
+      INSERT OR IGNORE INTO products (id, sku, category_id, brand_id, slug, product_type, base_price, discount_price, discount_percentage, vat_rate, stock_type, license_type, license_duration, compatibility, activation_limit, is_featured, is_bestseller) 
+      VALUES (1, 'WIN11-PRO-001', 1, 1, 'windows-11-pro', 'license', 199.99, 79.99, 60, 19.00, 'unlimited', 'perpetual', 'lifetime', '["Windows 11 compatible PC"]', 1, 1, 1)
+    `).run()
+
+    await db.prepare(`
+      INSERT OR IGNORE INTO product_translations (product_id, language, name, short_description, long_description, features, meta_title, meta_description) VALUES 
+      (1, 'en', 'Windows 11 Pro', 'Official Microsoft Windows 11 Professional license key', 'Get the latest Windows 11 Professional operating system with all advanced features.', '["Enhanced Security with BitLocker", "Remote Desktop Connection", "Windows Sandbox", "Hyper-V Virtualization"]', 'Buy Windows 11 Pro License Key', 'Purchase genuine Windows 11 Professional license key')
+    `).run()
+
+    await db.prepare(`
+      INSERT OR IGNORE INTO product_images (product_id, image_url, alt_text, sort_order, is_primary) VALUES 
+      (1, 'https://via.placeholder.com/600x400/1a2a4e/d4af37?text=Windows+11+Pro', 'Windows 11 Pro', 0, 1)
+    `).run()
+
+    return c.json({ success: true, message: 'Sample data inserted successfully' })
+  } catch (error) {
+    console.error('Database init error:', error)
+    return c.json({ success: false, error: String(error) }, 500)
+  }
+})
+
+// ============================================
+// PRODUCT & CATEGORY PAGES
+// ============================================
+
+import { ProductDetail } from './components/product-detail'
+import { CategoryListing } from './components/category-listing'
+
+// Product Detail Page
+app.get('/products/:slug', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const language = c.get('language') || 'en'
+    const slug = c.req.param('slug')
+
+    const product = await db.getProductBySlug(slug, language)
+
+    if (!product) {
+      return c.notFound()
+    }
+
+    return c.html(
+      <Layout>
+        <ProductDetail product={product as any} language={language} />
+      </Layout>
+    )
+  } catch (error) {
+    console.error('Error loading product:', error)
+    return c.notFound()
+  }
+})
+
+// Category Listing Page
+app.get('/categories/:slug', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const language = c.get('language') || 'en'
+    const slug = c.req.param('slug')
+
+    const category = await db.getCategoryBySlug(slug, language)
+
+    if (!category) {
+      return c.notFound()
+    }
+
+    return c.html(
+      <Layout>
+        <CategoryListing category={category} language={language} />
+      </Layout>
+    )
+  } catch (error) {
+    console.error('Error loading category:', error)
+    return c.notFound()
+  }
+})
+
 export default app
