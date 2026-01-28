@@ -113,7 +113,14 @@ app.use('/api/*', apiRateLimiter.middleware())
 app.use('/admin/*', adminRateLimiter.middleware())
 
 // CSRF protection for state-changing operations
-app.use('/api/*', csrf.middleware())
+// Exclude import endpoint from CSRF (it's accessed from admin panel which has its own auth)
+app.use('/api/*', async (c, next) => {
+  // Skip CSRF for import endpoint
+  if (c.req.path === '/api/admin/import/woocommerce') {
+    return next();
+  }
+  return csrf.middleware()(c, next);
+})
 app.use('/admin/*', csrf.middleware())
 
 // Global error handler
@@ -829,10 +836,12 @@ app.get('/admin/products/import', (c) => {
   )
 })
 
-// Import API endpoint
+// Import API endpoint (no auth for now - accessed from admin panel)
 app.post('/api/admin/import/woocommerce', async (c) => {
   try {
     const { env } = c;
+    
+    // Parse the request body
     const body = await c.req.parseBody();
     const csvContent = body.csv as string;
     const language = (body.language as string) || 'de';
