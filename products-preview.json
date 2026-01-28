@@ -1,0 +1,162 @@
+[
+  {
+    "id": 412,
+    "name": "Windows 11 Professional OEM Retail",
+    "price": 2999,
+    "salePrice": 1999,
+    "category": "Microsoft Windows",
+    "sku": "SK24-540001035"
+  },
+  {
+    "id": 413,
+    "name": "Microsoft Project 2021 Professional",
+    "price": 5999,
+    "salePrice": 3499,
+    "category": "Microsoft Office",
+    "sku": "SK24-540001039"
+  },
+  {
+    "id": 414,
+    "name": "Microsoft Office 2016 Standard MacOS 10.10-10.14",
+    "price": 6999,
+    "salePrice": null,
+    "category": "Microsoft Office 2016",
+    "sku": "SK24-540001038"
+  },
+  {
+    "id": 415,
+    "name": "Microsoft Office 2019 Standard MacOS 10.12-12.5",
+    "price": 8999,
+    "salePrice": null,
+    "category": "Microsoft Office 2019",
+    "sku": "SK24-540001037"
+  },
+  {
+    "id": 416,
+    "name": "Microsoft Office 2021 Standard MacOS 10.15-14.xx",
+    "price": 10999,
+    "salePrice": null,
+    "category": "Microsoft Office 2021",
+    "sku": "SK24-540001036"
+  },
+  {
+    "id": 417,
+    "name": "Microsoft Office 2024 Standard MacOS",
+    "price": 13999,
+    "salePrice": 2499,
+    "category": "Microsoft Office 2024",
+    "sku": "SK24-540001024"
+  },
+  {
+    "id": 418,
+    "name": "Microsoft Word 2021 MacOS 10.15-14.xx",
+    "price": 2499,
+    "salePrice": null,
+    "category": "Microsoft Office Mac",
+    "sku": "SK24-540001023"
+  },
+  {
+    "id": 419,
+    "name": "Microsoft PowerPoint 2021 MacOS 10.15-14.xx",
+    "price": 2499,
+    "salePrice": null,
+    "category": "Microsoft Office Mac",
+    "sku": "'788988705882"
+  },
+  {
+    "id": 420,
+    "name": "Microsoft Excel 2021 MacOS 10.15-14.xx",
+    "price": 2499,
+    "salePrice": null,
+    "category": "Microsoft Office Mac",
+    "sku": "'788988705881"
+  },
+  {
+    "id": 421,
+    "name": "Microsoft Outlook 2021 MacOS 10.15-14.XX",
+    "price": 2499,
+    "salePrice": null,
+    "category": "Microsoft Office Mac",
+    "sku": "SK24-540001022"
+  },
+  {
+    "id": 422,
+    "name": "Microsoft Publisher 2019 Retail",
+    "price": 1999,
+    "salePrice": null,
+    "category": "Microsoft Office",
+    "sku": "SK24-540001021"
+  },
+  {
+    "id": 423,
+    "name": "Microsoft Publisher 2021 Retail",
+    "price": 2499,
+    "salePrice": null,
+    "category": "Microsoft Office",
+    "sku": "SK24-540001020"
+  },
+  {
+    "id": 424,
+    "name": "Microsoft PowerPoint 2019 Retail",
+    "price": 1999,
+    "salePrice": null,
+    "category": "Software",
+    "sku": "SK24-540001025"
+  },
+  {
+    "id": 425,
+    "name": "Microsoft PowerPoint 2021 Retail",
+    "price": 2499,
+    "salePrice": null,
+    "category": "Software",
+    "sku": "SK24-540001026"
+  },
+  {
+    "id": 426,
+    "name": "Microsoft Excel 2019 Retail",
+    "price": 1999,
+    "salePrice": null,
+    "category": "Software",
+    "sku": "SK24-540001027"
+  },
+  {
+    "id": 427,
+    "name": "Microsoft Excel 2021 Retail",
+    "price": 2499,
+    "salePrice": null,
+    "category": "Microsoft Office",
+    "sku": "SK24-540001034"
+  },
+  {
+    "id": 428,
+    "name": "Microsoft Word 2019 Retail",
+    "price": 1999,
+    "salePrice": null,
+    "category": "Microsoft Office",
+    "sku": "SK24-540001033"
+  },
+  {
+    "id": 429,
+    "name": "Microsoft Word 2021 Retail",
+    "price": 2499,
+    "salePrice": null,
+    "category": "Microsoft Office",
+    "sku": "SK24-540001032"
+  },
+  {
+    "id": 430,
+    "name": "Microsoft Access 2016 Retail",
+    "price": 1299,
+    "salePrice": null,
+    "category": "Microsoft Office",
+    "sku": "SK24-540001028"
+  },
+  {
+    "id": 431,
+    "name": "Microsoft Access 2019 Retail",
+    "price": 1999,
+    "salePrice": null,
+    "category": "Microsoft Office",
+    "sku": "SK24-540001029"
+  }
+]
