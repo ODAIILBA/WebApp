@@ -57,63 +57,17 @@ export const HomepagePrestaShopEnhanced = () => {
                 100% { left: 100%; }
             }
             
-            @keyframes slideUp {
-                from { opacity: 0; transform: translateY(30px); }
-                to { opacity: 1; transform: translateY(0); }
-            }
-            
-            @keyframes scaleIn {
-                from { opacity: 0; transform: scale(0.9); }
-                to { opacity: 1; transform: scale(1); }
-            }
-            
-            @keyframes float {
-                0%, 100% { transform: translateY(0px); }
-                50% { transform: translateY(-20px); }
-            }
-            
-            @keyframes shimmer {
-                0% { background-position: -1000px 0; }
-                100% { background-position: 1000px 0; }
-            }
-            
-            @keyframes bounce {
-                0%, 100% { transform: translateY(0); }
-                50% { transform: translateY(-10px); }
-            }
-            
-            @keyframes zoomIn {
-                from { opacity: 0; transform: scale(0.8); }
-                to { opacity: 1; transform: scale(1); }
-            }
-            
             .animate-slideDown { animation: slideDown 0.3s ease-out; }
             .animate-fadeIn { animation: fadeIn 0.5s ease-in; }
-            .animate-slideUp { animation: slideUp 0.6s ease-out; }
-            .animate-scaleIn { animation: scaleIn 0.5s ease-out; }
-            .animate-bounce { animation: bounce 2s ease-in-out infinite; }
-            .animate-float { animation: float 3s ease-in-out infinite; }
             .pulse-gold { animation: pulse-gold 2s infinite; }
-            
-            /* Scroll Animations */
-            .scroll-fade-in {
-                opacity: 0;
-                transform: translateY(30px);
-                transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-            }
-            
-            .scroll-fade-in.visible {
-                opacity: 1;
-                transform: translateY(0);
-            }
             
             /* Hover Effects */
             .hover-lift {
                 transition: transform 0.3s ease, box-shadow 0.3s ease;
             }
             .hover-lift:hover {
-                transform: translateY(-8px);
-                box-shadow: 0 20px 40px rgba(212, 175, 55, 0.4);
+                transform: translateY(-5px);
+                box-shadow: 0 15px 35px rgba(212, 175, 55, 0.4);
             }
             
             .hover-scale {
@@ -121,41 +75,6 @@ export const HomepagePrestaShopEnhanced = () => {
             }
             .hover-scale:hover {
                 transform: scale(1.05);
-            }
-            
-            .hover-grow {
-                transition: transform 0.3s ease;
-            }
-            .hover-grow:hover {
-                transform: scale(1.1);
-            }
-            
-            /* Image Zoom on Hover */
-            .image-zoom-container {
-                overflow: hidden;
-                position: relative;
-            }
-            
-            .image-zoom {
-                transition: transform 0.5s ease;
-            }
-            
-            .image-zoom-container:hover .image-zoom {
-                transform: scale(1.15);
-            }
-            
-            /* Glassmorphism */
-            .glass-effect {
-                background: rgba(255, 255, 255, 0.1);
-                backdrop-filter: blur(10px);
-                border: 1px solid rgba(255, 255, 255, 0.2);
-            }
-            
-            /* Shimmer Loading Effect */
-            .skeleton-loader {
-                background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-                background-size: 200% 100%;
-                animation: shimmer 1.5s infinite;
             }
             
             /* Gradient Backgrounds */
@@ -232,176 +151,16 @@ export const HomepagePrestaShopEnhanced = () => {
             /* Product Card */
             .product-card {
                 background: white;
-                border-radius: 16px;
+                border-radius: 12px;
                 overflow: hidden;
-                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                transition: all 0.3s ease;
                 border: 2px solid transparent;
-                position: relative;
             }
             
             .product-card:hover {
                 border-color: var(--gold);
-                box-shadow: 0 20px 50px rgba(212, 175, 55, 0.3);
-                transform: translateY(-10px);
-            }
-            
-            .product-card-image {
-                position: relative;
-                overflow: hidden;
-                background: #f8f9fa;
-            }
-            
-            .product-card-image img {
-                transition: transform 0.5s ease;
-                width: 100%;
-                height: auto;
-            }
-            
-            .product-card:hover .product-card-image img {
-                transform: scale(1.1);
-            }
-            
-            .product-badge {
-                position: absolute;
-                top: 12px;
-                left: 12px;
-                z-index: 10;
-            }
-            
-            .badge-sale {
-                background: linear-gradient(135deg, #ef4444, #dc2626);
-                color: white;
-                padding: 6px 12px;
-                border-radius: 8px;
-                font-weight: bold;
-                font-size: 0.875rem;
-                box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4);
-                animation: pulse-gold 2s infinite;
-            }
-            
-            .badge-new {
-                background: linear-gradient(135deg, var(--gold), var(--gold-dark));
-                color: var(--navy-dark);
-                padding: 6px 12px;
-                border-radius: 8px;
-                font-weight: bold;
-                font-size: 0.875rem;
-                box-shadow: 0 4px 10px rgba(212, 175, 55, 0.4);
-            }
-            
-            .badge-bestseller {
-                background: linear-gradient(135deg, #10b981, #059669);
-                color: white;
-                padding: 6px 12px;
-                border-radius: 8px;
-                font-weight: bold;
-                font-size: 0.875rem;
-                box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4);
-            }
-            
-            .wishlist-btn {
-                position: absolute;
-                top: 12px;
-                right: 12px;
-                width: 40px;
-                height: 40px;
-                background: white;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                transition: all 0.3s ease;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-                z-index: 10;
-            }
-            
-            .wishlist-btn:hover {
-                background: var(--gold);
-                color: white;
-                transform: scale(1.1);
-            }
-            
-            .quick-view-overlay {
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                background: linear-gradient(to top, rgba(26, 42, 78, 0.95), transparent);
-                padding: 20px;
-                transform: translateY(100%);
-                transition: transform 0.3s ease;
-            }
-            
-            .product-card:hover .quick-view-overlay {
-                transform: translateY(0);
-            }
-            
-            .product-rating {
-                display: flex;
-                align-items: center;
-                gap: 4px;
-                color: var(--gold);
-                font-size: 0.875rem;
-            }
-            
-            .price-wrapper {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                margin: 12px 0;
-            }
-            
-            .old-price {
-                text-decoration: line-through;
-                color: #9ca3af;
-                font-size: 1rem;
-            }
-            
-            .new-price {
-                color: var(--navy-dark);
-                font-size: 1.5rem;
-                font-weight: bold;
-            }
-            
-            .add-to-cart-btn {
-                width: 100%;
-                background: var(--navy-dark);
-                color: white;
-                padding: 12px;
-                border-radius: 8px;
-                font-weight: bold;
-                transition: all 0.3s ease;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                gap: 8px;
-                border: none;
-                cursor: pointer;
-            }
-            
-            .add-to-cart-btn:hover {
-                background: var(--gold);
-                color: var(--navy-dark);
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
-            }
-            
-            .stock-indicator {
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-                font-size: 0.875rem;
-                color: #10b981;
-                font-weight: 600;
-            }
-            
-            .stock-indicator.low-stock {
-                color: #f59e0b;
-            }
-            
-            .stock-indicator.out-of-stock {
-                color: #ef4444;
+                box-shadow: 0 10px 30px rgba(212, 175, 55, 0.3);
+                transform: translateY(-5px);
             }
             
             /* Shine Effect */
@@ -882,103 +641,64 @@ export const HomepagePrestaShopEnhanced = () => {
         </header>
 
         <!-- Hero Section -->
-        <section class="gradient-hero text-white py-24 relative overflow-hidden">
-            <!-- Animated Background Shapes -->
-            <div class="absolute inset-0 overflow-hidden pointer-events-none">
-                <div class="absolute w-96 h-96 bg-gold opacity-10 rounded-full blur-3xl -top-20 -left-20 animate-float"></div>
-                <div class="absolute w-96 h-96 bg-gold opacity-10 rounded-full blur-3xl top-40 right-10 animate-float" style="animation-delay: 1s;"></div>
-                <div class="absolute w-64 h-64 bg-white opacity-5 rounded-full blur-3xl bottom-20 left-1/3 animate-float" style="animation-delay: 2s;"></div>
-            </div>
-            
-            <div class="w-full px-8 relative z-10">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                    <div class="space-y-8">
-                        <div class="inline-block animate-slideDown">
-                            <span class="bg-gold text-navy-dark px-4 py-2 rounded-full text-sm font-bold inline-flex items-center">
-                                <i class="fas fa-star mr-2"></i>
-                                Über 50.000 zufriedene Kunden
-                            </span>
-                        </div>
-                        
-                        <h1 class="text-5xl lg:text-6xl font-bold leading-tight animate-fadeIn">
-                            Original Software Lizenzen
-                            <span class="block text-gold mt-2">bis zu 70% günstiger</span>
+        <section class="gradient-hero text-white py-20 shine-effect">
+            <div class="w-full px-6">
+                <div class="grid grid-cols-2 gap-12 items-center">
+                    <div class="animate-fadeIn">
+                        <h1 class="text-5xl font-bold mb-6 leading-tight">
+                            Günstige Software Lizenzen kaufen – 
+                            <span class="text-gold">Original & Sofort verfügbar</span>
                         </h1>
-                        
-                        <p class="text-xl leading-relaxed text-gray-200 animate-fadeIn" style="animation-delay: 0.2s;">
-                            Windows 11, Office 2024, Antivirus & mehr – 
-                            <strong class="text-white">sofort verfügbar</strong>, 
-                            <strong class="text-white">100% legal</strong> und 
-                            <strong class="text-white">deutlich günstiger</strong>. 
-                            Direkt per E-Mail nach Zahlungseingang.
+                        <p class="text-xl mb-8 leading-relaxed text-gray-200">
+                            Bei SoftwareKing24.de finden Sie hochwertige digitale Softwarelösungen für Arbeit, Sicherheit und Produktivität – sofort verfügbar und rechtssicher. 
+                            Ob <strong>Windows 11</strong>, <strong>Microsoft Office 2024</strong>, <strong>Antivirus-Programme</strong>, <strong>Serverlösungen</strong> oder <strong>Retro-Software</strong>: 
+                            Wir bieten geprüfte Lizenzen zu Top-Preisen – direkt per E-Mail geliefert.
                         </p>
                         
-                        <div class="grid grid-cols-3 gap-4 animate-slideUp" style="animation-delay: 0.4s;">
-                            <div class="glass-effect rounded-xl p-4 hover-lift">
-                                <i class="fas fa-download text-gold text-3xl mb-2"></i>
-                                <div class="font-bold text-sm">Sofort-Download</div>
-                                <div class="text-xs text-gray-300">Nach Zahlung</div>
+                        <div class="flex items-center space-x-4 mb-8">
+                            <div class="flex items-center bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-4 py-3">
+                                <i class="fas fa-download text-gold text-2xl mr-3"></i>
+                                <div>
+                                    <div class="font-bold">Sofort-Download</div>
+                                    <div class="text-sm text-gray-300">Nach Zahlungseingang</div>
+                                </div>
                             </div>
-                            <div class="glass-effect rounded-xl p-4 hover-lift">
-                                <i class="fas fa-shield-check text-gold text-3xl mb-2"></i>
-                                <div class="font-bold text-sm">100% Legal</div>
-                                <div class="text-xs text-gray-300">Geprüfte Lizenzen</div>
+                            <div class="flex items-center bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-4 py-3">
+                                <i class="fas fa-shield-check text-gold text-2xl mr-3"></i>
+                                <div>
+                                    <div class="font-bold">100% Legal & Sicher</div>
+                                    <div class="text-sm text-gray-300">Geprüfte Lizenzen</div>
+                                </div>
                             </div>
-                            <div class="glass-effect rounded-xl p-4 hover-lift">
-                                <i class="fas fa-undo-alt text-gold text-3xl mb-2"></i>
-                                <div class="font-bold text-sm">14 Tage</div>
-                                <div class="text-xs text-gray-300">Geld-zurück</div>
+                            <div class="flex items-center bg-white bg-opacity-20 backdrop-blur-sm rounded-lg px-4 py-3">
+                                <i class="fas fa-undo-alt text-gold text-2xl mr-3"></i>
+                                <div>
+                                    <div class="font-bold">14 Tage Geld-zurück</div>
+                                    <div class="text-sm text-gray-300">Garantie</div>
+                                </div>
                             </div>
                         </div>
                         
-                        <div class="flex flex-wrap gap-4 animate-slideUp" style="animation-delay: 0.6s;">
-                            <a href="/produkte" class="bg-gold hover:bg-gold-light text-navy-dark px-10 py-4 rounded-xl font-bold text-lg transition-all hover-lift inline-flex items-center shadow-2xl">
-                                <i class="fas fa-shopping-bag mr-3 text-xl"></i>
+                        <div class="flex space-x-4">
+                            <a href="/produkte" class="bg-gold hover:bg-gold-light text-navy-dark px-8 py-4 rounded-lg font-bold text-lg transition-all hover-lift inline-flex items-center">
+                                <i class="fas fa-shopping-bag mr-2"></i>
                                 Jetzt einkaufen
                             </a>
-                            <a href="/produkte?tag=angebote" class="glass-effect hover:bg-white hover:bg-opacity-20 text-white px-10 py-4 rounded-xl font-bold text-lg transition-all hover-lift inline-flex items-center">
-                                <i class="fas fa-fire mr-3 text-gold text-xl"></i>
-                                Top Angebote
+                            <a href="/produkte?tag=angebote" class="bg-white bg-opacity-20 hover:bg-opacity-30 backdrop-blur-sm text-white px-8 py-4 rounded-lg font-bold text-lg transition-all hover-lift inline-flex items-center">
+                                <i class="fas fa-fire mr-2 text-gold"></i>
+                                Angebote ansehen
                             </a>
-                        </div>
-                        
-                        <div class="flex items-center gap-6 text-sm animate-fadeIn" style="animation-delay: 0.8s;">
-                            <div class="flex items-center gap-2">
-                                <div class="flex -space-x-2">
-                                    <img src="https://i.pravatar.cc/40?img=1" alt="Customer" class="w-10 h-10 rounded-full border-2 border-white" />
-                                    <img src="https://i.pravatar.cc/40?img=2" alt="Customer" class="w-10 h-10 rounded-full border-2 border-white" />
-                                    <img src="https://i.pravatar.cc/40?img=3" alt="Customer" class="w-10 h-10 rounded-full border-2 border-white" />
-                                    <div class="w-10 h-10 rounded-full border-2 border-white bg-gold text-navy-dark flex items-center justify-center font-bold text-xs">50k+</div>
-                                </div>
-                                <div>
-                                    <div class="font-bold">Zufriedene Kunden</div>
-                                    <div class="text-gray-300 text-xs">★★★★★ 4.9/5</div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                     
-                    <div class="relative animate-scaleIn" style="animation-delay: 0.4s;">
-                        <div class="relative">
-                            <img src="/static/banners/hero_home.jpg" alt="Original Software Lizenzen" class="w-full rounded-2xl shadow-2xl" onerror="this.src='https://via.placeholder.com/600x400/1a2a4e/d4af37?text=Software+Lizenzen'" />
-                            <div class="absolute -bottom-6 -right-6 bg-gradient-to-br from-gold to-gold-dark text-navy-dark px-8 py-6 rounded-2xl shadow-2xl font-bold pulse-gold">
-                                <div class="text-4xl">Bis zu 70%</div>
-                                <div class="text-lg">Günstiger</div>
-                            </div>
-                        </div>
-                        
-                        <!-- Floating Stats -->
-                        <div class="absolute top-10 -left-6 bg-white text-navy-dark px-6 py-4 rounded-xl shadow-xl animate-float">
-                            <div class="text-2xl font-bold text-gold">2.347+</div>
-                            <div class="text-sm">Verkäufe heute</div>
+                    <div class="relative">
+                        <img src="/static/hero-software.png" alt="Original Software Lizenzen" class="w-full rounded-lg shadow-2xl" onerror="this.src='https://via.placeholder.com/600x400/1a2a4e/d4af37?text=SoftwareKing24+Original+Software'" />
+                        <div class="absolute -bottom-6 -right-6 bg-gold text-navy-dark px-6 py-4 rounded-lg shadow-xl font-bold pulse-gold">
+                            <div class="text-3xl">Bis zu 70%</div>
+                            <div class="text-sm">Günstiger</div>
                         </div>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Scroll Indicator -->
-            <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
-                <i class="fas fa-chevron-down text-gold text-2xl"></i>
             </div>
         </section>
 
@@ -2254,32 +1974,6 @@ export const HomepagePrestaShopEnhanced = () => {
                     window.location.href = \`/produkte?search=\${encodeURIComponent(query)}\`;
                 }
             }
-            
-            // Scroll Animations
-            function initScrollAnimations() {
-                const observerOptions = {
-                    threshold: 0.1,
-                    rootMargin: '0px 0px -100px 0px'
-                };
-                
-                const observer = new IntersectionObserver((entries) => {
-                    entries.forEach(entry => {
-                        if (entry.isIntersecting) {
-                            entry.target.classList.add('visible');
-                        }
-                    });
-                }, observerOptions);
-                
-                // Observe all elements with scroll-fade-in class
-                document.querySelectorAll('.scroll-fade-in').forEach(el => {
-                    observer.observe(el);
-                });
-            }
-            
-            // Initialize scroll animations on page load
-            document.addEventListener('DOMContentLoaded', () => {
-                initScrollAnimations();
-            });
         </script>
     </body>
     </html>

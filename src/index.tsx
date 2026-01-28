@@ -6,6 +6,7 @@ import { DatabaseHelper } from './lib/database'
 import { Layout } from './renderer'
 import { Homepage } from './components/homepage'
 import { ProductsPage } from './components/products-page'
+import { ProductsPageModern } from './components/products-page-modern'
 import { HomepageNew } from './components/homepage-modern'
 import { HomepagePrestaShop } from './components/homepage-prestashop'
 import { HomepagePrestaShopEnhanced } from './components/homepage-prestashop-enhanced'
@@ -162,11 +163,11 @@ app.get('/de', (c) => {
 
 // Products page
 app.get('/produkte', (c) => {
-  return c.html(<ProductsPage />)
+  return c.html(<ProductsPageModern />)
 })
 
 app.get('/products', (c) => {
-  return c.html(<ProductsPage />)
+  return c.html(<ProductsPageModern />)
 })
 
 // Product detail page (using slug for SEO)
