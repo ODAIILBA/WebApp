@@ -489,4 +489,166 @@ app.get('/api/admin/dashboard', adminAuth, async (c) => {
   }
 })
 
+// Admin API: Get all licenses
+app.get('/api/admin/licenses', adminAuth, async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    
+    const licenses = await c.env.DB.prepare(`
+      SELECT lk.*, p.sku, pt.name as product_name
+      FROM license_keys lk
+      LEFT JOIN products p ON lk.product_id = p.id
+      LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = 'en'
+      ORDER BY lk.created_at DESC
+      LIMIT 100
+    `).all()
+
+    return c.json({ success: true, data: licenses.results || [] })
+  } catch (error) {
+    return c.json({ success: false, error: 'Failed to fetch licenses' }, 500)
+  }
+})
+
+// Admin API: Export licenses to CSV
+app.get('/api/admin/licenses/export', adminAuth, async (c) => {
+  try {
+    const licenses = await c.env.DB.prepare(`
+      SELECT lk.license_key, p.sku, lk.key_type, lk.status, lk.activation_limit, lk.activation_count, lk.created_at
+      FROM license_keys lk
+      LEFT JOIN products p ON lk.product_id = p.id
+      ORDER BY lk.created_at DESC
+    `).all()
+
+    // Generate CSV
+    const headers = ['License Key', 'Product SKU', 'Type', 'Status', 'Activation Limit', 'Activations', 'Created']
+    const rows = [headers.join(',')]
+    
+    ;(licenses.results || []).forEach((license: any) => {
+      rows.push([
+        license.license_key,
+        license.sku || '',
+        license.key_type,
+        license.status,
+        license.activation_limit,
+        license.activation_count,
+        license.created_at
+      ].join(','))
+    })
+
+    return new Response(rows.join('\n'), {
+      headers: {
+        'Content-Type': 'text/csv',
+        'Content-Disposition': 'attachment; filename="license-keys.csv"'
+      }
+    })
+  } catch (error) {
+    return c.json({ success: false, error: 'Failed to export licenses' }, 500)
+  }
+})
+
+// Admin API: Import licenses from CSV
+app.post('/api/admin/licenses/import', adminAuth, async (c) => {
+  try {
+    const formData = await c.req.formData()
+    const file = formData.get('file') as File
+    
+    if (!file) {
+      return c.json({ success: false, error: 'No file uploaded' }, 400)
+    }
+
+    const text = await file.text()
+    const lines = text.split('\n').filter(line => line.trim())
+    
+    if (lines.length < 2) {
+      return c.json({ success: false, error: 'CSV file is empty' }, 400)
+    }
+
+    // Skip header row
+    const dataLines = lines.slice(1)
+    let imported = 0
+    let skipped = 0
+
+    for (const line of dataLines) {
+      const [product_id, license_key, key_type, activation_limit] = line.split(',').map(v => v.trim())
+      
+      if (!product_id || !license_key) {
+        skipped++
+        continue
+      }
+
+      try {
+        await c.env.DB.prepare(`
+          INSERT INTO license_keys (product_id, license_key, key_type, activation_limit, status)
+          VALUES (?, ?, ?, ?, 'available')
+        `).bind(product_id, license_key, key_type || 'single', activation_limit || 1).run()
+        
+        imported++
+      } catch (error) {
+        // Duplicate key or other error
+        skipped++
+      }
+    }
+
+    return c.json({ 
+      success: true, 
+      data: { imported, skipped }
+    })
+  } catch (error) {
+    console.error('Import error:', error)
+    return c.json({ success: false, error: 'Failed to import licenses' }, 500)
+  }
+})
+
+// ============================================
+// ADMIN PAGE ROUTES
+// ============================================
+
+// Import admin components
+import { AdminLayout, AdminDashboard } from './components/admin'
+import { AdminProducts, AdminProductForm } from './components/admin-products'
+import { AdminLicenses, AdminLicenseImport } from './components/admin-licenses'
+
+// Admin Dashboard
+app.get('/admin', (c) => {
+  return c.html(
+    <AdminLayout title="Dashboard" currentUser={{ first_name: 'Admin' }}>
+      <AdminDashboard />
+    </AdminLayout>
+  )
+})
+
+// Products Management
+app.get('/admin/products', (c) => {
+  return c.html(
+    <AdminLayout title="Products" currentUser={{ first_name: 'Admin' }}>
+      <AdminProducts />
+    </AdminLayout>
+  )
+})
+
+app.get('/admin/products/add', (c) => {
+  return c.html(
+    <AdminLayout title="Add New Product" currentUser={{ first_name: 'Admin' }}>
+      <AdminProductForm isEdit={false} />
+    </AdminLayout>
+  )
+})
+
+// License Key Management
+app.get('/admin/licenses', (c) => {
+  return c.html(
+    <AdminLayout title="License Keys" currentUser={{ first_name: 'Admin' }}>
+      <AdminLicenses />
+    </AdminLayout>
+  )
+})
+
+app.get('/admin/licenses/import', (c) => {
+  return c.html(
+    <AdminLayout title="Import License Keys" currentUser={{ first_name: 'Admin' }}>
+      <AdminLicenseImport />
+    </AdminLayout>
+  )
+})
+
 export default app
