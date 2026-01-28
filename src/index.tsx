@@ -148,11 +148,11 @@ app.use('*', async (c, next) => {
 // ============================================
 
 app.get('/', (c) => {
-  return c.html(<HomepagePrestaShop />)
+  return c.html(HomepagePrestaShop())
 })
 
 app.get('/de', (c) => {
-  return c.html(<HomepagePrestaShop />)
+  return c.html(HomepagePrestaShop())
 })
 
 // Products page
