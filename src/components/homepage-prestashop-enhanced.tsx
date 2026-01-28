@@ -207,6 +207,81 @@ export const HomepagePrestaShopEnhanced = () => {
                 gap: 1.5rem;
             }
             
+            /* Product Slider */
+            .product-slider {
+                display: flex;
+                overflow-x: auto;
+                scroll-behavior: smooth;
+                gap: 1.5rem;
+                padding: 1rem 0;
+                scrollbar-width: thin;
+                scrollbar-color: var(--gold) var(--navy-dark);
+            }
+            
+            .product-slider::-webkit-scrollbar {
+                height: 8px;
+            }
+            
+            .product-slider::-webkit-scrollbar-track {
+                background: var(--navy-dark);
+                border-radius: 4px;
+            }
+            
+            .product-slider::-webkit-scrollbar-thumb {
+                background: var(--gold);
+                border-radius: 4px;
+            }
+            
+            .product-slider::-webkit-scrollbar-thumb:hover {
+                background: var(--gold-light);
+            }
+            
+            .slider-item {
+                flex: 0 0 300px;
+                scroll-snap-align: start;
+            }
+            
+            .slider-controls {
+                display: flex;
+                gap: 0.5rem;
+                justify-content: center;
+                margin-top: 1rem;
+            }
+            
+            .slider-btn {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background: var(--navy-dark);
+                color: var(--gold);
+                border: 2px solid var(--gold);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+            
+            .slider-btn:hover {
+                background: var(--gold);
+                color: var(--navy-dark);
+                transform: scale(1.1);
+            }
+            
+            /* Review Stars */
+            .review-stars {
+                color: var(--gold);
+                font-size: 1.25rem;
+            }
+            
+            .review-card {
+                background: white;
+                border-radius: 12px;
+                padding: 1.5rem;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                border-left: 4px solid var(--gold);
+            }
+            
             @media (max-width: 768px) {
                 .mega-menu {
                     position: fixed;
@@ -234,7 +309,7 @@ export const HomepagePrestaShopEnhanced = () => {
         
         <!-- Top Info Bar -->
         <div class="bg-navy-dark text-white py-2 text-xs">
-            <div class="max-w-7xl mx-auto px-4 flex flex-wrap items-center justify-between">
+            <div class="w-full px-8 flex flex-wrap items-center justify-between">
                 <div class="flex items-center space-x-6">
                     <span><i class="fas fa-phone-alt mr-2 text-gold"></i>+49 (0) 123 456789</span>
                     <span><i class="fas fa-envelope mr-2 text-gold"></i>[email protected]</span>
@@ -256,7 +331,7 @@ export const HomepagePrestaShopEnhanced = () => {
 
         <!-- Main Header -->
         <header class="bg-white shadow-lg sticky top-0 z-50">
-            <div class="max-w-7xl mx-auto px-4 py-3">
+            <div class="w-full px-8 py-3">
                 <div class="flex items-center justify-between">
                     <!-- Logo -->
                     <a href="/" class="flex items-center hover-scale">
@@ -309,7 +384,7 @@ export const HomepagePrestaShopEnhanced = () => {
 
             <!-- Advanced Mega Menu Navigation -->
             <nav class="bg-navy-dark">
-                <div class="max-w-7xl mx-auto">
+                <div class="w-full px-8">
                     <ul class="flex items-center justify-center space-x-1 text-white font-semibold">
                         <li><a href="/" class="px-4 py-4 hover:bg-navy-medium transition-colors block"><i class="fas fa-home mr-2"></i>Startseite</a></li>
                         
@@ -320,7 +395,7 @@ export const HomepagePrestaShopEnhanced = () => {
                                 <i class="fas fa-chevron-down ml-2 text-xs"></i>
                             </a>
                             <div class="mega-menu">
-                                <div class="max-w-7xl mx-auto px-4 py-6">
+                                <div class="w-full px-6 py-6">
                                     <div class="grid grid-cols-4 gap-6">
                                         <div>
                                             <h3 class="text-navy-dark font-bold mb-3 border-b-2 border-gold pb-2">
@@ -375,7 +450,7 @@ export const HomepagePrestaShopEnhanced = () => {
                                 <i class="fas fa-chevron-down ml-2 text-xs"></i>
                             </a>
                             <div class="mega-menu">
-                                <div class="max-w-7xl mx-auto px-4 py-6">
+                                <div class="w-full px-6 py-6">
                                     <div class="grid grid-cols-4 gap-6">
                                         <div>
                                             <h3 class="text-navy-dark font-bold mb-3 border-b-2 border-gold pb-2">
@@ -430,7 +505,7 @@ export const HomepagePrestaShopEnhanced = () => {
                                 <i class="fas fa-chevron-down ml-2 text-xs"></i>
                             </a>
                             <div class="mega-menu">
-                                <div class="max-w-7xl mx-auto px-4 py-6">
+                                <div class="w-full px-6 py-6">
                                     <div class="grid grid-cols-3 gap-6">
                                         <div>
                                             <h3 class="text-navy-dark font-bold mb-3 border-b-2 border-gold pb-2">
@@ -475,7 +550,7 @@ export const HomepagePrestaShopEnhanced = () => {
                                 <i class="fas fa-chevron-down ml-2 text-xs"></i>
                             </a>
                             <div class="mega-menu">
-                                <div class="max-w-7xl mx-auto px-4 py-6">
+                                <div class="w-full px-6 py-6">
                                     <div class="grid grid-cols-3 gap-6">
                                         <div>
                                             <h3 class="text-navy-dark font-bold mb-3 border-b-2 border-gold pb-2">
@@ -520,7 +595,7 @@ export const HomepagePrestaShopEnhanced = () => {
                                 <i class="fas fa-chevron-down ml-2 text-xs"></i>
                             </a>
                             <div class="mega-menu">
-                                <div class="max-w-7xl mx-auto px-4 py-6">
+                                <div class="w-full px-6 py-6">
                                     <div class="grid grid-cols-3 gap-6">
                                         <div>
                                             <h3 class="text-navy-dark font-bold mb-3 border-b-2 border-gold pb-2">
@@ -567,7 +642,7 @@ export const HomepagePrestaShopEnhanced = () => {
 
         <!-- Hero Section -->
         <section class="gradient-hero text-white py-20 shine-effect">
-            <div class="max-w-7xl mx-auto px-4">
+            <div class="w-full px-6">
                 <div class="grid grid-cols-2 gap-12 items-center">
                     <div class="animate-fadeIn">
                         <h1 class="text-5xl font-bold mb-6 leading-tight">
@@ -629,7 +704,7 @@ export const HomepagePrestaShopEnhanced = () => {
 
         <!-- Trust Badges -->
         <section class="bg-white py-6 shadow-md">
-            <div class="max-w-7xl mx-auto px-4">
+            <div class="w-full px-6">
                 <div class="grid grid-cols-5 gap-6 text-center">
                     <div class="flex flex-col items-center">
                         <div class="w-16 h-16 bg-gold bg-opacity-10 rounded-full flex items-center justify-center mb-3">
@@ -670,9 +745,301 @@ export const HomepagePrestaShopEnhanced = () => {
             </div>
         </section>
 
+        <!-- Google & Trustpilot Reviews Section -->
+        <section class="py-12 bg-gray-50">
+            <div class="w-full px-8">
+                <div class="text-center mb-10">
+                    <h2 class="text-3xl font-bold text-navy-dark mb-4">
+                        <i class="fas fa-star text-gold mr-3"></i>
+                        Vertraut von Tausenden zufriedenen Kunden
+                    </h2>
+                    <p class="text-gray-600 text-lg">Sehen Sie, was unsere Kunden über uns sagen</p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-8 mb-8">
+                    <!-- Google Reviews -->
+                    <div class="bg-white rounded-xl shadow-lg p-8 border-2 border-gold">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="flex items-center">
+                                <img src="https://www.google.com/favicon.ico" alt="Google" class="w-12 h-12 mr-4" />
+                                <div>
+                                    <h3 class="text-2xl font-bold text-navy-dark">Google Bewertungen</h3>
+                                    <p class="text-gray-600">Verifizierte Kundenbewertungen</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-5xl font-bold text-gold">4.9</div>
+                                <div class="review-stars">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star-half-alt"></i>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-1">4.523 Bewertungen</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-5 gap-2">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-gold">5★</div>
+                                <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
+                                    <div class="bg-gold h-2 rounded-full" style="width: 92%"></div>
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">92%</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-gold">4★</div>
+                                <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
+                                    <div class="bg-gold h-2 rounded-full" style="width: 6%"></div>
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">6%</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-gray-400">3★</div>
+                                <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
+                                    <div class="bg-gray-400 h-2 rounded-full" style="width: 1%"></div>
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">1%</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-gray-400">2★</div>
+                                <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
+                                    <div class="bg-gray-400 h-2 rounded-full" style="width: 0.5%"></div>
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">0.5%</div>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-gray-400">1★</div>
+                                <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
+                                    <div class="bg-gray-400 h-2 rounded-full" style="width: 0.5%"></div>
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">0.5%</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Trustpilot Reviews -->
+                    <div class="bg-white rounded-xl shadow-lg p-8 border-2 border-gold">
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center mr-4">
+                                    <i class="fas fa-star text-white text-2xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-2xl font-bold text-navy-dark">Trustpilot</h3>
+                                    <p class="text-gray-600">Hervorragend bewertet</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-5xl font-bold text-green-600">4.8</div>
+                                <div class="review-stars text-green-600">
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star"></i>
+                                    <i class="fas fa-star-half-alt"></i>
+                                </div>
+                                <p class="text-sm text-gray-600 mt-1">3.892 Bewertungen</p>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-semibold">Hervorragend</span>
+                                <div class="flex-1 mx-4 bg-gray-200 rounded-full h-3">
+                                    <div class="bg-green-600 h-3 rounded-full" style="width: 89%"></div>
+                                </div>
+                                <span class="text-sm font-bold text-green-600">89%</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-semibold">Gut</span>
+                                <div class="flex-1 mx-4 bg-gray-200 rounded-full h-3">
+                                    <div class="bg-green-500 h-3 rounded-full" style="width: 8%"></div>
+                                </div>
+                                <span class="text-sm font-bold">8%</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-semibold">Durchschnittlich</span>
+                                <div class="flex-1 mx-4 bg-gray-200 rounded-full h-3">
+                                    <div class="bg-yellow-500 h-3 rounded-full" style="width: 2%"></div>
+                                </div>
+                                <span class="text-sm font-bold">2%</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm font-semibold">Schlecht</span>
+                                <div class="flex-1 mx-4 bg-gray-200 rounded-full h-3">
+                                    <div class="bg-red-500 h-3 rounded-full" style="width: 1%"></div>
+                                </div>
+                                <span class="text-sm font-bold">1%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bestseller Slider -->
+        <section class="py-16 bg-white">
+            <div class="w-full px-8">
+                <div class="flex items-center justify-between mb-10">
+                    <div>
+                        <h2 class="text-3xl font-bold text-navy-dark mb-2">
+                            <i class="fas fa-fire text-gold mr-3"></i>
+                            Bestseller – Top-Produkte
+                        </h2>
+                        <p class="text-gray-600">Die meistverkauften Produkte unserer Kunden</p>
+                    </div>
+                    <a href="/produkte?sort=bestsellers" class="bg-gold hover:bg-gold-light text-navy-dark px-6 py-3 rounded-lg font-bold transition-all hover-lift">
+                        Alle Bestseller <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                </div>
+                <div class="product-slider" id="bestseller-slider">
+                    <!-- Products will be loaded here -->
+                </div>
+                <div class="slider-controls">
+                    <button class="slider-btn" onclick="scrollSlider('bestseller-slider', -300)">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="slider-btn" onclick="scrollSlider('bestseller-slider', 300)">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Favoriten Slider -->
+        <section class="py-16 bg-gray-50">
+            <div class="w-full px-8">
+                <div class="flex items-center justify-between mb-10">
+                    <div>
+                        <h2 class="text-3xl font-bold text-navy-dark mb-2">
+                            <i class="fas fa-heart text-gold mr-3"></i>
+                            Favoriten – Meist gewünscht
+                        </h2>
+                        <p class="text-gray-600">Die beliebtesten Produkte auf der Wunschliste</p>
+                    </div>
+                    <a href="/produkte?tag=favoriten" class="bg-navy-dark hover:bg-navy-medium text-white px-6 py-3 rounded-lg font-bold transition-all hover-lift">
+                        Alle Favoriten <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                </div>
+                <div class="product-slider" id="favorites-slider">
+                    <!-- Products will be loaded here -->
+                </div>
+                <div class="slider-controls">
+                    <button class="slider-btn" onclick="scrollSlider('favorites-slider', -300)">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="slider-btn" onclick="scrollSlider('favorites-slider', 300)">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Games Slider -->
+        <section class="py-16 bg-white">
+            <div class="w-full px-8">
+                <div class="flex items-center justify-between mb-10">
+                    <div>
+                        <h2 class="text-3xl font-bold text-navy-dark mb-2">
+                            <i class="fas fa-gamepad text-gold mr-3"></i>
+                            Gaming & Spiele
+                        </h2>
+                        <p class="text-gray-600">Game Keys, Gaming-Software und mehr</p>
+                    </div>
+                    <a href="/produkte?category=Games" class="bg-gold hover:bg-gold-light text-navy-dark px-6 py-3 rounded-lg font-bold transition-all hover-lift">
+                        Alle Games <i class="fas fa-arrow-right ml-2"></i>
+                    </a>
+                </div>
+                <div class="product-slider" id="games-slider">
+                    <!-- Products will be loaded here -->
+                </div>
+                <div class="slider-controls">
+                    <button class="slider-btn" onclick="scrollSlider('games-slider', -300)">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <button class="slider-btn" onclick="scrollSlider('games-slider', 300)">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Firma Angebote (Company Offers) -->
+        <section class="py-16 gradient-navy text-white">
+            <div class="w-full px-8">
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold mb-4">
+                        <i class="fas fa-building text-gold mr-3"></i>
+                        Spezielle Angebote für Unternehmen
+                    </h2>
+                    <p class="text-xl text-gray-200">Volumenlizenzen, individuelle Beratung und attraktive Konditionen für Ihr Unternehmen</p>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-8 mb-10">
+                    <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-8 hover-lift border-2 border-gold">
+                        <div class="w-16 h-16 bg-gold rounded-full flex items-center justify-center mb-4">
+                            <i class="fas fa-users text-navy-dark text-2xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-3">Volumenlizenzen</h3>
+                        <p class="text-gray-200 mb-4">
+                            Ab 10 Lizenzen erhalten Sie attraktive Mengenrabatte. 
+                            Perfekt für mittelständische und große Unternehmen.
+                        </p>
+                        <ul class="space-y-2 text-gray-200">
+                            <li><i class="fas fa-check text-gold mr-2"></i>Bis zu 25% Rabatt</li>
+                            <li><i class="fas fa-check text-gold mr-2"></i>Flexible Zahlungsbedingungen</li>
+                            <li><i class="fas fa-check text-gold mr-2"></i>Zentrale Lizenzverwaltung</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-8 hover-lift border-2 border-gold">
+                        <div class="w-16 h-16 bg-gold rounded-full flex items-center justify-center mb-4">
+                            <i class="fas fa-handshake text-navy-dark text-2xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-3">Persönlicher Ansprechpartner</h3>
+                        <p class="text-gray-200 mb-4">
+                            Ihr dedizierter Account Manager steht Ihnen für alle Fragen 
+                            rund um Softwarelizenzierung zur Verfügung.
+                        </p>
+                        <ul class="space-y-2 text-gray-200">
+                            <li><i class="fas fa-check text-gold mr-2"></i>Direkte Hotline</li>
+                            <li><i class="fas fa-check text-gold mr-2"></i>Schnelle Reaktionszeit</li>
+                            <li><i class="fas fa-check text-gold mr-2"></i>Individuelle Beratung</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-8 hover-lift border-2 border-gold">
+                        <div class="w-16 h-16 bg-gold rounded-full flex items-center justify-center mb-4">
+                            <i class="fas fa-file-invoice text-navy-dark text-2xl"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold mb-3">Kauf auf Rechnung</h3>
+                        <p class="text-gray-200 mb-4">
+                            Für verifizierte Geschäftskunden bieten wir 
+                            bequemen Rechnungskauf mit 30 Tagen Zahlungsziel.
+                        </p>
+                        <ul class="space-y-2 text-gray-200">
+                            <li><i class="fas fa-check text-gold mr-2"></i>30 Tage Zahlungsziel</li>
+                            <li><i class="fas fa-check text-gold mr-2"></i>Keine Vorkasse nötig</li>
+                            <li><i class="fas fa-check text-gold mr-2"></i>Sammelrechnung möglich</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <a href="/kontakt?type=business" class="inline-block bg-gold hover:bg-gold-light text-navy-dark px-10 py-4 rounded-lg font-bold text-lg transition-all hover-lift">
+                        <i class="fas fa-envelope mr-2"></i>
+                        Jetzt Unternehmensangebot anfragen
+                    </a>
+                    <p class="text-gray-300 mt-4">
+                        Oder rufen Sie uns an: <a href="tel:+491234567890" class="text-gold font-bold hover:underline">+49 (0) 123 456 7890</a>
+                    </p>
+                </div>
+            </div>
+        </section>
+
         <!-- Featured Products -->
         <section class="py-16 bg-gray-50">
-            <div class="max-w-7xl mx-auto px-4">
+            <div class="w-full px-6">
                 <div class="flex items-center justify-between mb-10">
                     <div>
                         <h2 class="text-3xl font-bold text-navy-dark mb-2">
@@ -691,7 +1058,7 @@ export const HomepagePrestaShopEnhanced = () => {
 
         <!-- Product Categories Grid -->
         <section class="py-16 bg-white">
-            <div class="max-w-7xl mx-auto px-4">
+            <div class="w-full px-6">
                 <div class="text-center mb-12">
                     <h2 class="text-3xl font-bold text-navy-dark mb-4">
                         <i class="fas fa-th-large text-gold mr-3"></i>
@@ -766,7 +1133,7 @@ export const HomepagePrestaShopEnhanced = () => {
 
         <!-- Bestsellers -->
         <section class="py-16 bg-gray-50">
-            <div class="max-w-7xl mx-auto px-4">
+            <div class="w-full px-6">
                 <div class="flex items-center justify-between mb-10">
                     <div>
                         <h2 class="text-3xl font-bold text-navy-dark mb-2">
@@ -785,7 +1152,7 @@ export const HomepagePrestaShopEnhanced = () => {
 
         <!-- SEO Content Section: Wer wir sind -->
         <section class="py-16 bg-white">
-            <div class="max-w-7xl mx-auto px-4">
+            <div class="w-full px-6">
                 <div class="grid grid-cols-2 gap-12">
                     <div>
                         <h2 class="text-3xl font-bold text-navy-dark mb-6">
@@ -867,7 +1234,7 @@ export const HomepagePrestaShopEnhanced = () => {
 
         <!-- ESD Licenses Explanation -->
         <section class="py-16 bg-navy-dark text-white">
-            <div class="max-w-7xl mx-auto px-4">
+            <div class="w-full px-6">
                 <div class="text-center mb-12">
                     <h2 class="text-3xl font-bold mb-4">
                         <i class="fas fa-download text-gold mr-3"></i>
@@ -1141,7 +1508,7 @@ export const HomepagePrestaShopEnhanced = () => {
 
         <!-- Customer Testimonials -->
         <section class="py-16 bg-white">
-            <div class="max-w-7xl mx-auto px-4">
+            <div class="w-full px-6">
                 <div class="text-center mb-12">
                     <h2 class="text-3xl font-bold text-navy-dark mb-4">
                         <i class="fas fa-comments text-gold mr-3"></i>
@@ -1251,7 +1618,7 @@ export const HomepagePrestaShopEnhanced = () => {
 
         <!-- New Arrivals -->
         <section class="py-16 bg-gray-50">
-            <div class="max-w-7xl mx-auto px-4">
+            <div class="w-full px-6">
                 <div class="flex items-center justify-between mb-10">
                     <div>
                         <h2 class="text-3xl font-bold text-navy-dark mb-2">
@@ -1267,7 +1634,7 @@ export const HomepagePrestaShopEnhanced = () => {
 
         <!-- Footer -->
         <footer class="bg-navy-dark text-white py-12">
-            <div class="max-w-7xl mx-auto px-4">
+            <div class="w-full px-6">
                 <div class="grid grid-cols-4 gap-8 mb-8">
                     <div>
                         <img src="/static/logo.png" alt="SoftwareKing24" class="h-12 mb-4" />
