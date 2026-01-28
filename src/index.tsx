@@ -13,6 +13,7 @@ import { CartPage } from './components/cart-page'
 import { RegisterPage } from './components/register-page'
 import { LoginPage } from './components/login-page'
 import { CheckoutPage } from './components/checkout-page'
+import { UserDashboard } from './components/user-dashboard'
 import { 
   formatPrice, 
   generateOrderNumber, 
@@ -214,6 +215,18 @@ app.get('/kasse', (c) => {
 
 app.get('/checkout', (c) => {
   return c.html(<CheckoutPage />)
+})
+
+// ===========================
+// USER DASHBOARD ROUTES
+// ===========================
+
+app.get('/konto', (c) => {
+  return c.html(<UserDashboard />)
+})
+
+app.get('/account', (c) => {
+  return c.html(<UserDashboard />)
 })
 
 // ============================================
