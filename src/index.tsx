@@ -6,6 +6,7 @@ import { DatabaseHelper } from './lib/database'
 import { Layout } from './renderer'
 import { Homepage } from './components/homepage'
 import { ProductsPage } from './components/products-page'
+import { HomepageNew } from './components/homepage-modern'
 import { 
   formatPrice, 
   generateOrderNumber, 
@@ -141,19 +142,11 @@ app.use('*', async (c, next) => {
 // ============================================
 
 app.get('/', (c) => {
-  return c.html(
-    <Layout>
-      <Homepage />
-    </Layout>
-  )
+  return c.html(<HomepageNew />)
 })
 
 app.get('/de', (c) => {
-  return c.html(
-    <Layout>
-      <Homepage />
-    </Layout>
-  )
+  return c.html(<HomepageNew />)
 })
 
 // Products page
