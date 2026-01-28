@@ -816,6 +816,138 @@ app.get('/checkout', (c) => {
   return c.html(<Checkout />)
 })
 
+// ============================================
+// PAYMENT API ENDPOINTS
+// ============================================
+
+// Stripe: Create Payment Intent
+app.post('/api/payments/stripe/create-intent', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { amount, currency, order_id, metadata } = body
+
+    // In production, use actual Stripe API
+    // For now, return mock response
+    const mockIntentId = 'pi_' + Math.random().toString(36).substring(7)
+    const mockClientSecret = mockIntentId + '_secret_' + Math.random().toString(36).substring(7)
+
+    return c.json({
+      success: true,
+      data: {
+        id: mockIntentId,
+        client_secret: mockClientSecret,
+        amount,
+        currency,
+        status: 'requires_payment_method'
+      }
+    })
+  } catch (error) {
+    return c.json({ success: false, error: String(error) }, 500)
+  }
+})
+
+// Stripe: Webhook Handler
+app.post('/api/payments/stripe/webhook', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { type, data } = body
+
+    // Handle different webhook events
+    if (type === 'payment_intent.succeeded') {
+      const paymentIntent = data.object
+      // Update order status in database
+      console.log('Payment succeeded:', paymentIntent.id)
+    } else if (type === 'payment_intent.payment_failed') {
+      console.log('Payment failed:', data.object.id)
+    }
+
+    return c.json({ success: true })
+  } catch (error) {
+    return c.json({ success: false, error: String(error) }, 500)
+  }
+})
+
+// PayPal: Create Order
+app.post('/api/payments/paypal/create-order', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { amount, currency, order_id } = body
+
+    // In production, use actual PayPal API
+    const mockOrderId = 'PAYPAL-' + Math.random().toString(36).substring(7).toUpperCase()
+
+    return c.json({
+      success: true,
+      data: {
+        id: mockOrderId,
+        status: 'CREATED'
+      }
+    })
+  } catch (error) {
+    return c.json({ success: false, error: String(error) }, 500)
+  }
+})
+
+// PayPal: Capture Payment
+app.post('/api/payments/paypal/capture', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { paypal_order_id } = body
+
+    // In production, capture payment via PayPal API
+    console.log('Capturing PayPal payment:', paypal_order_id)
+
+    return c.json({
+      success: true,
+      data: {
+        id: paypal_order_id,
+        status: 'COMPLETED'
+      }
+    })
+  } catch (error) {
+    return c.json({ success: false, error: String(error) }, 500)
+  }
+})
+
+// PayPal: Webhook Handler
+app.post('/api/payments/paypal/webhook', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { event_type, resource } = body
+
+    if (event_type === 'PAYMENT.CAPTURE.COMPLETED') {
+      console.log('PayPal payment captured:', resource.id)
+    }
+
+    return c.json({ success: true })
+  } catch (error) {
+    return c.json({ success: false, error: String(error) }, 500)
+  }
+})
+
+// Payment Verification
+app.post('/api/payments/verify', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { payment_method, payment_id, order_id } = body
+
+    // Verify payment based on method
+    // In production, verify with actual payment provider
+
+    return c.json({
+      success: true,
+      data: {
+        verified: true,
+        payment_id,
+        order_id,
+        status: 'completed'
+      }
+    })
+  } catch (error) {
+    return c.json({ success: false, error: String(error) }, 500)
+  }
+})
+
 // User Dashboard Routes
 app.get('/account', (c) => {
   return c.html(<UserDashboard activeTab="overview" />)
