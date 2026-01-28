@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products Test - SoftwareKing24</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold mb-8">🛍️ Products in Database</h1>
+        
+        <div id="loading" class="text-center py-12">
+            <div class="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <p class="mt-4 text-gray-600">Loading products...</p>
+        </div>
+        
+        <div id="products" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 hidden"></div>
+        
+        <div id="error" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+            <p class="font-bold">Error loading products</p>
+            <p id="error-message"></p>
+        </div>
+    </div>
+
+    <script>
+        async function loadProducts() {
+            try {
+                const response = await fetch('/api/products?limit=20');
+                const result = await response.json();
+                
+                document.getElementById('loading').classList.add('hidden');
+                
+                if (!result.success || !result.data || result.data.length === 0) {
+                    document.getElementById('error').classList.remove('hidden');
+                    document.getElementById('error-message').textContent = 'No products found in database';
+                    return;
+                }
+                
+                const productsContainer = document.getElementById('products');
+                productsContainer.classList.remove('hidden');
+                
+                result.data.forEach(product => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition';
+                    
+                    const price = product.discount_price || product.base_price;
+                    const hasDiscount = product.discount_price && product.discount_price < product.base_price;
+                    
+                    card.innerHTML = `
+                        <img src="${product.image_url || '/static/placeholder.png'}" 
+                             alt="${product.alt_text || product.name}" 
+                             class="w-full h-48 object-cover"
+                             onerror="this.src='/static/placeholder.png'">
+                        <div class="p-4">
+                            <h3 class="font-bold text-lg mb-2 line-clamp-2">${product.name}</h3>
+                            <p class="text-sm text-gray-600 mb-2">${product.brand_name || 'No Brand'}</p>
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    ${hasDiscount ? `
+                                        <span class="text-gray-400 line-through text-sm">€${product.base_price.toFixed(2)}</span>
+                                        <span class="text-xl font-bold text-blue-600 ml-2">€${price.toFixed(2)}</span>
+                                    ` : `
+                                        <span class="text-xl font-bold text-blue-600">€${price.toFixed(2)}</span>
+                                    `}
+                                </div>
+                                <a href="/produkt/${product.slug}" 
+                                   class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition text-sm">
+                                    Details
+                                </a>
+                            </div>
+                            <div class="mt-2 text-xs text-gray-500">
+                                SKU: ${product.sku} | ID: ${product.id}
+                            </div>
+                        </div>
+                    `;
+                    
+                    productsContainer.appendChild(card);
+                });
+                
+                // Add summary
+                const summary = document.createElement('div');
+                summary.className = 'col-span-full mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4';
+                summary.innerHTML = `
+                    <p class="text-center text-blue-800 font-semibold">
+                        ✅ Successfully loaded ${result.data.length} products from database
+                    </p>
+                `;
+                productsContainer.appendChild(summary);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('error').classList.remove('hidden');
+                document.getElementById('error-message').textContent = error.message;
+            }
+        }
+        
+        // Load products on page load
+        loadProducts();
+    </script>
+</body>
+</html>
