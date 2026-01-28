@@ -261,9 +261,33 @@ export const AdminLayout: FC<AdminLayoutProps> = ({ title, currentUser, children
               Analytics
             </div>
             
+            <a href="/admin/analytics" class="admin-nav-item">
+              <i class="fas fa-chart-line w-5"></i>
+              <span>Advanced Analytics</span>
+            </a>
+            
             <a href="/admin/reports" class="admin-nav-item">
               <i class="fas fa-chart-bar w-5"></i>
               <span>Reports</span>
+            </a>
+            
+            <div class="px-4 py-2 text-xs text-gray-400 uppercase font-semibold mt-4">
+              Order Processing
+            </div>
+            
+            <a href="/admin/order-management" class="admin-nav-item">
+              <i class="fas fa-tasks w-5"></i>
+              <span>Order Management</span>
+            </a>
+            
+            <a href="/admin/delivery" class="admin-nav-item">
+              <i class="fas fa-shipping-fast w-5"></i>
+              <span>Delivery Management</span>
+            </a>
+            
+            <a href="/admin/tracking" class="admin-nav-item">
+              <i class="fas fa-map-marker-alt w-5"></i>
+              <span>Tracking</span>
             </a>
             
             <div class="px-4 py-2 text-xs text-gray-400 uppercase font-semibold mt-4">

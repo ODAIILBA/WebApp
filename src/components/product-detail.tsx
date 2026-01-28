@@ -1,431 +1,1073 @@
-// Product Detail Page Component
 import type { FC } from 'hono/jsx'
-import type { ProductWithDetails } from '../types'
 
 interface ProductDetailProps {
-  product: ProductWithDetails
+  product: any
   language: string
 }
 
 export const ProductDetail: FC<ProductDetailProps> = ({ product, language }) => {
-  const features = product.features ? JSON.parse(product.features) : []
-  const compatibility = product.compatibility ? JSON.parse(product.compatibility) : []
-  
+  const t = language === 'de' ? {
+    addToCart: 'In den Warenkorb',
+    addToWishlist: 'Zur Wunschliste',
+    buyNow: 'Jetzt kaufen',
+    description: 'Beschreibung',
+    features: 'Funktionen',
+    systemRequirements: 'Systemanforderungen',
+    reviews: 'Bewertungen',
+    delivery: 'Lieferung',
+    instantDelivery: 'Sofortiger digitaler Download',
+    licenseInfo: 'Lizenzinformationen',
+    shareProduct: 'Produkt teilen',
+    productCode: 'Produktcode',
+    availability: 'Verfügbarkeit',
+    inStock: 'Auf Lager',
+    rating: 'Bewertung',
+    reviews_count: 'Bewertungen',
+    relatedProducts: 'Ähnliche Produkte',
+    recentlyViewed: 'Kürzlich angesehen',
+    quantity: 'Menge',
+    price: 'Preis',
+    includingVAT: 'inkl. MwSt.',
+    specifications: 'Spezifikationen'
+  } : {
+    addToCart: 'Add to Cart',
+    addToWishlist: 'Add to Wishlist',
+    buyNow: 'Buy Now',
+    description: 'Description',
+    features: 'Features',
+    systemRequirements: 'System Requirements',
+    reviews: 'Reviews',
+    delivery: 'Delivery',
+    instantDelivery: 'Instant Digital Download',
+    licenseInfo: 'License Information',
+    shareProduct: 'Share Product',
+    productCode: 'Product Code',
+    availability: 'Availability',
+    inStock: 'In Stock',
+    rating: 'Rating',
+    reviews_count: 'Reviews',
+    relatedProducts: 'Related Products',
+    recentlyViewed: 'Recently Viewed',
+    quantity: 'Quantity',
+    price: 'Price',
+    includingVAT: 'incl. VAT',
+    specifications: 'Specifications'
+  }
+
   return (
-    <div>
+    <div class="product-detail-page">
       {/* Breadcrumb */}
-      <div class="bg-gray-100 py-3">
-        <div class="container mx-auto px-4">
-          <nav class="text-sm">
-            <a href="/" class="text-gray-600 hover:text-primary">Home</a>
-            <span class="mx-2 text-gray-400">/</span>
-            <a href={`/categories/${product.category?.slug || ''}`} class="text-gray-600 hover:text-primary">
-              {product.category?.name || 'Category'}
-            </a>
-            <span class="mx-2 text-gray-400">/</span>
-            <span class="text-gray-800">{product.name}</span>
-          </nav>
+      <div class="breadcrumb">
+        <a href="/">Home</a>
+        <span class="separator">/</span>
+        <a href="/products">{language === 'de' ? 'Produkte' : 'Products'}</a>
+        <span class="separator">/</span>
+        <span class="current">{product.name}</span>
+      </div>
+
+      <div class="product-detail-container">
+        {/* Left: Image Gallery */}
+        <div class="product-gallery">
+          <div class="main-image">
+            <img 
+              id="main-product-image" 
+              src={product.image || 'https://placehold.co/600x600?text=Product+Image'} 
+              alt={product.name}
+            />
+            <button class="zoom-btn" onclick="openImageLightbox()">
+              <i class="fas fa-search-plus"></i>
+            </button>
+          </div>
+          <div class="thumbnail-gallery">
+            <div class="thumbnail active" onclick="changeMainImage(this)">
+              <img src={product.image || 'https://placehold.co/100x100?text=1'} alt="Thumbnail 1" />
+            </div>
+            <div class="thumbnail" onclick="changeMainImage(this)">
+              <img src="https://placehold.co/100x100?text=2" alt="Thumbnail 2" />
+            </div>
+            <div class="thumbnail" onclick="changeMainImage(this)">
+              <img src="https://placehold.co/100x100?text=3" alt="Thumbnail 3" />
+            </div>
+            <div class="thumbnail" onclick="changeMainImage(this)">
+              <img src="https://placehold.co/100x100?text=4" alt="Thumbnail 4" />
+            </div>
+          </div>
+        </div>
+
+        {/* Right: Product Info */}
+        <div class="product-info">
+          <h1 class="product-title">{product.name}</h1>
+          
+          {/* Rating */}
+          <div class="product-rating">
+            <div class="stars">
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star"></i>
+              <i class="fas fa-star-half-alt"></i>
+            </div>
+            <span class="rating-value">4.8</span>
+            <span class="reviews-count">(234 {t.reviews_count})</span>
+          </div>
+
+          {/* Price */}
+          <div class="product-price">
+            <div class="current-price">
+              <span class="price-amount">€{product.price || '149.99'}</span>
+              <span class="vat-info">{t.includingVAT}</span>
+            </div>
+            {product.discount_price && (
+              <div class="old-price">€{product.discount_price}</div>
+            )}
+          </div>
+
+          {/* Trust Badges */}
+          <div class="trust-badges">
+            <div class="badge">
+              <i class="fas fa-shipping-fast"></i>
+              <span>{t.instantDelivery}</span>
+            </div>
+            <div class="badge">
+              <i class="fas fa-shield-alt"></i>
+              <span>{language === 'de' ? 'SSL Verschlüsselt' : 'SSL Encrypted'}</span>
+            </div>
+            <div class="badge">
+              <i class="fas fa-undo"></i>
+              <span>{language === 'de' ? '30 Tage Rückgaberecht' : '30 Days Return'}</span>
+            </div>
+          </div>
+
+          {/* Short Description */}
+          <div class="short-description">
+            <p>{product.short_description || 'Vollständige Softwarelizenz mit sofortiger digitaler Lieferung. Offiziell und rechtmäßig. Lebenslange Nutzung.'}</p>
+          </div>
+
+          {/* Availability */}
+          <div class="availability">
+            <span class="label">{t.availability}:</span>
+            <span class="status in-stock">
+              <i class="fas fa-check-circle"></i> {t.inStock}
+            </span>
+          </div>
+
+          {/* License Type (if applicable) */}
+          <div class="license-selector">
+            <label>{t.licenseInfo}:</label>
+            <select class="form-control" id="license-type">
+              <option value="single">1 Gerät - €149.99</option>
+              <option value="multi">3 Geräte - €249.99</option>
+              <option value="business">5 Geräte (Business) - €399.99</option>
+            </select>
+          </div>
+
+          {/* Quantity */}
+          <div class="quantity-selector">
+            <label>{t.quantity}:</label>
+            <div class="quantity-controls">
+              <button class="qty-btn" onclick="decreaseQuantity()">-</button>
+              <input type="number" id="product-quantity" value="1" min="1" max="99" />
+              <button class="qty-btn" onclick="increaseQuantity()">+</button>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div class="product-actions">
+            <button class="btn-primary btn-large" onclick="addToCart()">
+              <i class="fas fa-shopping-cart"></i> {t.addToCart}
+            </button>
+            <button class="btn-secondary btn-large" onclick="buyNow()">
+              <i class="fas fa-bolt"></i> {t.buyNow}
+            </button>
+            <button class="btn-icon" onclick="addToWishlist()" title={t.addToWishlist}>
+              <i class="far fa-heart"></i>
+            </button>
+            <button class="btn-icon" onclick="shareProduct()" title={t.shareProduct}>
+              <i class="fas fa-share-alt"></i>
+            </button>
+          </div>
+
+          {/* Product Meta */}
+          <div class="product-meta">
+            <div class="meta-item">
+              <span class="label">{t.productCode}:</span>
+              <span class="value">{product.sku || 'MS-OFF-2021-PRO'}</span>
+            </div>
+            <div class="meta-item">
+              <span class="label">{language === 'de' ? 'Kategorie' : 'Category'}:</span>
+              <span class="value">{product.category || 'Office Software'}</span>
+            </div>
+            <div class="meta-item">
+              <span class="label">{language === 'de' ? 'Marke' : 'Brand'}:</span>
+              <span class="value">{product.brand || 'Microsoft'}</span>
+            </div>
+          </div>
+
+          {/* Payment Methods */}
+          <div class="payment-methods">
+            <span class="label">{language === 'de' ? 'Zahlungsmethoden' : 'Payment Methods'}:</span>
+            <div class="payment-icons">
+              <img src="https://upload.wikimedia.org/wikipedia/commons/b/ba/Stripe_Logo%2C_revised_2016.svg" alt="Stripe" />
+              <img src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Paypal_2014_logo.png" alt="PayPal" />
+              <i class="fab fa-cc-visa"></i>
+              <i class="fab fa-cc-mastercard"></i>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="container mx-auto px-4 py-8">
-        <div class="grid md:grid-cols-3 gap-8">
-          {/* Left Column - Product Image */}
-          <div class="md:col-span-1">
-            <div class="sticky top-4">
-              <div class="bg-white rounded-lg shadow-lg overflow-hidden gold-border">
-                <img 
-                  src={product.image_url || `https://via.placeholder.com/400x300/1a2a4e/d4af37?text=${encodeURIComponent(product.name)}`}
-                  alt={product.name}
-                  class="w-full h-auto"
-                />
-                
-                {product.discount_percentage > 0 && (
-                  <div class="absolute top-4 right-4 discount-badge px-4 py-2 rounded-full text-lg font-bold">
-                    -{product.discount_percentage}%
-                  </div>
-                )}
-                
-                <div class="absolute top-4 left-4 bg-gold text-primary px-3 py-2 rounded-lg font-bold">
-                  <i class="fas fa-bolt mr-2"></i>
-                  INSTANT DELIVERY
-                </div>
-              </div>
+      {/* Tabs Section */}
+      <div class="product-tabs">
+        <div class="tabs-nav">
+          <button class="tab-btn active" onclick="switchTab('description')">{t.description}</button>
+          <button class="tab-btn" onclick="switchTab('features')">{t.features}</button>
+          <button class="tab-btn" onclick="switchTab('requirements')">{t.systemRequirements}</button>
+          <button class="tab-btn" onclick="switchTab('reviews')">{t.reviews} (234)</button>
+        </div>
 
-              {/* Trust Badges */}
-              <div class="mt-6 bg-white rounded-lg shadow-lg p-4">
-                <div class="space-y-3">
-                  <div class="flex items-center gap-3">
-                    <i class="fas fa-shield-alt text-green-500 text-xl"></i>
-                    <span class="text-sm">100% Genuine License</span>
-                  </div>
-                  <div class="flex items-center gap-3">
-                    <i class="fas fa-clock text-blue-500 text-xl"></i>
-                    <span class="text-sm">Instant Email Delivery</span>
-                  </div>
-                  <div class="flex items-center gap-3">
-                    <i class="fas fa-headset text-purple-500 text-xl"></i>
-                    <span class="text-sm">24/7 Customer Support</span>
-                  </div>
-                  <div class="flex items-center gap-3">
-                    <i class="fas fa-infinity text-gold text-xl"></i>
-                    <span class="text-sm">Lifetime Updates</span>
-                  </div>
-                </div>
+        <div class="tabs-content">
+          {/* Description Tab */}
+          <div id="tab-description" class="tab-pane active">
+            <h3>{t.description}</h3>
+            <p>{product.description || 'Microsoft Office 2021 Professional Plus ist die vollständige Office-Suite für professionelle Anwender. Enthält Word, Excel, PowerPoint, Outlook, Access, Publisher und mehr.'}</p>
+            <h4>{language === 'de' ? 'Hauptmerkmale' : 'Key Features'}:</h4>
+            <ul>
+              <li>Vollständige Office-Suite mit allen Anwendungen</li>
+              <li>Unbegrenzte Nutzungsdauer - einmalige Zahlung</li>
+              <li>Offizielle Microsoft-Lizenz</li>
+              <li>Sofortiger digitaler Download</li>
+              <li>Deutscher Support und Updates</li>
+            </ul>
+          </div>
+
+          {/* Features Tab */}
+          <div id="tab-features" class="tab-pane">
+            <h3>{t.features}</h3>
+            <div class="features-grid">
+              <div class="feature-item">
+                <i class="fas fa-file-word"></i>
+                <h4>Word</h4>
+                <p>Professionelle Textverarbeitung</p>
+              </div>
+              <div class="feature-item">
+                <i class="fas fa-file-excel"></i>
+                <h4>Excel</h4>
+                <p>Leistungsstarke Tabellenkalkulation</p>
+              </div>
+              <div class="feature-item">
+                <i class="fas fa-file-powerpoint"></i>
+                <h4>PowerPoint</h4>
+                <p>Beeindruckende Präsentationen</p>
+              </div>
+              <div class="feature-item">
+                <i class="fas fa-envelope"></i>
+                <h4>Outlook</h4>
+                <p>E-Mail und Kalender Management</p>
               </div>
             </div>
           </div>
 
-          {/* Middle Column - Product Info */}
-          <div class="md:col-span-2">
-            {/* Product Header */}
-            <div class="mb-6">
-              <div class="flex items-center gap-3 mb-3">
-                {product.brand_name && (
-                  <span class="badge badge-info text-sm">{product.brand_name}</span>
-                )}
-                {product.is_new && (
-                  <span class="badge badge-success text-sm">
-                    <i class="fas fa-sparkles mr-1"></i> NEW
-                  </span>
-                )}
-                {product.is_bestseller && (
-                  <span class="badge badge-warning text-sm">
-                    <i class="fas fa-fire mr-1"></i> BESTSELLER
-                  </span>
-                )}
-              </div>
-              
-              <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-3">
-                {product.name}
-              </h1>
-              
-              <p class="text-lg text-gray-600 mb-4">
-                {product.short_description}
-              </p>
-
-              {/* Rating */}
-              {product.review_count > 0 && (
-                <div class="flex items-center gap-2 mb-4">
-                  <div class="flex text-yellow-400">
-                    {[1, 2, 3, 4, 5].map(star => (
-                      <i class={`fas fa-star ${star <= Math.round(product.rating) ? '' : 'opacity-30'}`}></i>
-                    ))}
-                  </div>
-                  <span class="text-gray-600">
-                    {product.rating.toFixed(1)} ({product.review_count} reviews)
-                  </span>
-                </div>
-              )}
-
-              <div class="text-sm text-gray-500 mb-4">
-                SKU: <span class="font-mono">{product.sku}</span>
-              </div>
-            </div>
-
-            {/* Price & Add to Cart */}
-            <div class="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-6 mb-6 gold-border">
-              <div class="flex items-center justify-between mb-4">
-                <div>
-                  {product.discount_price && (
-                    <div class="text-lg text-gray-400 line-through mb-1">
-                      €{product.base_price.toFixed(2)}
-                    </div>
-                  )}
-                  <div class="text-4xl font-bold text-primary">
-                    €{(product.discount_price || product.base_price).toFixed(2)}
-                  </div>
-                  <div class="text-sm text-gray-600 mt-1">
-                    incl. {product.vat_rate}% VAT
-                  </div>
-                </div>
-                
-                {product.stock_type === 'unlimited' && (
-                  <div class="text-green-600 font-semibold">
-                    <i class="fas fa-check-circle mr-2"></i>
-                    In Stock
-                  </div>
-                )}
-              </div>
-
-              <button 
-                class="btn-gold w-full text-xl py-4 rounded-lg mb-3"
-                onclick={`addToCart('${product.slug}')`}
-              >
-                <i class="fas fa-shopping-cart mr-3"></i>
-                Add to Cart
-              </button>
-
-              <div class="flex gap-3">
-                <button class="flex-1 btn-primary py-3 rounded-lg">
-                  <i class="fas fa-heart mr-2"></i>
-                  Wishlist
-                </button>
-                <button class="flex-1 btn-primary py-3 rounded-lg">
-                  <i class="fas fa-share-alt mr-2"></i>
-                  Share
-                </button>
-              </div>
-            </div>
-
-            {/* Key Features */}
-            {features.length > 0 && (
-              <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-                <h2 class="text-2xl font-bold mb-4 flex items-center">
-                  <i class="fas fa-star text-gold mr-3"></i>
-                  Key Features
-                </h2>
-                <ul class="grid md:grid-cols-2 gap-3">
-                  {features.map((feature: string) => (
-                    <li class="flex items-start gap-3">
-                      <i class="fas fa-check-circle text-green-500 mt-1"></i>
-                      <span>{feature}</span>
-                    </li>
-                  ))}
+          {/* System Requirements Tab */}
+          <div id="tab-requirements" class="tab-pane">
+            <h3>{t.systemRequirements}</h3>
+            <div class="requirements-grid">
+              <div class="req-column">
+                <h4>Windows</h4>
+                <ul>
+                  <li><strong>OS:</strong> Windows 10, Windows 11</li>
+                  <li><strong>Prozessor:</strong> 1.6 GHz oder schneller</li>
+                  <li><strong>RAM:</strong> 4 GB (64-bit)</li>
+                  <li><strong>Festplatte:</strong> 4 GB verfügbar</li>
+                  <li><strong>Display:</strong> 1280 x 768 Auflösung</li>
                 </ul>
               </div>
-            )}
-
-            {/* Product Details Tabs */}
-            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-              <div class="border-b border-gray-200 mb-6">
-                <nav class="flex gap-6">
-                  <button class="tab-btn active pb-3 px-2 border-b-2 border-gold font-semibold" data-tab="description">
-                    Description
-                  </button>
-                  <button class="tab-btn pb-3 px-2 border-b-2 border-transparent font-semibold text-gray-500 hover:text-gray-800" data-tab="requirements">
-                    Requirements
-                  </button>
-                  {product.faqs && product.faqs.length > 0 && (
-                    <button class="tab-btn pb-3 px-2 border-b-2 border-transparent font-semibold text-gray-500 hover:text-gray-800" data-tab="faq">
-                      FAQ
-                    </button>
-                  )}
-                </nav>
+              <div class="req-column">
+                <h4>{language === 'de' ? 'Zusätzliche Anforderungen' : 'Additional Requirements'}</h4>
+                <ul>
+                  <li>Internet-Verbindung für Aktivierung</li>
+                  <li>Microsoft-Konto empfohlen</li>
+                  <li>.NET Version 3.5 oder höher</li>
+                  <li>DirectX 9 oder höher</li>
+                </ul>
               </div>
-
-              {/* Description Tab */}
-              <div class="tab-content" data-tab="description">
-                <div class="prose max-w-none">
-                  <p class="text-gray-700 leading-relaxed whitespace-pre-line">
-                    {product.long_description || product.short_description}
-                  </p>
-                </div>
-              </div>
-
-              {/* Requirements Tab */}
-              <div class="tab-content hidden" data-tab="requirements">
-                <div class="space-y-4">
-                  <div>
-                    <h3 class="font-bold text-lg mb-2">License Information</h3>
-                    <ul class="space-y-2 text-gray-700">
-                      <li><strong>Type:</strong> {product.license_type}</li>
-                      <li><strong>Duration:</strong> {product.license_duration}</li>
-                      <li><strong>Devices:</strong> {product.activation_limit} device(s)</li>
-                      <li><strong>Delivery:</strong> {product.delivery_type}</li>
-                    </ul>
-                  </div>
-                  
-                  {compatibility.length > 0 && (
-                    <div>
-                      <h3 class="font-bold text-lg mb-2">Compatibility</h3>
-                      <ul class="space-y-1 text-gray-700">
-                        {compatibility.map((item: string) => (
-                          <li>
-                            <i class="fas fa-check text-green-500 mr-2"></i>
-                            {item}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* FAQ Tab */}
-              {product.faqs && product.faqs.length > 0 && (
-                <div class="tab-content hidden" data-tab="faq">
-                  <div class="space-y-4">
-                    {product.faqs.map((faq: any, index: number) => (
-                      <div class="border-b border-gray-200 pb-4 last:border-0">
-                        <button 
-                          class="faq-question w-full text-left font-semibold text-lg mb-2 flex items-center justify-between"
-                          onclick={`toggleFaq(${index})`}
-                        >
-                          {faq.question}
-                          <i class="fas fa-chevron-down transition-transform" id={`faq-icon-${index}`}></i>
-                        </button>
-                        <div class="faq-answer hidden text-gray-700" id={`faq-answer-${index}`}>
-                          {faq.answer}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* How to Activate */}
-            <div class="bg-gradient-to-r from-primary to-blue-900 text-white rounded-lg p-6 mb-6">
-              <h2 class="text-2xl font-bold mb-4">
-                <i class="fas fa-info-circle mr-3"></i>
-                How to Activate Your License
-              </h2>
-              <ol class="space-y-3">
-                <li class="flex items-start gap-3">
-                  <span class="bg-gold text-primary rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">1</span>
-                  <span>Complete your purchase and receive your license key via email instantly</span>
-                </li>
-                <li class="flex items-start gap-3">
-                  <span class="bg-gold text-primary rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">2</span>
-                  <span>Download the software from the official website or provided link</span>
-                </li>
-                <li class="flex items-start gap-3">
-                  <span class="bg-gold text-primary rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">3</span>
-                  <span>Install the software and enter your license key when prompted</span>
-                </li>
-                <li class="flex items-start gap-3">
-                  <span class="bg-gold text-primary rounded-full w-8 h-8 flex items-center justify-center font-bold flex-shrink-0">4</span>
-                  <span>Enjoy your fully activated software with lifetime support</span>
-                </li>
-              </ol>
             </div>
           </div>
-        </div>
 
-        {/* Related Products */}
-        <div class="mt-12">
-          <h2 class="text-3xl font-bold mb-6">
-            <i class="fas fa-th-large text-gold mr-3"></i>
-            You May Also Like
-          </h2>
-          <div id="related-products" class="grid md:grid-cols-4 gap-6">
-            <div class="text-center py-8 col-span-4">
-              <i class="fas fa-spinner fa-spin text-3xl text-gray-400"></i>
+          {/* Reviews Tab */}
+          <div id="tab-reviews" class="tab-pane">
+            <h3>{t.reviews}</h3>
+            <div class="reviews-summary">
+              <div class="rating-overview">
+                <div class="avg-rating">4.8</div>
+                <div class="stars-large">
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star"></i>
+                  <i class="fas fa-star-half-alt"></i>
+                </div>
+                <div class="total-reviews">234 Bewertungen</div>
+              </div>
+              <div class="rating-bars">
+                <div class="rating-bar">
+                  <span class="stars-label">5 ★</span>
+                  <div class="bar"><div class="bar-fill" style="width: 75%"></div></div>
+                  <span class="count">176</span>
+                </div>
+                <div class="rating-bar">
+                  <span class="stars-label">4 ★</span>
+                  <div class="bar"><div class="bar-fill" style="width: 15%"></div></div>
+                  <span class="count">35</span>
+                </div>
+                <div class="rating-bar">
+                  <span class="stars-label">3 ★</span>
+                  <div class="bar"><div class="bar-fill" style="width: 7%"></div></div>
+                  <span class="count">16</span>
+                </div>
+                <div class="rating-bar">
+                  <span class="stars-label">2 ★</span>
+                  <div class="bar"><div class="bar-fill" style="width: 2%"></div></div>
+                  <span class="count">5</span>
+                </div>
+                <div class="rating-bar">
+                  <span class="stars-label">1 ★</span>
+                  <div class="bar"><div class="bar-fill" style="width: 1%"></div></div>
+                  <span class="count">2</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="reviews-list">
+              <div class="review-item">
+                <div class="review-header">
+                  <div class="reviewer-name">Max M.</div>
+                  <div class="review-stars">★★★★★</div>
+                </div>
+                <div class="review-date">Vor 2 Tagen</div>
+                <div class="review-text">
+                  Sehr schnelle Lieferung, Lizenzschlüssel funktioniert einwandfrei. Installation war problemlos. Kann ich nur empfehlen!
+                </div>
+                <div class="review-helpful">
+                  War diese Bewertung hilfreich? <button>Ja (12)</button> <button>Nein (1)</button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* JavaScript for interactivity */}
-      <script dangerouslySetInnerHTML={{__html: `
-        // Tab switching
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-          btn.addEventListener('click', function() {
-            const tabName = this.dataset.tab;
-            
-            // Update buttons
-            document.querySelectorAll('.tab-btn').forEach(b => {
-              b.classList.remove('active', 'border-gold', 'text-gray-800');
-              b.classList.add('border-transparent', 'text-gray-500');
-            });
-            this.classList.add('active', 'border-gold', 'text-gray-800');
-            this.classList.remove('border-transparent', 'text-gray-500');
-            
-            // Update content
-            document.querySelectorAll('.tab-content').forEach(content => {
-              if (content.dataset.tab === tabName) {
-                content.classList.remove('hidden');
-              } else {
-                content.classList.add('hidden');
-              }
-            });
-          });
-        });
+      {/* Related Products */}
+      <div class="related-products-section">
+        <h3>{t.relatedProducts}</h3>
+        <div class="products-carousel" id="related-products"></div>
+      </div>
 
-        // FAQ toggle
-        function toggleFaq(index) {
-          const answer = document.getElementById('faq-answer-' + index);
-          const icon = document.getElementById('faq-icon-' + index);
-          
-          if (answer.classList.contains('hidden')) {
-            answer.classList.remove('hidden');
-            icon.style.transform = 'rotate(180deg)';
-          } else {
-            answer.classList.add('hidden');
-            icon.style.transform = 'rotate(0deg)';
+      {/* Recently Viewed */}
+      <div class="recently-viewed-section">
+        <h3>{t.recentlyViewed}</h3>
+        <div class="products-carousel" id="recently-viewed"></div>
+      </div>
+
+      {/* Lightbox Modal */}
+      <div id="image-lightbox" class="lightbox">
+        <button class="lightbox-close" onclick="closeLightbox()">&times;</button>
+        <img id="lightbox-image" src="" alt="" />
+        <button class="lightbox-prev" onclick="prevImage()">‹</button>
+        <button class="lightbox-next" onclick="nextImage()">›</button>
+      </div>
+
+      <style>{`
+        .product-detail-page {
+          max-width: 1400px;
+          margin: 0 auto;
+          padding: 20px;
+        }
+        .breadcrumb {
+          display: flex;
+          gap: 10px;
+          margin-bottom: 30px;
+          font-size: 14px;
+          color: #666;
+        }
+        .breadcrumb a {
+          color: #1a2a4e;
+          text-decoration: none;
+        }
+        .breadcrumb a:hover {
+          text-decoration: underline;
+        }
+        .product-detail-container {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 40px;
+          margin-bottom: 60px;
+        }
+        .product-gallery {
+          position: sticky;
+          top: 20px;
+          height: fit-content;
+        }
+        .main-image {
+          position: relative;
+          background: white;
+          border: 1px solid #e0e0e0;
+          border-radius: 10px;
+          overflow: hidden;
+          margin-bottom: 20px;
+        }
+        .main-image img {
+          width: 100%;
+          height: auto;
+          display: block;
+        }
+        .zoom-btn {
+          position: absolute;
+          top: 15px;
+          right: 15px;
+          width: 40px;
+          height: 40px;
+          background: rgba(255,255,255,0.9);
+          border: none;
+          border-radius: 50%;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .thumbnail-gallery {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 10px;
+        }
+        .thumbnail {
+          border: 2px solid #e0e0e0;
+          border-radius: 8px;
+          overflow: hidden;
+          cursor: pointer;
+          transition: all 0.3s;
+        }
+        .thumbnail:hover,
+        .thumbnail.active {
+          border-color: #d4af37;
+        }
+        .thumbnail img {
+          width: 100%;
+          height: auto;
+          display: block;
+        }
+        .product-title {
+          font-size: 32px;
+          color: #1a2a4e;
+          margin-bottom: 15px;
+          font-weight: 600;
+        }
+        .product-rating {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 20px;
+        }
+        .stars {
+          color: #ffc107;
+          font-size: 18px;
+        }
+        .rating-value {
+          font-weight: 600;
+          color: #1a2a4e;
+        }
+        .reviews-count {
+          color: #666;
+          font-size: 14px;
+        }
+        .product-price {
+          margin-bottom: 25px;
+        }
+        .current-price {
+          display: flex;
+          align-items: baseline;
+          gap: 10px;
+        }
+        .price-amount {
+          font-size: 42px;
+          font-weight: bold;
+          color: #1a2a4e;
+        }
+        .vat-info {
+          font-size: 14px;
+          color: #666;
+        }
+        .old-price {
+          font-size: 24px;
+          color: #999;
+          text-decoration: line-through;
+          margin-top: 5px;
+        }
+        .trust-badges {
+          display: flex;
+          gap: 15px;
+          margin-bottom: 25px;
+          flex-wrap: wrap;
+        }
+        .trust-badges .badge {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          padding: 8px 15px;
+          background: #f0f8ff;
+          border-radius: 5px;
+          font-size: 14px;
+          color: #1a2a4e;
+        }
+        .trust-badges .badge i {
+          color: #28a745;
+        }
+        .short-description {
+          margin-bottom: 25px;
+          line-height: 1.6;
+          color: #666;
+        }
+        .availability {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          margin-bottom: 20px;
+        }
+        .availability .label {
+          font-weight: 600;
+          color: #333;
+        }
+        .status.in-stock {
+          color: #28a745;
+          font-weight: 600;
+        }
+        .license-selector,
+        .quantity-selector {
+          margin-bottom: 20px;
+        }
+        .license-selector label,
+        .quantity-selector label {
+          display: block;
+          font-weight: 600;
+          color: #333;
+          margin-bottom: 8px;
+        }
+        .quantity-controls {
+          display: flex;
+          align-items: center;
+          gap: 0;
+          width: 140px;
+          border: 1px solid #ddd;
+          border-radius: 5px;
+          overflow: hidden;
+        }
+        .qty-btn {
+          width: 40px;
+          height: 44px;
+          background: white;
+          border: none;
+          cursor: pointer;
+          font-size: 20px;
+          color: #1a2a4e;
+          transition: all 0.2s;
+        }
+        .qty-btn:hover {
+          background: #f8f9fa;
+        }
+        #product-quantity {
+          width: 60px;
+          height: 44px;
+          border: none;
+          border-left: 1px solid #ddd;
+          border-right: 1px solid #ddd;
+          text-align: center;
+          font-size: 16px;
+          font-weight: 600;
+        }
+        .product-actions {
+          display: flex;
+          gap: 10px;
+          margin-bottom: 30px;
+        }
+        .btn-large {
+          flex: 1;
+          padding: 15px 30px;
+          font-size: 16px;
+          font-weight: 600;
+          border-radius: 8px;
+          border: none;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          transition: all 0.3s;
+        }
+        .btn-primary {
+          background: #1a2a4e;
+          color: white;
+        }
+        .btn-primary:hover {
+          background: #2a3a5e;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(26, 42, 78, 0.3);
+        }
+        .btn-secondary {
+          background: #d4af37;
+          color: #1a2a4e;
+        }
+        .btn-secondary:hover {
+          background: #b8941f;
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+        }
+        .btn-icon {
+          width: 52px;
+          height: 52px;
+          background: white;
+          border: 2px solid #ddd;
+          border-radius: 8px;
+          cursor: pointer;
+          font-size: 18px;
+          color: #1a2a4e;
+          transition: all 0.3s;
+        }
+        .btn-icon:hover {
+          border-color: #d4af37;
+          color: #d4af37;
+        }
+        .product-meta {
+          border-top: 1px solid #e0e0e0;
+          padding-top: 20px;
+          margin-bottom: 20px;
+        }
+        .meta-item {
+          display: flex;
+          gap: 10px;
+          margin-bottom: 10px;
+          font-size: 14px;
+        }
+        .meta-item .label {
+          color: #666;
+        }
+        .meta-item .value {
+          color: #1a2a4e;
+          font-weight: 600;
+        }
+        .payment-methods {
+          border-top: 1px solid #e0e0e0;
+          padding-top: 20px;
+        }
+        .payment-methods .label {
+          display: block;
+          font-weight: 600;
+          color: #333;
+          margin-bottom: 10px;
+        }
+        .payment-icons {
+          display: flex;
+          gap: 15px;
+          align-items: center;
+          flex-wrap: wrap;
+        }
+        .payment-icons img {
+          height: 30px;
+          width: auto;
+        }
+        .payment-icons i {
+          font-size: 32px;
+          color: #666;
+        }
+        .product-tabs {
+          margin: 60px 0;
+        }
+        .tabs-nav {
+          display: flex;
+          gap: 5px;
+          border-bottom: 2px solid #e0e0e0;
+          margin-bottom: 30px;
+        }
+        .tab-btn {
+          padding: 15px 30px;
+          background: none;
+          border: none;
+          border-bottom: 3px solid transparent;
+          cursor: pointer;
+          font-size: 16px;
+          font-weight: 600;
+          color: #666;
+          transition: all 0.3s;
+        }
+        .tab-btn:hover {
+          color: #1a2a4e;
+        }
+        .tab-btn.active {
+          color: #1a2a4e;
+          border-bottom-color: #d4af37;
+        }
+        .tab-pane {
+          display: none;
+        }
+        .tab-pane.active {
+          display: block;
+        }
+        .features-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          gap: 30px;
+          margin-top: 30px;
+        }
+        .feature-item {
+          text-align: center;
+          padding: 30px;
+          background: #f8f9fa;
+          border-radius: 10px;
+        }
+        .feature-item i {
+          font-size: 48px;
+          color: #d4af37;
+          margin-bottom: 15px;
+        }
+        .feature-item h4 {
+          color: #1a2a4e;
+          margin-bottom: 10px;
+        }
+        .requirements-grid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 40px;
+          margin-top: 30px;
+        }
+        .req-column h4 {
+          color: #1a2a4e;
+          margin-bottom: 15px;
+        }
+        .req-column ul {
+          list-style: none;
+          padding: 0;
+        }
+        .req-column ul li {
+          padding: 8px 0;
+          border-bottom: 1px solid #e0e0e0;
+        }
+        .reviews-summary {
+          display: grid;
+          grid-template-columns: 200px 1fr;
+          gap: 40px;
+          margin-bottom: 40px;
+          padding: 30px;
+          background: #f8f9fa;
+          border-radius: 10px;
+        }
+        .rating-overview {
+          text-align: center;
+        }
+        .avg-rating {
+          font-size: 64px;
+          font-weight: bold;
+          color: #1a2a4e;
+        }
+        .stars-large {
+          color: #ffc107;
+          font-size: 24px;
+          margin: 10px 0;
+        }
+        .rating-bars {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+        .rating-bar {
+          display: flex;
+          align-items: center;
+          gap: 15px;
+        }
+        .stars-label {
+          width: 50px;
+          color: #666;
+        }
+        .bar {
+          flex: 1;
+          height: 10px;
+          background: #e0e0e0;
+          border-radius: 5px;
+          overflow: hidden;
+        }
+        .bar-fill {
+          height: 100%;
+          background: #ffc107;
+        }
+        .rating-bar .count {
+          width: 50px;
+          text-align: right;
+          color: #666;
+        }
+        .review-item {
+          border-bottom: 1px solid #e0e0e0;
+          padding: 20px 0;
+        }
+        .review-header {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 10px;
+        }
+        .reviewer-name {
+          font-weight: 600;
+          color: #1a2a4e;
+        }
+        .review-stars {
+          color: #ffc107;
+        }
+        .review-date {
+          font-size: 14px;
+          color: #999;
+          margin-bottom: 10px;
+        }
+        .review-text {
+          line-height: 1.6;
+          color: #666;
+          margin-bottom: 15px;
+        }
+        .review-helpful button {
+          border: 1px solid #ddd;
+          background: white;
+          padding: 5px 15px;
+          border-radius: 5px;
+          margin-right: 10px;
+          cursor: pointer;
+        }
+        .related-products-section,
+        .recently-viewed-section {
+          margin: 60px 0;
+        }
+        .related-products-section h3,
+        .recently-viewed-section h3 {
+          font-size: 28px;
+          color: #1a2a4e;
+          margin-bottom: 30px;
+        }
+        .products-carousel {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+          gap: 20px;
+        }
+        .lightbox {
+          display: none;
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0,0,0,0.95);
+          z-index: 10000;
+          align-items: center;
+          justify-content: center;
+        }
+        .lightbox img {
+          max-width: 90%;
+          max-height: 90%;
+        }
+        .lightbox-close {
+          position: absolute;
+          top: 20px;
+          right: 40px;
+          font-size: 48px;
+          color: white;
+          background: none;
+          border: none;
+          cursor: pointer;
+        }
+        .lightbox-prev,
+        .lightbox-next {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          font-size: 64px;
+          color: white;
+          background: none;
+          border: none;
+          cursor: pointer;
+          padding: 20px;
+        }
+        .lightbox-prev { left: 20px; }
+        .lightbox-next { right: 20px; }
+        @media (max-width: 1024px) {
+          .product-detail-container {
+            grid-template-columns: 1fr;
+          }
+          .product-gallery {
+            position: relative;
           }
         }
-
-        // Add to cart function
-        function addToCart(slug) {
-          // Get current cart from localStorage
-          const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-          
-          // Check if product already in cart
-          const existingItem = cart.find(item => item.slug === slug);
-          
-          if (existingItem) {
-            existingItem.quantity += 1;
-          } else {
-            cart.push({
-              slug: slug,
-              quantity: 1
-            });
+        @media (max-width: 768px) {
+          .product-title {
+            font-size: 24px;
           }
+          .price-amount {
+            font-size: 32px;
+          }
+          .tabs-nav {
+            overflow-x: auto;
+          }
+          .tab-btn {
+            padding: 12px 20px;
+            font-size: 14px;
+          }
+          .features-grid,
+          .requirements-grid {
+            grid-template-columns: 1fr;
+          }
+          .reviews-summary {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
+
+      <script dangerouslySetInnerHTML={{ __html: `
+        function changeMainImage(thumbnail) {
+          const img = thumbnail.querySelector('img');
+          document.getElementById('main-product-image').src = img.src;
+          document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+          thumbnail.classList.add('active');
+        }
+        
+        function openImageLightbox() {
+          const mainImg = document.getElementById('main-product-image').src;
+          document.getElementById('lightbox-image').src = mainImg;
+          document.getElementById('image-lightbox').style.display = 'flex';
+        }
+        
+        function closeLightbox() {
+          document.getElementById('image-lightbox').style.display = 'none';
+        }
+        
+        function prevImage() {
+          // Navigate to previous image
+        }
+        
+        function nextImage() {
+          // Navigate to next image
+        }
+        
+        function switchTab(tabName) {
+          document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+          document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+          event.target.classList.add('active');
+          document.getElementById('tab-' + tabName).classList.add('active');
+        }
+        
+        function decreaseQuantity() {
+          const input = document.getElementById('product-quantity');
+          if (input.value > 1) {
+            input.value = parseInt(input.value) - 1;
+          }
+        }
+        
+        function increaseQuantity() {
+          const input = document.getElementById('product-quantity');
+          if (input.value < 99) {
+            input.value = parseInt(input.value) + 1;
+          }
+        }
+        
+        function addToCart() {
+          const quantity = document.getElementById('product-quantity').value;
+          const licenseType = document.getElementById('license-type').value;
+          
+          // Get cart from localStorage
+          let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+          
+          // Add product to cart
+          cart.push({
+            id: Date.now(),
+            productId: '${product.id || 1}',
+            name: '${product.name || 'Product'}',
+            price: parseFloat('${product.price || 149.99}'),
+            quantity: parseInt(quantity),
+            licenseType: licenseType
+          });
           
           // Save cart
           localStorage.setItem('cart', JSON.stringify(cart));
           
+          // Show notification
+          alert('Produkt wurde zum Warenkorb hinzugefügt!');
+          
           // Update cart count in header
           updateCartCount();
-          
-          // Show notification
-          alert('Product added to cart!');
         }
-
+        
+        function buyNow() {
+          addToCart();
+          window.location.href = '/checkout';
+        }
+        
+        function addToWishlist() {
+          let wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+          wishlist.push({
+            productId: '${product.id || 1}',
+            name: '${product.name || 'Product'}',
+            price: parseFloat('${product.price || 149.99}')
+          });
+          localStorage.setItem('wishlist', JSON.stringify(wishlist));
+          alert('Zur Wunschliste hinzugefügt!');
+        }
+        
+        function shareProduct() {
+          if (navigator.share) {
+            navigator.share({
+              title: '${product.name || 'Product'}',
+              text: 'Schau dir dieses Produkt an!',
+              url: window.location.href
+            });
+          } else {
+            // Fallback: Copy link
+            navigator.clipboard.writeText(window.location.href);
+            alert('Link kopiert!');
+          }
+        }
+        
         function updateCartCount() {
           const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-          const count = cart.reduce((sum, item) => sum + item.quantity, 0);
-          const badge = document.querySelector('.fa-shopping-cart + span');
-          if (badge) {
-            badge.textContent = count;
+          const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+          const cartBadge = document.querySelector('.cart-count');
+          if (cartBadge) {
+            cartBadge.textContent = cartCount;
           }
         }
-
-        // Load related products
-        async function loadRelatedProducts() {
-          try {
-            const response = await fetch('/api/products/featured?limit=4');
-            const data = await response.json();
-            
-            if (data.success && data.data.length > 0) {
-              const container = document.getElementById('related-products');
-              container.innerHTML = data.data.map(product => {
-                const discount = product.discount_percentage || 0;
-                const price = product.discount_price || product.base_price;
-                
-                return \`
-                  <a href="/products/\${product.slug}" class="product-card bg-white rounded-lg shadow-lg overflow-hidden gold-border block">
-                    <div class="relative">
-                      <img src="\${product.image_url || 'https://via.placeholder.com/300x200'}" 
-                           alt="\${product.name}" 
-                           class="w-full h-48 object-cover"/>
-                      \${discount > 0 ? \`
-                        <div class="discount-badge absolute top-2 right-2 px-3 py-1 rounded-full text-sm">
-                          -\${discount}%
-                        </div>
-                      \` : ''}
-                    </div>
-                    <div class="p-4">
-                      <h3 class="font-bold text-lg mb-2 h-12 overflow-hidden">\${product.name}</h3>
-                      <div class="text-2xl font-bold text-gold">€\${price.toFixed(2)}</div>
-                    </div>
-                  </a>
-                \`;
-              }).join('');
-            }
-          } catch (error) {
-            console.error('Error loading related products:', error);
-          }
+        
+        // Save to recently viewed
+        function saveToRecentlyViewed() {
+          let recent = JSON.parse(localStorage.getItem('recentlyViewed') || '[]');
+          const product = {
+            id: '${product.id || 1}',
+            name: '${product.name || 'Product'}',
+            price: '${product.price || 149.99}',
+            image: '${product.image || ''}'
+          };
+          
+          // Remove if already exists
+          recent = recent.filter(p => p.id !== product.id);
+          
+          // Add to beginning
+          recent.unshift(product);
+          
+          // Keep only last 10
+          recent = recent.slice(0, 10);
+          
+          localStorage.setItem('recentlyViewed', JSON.stringify(recent));
         }
-
+        
         // Initialize
-        document.addEventListener('DOMContentLoaded', function() {
-          loadRelatedProducts();
-          updateCartCount();
+        updateCartCount();
+        saveToRecentlyViewed();
+        
+        // Close lightbox with Escape key
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') {
+            closeLightbox();
+          }
         });
-      `}} />
+      ` }} ></script>
     </div>
   )
 }

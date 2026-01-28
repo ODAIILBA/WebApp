@@ -675,6 +675,10 @@ import { AdminInvoices } from './components/admin-invoices'
 import { AdminCertificates } from './components/admin-certificates'
 import { AdminSettings } from './components/admin-settings'
 import { AdminReports } from './components/admin-reports'
+import { AdminAnalytics } from './components/admin-analytics-enhanced'
+import { AdminDelivery } from './components/admin-delivery'
+import { AdminOrderManagement } from './components/admin-order-management-full'
+import { AdminTracking } from './components/admin-tracking'
 
 // Admin Dashboard
 app.get('/admin', (c) => {
@@ -769,6 +773,42 @@ app.get('/admin/settings', (c) => {
   return c.html(
     <AdminLayout title="Settings" currentUser={{ first_name: 'Admin' }}>
       <AdminSettings />
+    </AdminLayout>
+  )
+})
+
+// Enhanced Analytics & Reporting
+app.get('/admin/analytics', (c) => {
+  return c.html(
+    <AdminLayout title="Analytics & Reporting" currentUser={{ first_name: 'Admin' }}>
+      <AdminAnalytics />
+    </AdminLayout>
+  )
+})
+
+// Delivery Management
+app.get('/admin/delivery', (c) => {
+  return c.html(
+    <AdminLayout title="Delivery Management" currentUser={{ first_name: 'Admin' }}>
+      <AdminDelivery />
+    </AdminLayout>
+  )
+})
+
+// Complete Order Management
+app.get('/admin/order-management', (c) => {
+  return c.html(
+    <AdminLayout title="Order Management" currentUser={{ first_name: 'Admin' }}>
+      <AdminOrderManagement />
+    </AdminLayout>
+  )
+})
+
+// Tracking Management
+app.get('/admin/tracking', (c) => {
+  return c.html(
+    <AdminLayout title="Tracking Management" currentUser={{ first_name: 'Admin' }}>
+      <AdminTracking />
     </AdminLayout>
   )
 })
