@@ -913,7 +913,7 @@ app.get('/api/init-db', async (c) => {
 
 import { ProductDetail } from './components/product-detail'
 import { CategoryListing } from './components/category-listing'
-import { ShoppingCart } from './components/cart'
+import { Cart } from './components/cart'
 import { Checkout } from './components/checkout'
 import { UserDashboard } from './components/user-dashboard'
 import { OrdersPage } from './components/orders-page'
@@ -973,11 +973,20 @@ app.get('/categories/:slug', async (c) => {
 })
 
 // Shopping Cart Page
-app.get('/cart', (c) => {
-  return c.html(<ShoppingCart />)
+// Cart Page (German + English URLs)
+app.get('/warenkorb', (c) => {
+  return c.html(<Layout title="Warenkorb"><Cart /></Layout>)
 })
 
-// Checkout Page
+app.get('/cart', (c) => {
+  return c.html(<Layout title="Shopping Cart"><Cart /></Layout>)
+})
+
+// Checkout Page (German + English URLs)
+app.get('/kasse', (c) => {
+  return c.html(<Checkout />)
+})
+
 app.get('/checkout', (c) => {
   return c.html(<Checkout />)
 })
