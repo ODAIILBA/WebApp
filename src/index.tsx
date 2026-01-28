@@ -689,6 +689,124 @@ app.post('/api/admin/homepage-sections/:id/products', async (c) => {
 })
 
 // ============================================
+// API ROUTES: Homepage (Public)
+// ============================================
+
+// Get active homepage sections with their products
+app.get('/api/homepage-sections', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const language = c.req.query('language') || c.get('language') || 'de'
+
+    // Get active sections with translations
+    const sections = await db.db.prepare(`
+      SELECT 
+        s.*,
+        st.title,
+        st.subtitle,
+        st.language
+      FROM homepage_sections s
+      LEFT JOIN homepage_section_translations st ON s.id = st.section_id
+      WHERE s.is_active = 1 AND st.language = ?
+      ORDER BY s.display_order ASC
+    `).bind(language).all()
+
+    // For each section, get its products
+    const sectionsWithProducts = await Promise.all(
+      (sections.results || []).map(async (section: any) => {
+        // Check if section has manual products
+        const manualProducts = await db.db.prepare(`
+          SELECT sp.product_id, sp.sort_order
+          FROM section_products sp
+          WHERE sp.section_id = ?
+          ORDER BY sp.sort_order ASC
+        `).bind(section.id).all()
+
+        let products = []
+        
+        if (manualProducts.results && manualProducts.results.length > 0) {
+          // Use manually selected products
+          const productIds = (manualProducts.results as any[]).map((p: any) => p.product_id)
+          const placeholders = productIds.map(() => '?').join(',')
+          
+          const productsResult = await db.db.prepare(`
+            SELECT 
+              p.*,
+              pt.name,
+              pt.short_description,
+              (SELECT image_url FROM product_images WHERE product_id = p.id LIMIT 1) as image_url
+            FROM products p
+            LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = ?
+            WHERE p.id IN (${placeholders}) AND p.is_active = 1
+            ORDER BY CASE p.id ${productIds.map((id, i) => `WHEN ${id} THEN ${i}`).join(' ')} END
+          `).bind(language, ...productIds).all()
+          
+          products = productsResult.results || []
+        } else {
+          // Use automatic products based on section type
+          let query = ''
+          if (section.section_type === 'featured') {
+            query = `
+              SELECT p.*, pt.name, pt.short_description,
+                (SELECT image_url FROM product_images WHERE product_id = p.id LIMIT 1) as image_url
+              FROM products p
+              LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = ?
+              WHERE p.is_active = 1 AND p.is_featured = 1
+              ORDER BY p.created_at DESC
+              LIMIT ?
+            `
+          } else if (section.section_type === 'bestsellers') {
+            query = `
+              SELECT p.*, pt.name, pt.short_description,
+                (SELECT image_url FROM product_images WHERE product_id = p.id LIMIT 1) as image_url
+              FROM products p
+              LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = ?
+              WHERE p.is_active = 1 AND p.is_bestseller = 1
+              ORDER BY p.created_at DESC
+              LIMIT ?
+            `
+          } else if (section.section_type === 'new') {
+            query = `
+              SELECT p.*, pt.name, pt.short_description,
+                (SELECT image_url FROM product_images WHERE product_id = p.id LIMIT 1) as image_url
+              FROM products p
+              LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = ?
+              WHERE p.is_active = 1 AND p.is_new = 1
+              ORDER BY p.created_at DESC
+              LIMIT ?
+            `
+          } else {
+            // Default: newest products
+            query = `
+              SELECT p.*, pt.name, pt.short_description,
+                (SELECT image_url FROM product_images WHERE product_id = p.id LIMIT 1) as image_url
+              FROM products p
+              LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = ?
+              WHERE p.is_active = 1
+              ORDER BY p.created_at DESC
+              LIMIT ?
+            `
+          }
+          
+          const productsResult = await db.db.prepare(query).bind(language, section.items_limit || 8).all()
+          products = productsResult.results || []
+        }
+
+        return {
+          ...section,
+          products
+        }
+      })
+    )
+
+    return c.json({ success: true, data: sectionsWithProducts })
+  } catch (error) {
+    console.error('Error fetching homepage sections:', error)
+    return c.json({ success: false, error: 'Failed to fetch homepage sections' }, 500)
+  }
+})
+
+// ============================================
 // API ROUTES: Authentication
 // ============================================
 

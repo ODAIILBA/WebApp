@@ -2012,22 +2012,34 @@ export const HomepagePrestaShopEnhanced = () => {
             // Load Products
             async function loadProducts() {
                 try {
-                    // Load Flash Deals (lowest prices)
+                    // Load homepage sections with products
+                    const sectionsResponse = await axios.get('/api/homepage-sections?language=de');
+                    if (sectionsResponse.data.success) {
+                        const sections = sectionsResponse.data.data;
+                        
+                        // Find and render each section
+                        sections.forEach(section => {
+                            // Map API product format to expected format
+                            const mappedProducts = section.products.map(p => ({
+                                ...p,
+                                price: Math.round((p.base_price || 0) * 100),
+                                sale_price: p.discount_price ? Math.round(p.discount_price * 100) : null,
+                                description: p.short_description || '',
+                                image: p.image_url
+                            }));
+                            
+                            if (section.section_key === 'featured_products' && mappedProducts.length > 0) {
+                                renderBestsellers(mappedProducts.slice(0, 6));
+                            } else if (section.section_key === 'new_arrivals' && mappedProducts.length > 0) {
+                                renderNewArrivals(mappedProducts.slice(0, 4));
+                            }
+                        });
+                    }
+                    
+                    // Fallback: Load Flash Deals (lowest prices) - not managed by sections
                     const flashResponse = await axios.get('/api/products?limit=4&sort=price-asc');
                     if (flashResponse.data.success) {
                         renderFlashDeals(flashResponse.data.data.slice(0, 4));
-                    }
-
-                    // Load Featured Products
-                    const featuredResponse = await axios.get('/api/products/featured');
-                    if (featuredResponse.data.success) {
-                        renderBestsellers(featuredResponse.data.data.slice(0, 6));
-                    }
-
-                    // Load New Arrivals (newest first)
-                    const newResponse = await axios.get('/api/products?limit=4&sort=newest');
-                    if (newResponse.data.success) {
-                        renderNewArrivals(newResponse.data.data.slice(0, 4));
                     }
                 } catch (error) {
                     console.error('Error loading products:', error);
