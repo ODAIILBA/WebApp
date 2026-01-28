@@ -3,301 +3,330 @@ export const HomepagePrestaShop = () => {
     <!DOCTYPE html>
     <html lang="de">
     <head>
-        <meta charset="UTF-8"/>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-        <title>SoftwareKing24 - Original Microsoft Software günstig kaufen</title>
-        <meta name="description" content="Original Microsoft Software zu Top-Preisen. Windows, Office, Server - Sofortiger Download, lebenslange Lizenz, deutscher Support."/>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>SoftwareKing24 - Original Software zu unschlagbaren Preisen</title>
+        <meta name="description" content="Kaufen Sie Original Microsoft Software günstig. Windows 11, Office 2024, Server - Sofortiger Download, lebenslange Lizenz, 100% legal."/>
         <script src="https://cdn.tailwindcss.com"></script>
-        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet" />
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
         <script src="/static/cart-manager-enhanced.js"></script>
         <style>
-            .hero-gradient {
-                background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 50%, #60a5fa 100%);
-            }
-            .feature-card {
-                transition: all 0.3s ease;
-            }
-            .feature-card:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            }
-            .product-card {
-                transition: all 0.3s ease;
-                border: 1px solid #e5e7eb;
-            }
-            .product-card:hover {
-                transform: translateY(-8px);
-                box-shadow: 0 25px 50px rgba(0,0,0,0.15);
-                border-color: #3b82f6;
-            }
-            .category-badge {
-                transition: all 0.3s ease;
-            }
-            .category-badge:hover {
-                transform: scale(1.05);
-                box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
-            }
-            .pulse-animation {
-                animation: pulse 2s infinite;
-            }
-            @keyframes pulse {
-                0%, 100% { opacity: 1; }
-                50% { opacity: 0.8; }
-            }
-            .slide-in {
-                animation: slideIn 0.5s ease-out;
-            }
-            @keyframes slideIn {
-                from { opacity: 0; transform: translateY(30px); }
+            @keyframes slideDown {
+                from { opacity: 0; transform: translateY(-10px); }
                 to { opacity: 1; transform: translateY(0); }
             }
-            .banner-text {
-                text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes pulse {
+                0%, 100% { transform: scale(1); }
+                50% { transform: scale(1.05); }
+            }
+            .hover-lift:hover {
+                transform: translateY(-8px);
+                box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            }
+            .gradient-text {
+                background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+            }
+            .badge-pulse {
+                animation: pulse 2s infinite;
             }
         </style>
     </head>
     <body class="bg-gray-50">
         
-        <!-- Top Bar -->
-        <div class="bg-blue-900 text-white text-sm py-2">
-            <div class="max-w-7xl mx-auto px-4 flex justify-between items-center">
-                <div class="flex items-center space-x-6">
-                    <span><i class="fas fa-phone mr-2"></i>+49 (0) 123 456789</span>
-                    <span><i class="fas fa-envelope mr-2"></i>[email protected]</span>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <a href="/konto" class="hover:text-blue-200 transition"><i class="fas fa-user mr-1"></i>Mein Konto</a>
-                    <a href="/warenkorb" class="hover:text-blue-200 transition relative">
-                        <i class="fas fa-shopping-cart mr-1"></i>Warenkorb
-                        <span class="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full ml-1" data-cart-count>0</span>
-                    </a>
-                </div>
+        <!-- Top Banner -->
+        <div class="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 text-center text-sm">
+            <div class="max-w-7xl mx-auto px-4 flex items-center justify-center space-x-6">
+                <span><i class="fas fa-truck mr-2"></i>Kostenloser Sofort-Download</span>
+                <span><i class="fas fa-shield-alt mr-2"></i>100% Original & Legal</span>
+                <span><i class="fas fa-headset mr-2"></i>24/7 Support</span>
+                <span><i class="fas fa-gift mr-2"></i>Spare bis zu 70% - Nur heute!</span>
             </div>
         </div>
 
-        <!-- Main Header -->
+        <!-- Header -->
         <header class="bg-white shadow-md sticky top-0 z-50">
-            <div class="max-w-7xl mx-auto px-4 py-4">
-                <div class="flex items-center justify-between">
-                    <!-- Logo -->
-                    <a href="/" class="flex items-center">
-                        <img src="/static/logo.png" alt="SoftwareKing24" class="h-16"/>
+            <div class="max-w-7xl mx-auto px-4">
+                <!-- Top Header -->
+                <div class="border-b border-gray-200 py-2">
+                    <div class="flex justify-between items-center text-sm">
+                        <div class="flex items-center space-x-4 text-gray-600">
+                            <span><i class="fas fa-phone mr-1"></i>+49 123 456789</span>
+                            <span><i class="fas fa-envelope mr-1"></i>[email protected]</span>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <a href="/warenkorb" class="text-gray-600 hover:text-blue-600 transition relative">
+                                <i class="fas fa-shopping-cart mr-1"></i>Warenkorb 
+                                <span class="bg-red-500 text-white px-2 py-0.5 rounded-full text-xs ml-1" data-cart-count>0</span>
+                            </a>
+                            <a href="/login" class="text-gray-600 hover:text-blue-600"><i class="fas fa-user mr-1"></i>Anmelden</a>
+                            <button class="text-gray-600 hover:text-blue-600"><i class="fas fa-globe mr-1"></i>DE / EN</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Header -->
+                <div class="flex items-center justify-between py-4">
+                    <a href="/" class="flex items-center space-x-3">
+                        <img src="/static/logo.png" alt="SoftwareKing24" class="h-16" />
                     </a>
 
                     <!-- Search Bar -->
                     <div class="flex-1 max-w-2xl mx-8">
-                        <form class="relative" onsubmit="performSearch(); return false;">
+                        <div class="relative">
                             <input 
                                 type="text" 
                                 id="global-search"
-                                placeholder="Windows, Office, Antivirus suchen..." 
-                                class="w-full px-6 py-3 border-2 border-blue-500 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-600 pr-12"
+                                placeholder="Windows 11, Office 2024, Server, Antivirus..." 
+                                class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 pr-32"
                             />
-                            <button type="submit" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-blue-600 text-white px-6 py-2 rounded-full hover:bg-blue-700 transition">
-                                <i class="fas fa-search"></i>
+                            <button onclick="performSearch()" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-2 rounded-md hover:from-blue-700 hover:to-purple-700">
+                                <i class="fas fa-search mr-2"></i>Suchen
                             </button>
-                        </form>
+                        </div>
                     </div>
 
-                    <!-- Action Buttons -->
+                    <!-- Cart & User -->
                     <div class="flex items-center space-x-4">
                         <a href="/warenkorb" class="relative">
-                            <button class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition flex items-center space-x-2">
-                                <i class="fas fa-shopping-cart text-xl"></i>
-                                <span class="font-semibold">Warenkorb</span>
-                                <span class="bg-red-500 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center" data-cart-count>0</span>
-                            </button>
+                            <i class="fas fa-shopping-cart text-3xl text-gray-700 hover:text-blue-600"></i>
+                            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center font-bold" data-cart-count>0</span>
                         </a>
+                        <div class="text-right">
+                            <div class="text-xs text-gray-500">Mein Konto</div>
+                            <a href="/login" class="text-sm font-semibold text-gray-700 hover:text-blue-600">Anmelden</a>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Navigation Menu -->
-                <nav class="mt-4 border-t border-gray-200 pt-4">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center space-x-6">
-                            <a href="/produkte" class="flex items-center space-x-2 text-gray-700 hover:text-blue-600 font-semibold transition">
-                                <i class="fas fa-th-large"></i>
-                                <span>Alle Produkte</span>
+                <nav class="border-t border-gray-200">
+                    <ul class="flex items-center space-x-1">
+                        <li class="relative group">
+                            <a href="/produkte" class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition font-semibold">
+                                <i class="fas fa-th-large mr-2"></i>Alle Produkte
                             </a>
-                            <a href="/produkte?category=Microsoft%20Windows" class="text-gray-700 hover:text-blue-600 transition">Windows</a>
-                            <a href="/produkte?category=Microsoft%20Office" class="text-gray-700 hover:text-blue-600 transition">Office</a>
-                            <a href="/produkte?category=Server" class="text-gray-700 hover:text-blue-600 transition">Server</a>
-                            <a href="/produkte?category=Antivirus" class="text-gray-700 hover:text-blue-600 transition">Antivirus</a>
-                            <a href="/deals" class="text-red-600 hover:text-red-700 font-bold transition">
-                                <i class="fas fa-fire mr-1"></i>Top Deals
+                        </li>
+                        <li class="relative group">
+                            <a href="/produkte?category=Windows" class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
+                                <i class="fab fa-windows mr-2"></i>Windows
+                                <i class="fas fa-chevron-down ml-2 text-xs"></i>
                             </a>
-                        </div>
-                        <div class="flex items-center space-x-4 text-sm text-gray-600">
-                            <span><i class="fas fa-truck text-green-600 mr-1"></i>Sofort-Download</span>
-                            <span><i class="fas fa-shield-alt text-blue-600 mr-1"></i>100% Sicher</span>
-                            <span><i class="fas fa-certificate text-yellow-600 mr-1"></i>Original</span>
-                        </div>
-                    </div>
+                            <div class="absolute left-0 top-full mt-0 w-64 bg-white shadow-xl rounded-lg hidden group-hover:block z-50 border border-gray-200">
+                                <div class="p-4 space-y-2">
+                                    <a href="/produkte?search=Windows 11" class="block px-3 py-2 hover:bg-blue-50 rounded">Windows 11 Professional</a>
+                                    <a href="/produkte?search=Windows 11 Home" class="block px-3 py-2 hover:bg-blue-50 rounded">Windows 11 Home</a>
+                                    <a href="/produkte?search=Windows 10" class="block px-3 py-2 hover:bg-blue-50 rounded">Windows 10 Professional</a>
+                                    <a href="/produkte?search=Windows Server" class="block px-3 py-2 hover:bg-blue-50 rounded">Windows Server</a>
+                                </div>
+                            </div>
+                        </li>
+                        <li class="relative group">
+                            <a href="/produkte?category=Office" class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
+                                <i class="fas fa-file-word mr-2"></i>Microsoft Office
+                                <i class="fas fa-chevron-down ml-2 text-xs"></i>
+                            </a>
+                            <div class="absolute left-0 top-full mt-0 w-64 bg-white shadow-xl rounded-lg hidden group-hover:block z-50 border border-gray-200">
+                                <div class="p-4 space-y-2">
+                                    <a href="/produkte?search=Office 2024" class="block px-3 py-2 hover:bg-blue-50 rounded">Office 2024</a>
+                                    <a href="/produkte?search=Office 2021" class="block px-3 py-2 hover:bg-blue-50 rounded">Office 2021</a>
+                                    <a href="/produkte?search=Office 2019" class="block px-3 py-2 hover:bg-blue-50 rounded">Office 2019</a>
+                                    <a href="/produkte?search=Office 365" class="block px-3 py-2 hover:bg-blue-50 rounded">Microsoft 365</a>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <a href="/produkte?category=Server" class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
+                                <i class="fas fa-server mr-2"></i>Server
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/produkte?category=Antivirus" class="flex items-center px-4 py-3 text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition">
+                                <i class="fas fa-shield-virus mr-2"></i>Antivirus
+                            </a>
+                        </li>
+                        <li class="ml-auto">
+                            <a href="#deals" class="flex items-center px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-full hover:from-red-600 hover:to-pink-600 transition font-bold badge-pulse">
+                                <i class="fas fa-fire mr-2"></i>Angebote -70%
+                            </a>
+                        </li>
+                    </ul>
                 </nav>
             </div>
         </header>
 
-        <!-- Hero Banner -->
-        <section class="hero-gradient py-16">
+        <!-- Hero Slider -->
+        <section class="bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 py-16">
             <div class="max-w-7xl mx-auto px-4">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                    <div class="text-white slide-in">
-                        <div class="inline-block bg-red-500 text-white px-4 py-2 rounded-full text-sm font-bold mb-4 pulse-animation">
-                            <i class="fas fa-fire mr-2"></i>MEGA SALE - Bis zu 70% Rabatt!
+                    <div class="text-white">
+                        <div class="inline-block bg-yellow-400 text-gray-900 px-4 py-2 rounded-full text-sm font-bold mb-4">
+                            <i class="fas fa-bolt mr-2"></i>FLASH SALE - Nur heute!
                         </div>
-                        <h1 class="text-5xl font-bold mb-6 banner-text leading-tight">
-                            Original Microsoft Software zum Bestpreis
+                        <h1 class="text-5xl font-bold mb-6 leading-tight">
+                            Original Software<br/>
+                            <span class="text-yellow-300">bis zu 70% günstiger</span>
                         </h1>
                         <p class="text-xl mb-8 text-blue-100">
-                            Sofortiger Download • Lebenslange Lizenz • Deutscher Support
+                            Windows 11, Office 2024, Server - Sofortiger Download, lebenslange Lizenz, 100% legal & sicher
                         </p>
                         <div class="flex space-x-4">
-                            <a href="/produkte" class="bg-white text-blue-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-50 transition transform hover:scale-105 shadow-lg">
+                            <a href="/produkte" class="bg-white text-blue-600 px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-50 transition inline-flex items-center">
                                 <i class="fas fa-shopping-bag mr-2"></i>Jetzt einkaufen
                             </a>
-                            <a href="#bestsellers" class="bg-blue-800 text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-blue-900 transition border-2 border-white">
-                                <i class="fas fa-star mr-2"></i>Bestseller
+                            <a href="#bestsellers" class="border-2 border-white text-white px-8 py-4 rounded-lg font-bold text-lg hover:bg-white hover:text-blue-600 transition inline-flex items-center">
+                                <i class="fas fa-star mr-2"></i>Bestseller ansehen
                             </a>
                         </div>
-                        <div class="mt-8 flex items-center space-x-8">
-                            <div class="text-center">
-                                <div class="text-3xl font-bold">10.000+</div>
-                                <div class="text-blue-200 text-sm">Zufriedene Kunden</div>
+                        <div class="mt-8 flex items-center space-x-8 text-sm">
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-300 mr-2"></i>
+                                Sofort-Download
                             </div>
-                            <div class="text-center">
-                                <div class="text-3xl font-bold">4.9/5.0</div>
-                                <div class="text-blue-200 text-sm">
-                                    <i class="fas fa-star text-yellow-400"></i>
-                                    <i class="fas fa-star text-yellow-400"></i>
-                                    <i class="fas fa-star text-yellow-400"></i>
-                                    <i class="fas fa-star text-yellow-400"></i>
-                                    <i class="fas fa-star text-yellow-400"></i>
-                                </div>
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-300 mr-2"></i>
+                                Sichere Zahlung
                             </div>
-                            <div class="text-center">
-                                <div class="text-3xl font-bold">100%</div>
-                                <div class="text-blue-200 text-sm">Original-Lizenzen</div>
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-300 mr-2"></i>
+                                14 Tage Geld-zurück
                             </div>
                         </div>
                     </div>
-                    <div class="hidden lg:block">
-                        <img src="https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=600&h=400&fit=crop" alt="Software" class="rounded-2xl shadow-2xl"/>
+                    <div class="relative">
+                        <img src="https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800" alt="Software" class="rounded-2xl shadow-2xl" />
+                        <div class="absolute -bottom-4 -left-4 bg-yellow-400 text-gray-900 p-6 rounded-xl shadow-xl">
+                            <div class="text-3xl font-bold">70%</div>
+                            <div class="text-sm font-semibold">RABATT</div>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- Trust Badges -->
-        <section class="bg-white py-8 border-b">
+        <section class="bg-white py-8 border-y border-gray-200">
             <div class="max-w-7xl mx-auto px-4">
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    <div class="flex items-center justify-center space-x-3 feature-card p-4">
-                        <i class="fas fa-download text-4xl text-blue-600"></i>
-                        <div>
-                            <div class="font-bold text-gray-800">Sofort-Download</div>
-                            <div class="text-sm text-gray-600">Innerhalb von Sekunden</div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+                    <div class="flex flex-col items-center">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-3">
+                            <i class="fas fa-shield-alt text-blue-600 text-2xl"></i>
                         </div>
+                        <h4 class="font-bold text-gray-800">100% Original</h4>
+                        <p class="text-sm text-gray-600">Direkt vom Hersteller</p>
                     </div>
-                    <div class="flex items-center justify-center space-x-3 feature-card p-4">
-                        <i class="fas fa-certificate text-4xl text-green-600"></i>
-                        <div>
-                            <div class="font-bold text-gray-800">100% Original</div>
-                            <div class="text-sm text-gray-600">Direkt von Microsoft</div>
+                    <div class="flex flex-col items-center">
+                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-3">
+                            <i class="fas fa-download text-green-600 text-2xl"></i>
                         </div>
+                        <h4 class="font-bold text-gray-800">Sofort-Download</h4>
+                        <p class="text-sm text-gray-600">Innerhalb von Minuten</p>
                     </div>
-                    <div class="flex items-center justify-center space-x-3 feature-card p-4">
-                        <i class="fas fa-shield-alt text-4xl text-purple-600"></i>
-                        <div>
-                            <div class="font-bold text-gray-800">SSL-Verschlüsselt</div>
-                            <div class="text-sm text-gray-600">Sichere Zahlung</div>
+                    <div class="flex flex-col items-center">
+                        <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-3">
+                            <i class="fas fa-infinity text-purple-600 text-2xl"></i>
                         </div>
+                        <h4 class="font-bold text-gray-800">Lebenslange Lizenz</h4>
+                        <p class="text-sm text-gray-600">Keine Abo-Kosten</p>
                     </div>
-                    <div class="flex items-center justify-center space-x-3 feature-card p-4">
-                        <i class="fas fa-headset text-4xl text-red-600"></i>
-                        <div>
-                            <div class="font-bold text-gray-800">24/7 Support</div>
-                            <div class="text-sm text-gray-600">Deutscher Kundenservice</div>
+                    <div class="flex flex-col items-center">
+                        <div class="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mb-3">
+                            <i class="fas fa-headset text-yellow-600 text-2xl"></i>
                         </div>
+                        <h4 class="font-bold text-gray-800">24/7 Support</h4>
+                        <p class="text-sm text-gray-600">Immer für Sie da</p>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Categories -->
-        <section class="py-12 bg-gray-50">
+        <!-- Featured Categories -->
+        <section class="py-16 bg-gray-50">
             <div class="max-w-7xl mx-auto px-4">
-                <div class="text-center mb-10">
-                    <h2 class="text-3xl font-bold text-gray-800 mb-3">
-                        <i class="fas fa-th-large text-blue-600 mr-3"></i>Kategorien
-                    </h2>
-                    <p class="text-gray-600">Finden Sie die perfekte Software für Ihre Bedürfnisse</p>
+                <div class="text-center mb-12">
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Kategorien durchstöbern</h2>
+                    <p class="text-gray-600 text-lg">Finden Sie die perfekte Software für Ihre Bedürfnisse</p>
                 </div>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-                    <a href="/produkte?category=Microsoft%20Windows" class="category-badge bg-white rounded-xl p-6 text-center shadow-md hover:shadow-xl transition">
-                        <div class="w-20 h-20 mx-auto mb-4 bg-blue-100 rounded-full flex items-center justify-center">
-                            <i class="fab fa-windows text-4xl text-blue-600"></i>
+                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                    <a href="/produkte?category=Windows" class="bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition text-center hover-lift">
+                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fab fa-windows text-blue-600 text-3xl"></i>
                         </div>
-                        <h3 class="font-bold text-lg mb-2">Windows</h3>
-                        <p class="text-sm text-gray-600">Betriebssysteme</p>
-                        <div class="mt-3 text-blue-600 font-semibold">Ab €19.99 →</div>
+                        <h3 class="font-bold text-gray-800 mb-2">Windows</h3>
+                        <p class="text-sm text-gray-600">15 Produkte</p>
                     </a>
-                    <a href="/produkte?category=Microsoft%20Office" class="category-badge bg-white rounded-xl p-6 text-center shadow-md hover:shadow-xl transition">
-                        <div class="w-20 h-20 mx-auto mb-4 bg-orange-100 rounded-full flex items-center justify-center">
-                            <i class="fas fa-file-alt text-4xl text-orange-600"></i>
+                    <a href="/produkte?category=Office" class="bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition text-center hover-lift">
+                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-file-word text-green-600 text-3xl"></i>
                         </div>
-                        <h3 class="font-bold text-lg mb-2">Office</h3>
-                        <p class="text-sm text-gray-600">Produktivität</p>
-                        <div class="mt-3 text-blue-600 font-semibold">Ab €29.99 →</div>
+                        <h3 class="font-bold text-gray-800 mb-2">Office</h3>
+                        <p class="text-sm text-gray-600">25 Produkte</p>
                     </a>
-                    <a href="/produkte?category=Server" class="category-badge bg-white rounded-xl p-6 text-center shadow-md hover:shadow-xl transition">
-                        <div class="w-20 h-20 mx-auto mb-4 bg-purple-100 rounded-full flex items-center justify-center">
-                            <i class="fas fa-server text-4xl text-purple-600"></i>
+                    <a href="/produkte?category=Server" class="bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition text-center hover-lift">
+                        <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-server text-purple-600 text-3xl"></i>
                         </div>
-                        <h3 class="font-bold text-lg mb-2">Server</h3>
-                        <p class="text-sm text-gray-600">Enterprise Lösungen</p>
-                        <div class="mt-3 text-blue-600 font-semibold">Ab €39.99 →</div>
+                        <h3 class="font-bold text-gray-800 mb-2">Server</h3>
+                        <p class="text-sm text-gray-600">12 Produkte</p>
                     </a>
-                    <a href="/produkte?category=Antivirus" class="category-badge bg-white rounded-xl p-6 text-center shadow-md hover:shadow-xl transition">
-                        <div class="w-20 h-20 mx-auto mb-4 bg-green-100 rounded-full flex items-center justify-center">
-                            <i class="fas fa-shield-virus text-4xl text-green-600"></i>
+                    <a href="/produkte?category=Antivirus" class="bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition text-center hover-lift">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-shield-virus text-red-600 text-3xl"></i>
                         </div>
-                        <h3 class="font-bold text-lg mb-2">Antivirus</h3>
-                        <p class="text-sm text-gray-600">Sicherheit</p>
-                        <div class="mt-3 text-blue-600 font-semibold">Ab €14.99 →</div>
+                        <h3 class="font-bold text-gray-800 mb-2">Antivirus</h3>
+                        <p class="text-sm text-gray-600">8 Produkte</p>
+                    </a>
+                    <a href="/produkte?category=Adobe" class="bg-white p-6 rounded-xl shadow-md hover:shadow-xl transition text-center hover-lift">
+                        <div class="w-16 h-16 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-image text-pink-600 text-3xl"></i>
+                        </div>
+                        <h3 class="font-bold text-gray-800 mb-2">Adobe</h3>
+                        <p class="text-sm text-gray-600">10 Produkte</p>
+                    </a>
+                    <a href="/produkte" class="bg-gradient-to-br from-blue-600 to-purple-600 p-6 rounded-xl shadow-md hover:shadow-xl transition text-center hover-lift text-white">
+                        <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-th text-white text-3xl"></i>
+                        </div>
+                        <h3 class="font-bold mb-2">Alle Kategorien</h3>
+                        <p class="text-sm text-blue-100">Alle ansehen</p>
                     </a>
                 </div>
             </div>
         </section>
 
-        <!-- Flash Deals Banner -->
-        <section class="bg-gradient-to-r from-red-600 to-orange-600 py-8">
+        <!-- Flash Deals Countdown -->
+        <section id="deals" class="py-16 bg-gradient-to-r from-red-600 to-pink-600">
             <div class="max-w-7xl mx-auto px-4">
-                <div class="flex items-center justify-between text-white">
-                    <div class="flex items-center space-x-4">
-                        <i class="fas fa-bolt text-5xl pulse-animation"></i>
-                        <div>
-                            <h3 class="text-2xl font-bold">FLASH SALE!</h3>
-                            <p class="text-lg">Nur noch heute: Bis zu 70% Rabatt auf ausgewählte Produkte</p>
+                <div class="text-center text-white mb-12">
+                    <div class="inline-block bg-yellow-400 text-gray-900 px-6 py-3 rounded-full font-bold mb-4">
+                        <i class="fas fa-fire mr-2"></i>FLASH SALE
+                    </div>
+                    <h2 class="text-4xl font-bold mb-4">Angebote enden in:</h2>
+                    <div class="flex justify-center space-x-4 mb-6">
+                        <div class="bg-white bg-opacity-20 backdrop-blur px-6 py-4 rounded-lg">
+                            <div class="text-4xl font-bold">12</div>
+                            <div class="text-sm">Stunden</div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 backdrop-blur px-6 py-4 rounded-lg">
+                            <div class="text-4xl font-bold">34</div>
+                            <div class="text-sm">Minuten</div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 backdrop-blur px-6 py-4 rounded-lg">
+                            <div class="text-4xl font-bold">56</div>
+                            <div class="text-sm">Sekunden</div>
                         </div>
                     </div>
-                    <div class="flex items-center space-x-6">
-                        <div class="text-center bg-white text-red-600 px-4 py-2 rounded-lg">
-                            <div class="text-2xl font-bold" id="hours">12</div>
-                            <div class="text-xs">Stunden</div>
-                        </div>
-                        <div class="text-center bg-white text-red-600 px-4 py-2 rounded-lg">
-                            <div class="text-2xl font-bold" id="minutes">34</div>
-                            <div class="text-xs">Minuten</div>
-                        </div>
-                        <div class="text-center bg-white text-red-600 px-4 py-2 rounded-lg">
-                            <div class="text-2xl font-bold" id="seconds">56</div>
-                            <div class="text-xs">Sekunden</div>
-                        </div>
-                        <a href="/deals" class="bg-white text-red-600 px-8 py-3 rounded-lg font-bold hover:bg-gray-100 transition">
-                            Jetzt zugreifen!
-                        </a>
-                    </div>
+                    <p class="text-xl text-red-100">Spare bis zu 70% auf ausgewählte Produkte!</p>
+                </div>
+                <div id="flash-deals" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Flash deal products will be loaded here -->
                 </div>
             </div>
         </section>
@@ -305,19 +334,19 @@ export const HomepagePrestaShop = () => {
         <!-- Bestsellers -->
         <section id="bestsellers" class="py-16 bg-white">
             <div class="max-w-7xl mx-auto px-4">
-                <div class="flex items-center justify-between mb-10">
+                <div class="flex justify-between items-center mb-12">
                     <div>
-                        <h2 class="text-3xl font-bold text-gray-800 mb-2">
+                        <h2 class="text-4xl font-bold text-gray-800 mb-2">
                             <i class="fas fa-star text-yellow-500 mr-3"></i>Bestseller
                         </h2>
-                        <p class="text-gray-600">Unsere meistverkauften Produkte</p>
+                        <p class="text-gray-600 text-lg">Die beliebtesten Produkte unserer Kunden</p>
                     </div>
-                    <a href="/produkte" class="text-blue-600 font-semibold hover:text-blue-700">
-                        Alle anzeigen <i class="fas fa-arrow-right ml-2"></i>
+                    <a href="/produkte?sort=bestsellers" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition font-semibold">
+                        Alle ansehen <i class="fas fa-arrow-right ml-2"></i>
                     </a>
                 </div>
-                <div id="bestsellers-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <!-- Products will be loaded here -->
+                <div id="bestsellers-products" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- Bestseller products will be loaded here -->
                 </div>
             </div>
         </section>
@@ -326,47 +355,37 @@ export const HomepagePrestaShop = () => {
         <section class="py-16 bg-gradient-to-br from-blue-50 to-purple-50">
             <div class="max-w-7xl mx-auto px-4">
                 <div class="text-center mb-12">
-                    <h2 class="text-3xl font-bold text-gray-800 mb-3">
-                        Warum SoftwareKing24?
-                    </h2>
-                    <p class="text-gray-600 text-lg">Ihr vertrauensvoller Partner für Original-Software</p>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Warum SoftwareKing24?</h2>
+                    <p class="text-gray-600 text-lg">Über 50.000 zufriedene Kunden vertrauen uns</p>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div class="feature-card bg-white rounded-xl p-8 shadow-lg">
-                        <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6">
-                            <i class="fas fa-money-bill-wave text-3xl text-blue-600"></i>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <div class="bg-white p-8 rounded-2xl shadow-lg text-center hover-lift">
+                        <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-certificate text-white text-3xl"></i>
                         </div>
-                        <h3 class="text-xl font-bold mb-3">Unschlagbare Preise</h3>
-                        <p class="text-gray-600 mb-4">Sparen Sie bis zu 70% gegenüber den UVP-Preisen. Original-Lizenzen zum Bestpreis!</p>
-                        <ul class="space-y-2 text-sm text-gray-600">
-                            <li><i class="fas fa-check text-green-600 mr-2"></i>Keine versteckten Kosten</li>
-                            <li><i class="fas fa-check text-green-600 mr-2"></i>Regelmäßige Sonderangebote</li>
-                            <li><i class="fas fa-check text-green-600 mr-2"></i>Mengenrabatte verfügbar</li>
-                        </ul>
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">100% Legal & Original</h3>
+                        <p class="text-gray-600">Alle unsere Produkte sind zu 100% legal und stammen direkt vom Hersteller. Garantiert!</p>
                     </div>
-                    <div class="feature-card bg-white rounded-xl p-8 shadow-lg">
-                        <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
-                            <i class="fas fa-bolt text-3xl text-green-600"></i>
+                    <div class="bg-white p-8 rounded-2xl shadow-lg text-center hover-lift">
+                        <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-bolt text-white text-3xl"></i>
                         </div>
-                        <h3 class="text-xl font-bold mb-3">Sofort-Lieferung</h3>
-                        <p class="text-gray-600 mb-4">Erhalten Sie Ihren Lizenzschlüssel innerhalb von Sekunden per E-Mail.</p>
-                        <ul class="space-y-2 text-sm text-gray-600">
-                            <li><i class="fas fa-check text-green-600 mr-2"></i>Automatischer Versand</li>
-                            <li><i class="fas fa-check text-green-600 mr-2"></i>24/7 verfügbar</li>
-                            <li><i class="fas fa-check text-green-600 mr-2"></i>Keine Wartezeiten</li>
-                        </ul>
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">Sofortiger Download</h3>
+                        <p class="text-gray-600">Erhalten Sie Ihre Lizenz sofort nach dem Kauf per E-Mail. Keine Wartezeit!</p>
                     </div>
-                    <div class="feature-card bg-white rounded-xl p-8 shadow-lg">
-                        <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mb-6">
-                            <i class="fas fa-life-ring text-3xl text-purple-600"></i>
+                    <div class="bg-white p-8 rounded-2xl shadow-lg text-center hover-lift">
+                        <div class="w-20 h-20 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-euro-sign text-white text-3xl"></i>
                         </div>
-                        <h3 class="text-xl font-bold mb-3">Erstklassiger Support</h3>
-                        <p class="text-gray-600 mb-4">Unser deutscher Kundenservice hilft Ihnen bei allen Fragen weiter.</p>
-                        <ul class="space-y-2 text-sm text-gray-600">
-                            <li><i class="fas fa-check text-green-600 mr-2"></i>Deutscher Support</li>
-                            <li><i class="fas fa-check text-green-600 mr-2"></i>Schnelle Antwortzeiten</li>
-                            <li><i class="fas fa-check text-green-600 mr-2"></i>Kompetente Beratung</li>
-                        </ul>
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">Beste Preise</h3>
+                        <p class="text-gray-600">Sparen Sie bis zu 70% gegenüber dem Hersteller. Garantiert günstigste Preise!</p>
+                    </div>
+                    <div class="bg-white p-8 rounded-2xl shadow-lg text-center hover-lift">
+                        <div class="w-20 h-20 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="fas fa-users text-white text-3xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-3">50.000+ Kunden</h3>
+                        <p class="text-gray-600">Tausende zufriedene Kunden vertrauen auf unsere Qualität und Service.</p>
                     </div>
                 </div>
             </div>
@@ -375,135 +394,180 @@ export const HomepagePrestaShop = () => {
         <!-- New Arrivals -->
         <section class="py-16 bg-white">
             <div class="max-w-7xl mx-auto px-4">
-                <div class="flex items-center justify-between mb-10">
+                <div class="flex justify-between items-center mb-12">
                     <div>
-                        <h2 class="text-3xl font-bold text-gray-800 mb-2">
+                        <h2 class="text-4xl font-bold text-gray-800 mb-2">
                             <i class="fas fa-sparkles text-purple-600 mr-3"></i>Neu eingetroffen
                         </h2>
-                        <p class="text-gray-600">Die neuesten Software-Releases</p>
+                        <p class="text-gray-600 text-lg">Die neuesten Produkte in unserem Sortiment</p>
                     </div>
-                    <a href="/produkte?sort=newest" class="text-blue-600 font-semibold hover:text-blue-700">
-                        Alle neuen Produkte <i class="fas fa-arrow-right ml-2"></i>
+                    <a href="/produkte?sort=newest" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg hover:from-purple-700 hover:to-pink-700 transition font-semibold">
+                        Alle ansehen <i class="fas fa-arrow-right ml-2"></i>
                     </a>
                 </div>
-                <div id="new-arrivals-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <!-- Products will be loaded here -->
+                <div id="new-arrivals" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <!-- New arrival products will be loaded here -->
                 </div>
             </div>
         </section>
 
-        <!-- Promotional Banner -->
-        <section class="bg-gradient-to-r from-purple-600 to-blue-600 py-12">
-            <div class="max-w-7xl mx-auto px-4">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-                    <div class="text-white">
-                        <h3 class="text-3xl font-bold mb-4">Newsletter abonnieren & 10€ Gutschein sichern!</h3>
-                        <p class="text-lg mb-6 text-blue-100">Erhalten Sie exklusive Angebote und Updates direkt in Ihr Postfach.</p>
-                        <form class="flex space-x-3">
-                            <input 
-                                type="email" 
-                                placeholder="Ihre E-Mail-Adresse" 
-                                class="flex-1 px-6 py-3 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-white"
-                            />
-                            <button type="submit" class="bg-white text-purple-600 px-8 py-3 rounded-lg font-bold hover:bg-gray-100 transition">
-                                Anmelden
-                            </button>
-                        </form>
-                        <p class="text-xs text-blue-100 mt-3">
-                            <i class="fas fa-lock mr-1"></i>Ihre Daten sind bei uns sicher. Kein Spam.
-                        </p>
+        <!-- Newsletter -->
+        <section class="py-16 bg-gradient-to-r from-blue-600 to-purple-600">
+            <div class="max-w-4xl mx-auto px-4 text-center">
+                <div class="bg-white bg-opacity-10 backdrop-blur rounded-2xl p-12">
+                    <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i class="fas fa-envelope text-blue-600 text-3xl"></i>
                     </div>
-                    <div class="flex justify-center">
-                        <div class="bg-white rounded-2xl p-8 shadow-2xl transform hover:scale-105 transition">
-                            <div class="text-center">
-                                <div class="text-6xl font-bold text-purple-600 mb-2">10€</div>
-                                <div class="text-xl font-semibold text-gray-800 mb-4">Willkommens-Gutschein</div>
-                                <div class="text-gray-600 text-sm">Bei Ihrer ersten Bestellung</div>
-                            </div>
-                        </div>
-                    </div>
+                    <h2 class="text-4xl font-bold text-white mb-4">Bleiben Sie auf dem Laufenden!</h2>
+                    <p class="text-xl text-blue-100 mb-8">Abonnieren Sie unseren Newsletter und erhalten Sie exklusive Angebote und 10% Rabatt auf Ihre erste Bestellung!</p>
+                    <form class="flex flex-col md:flex-row gap-4 max-w-xl mx-auto">
+                        <input 
+                            type="email" 
+                            placeholder="Ihre E-Mail-Adresse" 
+                            class="flex-1 px-6 py-4 rounded-lg text-gray-800 focus:outline-none focus:ring-4 focus:ring-white focus:ring-opacity-50"
+                        />
+                        <button type="submit" class="bg-yellow-400 text-gray-900 px-8 py-4 rounded-lg font-bold hover:bg-yellow-300 transition">
+                            <i class="fas fa-paper-plane mr-2"></i>Abonnieren
+                        </button>
+                    </form>
+                    <p class="text-sm text-blue-100 mt-4">
+                        <i class="fas fa-check-circle mr-2"></i>Keine Spam-Mails. Abmeldung jederzeit möglich.
+                    </p>
                 </div>
             </div>
         </section>
 
         <!-- Customer Reviews -->
-        <section class="py-16 bg-gray-50">
+        <section class="py-16 bg-white">
             <div class="max-w-7xl mx-auto px-4">
                 <div class="text-center mb-12">
-                    <h2 class="text-3xl font-bold text-gray-800 mb-3">
-                        <i class="fas fa-comments text-green-600 mr-3"></i>Was unsere Kunden sagen
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-comments text-blue-600 mr-3"></i>Was unsere Kunden sagen
                     </h2>
-                    <div class="flex items-center justify-center space-x-2 mb-2">
-                        <i class="fas fa-star text-yellow-500 text-xl"></i>
-                        <i class="fas fa-star text-yellow-500 text-xl"></i>
-                        <i class="fas fa-star text-yellow-500 text-xl"></i>
-                        <i class="fas fa-star text-yellow-500 text-xl"></i>
-                        <i class="fas fa-star text-yellow-500 text-xl"></i>
-                        <span class="ml-3 text-lg font-semibold">4.9/5.0</span>
+                    <p class="text-gray-600 text-lg">Über 10.000 begeisterte Bewertungen</p>
+                    <div class="flex justify-center items-center space-x-2 mt-4">
+                        <div class="flex text-yellow-400 text-2xl">
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <span class="text-gray-600 text-xl font-bold">4.9/5.0</span>
                     </div>
-                    <p class="text-gray-600">Basierend auf 10.234 Bewertungen</p>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div class="feature-card bg-white rounded-xl p-6 shadow-lg">
+                    <div class="bg-gradient-to-br from-blue-50 to-purple-50 p-8 rounded-2xl shadow-lg">
                         <div class="flex items-center mb-4">
-                            <div class="flex text-yellow-500">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
+                            <img src="https://ui-avatars.com/api/?name=Max+Mueller&background=2563eb&color=fff" alt="Max" class="w-12 h-12 rounded-full mr-4" />
+                            <div>
+                                <h4 class="font-bold text-gray-800">Max Müller</h4>
+                                <div class="flex text-yellow-400">
+                                    <i class="fas fa-star text-sm"></i>
+                                    <i class="fas fa-star text-sm"></i>
+                                    <i class="fas fa-star text-sm"></i>
+                                    <i class="fas fa-star text-sm"></i>
+                                    <i class="fas fa-star text-sm"></i>
+                                </div>
                             </div>
                         </div>
-                        <p class="text-gray-700 mb-4">"Schnelle Lieferung, original Lizenzschlüssel und super Preis! Absolut empfehlenswert!"</p>
-                        <div class="flex items-center">
-                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                                <i class="fas fa-user text-blue-600"></i>
-                            </div>
+                        <p class="text-gray-700 italic">"Schnelle Lieferung, super Preis! Windows 11 Pro funktioniert einwandfrei. Kann ich nur empfehlen!"</p>
+                        <p class="text-sm text-gray-500 mt-4">Vor 2 Tagen</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-blue-50 to-purple-50 p-8 rounded-2xl shadow-lg">
+                        <div class="flex items-center mb-4">
+                            <img src="https://ui-avatars.com/api/?name=Anna+Schmidt&background=7c3aed&color=fff" alt="Anna" class="w-12 h-12 rounded-full mr-4" />
                             <div>
-                                <div class="font-semibold">Michael S.</div>
-                                <div class="text-sm text-gray-600">Windows 11 Pro</div>
+                                <h4 class="font-bold text-gray-800">Anna Schmidt</h4>
+                                <div class="flex text-yellow-400">
+                                    <i class="fas fa-star text-sm"></i>
+                                    <i class="fas fa-star text-sm"></i>
+                                    <i class="fas fa-star text-sm"></i>
+                                    <i class="fas fa-star text-sm"></i>
+                                    <i class="fas fa-star text-sm"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-gray-700 italic">"Office 2024 zum halben Preis! Lizenzschlüssel kam sofort per Mail. Alles top!"</p>
+                        <p class="text-sm text-gray-500 mt-4">Vor 5 Tagen</p>
+                    </div>
+                    <div class="bg-gradient-to-br from-blue-50 to-purple-50 p-8 rounded-2xl shadow-lg">
+                        <div class="flex items-center mb-4">
+                            <img src="https://ui-avatars.com/api/?name=Thomas+Weber&background=059669&color=fff" alt="Thomas" class="w-12 h-12 rounded-full mr-4" />
+                            <div>
+                                <h4 class="font-bold text-gray-800">Thomas Weber</h4>
+                                <div class="flex text-yellow-400">
+                                    <i class="fas fa-star text-sm"></i>
+                                    <i class="fas fa-star text-sm"></i>
+                                    <i class="fas fa-star text-sm"></i>
+                                    <i class="fas fa-star text-sm"></i>
+                                    <i class="fas fa-star text-sm"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="text-gray-700 italic">"Sehr seriöser Shop! Support antwortet schnell. Habe schon mehrfach hier gekauft."</p>
+                        <p class="text-sm text-gray-500 mt-4">Vor 1 Woche</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Payment & Security -->
+        <section class="py-16 bg-gray-50">
+            <div class="max-w-7xl mx-auto px-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <h2 class="text-3xl font-bold text-gray-800 mb-6">Sichere Zahlung & Datenschutz</h2>
+                        <div class="space-y-4">
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <i class="fas fa-lock text-green-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-800 mb-1">SSL-Verschlüsselung</h3>
+                                    <p class="text-gray-600">Alle Daten werden verschlüsselt übertragen</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <i class="fas fa-shield-alt text-blue-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-800 mb-1">DSGVO-konform</h3>
+                                    <p class="text-gray-600">Voller Datenschutz nach EU-Recht</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start">
+                                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
+                                    <i class="fas fa-credit-card text-purple-600 text-xl"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-gray-800 mb-1">Sichere Zahlungsmethoden</h3>
+                                    <p class="text-gray-600">Kreditkarte, PayPal, Überweisung</p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="feature-card bg-white rounded-xl p-6 shadow-lg">
-                        <div class="flex items-center mb-4">
-                            <div class="flex text-yellow-500">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
+                    <div class="bg-white p-8 rounded-2xl shadow-lg">
+                        <h3 class="text-xl font-bold text-gray-800 mb-6">Wir akzeptieren:</h3>
+                        <div class="grid grid-cols-3 gap-6">
+                            <div class="flex items-center justify-center p-4 border-2 border-gray-200 rounded-lg">
+                                <i class="fab fa-cc-visa text-5xl text-blue-600"></i>
                             </div>
-                        </div>
-                        <p class="text-gray-700 mb-4">"Bestelle hier regelmäßig für meine Firma. Immer zuverlässig und günstig!"</p>
-                        <div class="flex items-center">
-                            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-3">
-                                <i class="fas fa-user text-purple-600"></i>
+                            <div class="flex items-center justify-center p-4 border-2 border-gray-200 rounded-lg">
+                                <i class="fab fa-cc-mastercard text-5xl text-red-600"></i>
                             </div>
-                            <div>
-                                <div class="font-semibold">Julia K.</div>
-                                <div class="text-sm text-gray-600">Office 2024</div>
+                            <div class="flex items-center justify-center p-4 border-2 border-gray-200 rounded-lg">
+                                <i class="fab fa-cc-amex text-5xl text-blue-700"></i>
                             </div>
-                        </div>
-                    </div>
-                    <div class="feature-card bg-white rounded-xl p-6 shadow-lg">
-                        <div class="flex items-center mb-4">
-                            <div class="flex text-yellow-500">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
+                            <div class="flex items-center justify-center p-4 border-2 border-gray-200 rounded-lg">
+                                <i class="fab fa-cc-paypal text-5xl text-blue-500"></i>
                             </div>
-                        </div>
-                        <p class="text-gray-700 mb-4">"Top Service! Hatte eine Frage und bekam sofort kompetente Hilfe."</p>
-                        <div class="flex items-center">
-                            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                                <i class="fas fa-user text-green-600"></i>
+                            <div class="flex items-center justify-center p-4 border-2 border-gray-200 rounded-lg">
+                                <i class="fas fa-university text-5xl text-gray-600"></i>
                             </div>
-                            <div>
-                                <div class="font-semibold">Thomas B.</div>
-                                <div class="text-sm text-gray-600">Windows Server 2022</div>
+                            <div class="flex items-center justify-center p-4 border-2 border-gray-200 rounded-lg">
+                                <i class="fab fa-stripe text-5xl text-purple-600"></i>
                             </div>
                         </div>
                     </div>
@@ -511,93 +575,74 @@ export const HomepagePrestaShop = () => {
             </div>
         </section>
 
-        <!-- FAQ Section -->
+        <!-- FAQ -->
         <section class="py-16 bg-white">
             <div class="max-w-4xl mx-auto px-4">
                 <div class="text-center mb-12">
-                    <h2 class="text-3xl font-bold text-gray-800 mb-3">
-                        <i class="fas fa-question-circle text-blue-600 mr-3"></i>Häufig gestellte Fragen
-                    </h2>
-                    <p class="text-gray-600">Alles, was Sie wissen müssen</p>
+                    <h2 class="text-4xl font-bold text-gray-800 mb-4">Häufig gestellte Fragen</h2>
+                    <p class="text-gray-600 text-lg">Alles, was Sie wissen müssen</p>
                 </div>
                 <div class="space-y-4">
-                    <details class="bg-gray-50 rounded-lg p-6 group">
-                        <summary class="font-semibold text-lg cursor-pointer flex items-center justify-between">
-                            <span>Sind die Lizenzen original?</span>
-                            <i class="fas fa-chevron-down group-open:rotate-180 transition"></i>
-                        </summary>
-                        <p class="mt-4 text-gray-600">Ja, alle unsere Lizenzen sind 100% original und stammen direkt von Microsoft. Sie erhalten echte Produktschlüssel, die Sie aktivieren und ein Leben lang nutzen können.</p>
+                    <details class="bg-gray-50 p-6 rounded-xl cursor-pointer">
+                        <summary class="font-bold text-gray-800 text-lg">Sind die Lizenzen legal?</summary>
+                        <p class="mt-4 text-gray-600">Ja, alle unsere Lizenzen sind 100% legal und stammen direkt vom Hersteller. Wir sind autorisierter Händler.</p>
                     </details>
-                    <details class="bg-gray-50 rounded-lg p-6 group">
-                        <summary class="font-semibold text-lg cursor-pointer flex items-center justify-between">
-                            <span>Wie schnell erhalte ich meine Lizenz?</span>
-                            <i class="fas fa-chevron-down group-open:rotate-180 transition"></i>
-                        </summary>
-                        <p class="mt-4 text-gray-600">Nach erfolgreicher Bestellung erhalten Sie Ihren Lizenzschlüssel innerhalb weniger Sekunden per E-Mail. Der Versand erfolgt vollautomatisch.</p>
+                    <details class="bg-gray-50 p-6 rounded-xl cursor-pointer">
+                        <summary class="font-bold text-gray-800 text-lg">Wie schnell erhalte ich meinen Lizenzschlüssel?</summary>
+                        <p class="mt-4 text-gray-600">Nach Zahlungseingang erhalten Sie Ihren Lizenzschlüssel sofort per E-Mail. In der Regel innerhalb weniger Minuten.</p>
                     </details>
-                    <details class="bg-gray-50 rounded-lg p-6 group">
-                        <summary class="font-semibold text-lg cursor-pointer flex items-center justify-between">
-                            <span>Welche Zahlungsmethoden akzeptieren Sie?</span>
-                            <i class="fas fa-chevron-down group-open:rotate-180 transition"></i>
-                        </summary>
-                        <p class="mt-4 text-gray-600">Wir akzeptieren alle gängigen Zahlungsmethoden inkl. Kreditkarte, PayPal, Sofortüberweisung und mehr. Alle Zahlungen werden SSL-verschlüsselt verarbeitet.</p>
+                    <details class="bg-gray-50 p-6 rounded-xl cursor-pointer">
+                        <summary class="font-bold text-gray-800 text-lg">Kann ich die Software mehrmals installieren?</summary>
+                        <p class="mt-4 text-gray-600">Das hängt vom Lizenztyp ab. Retail-Lizenzen können auf einem neuen Gerät reaktiviert werden.</p>
                     </details>
-                    <details class="bg-gray-50 rounded-lg p-6 group">
-                        <summary class="font-semibold text-lg cursor-pointer flex items-center justify-between">
-                            <span>Gibt es eine Geld-zurück-Garantie?</span>
-                            <i class="fas fa-chevron-down group-open:rotate-180 transition"></i>
-                        </summary>
-                        <p class="mt-4 text-gray-600">Ja, wir bieten eine 14-Tage-Geld-zurück-Garantie. Sollten Sie nicht zufrieden sein, erstatten wir Ihnen den vollen Kaufpreis.</p>
+                    <details class="bg-gray-50 p-6 rounded-xl cursor-pointer">
+                        <summary class="font-bold text-gray-800 text-lg">Was passiert bei Problemen?</summary>
+                        <p class="mt-4 text-gray-600">Unser Support-Team hilft Ihnen gerne weiter. 14 Tage Geld-zurück-Garantie bei Problemen.</p>
                     </details>
-                </div>
-            </div>
-        </section>
-
-        <!-- Call to Action -->
-        <section class="bg-gradient-to-r from-blue-600 to-purple-600 py-16">
-            <div class="max-w-4xl mx-auto px-4 text-center text-white">
-                <h2 class="text-4xl font-bold mb-4">Bereit, loszulegen?</h2>
-                <p class="text-xl mb-8 text-blue-100">Finden Sie die perfekte Software für Ihre Bedürfnisse – zum besten Preis!</p>
-                <div class="flex flex-col sm:flex-row justify-center gap-4">
-                    <a href="/produkte" class="bg-white text-blue-600 px-10 py-4 rounded-lg font-bold text-lg hover:bg-gray-100 transition transform hover:scale-105 shadow-lg">
-                        <i class="fas fa-shopping-bag mr-2"></i>Jetzt einkaufen
-                    </a>
-                    <a href="/kontakt" class="bg-blue-800 text-white px-10 py-4 rounded-lg font-bold text-lg hover:bg-blue-900 transition border-2 border-white">
-                        <i class="fas fa-phone mr-2"></i>Kontakt aufnehmen
-                    </a>
                 </div>
             </div>
         </section>
 
         <!-- Footer -->
-        <footer class="bg-gray-900 text-gray-300 py-12">
+        <footer class="bg-gray-900 text-white py-12">
             <div class="max-w-7xl mx-auto px-4">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
                     <div>
-                        <h4 class="text-white font-bold mb-4">Über uns</h4>
-                        <p class="text-sm">SoftwareKing24 ist Ihr vertrauensvoller Partner für Original-Software zu unschlagbaren Preisen.</p>
+                        <img src="/static/logo.png" alt="SoftwareKing24" class="h-12 mb-4 brightness-0 invert" />
+                        <p class="text-gray-400 mb-4">Ihr vertrauenswürdiger Partner für Original-Software zu günstigen Preisen.</p>
+                        <div class="flex space-x-3">
+                            <a href="#" class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center hover:bg-blue-700 transition">
+                                <i class="fab fa-facebook-f"></i>
+                            </a>
+                            <a href="#" class="w-10 h-10 bg-blue-400 rounded-full flex items-center justify-center hover:bg-blue-500 transition">
+                                <i class="fab fa-twitter"></i>
+                            </a>
+                            <a href="#" class="w-10 h-10 bg-pink-600 rounded-full flex items-center justify-center hover:bg-pink-700 transition">
+                                <i class="fab fa-instagram"></i>
+                            </a>
+                        </div>
                     </div>
                     <div>
-                        <h4 class="text-white font-bold mb-4">Kategorien</h4>
-                        <ul class="space-y-2 text-sm">
-                            <li><a href="/produkte?category=Microsoft%20Windows" class="hover:text-white transition">Windows</a></li>
-                            <li><a href="/produkte?category=Microsoft%20Office" class="hover:text-white transition">Office</a></li>
+                        <h4 class="font-bold text-lg mb-4">Kategorien</h4>
+                        <ul class="space-y-2 text-gray-400">
+                            <li><a href="/produkte?category=Windows" class="hover:text-white transition">Windows</a></li>
+                            <li><a href="/produkte?category=Office" class="hover:text-white transition">Microsoft Office</a></li>
                             <li><a href="/produkte?category=Server" class="hover:text-white transition">Server</a></li>
                             <li><a href="/produkte?category=Antivirus" class="hover:text-white transition">Antivirus</a></li>
                         </ul>
                     </div>
                     <div>
-                        <h4 class="text-white font-bold mb-4">Kundenservice</h4>
-                        <ul class="space-y-2 text-sm">
+                        <h4 class="font-bold text-lg mb-4">Kundenservice</h4>
+                        <ul class="space-y-2 text-gray-400">
                             <li><a href="/kontakt" class="hover:text-white transition">Kontakt</a></li>
-                            <li><a href="/faq" class="hover:text-white transition">FAQ</a></li>
-                            <li><a href="/versand" class="hover:text-white transition">Versand</a></li>
-                            <li><a href="/rueckgabe" class="hover:text-white transition">Rückgabe</a></li>
+                            <li><a href="/hilfe" class="hover:text-white transition">Hilfe & Support</a></li>
+                            <li><a href="/versand" class="hover:text-white transition">Versand & Lieferung</a></li>
+                            <li><a href="/retoure" class="hover:text-white transition">Rückgabe</a></li>
                         </ul>
                     </div>
                     <div>
-                        <h4 class="text-white font-bold mb-4">Rechtliches</h4>
-                        <ul class="space-y-2 text-sm">
+                        <h4 class="font-bold text-lg mb-4">Rechtliches</h4>
+                        <ul class="space-y-2 text-gray-400">
                             <li><a href="/agb" class="hover:text-white transition">AGB</a></li>
                             <li><a href="/datenschutz" class="hover:text-white transition">Datenschutz</a></li>
                             <li><a href="/impressum" class="hover:text-white transition">Impressum</a></li>
@@ -605,105 +650,147 @@ export const HomepagePrestaShop = () => {
                         </ul>
                     </div>
                 </div>
-                <div class="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
-                    <p class="text-sm">&copy; 2026 SoftwareKing24. Alle Rechte vorbehalten.</p>
-                    <div class="flex space-x-4 mt-4 md:mt-0">
-                        <a href="#" class="text-2xl hover:text-white transition"><i class="fab fa-facebook"></i></a>
-                        <a href="#" class="text-2xl hover:text-white transition"><i class="fab fa-twitter"></i></a>
-                        <a href="#" class="text-2xl hover:text-white transition"><i class="fab fa-instagram"></i></a>
-                        <a href="#" class="text-2xl hover:text-white transition"><i class="fab fa-youtube"></i></a>
-                    </div>
+                <div class="border-t border-gray-800 pt-8 text-center text-gray-400">
+                    <p>&copy; 2026 SoftwareKing24. Alle Rechte vorbehalten.</p>
                 </div>
             </div>
         </footer>
 
         <script>
-            // Initialize cart count
+            // Initialize cart counter
             document.addEventListener('DOMContentLoaded', () => {
-                updateCartCount();
-                loadBestsellers();
-                loadNewArrivals();
-                startCountdown();
+                if (typeof CartManager !== 'undefined') {
+                    CartManager.updateCartCount();
+                    loadProducts();
+                }
             });
 
-            function updateCartCount() {
-                const cart = CartManager.getCart();
-                const cartCountElements = document.querySelectorAll('[data-cart-count]');
-                cartCountElements.forEach(el => {
-                    el.textContent = cart.items.length;
-                });
-            }
-
-            async function loadBestsellers() {
+            // Load products
+            async function loadProducts() {
                 try {
-                    const response = await axios.get('/api/products?limit=4&sort=popular');
-                    const products = response.data.data;
-                    const container = document.getElementById('bestsellers-grid');
-                    container.innerHTML = products.map(product => createProductCard(product)).join('');
+                    // Load flash deals
+                    const flashResponse = await axios.get('/api/products?limit=4&sort=price-asc');
+                    if (flashResponse.data.success) {
+                        renderFlashDeals(flashResponse.data.data);
+                    }
+
+                    // Load bestsellers
+                    const bestResponse = await axios.get('/api/products/featured');
+                    if (bestResponse.data.success) {
+                        renderBestsellers(bestResponse.data.data);
+                    }
+
+                    // Load new arrivals
+                    const newResponse = await axios.get('/api/products?limit=4&sort=newest');
+                    if (newResponse.data.success) {
+                        renderNewArrivals(newResponse.data.data);
+                    }
                 } catch (error) {
-                    console.error('Error loading bestsellers:', error);
+                    console.error('Error loading products:', error);
                 }
             }
 
-            async function loadNewArrivals() {
-                try {
-                    const response = await axios.get('/api/products?limit=4&sort=newest');
-                    const products = response.data.data;
-                    const container = document.getElementById('new-arrivals-grid');
-                    container.innerHTML = products.map(product => createProductCard(product)).join('');
-                } catch (error) {
-                    console.error('Error loading new arrivals:', error);
-                }
-            }
-
-            function createProductCard(product) {
-                const hasDiscount = product.sale_price && product.sale_price < product.price;
-                const displayPrice = hasDiscount ? product.sale_price : product.price;
-                const savings = hasDiscount ? Math.round(((product.price - product.sale_price) / product.price) * 100) : 0;
-
-                return \`
-                    <div class="product-card bg-white rounded-xl p-6 shadow-md">
-                        <div class="relative mb-4">
-                            \${hasDiscount ? \`<div class="absolute top-2 right-2 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">-\${savings}%</div>\` : ''}
-                            <div class="w-full h-48 bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg flex items-center justify-center mb-4">
-                                <i class="fas fa-box text-6xl text-blue-200"></i>
+            function renderFlashDeals(products) {
+                const container = document.getElementById('flash-deals');
+                container.innerHTML = products.slice(0, 4).map(product => {
+                    const discount = product.sale_price ? Math.round(((product.price - product.sale_price) / product.price) * 100) : 0;
+                    const displayPrice = product.sale_price || product.price;
+                    
+                    return \`
+                        <div class="bg-white rounded-2xl shadow-xl overflow-hidden hover-lift">
+                            <div class="relative">
+                                <img src="\${product.image}" alt="\${product.name}" class="w-full h-48 object-cover" />
+                                \${discount > 0 ? \`<div class="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full font-bold">-\${discount}%</div>\` : ''}
                             </div>
-                        </div>
-                        <div class="text-sm text-blue-600 mb-2">\${product.category || 'Software'}</div>
-                        <h3 class="font-bold text-lg mb-3 h-12 line-clamp-2">\${product.name}</h3>
-                        <div class="flex items-center mb-3">
-                            <div class="flex text-yellow-500 text-sm">
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                                <i class="fas fa-star"></i>
-                            </div>
-                            <span class="text-sm text-gray-600 ml-2">(4.9)</span>
-                        </div>
-                        <div class="mb-4">
-                            \${hasDiscount ? \`
-                                <div class="flex items-center space-x-2">
-                                    <span class="text-2xl font-bold text-red-600">€\${displayPrice.toFixed(2)}</span>
-                                    <span class="text-lg text-gray-500 line-through">€\${product.price.toFixed(2)}</span>
+                            <div class="p-6">
+                                <h3 class="font-bold text-gray-800 mb-2">\${product.name}</h3>
+                                <div class="flex items-center justify-between mb-4">
+                                    <div>
+                                        \${product.sale_price ? \`
+                                            <span class="text-2xl font-bold text-red-600">€\${displayPrice.toFixed(2)}</span>
+                                            <span class="text-sm text-gray-500 line-through ml-2">€\${product.price.toFixed(2)}</span>
+                                        \` : \`
+                                            <span class="text-2xl font-bold text-gray-800">€\${displayPrice.toFixed(2)}</span>
+                                        \`}
+                                    </div>
                                 </div>
-                            \` : \`
-                                <span class="text-2xl font-bold text-blue-600">€\${displayPrice.toFixed(2)}</span>
-                            \`}
+                                <button onclick="addToCart(\${product.id})" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-bold hover:from-blue-700 hover:to-purple-700 transition">
+                                    <i class="fas fa-shopping-cart mr-2"></i>In den Warenkorb
+                                </button>
+                            </div>
                         </div>
-                        <div class="flex space-x-2">
-                            <button 
-                                onclick="CartManager.addItem(\${product.id}, '\${product.name.replace(/'/g, "\\'")}', \${displayPrice}, '/images/product.jpg', 1); updateCartCount(); alert('Produkt zum Warenkorb hinzugefügt!');"
-                                class="flex-1 bg-blue-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
-                            >
-                                <i class="fas fa-shopping-cart mr-2"></i>In den Warenkorb
-                            </button>
-                            <a href="/produkt/\${product.id}" class="bg-gray-100 text-gray-700 px-4 py-3 rounded-lg hover:bg-gray-200 transition">
-                                <i class="fas fa-eye"></i>
-                            </a>
+                    \`;
+                }).join('');
+            }
+
+            function renderBestsellers(products) {
+                const container = document.getElementById('bestsellers-products');
+                container.innerHTML = products.slice(0, 4).map(product => {
+                    const displayPrice = product.sale_price || product.price;
+                    
+                    return \`
+                        <div class="bg-white rounded-xl shadow-md overflow-hidden hover-lift">
+                            <div class="relative">
+                                <img src="\${product.image}" alt="\${product.name}" class="w-full h-48 object-cover" />
+                                <div class="absolute top-4 left-4 bg-yellow-400 text-gray-900 px-3 py-1 rounded-full font-bold text-sm">
+                                    <i class="fas fa-star mr-1"></i>Bestseller
+                                </div>
+                            </div>
+                            <div class="p-6">
+                                <h3 class="font-bold text-gray-800 mb-2">\${product.name}</h3>
+                                <div class="flex items-center mb-3">
+                                    <div class="flex text-yellow-400 text-sm">
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                        <i class="fas fa-star"></i>
+                                    </div>
+                                    <span class="text-sm text-gray-600 ml-2">(4.9)</span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-2xl font-bold text-blue-600">€\${displayPrice.toFixed(2)}</span>
+                                    <button onclick="addToCart(\${product.id})" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                                        <i class="fas fa-cart-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
-                    </div>
-                \`;
+                    \`;
+                }).join('');
+            }
+
+            function renderNewArrivals(products) {
+                const container = document.getElementById('new-arrivals');
+                container.innerHTML = products.slice(0, 4).map(product => {
+                    const displayPrice = product.sale_price || product.price;
+                    
+                    return \`
+                        <div class="bg-white rounded-xl shadow-md overflow-hidden hover-lift">
+                            <div class="relative">
+                                <img src="\${product.image}" alt="\${product.name}" class="w-full h-48 object-cover" />
+                                <div class="absolute top-4 left-4 bg-purple-500 text-white px-3 py-1 rounded-full font-bold text-sm">
+                                    <i class="fas fa-sparkles mr-1"></i>Neu
+                                </div>
+                            </div>
+                            <div class="p-6">
+                                <h3 class="font-bold text-gray-800 mb-2">\${product.name}</h3>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-2xl font-bold text-purple-600">€\${displayPrice.toFixed(2)}</span>
+                                    <button onclick="addToCart(\${product.id})" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
+                                        <i class="fas fa-cart-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    \`;
+                }).join('');
+            }
+
+            async function addToCart(productId) {
+                if (typeof CartManager !== 'undefined') {
+                    await CartManager.addToCart(productId);
+                }
             }
 
             function performSearch() {
@@ -711,23 +798,6 @@ export const HomepagePrestaShop = () => {
                 if (query) {
                     window.location.href = \`/produkte?search=\${encodeURIComponent(query)}\`;
                 }
-            }
-
-            function startCountdown() {
-                const endTime = new Date().getTime() + (12 * 60 * 60 * 1000 + 34 * 60 * 1000 + 56 * 1000);
-                
-                setInterval(() => {
-                    const now = new Date().getTime();
-                    const distance = endTime - now;
-                    
-                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-                    
-                    document.getElementById('hours').textContent = hours.toString().padStart(2, '0');
-                    document.getElementById('minutes').textContent = minutes.toString().padStart(2, '0');
-                    document.getElementById('seconds').textContent = seconds.toString().padStart(2, '0');
-                }, 1000);
             }
         </script>
     </body>
