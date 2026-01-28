@@ -5,6 +5,7 @@ import type { CloudflareBindings } from './types'
 import { DatabaseHelper } from './lib/database'
 import { Layout } from './renderer'
 import { Homepage } from './components/homepage'
+import { ProductsPage } from './components/products-page'
 import { 
   formatPrice, 
   generateOrderNumber, 
@@ -41,6 +42,9 @@ import { calculateVAT as calculateEUVAT, validateVATNumber } from './lib/vat'
 
 // Audit Logging
 import { AuditLogger, SecurityLogger, auditMiddleware } from './lib/audit'
+
+// API Routes
+import api from './api'
 
 // Webhook Verification
 import { 
@@ -108,6 +112,9 @@ app.onError((error, c) => {
 // Serve static files
 app.use('/static/*', serveStatic({ root: './public' }))
 
+// Mount API routes
+app.route('/api', api)
+
 // ============================================
 // MIDDLEWARE: Database Helper
 // ============================================
@@ -147,6 +154,15 @@ app.get('/de', (c) => {
       <Homepage />
     </Layout>
   )
+})
+
+// Products page
+app.get('/produkte', (c) => {
+  return c.html(<ProductsPage />)
+})
+
+app.get('/products', (c) => {
+  return c.html(<ProductsPage />)
 })
 
 // ============================================
