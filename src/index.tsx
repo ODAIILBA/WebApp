@@ -24,13 +24,12 @@ import {
   generateOrderNumber, 
   generateToken, 
   getSessionExpiration,
-  hashPassword,
-  verifyPassword,
   calculateVAT,
   safeJsonParse,
   generateProductSchema,
   generateFAQSchema
 } from './utils/helpers'
+import { AuthService, hashPassword, verifyPassword, generateSecureToken } from './lib/auth'
 
 // Security Middleware
 import { 
@@ -113,14 +112,29 @@ app.use('/api/*', apiRateLimiter.middleware())
 app.use('/admin/*', adminRateLimiter.middleware())
 
 // CSRF protection for state-changing operations
-// Exclude import endpoint from CSRF (it's accessed from admin panel which has its own auth)
+// Exclude import endpoint, section products, and auth endpoints from CSRF
 app.use('/api/*', async (c, next) => {
-  // Skip CSRF for import endpoint and section products
-  if (c.req.path === '/api/admin/import/woocommerce' || 
-      c.req.path.startsWith('/api/admin/homepage-sections/') && c.req.path.endsWith('/products')) {
-    return next();
+  // Skip CSRF for these endpoints
+  const exemptPaths = [
+    '/api/admin/import/woocommerce',
+    '/api/auth/register',
+    '/api/auth/login',
+    '/api/auth/password-reset/request',
+    '/api/auth/password-reset/confirm',
+    '/api/auth/verify-email'
+  ]
+  
+  // Check if path is exempt
+  if (exemptPaths.includes(c.req.path)) {
+    return next()
   }
-  return csrf.middleware()(c, next);
+  
+  // Check if it's homepage sections products endpoint
+  if (c.req.path.startsWith('/api/admin/homepage-sections/') && c.req.path.endsWith('/products')) {
+    return next()
+  }
+  
+  return csrf.middleware()(c, next)
 })
 app.use('/admin/*', csrf.middleware())
 
@@ -143,6 +157,11 @@ app.use('/static/*', serveStatic({ root: './public' }))
 
 app.use('*', async (c, next) => {
   c.set('db', new DatabaseHelper(c.env.DB))
+  
+  // Add AuthService with JWT secret from environment
+  const jwtSecret = c.env.JWT_SECRET || 'dev-secret-change-in-production'
+  c.set('auth', new AuthService(c.env.DB, jwtSecret))
+  
   await next()
 })
 
@@ -812,7 +831,7 @@ app.get('/api/homepage-sections', async (c) => {
 
 app.post('/api/auth/register', async (c) => {
   try {
-    const db = c.get('db') as DatabaseHelper
+    const auth = c.get('auth') as AuthService
     const body = await c.req.json()
 
     // Validate input
@@ -820,51 +839,53 @@ app.post('/api/auth/register', async (c) => {
       return c.json({ success: false, error: 'Missing required fields' }, 400)
     }
 
-    // Check if user exists
-    const existingUser = await db.getUserByEmail(body.email)
-    if (existingUser) {
-      return c.json({ success: false, error: 'Email already registered' }, 400)
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(body.email)) {
+      return c.json({ success: false, error: 'Invalid email format' }, 400)
     }
 
-    // Hash password
-    const passwordHash = await hashPassword(body.password)
+    // Validate password strength (min 8 chars, 1 uppercase, 1 lowercase, 1 number)
+    if (body.password.length < 8) {
+      return c.json({ success: false, error: 'Password must be at least 8 characters' }, 400)
+    }
 
-    // Create user
-    const userId = await db.createUser({
-      email: body.email,
-      password_hash: passwordHash,
-      first_name: body.first_name,
-      last_name: body.last_name,
-      role: 'customer',
-      language_preference: c.get('language') || 'en'
-    })
+    // Register user
+    const result = await auth.register(
+      body.email,
+      body.password,
+      body.first_name,
+      body.last_name
+    )
 
-    // Create session
-    const token = generateToken()
-    const expiresAt = getSessionExpiration()
-    await db.createSession(userId, token, expiresAt)
+    if (!result.success) {
+      return c.json({ success: false, error: result.error }, 400)
+    }
+
+    // Log in the user immediately after registration
+    const loginResult = await auth.login(body.email, body.password)
+    
+    if (!loginResult.success) {
+      return c.json({ 
+        success: true, 
+        message: 'Registration successful. Please log in.',
+        userId: result.userId
+      })
+    }
 
     return c.json({ 
       success: true, 
-      data: { 
-        token,
-        user: {
-          id: userId,
-          email: body.email,
-          first_name: body.first_name,
-          last_name: body.last_name,
-          role: 'customer'
-        }
-      } 
+      data: loginResult.token
     })
   } catch (error) {
+    console.error('Registration error:', error)
     return c.json({ success: false, error: 'Registration failed' }, 500)
   }
 })
 
 app.post('/api/auth/login', async (c) => {
   try {
-    const db = c.get('db') as DatabaseHelper
+    const auth = c.get('auth') as AuthService
     const body = await c.req.json()
 
     // Validate input
@@ -872,38 +893,96 @@ app.post('/api/auth/login', async (c) => {
       return c.json({ success: false, error: 'Missing email or password' }, 400)
     }
 
-    // Get user
-    const user = await db.getUserByEmail(body.email)
-    if (!user) {
-      return c.json({ success: false, error: 'Invalid credentials' }, 401)
-    }
+    // Login
+    const result = await auth.login(body.email, body.password)
 
-    // Verify password
-    const isValid = await verifyPassword(body.password, user.password_hash)
-    if (!isValid) {
-      return c.json({ success: false, error: 'Invalid credentials' }, 401)
+    if (!result.success) {
+      return c.json({ success: false, error: result.error }, 401)
     }
-
-    // Create session
-    const token = generateToken()
-    const expiresAt = getSessionExpiration()
-    await db.createSession(user.id, token, expiresAt)
 
     return c.json({ 
       success: true, 
-      data: { 
-        token,
-        user: {
-          id: user.id,
-          email: user.email,
-          first_name: user.first_name,
-          last_name: user.last_name,
-          role: user.role
-        }
-      } 
+      data: result.token
     })
   } catch (error) {
+    console.error('Login error:', error)
     return c.json({ success: false, error: 'Login failed' }, 500)
+  }
+})
+
+// Password Reset Request
+app.post('/api/auth/password-reset/request', async (c) => {
+  try {
+    const auth = c.get('auth') as AuthService
+    const body = await c.req.json()
+
+    if (!body.email) {
+      return c.json({ success: false, error: 'Email is required' }, 400)
+    }
+
+    const result = await auth.requestPasswordReset(body.email)
+    
+    // Always return success (security best practice - don't reveal if email exists)
+    return c.json({ 
+      success: true, 
+      message: 'If the email exists, a password reset link has been sent'
+    })
+  } catch (error) {
+    console.error('Password reset request error:', error)
+    return c.json({ success: false, error: 'Failed to process request' }, 500)
+  }
+})
+
+// Password Reset Confirmation
+app.post('/api/auth/password-reset/confirm', async (c) => {
+  try {
+    const auth = c.get('auth') as AuthService
+    const body = await c.req.json()
+
+    if (!body.token || !body.newPassword) {
+      return c.json({ success: false, error: 'Token and new password are required' }, 400)
+    }
+
+    // Validate password strength
+    if (body.newPassword.length < 8) {
+      return c.json({ success: false, error: 'Password must be at least 8 characters' }, 400)
+    }
+
+    const result = await auth.resetPassword(body.token, body.newPassword)
+
+    if (!result.success) {
+      return c.json({ success: false, error: result.error }, 400)
+    }
+
+    return c.json({ 
+      success: true, 
+      message: 'Password reset successfully. You can now log in with your new password.'
+    })
+  } catch (error) {
+    console.error('Password reset confirmation error:', error)
+    return c.json({ success: false, error: 'Failed to reset password' }, 500)
+  }
+})
+
+// Email Verification
+app.get('/api/auth/verify-email/:token', async (c) => {
+  try {
+    const auth = c.get('auth') as AuthService
+    const token = c.req.param('token')
+
+    const result = await auth.verifyEmail(token)
+
+    if (!result.success) {
+      return c.json({ success: false, error: 'Invalid or expired verification token' }, 400)
+    }
+
+    return c.json({ 
+      success: true, 
+      message: 'Email verified successfully. You can now log in.'
+    })
+  } catch (error) {
+    console.error('Email verification error:', error)
+    return c.json({ success: false, error: 'Verification failed' }, 500)
   }
 })
 

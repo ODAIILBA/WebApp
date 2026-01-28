@@ -1,302 +1,360 @@
-// License key generation and management
-import { CloudflareBindings } from '../types'
+/**
+ * License Key Generator
+ * Generates secure, unique license keys for software products
+ */
 
-export interface License {
-  id?: number
-  key: string
-  productId: number
-  orderId: number
-  userId?: number
-  status: 'active' | 'revoked' | 'expired'
-  activatedAt?: string
-  expiresAt?: string
-  createdAt?: string
+import type { D1Database } from '@cloudflare/workers-types'
+
+export interface LicenseKey {
+  id: number
+  product_id: number
+  license_key: string
+  status: 'available' | 'assigned' | 'activated' | 'expired' | 'revoked'
+  order_id?: number
+  user_id?: number
+  activation_count: number
+  max_activations: number
+  expires_at?: string
+  created_at: string
 }
 
+export interface LicenseActivation {
+  id: number
+  license_key_id: number
+  device_id: string
+  device_name?: string
+  ip_address?: string
+  activated_at: string
+}
+
+/**
+ * Generate a secure license key
+ * Format: XXXX-XXXX-XXXX-XXXX-XXXX (5 groups of 4 alphanumeric characters)
+ */
+export function generateLicenseKey(prefix: string = 'SK24'): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+  const groups = 5
+  const groupLength = 4
+  
+  const parts: string[] = []
+  
+  for (let i = 0; i < groups; i++) {
+    let group = ''
+    const randomValues = new Uint8Array(groupLength)
+    crypto.getRandomValues(randomValues)
+    
+    for (let j = 0; j < groupLength; j++) {
+      group += chars[randomValues[j] % chars.length]
+    }
+    
+    parts.push(group)
+  }
+  
+  return `${prefix}-${parts.join('-')}`
+}
+
+/**
+ * Validate license key format
+ */
+export function isValidLicenseKeyFormat(key: string): boolean {
+  // Format: PREFIX-XXXX-XXXX-XXXX-XXXX-XXXX
+  const pattern = /^[A-Z0-9]+-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/
+  return pattern.test(key)
+}
+
+/**
+ * License Generator Service
+ */
 export class LicenseGenerator {
+  constructor(private db: D1Database, private prefix: string = 'SK24') {}
+  
   /**
-   * Generate a random license key in format: XXXX-XXXX-XXXX-XXXX
+   * Generate a batch of license keys for a product
    */
-  static generateKey(): string {
-    const segments = 4
-    const segmentLength = 4
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789' // Removed ambiguous chars (0,O,1,I)
-    
-    const generateSegment = () => {
-      let segment = ''
-      for (let i = 0; i < segmentLength; i++) {
-        segment += chars.charAt(Math.floor(Math.random() * chars.length))
-      }
-      return segment
-    }
-    
-    const keySegments = []
-    for (let i = 0; i < segments; i++) {
-      keySegments.push(generateSegment())
-    }
-    
-    return keySegments.join('-')
-  }
-
-  /**
-   * Generate multiple license keys
-   */
-  static generateKeys(count: number): string[] {
-    const keys = new Set<string>()
-    
-    while (keys.size < count) {
-      keys.add(this.generateKey())
-    }
-    
-    return Array.from(keys)
-  }
-
-  /**
-   * Validate license key format
-   */
-  static validateKeyFormat(key: string): boolean {
-    const pattern = /^[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}-[A-Z2-9]{4}$/
-    return pattern.test(key)
-  }
-
-  /**
-   * Create license in database
-   */
-  static async createLicense(
-    DB: D1Database,
-    data: {
-      productId: number
-      orderId: number
-      userId?: number
-      quantity?: number
-    }
-  ): Promise<License[]> {
-    const { productId, orderId, userId, quantity = 1 } = data
-    const licenses: License[] = []
-
+  async generateBatch(
+    productId: number,
+    count: number,
+    maxActivations: number = 1,
+    expiresInDays?: number
+  ): Promise<{ success: boolean; keys?: string[]; error?: string }> {
     try {
-      // Generate unique keys
-      const keys = this.generateKeys(quantity)
-
-      // Insert licenses into database
-      for (const key of keys) {
-        const result = await DB.prepare(
-          `INSERT INTO licenses (
-            license_key, product_id, order_id, user_id, status, created_at
-          ) VALUES (?, ?, ?, ?, 'active', datetime('now'))`
-        ).bind(key, productId, orderId, userId || null).run()
-
-        licenses.push({
-          id: result.meta.last_row_id,
-          key,
-          productId,
-          orderId,
-          userId,
-          status: 'active',
-          createdAt: new Date().toISOString()
-        })
+      const keys: string[] = []
+      const expiresAt = expiresInDays 
+        ? new Date(Date.now() + expiresInDays * 24 * 60 * 60 * 1000).toISOString()
+        : null
+      
+      for (let i = 0; i < count; i++) {
+        let licenseKey: string
+        let attempts = 0
+        const maxAttempts = 10
+        
+        // Generate unique key\n        do {
+          licenseKey = generateLicenseKey(this.prefix)
+          attempts++
+          
+          // Check if key already exists
+          const existing = await this.db
+            .prepare('SELECT id FROM license_keys WHERE license_key = ?')
+            .bind(licenseKey)
+            .first()
+          
+          if (!existing) {
+            break
+          }
+          
+          if (attempts >= maxAttempts) {
+            return { success: false, error: 'Failed to generate unique license key' }
+          }
+        } while (true)
+        
+        // Insert license key
+        await this.db
+          .prepare(`
+            INSERT INTO license_keys (
+              product_id, license_key, status, max_activations, expires_at
+            ) VALUES (?, ?, 'available', ?, ?)
+          `)
+          .bind(productId, licenseKey, maxActivations, expiresAt)
+          .run()
+        
+        keys.push(licenseKey)
       }
-
-      return licenses
+      
+      return { success: true, keys }
     } catch (error) {
-      console.error('Error creating licenses:', error)
-      throw new Error('Failed to create licenses')
+      console.error('License generation error:', error)
+      return { success: false, error: 'Failed to generate license keys' }
     }
   }
-
+  
   /**
-   * Get licenses for an order
+   * Assign a license key to an order
    */
-  static async getLicensesByOrder(
-    DB: D1Database,
-    orderId: number
-  ): Promise<License[]> {
-    try {
-      const result = await DB.prepare(
-        `SELECT l.*, p.name as product_name 
-         FROM licenses l
-         LEFT JOIN products p ON l.product_id = p.id
-         WHERE l.order_id = ?
-         ORDER BY l.created_at DESC`
-      ).bind(orderId).all()
-
-      return result.results as any[]
-    } catch (error) {
-      console.error('Error getting licenses:', error)
-      throw new Error('Failed to get licenses')
-    }
-  }
-
-  /**
-   * Get licenses for a user
-   */
-  static async getLicensesByUser(
-    DB: D1Database,
+  async assignToOrder(
+    productId: number,
+    orderId: number,
     userId: number
-  ): Promise<License[]> {
+  ): Promise<{ success: boolean; licenseKey?: string; error?: string }> {
     try {
-      const result = await DB.prepare(
-        `SELECT l.*, p.name as product_name, o.order_number
-         FROM licenses l
-         LEFT JOIN products p ON l.product_id = p.id
-         LEFT JOIN orders o ON l.order_id = o.id
-         WHERE l.user_id = ?
-         ORDER BY l.created_at DESC`
-      ).bind(userId).all()
-
-      return result.results as any[]
-    } catch (error) {
-      console.error('Error getting user licenses:', error)
-      throw new Error('Failed to get user licenses')
-    }
-  }
-
-  /**
-   * Verify a license key
-   */
-  static async verifyLicense(
-    DB: D1Database,
-    key: string
-  ): Promise<{ valid: boolean; license?: License; message: string }> {
-    try {
-      // Validate format
-      if (!this.validateKeyFormat(key)) {
-        return {
-          valid: false,
-          message: 'Invalid license key format'
-        }
-      }
-
-      // Check database
-      const license = await DB.prepare(
-        `SELECT l.*, p.name as product_name
-         FROM licenses l
-         LEFT JOIN products p ON l.product_id = p.id
-         WHERE l.license_key = ?`
-      ).bind(key).first() as any
-
+      // Get an available license key for this product
+      const license = await this.db
+        .prepare(`
+          SELECT id, license_key, max_activations, expires_at
+          FROM license_keys
+          WHERE product_id = ? AND status = 'available'
+            AND (expires_at IS NULL OR expires_at > datetime('now'))
+          LIMIT 1
+        `)
+        .bind(productId)
+        .first<LicenseKey>()
+      
       if (!license) {
-        return {
-          valid: false,
-          message: 'License key not found'
-        }
+        return { success: false, error: 'No available license keys for this product' }
       }
-
+      
+      // Update license key
+      await this.db
+        .prepare(`
+          UPDATE license_keys
+          SET status = 'assigned',
+              order_id = ?,
+              user_id = ?
+          WHERE id = ?
+        `)
+        .bind(orderId, userId, license.id)
+        .run()
+      
+      return { success: true, licenseKey: license.license_key }
+    } catch (error) {
+      console.error('License assignment error:', error)
+      return { success: false, error: 'Failed to assign license key' }
+    }
+  }
+  
+  /**
+   * Activate a license key
+   */
+  async activateLicense(
+    licenseKey: string,
+    deviceId: string,
+    deviceName?: string,
+    ipAddress?: string
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      // Get license
+      const license = await this.db
+        .prepare(`
+          SELECT id, status, activation_count, max_activations, expires_at
+          FROM license_keys
+          WHERE license_key = ?
+        `)
+        .bind(licenseKey)
+        .first<LicenseKey>()
+      
+      if (!license) {
+        return { success: false, error: 'Invalid license key' }
+      }
+      
+      // Check if license is valid
       if (license.status === 'revoked') {
-        return {
-          valid: false,
-          license,
-          message: 'License key has been revoked'
-        }
+        return { success: false, error: 'License key has been revoked' }
       }
-
-      if (license.status === 'expired') {
-        return {
-          valid: false,
-          license,
-          message: 'License key has expired'
-        }
+      
+      if (license.status === 'available') {
+        return { success: false, error: 'License key must be assigned before activation' }
       }
-
-      // Check expiration date if set
+      
+      // Check expiration
       if (license.expires_at && new Date(license.expires_at) < new Date()) {
-        // Update status to expired
-        await DB.prepare(
-          `UPDATE licenses SET status = 'expired', updated_at = datetime('now') WHERE id = ?`
-        ).bind(license.id).run()
-
-        return {
-          valid: false,
-          license,
-          message: 'License key has expired'
-        }
+        await this.db
+          .prepare('UPDATE license_keys SET status = ? WHERE id = ?')
+          .bind('expired', license.id)
+          .run()
+        
+        return { success: false, error: 'License key has expired' }
       }
-
-      return {
-        valid: true,
-        license,
-        message: 'License key is valid'
+      
+      // Check if device is already activated
+      const existingActivation = await this.db
+        .prepare('SELECT id FROM license_activations WHERE license_key_id = ? AND device_id = ?')
+        .bind(license.id, deviceId)
+        .first()
+      
+      if (existingActivation) {
+        return { success: true } // Already activated on this device
       }
+      
+      // Check activation limit
+      if (license.activation_count >= license.max_activations) {
+        return { success: false, error: 'Maximum activation limit reached' }
+      }
+      
+      // Create activation record
+      await this.db
+        .prepare(`
+          INSERT INTO license_activations (
+            license_key_id, device_id, device_name, ip_address
+          ) VALUES (?, ?, ?, ?)
+        `)
+        .bind(license.id, deviceId, deviceName, ipAddress)
+        .run()
+      
+      // Update activation count and status
+      await this.db
+        .prepare(`
+          UPDATE license_keys
+          SET activation_count = activation_count + 1,
+              status = CASE 
+                WHEN activation_count + 1 >= max_activations THEN 'activated'
+                ELSE status
+              END
+          WHERE id = ?
+        `)
+        .bind(license.id)
+        .run()
+      
+      return { success: true }
     } catch (error) {
-      console.error('Error verifying license:', error)
-      throw new Error('Failed to verify license')
+      console.error('License activation error:', error)
+      return { success: false, error: 'Failed to activate license' }
     }
   }
-
+  
   /**
-   * Activate a license (record activation)
+   * Deactivate a license on a specific device
    */
-  static async activateLicense(
-    DB: D1Database,
-    key: string,
-    metadata?: {
-      deviceId?: string
-      ipAddress?: string
-      userAgent?: string
-    }
-  ): Promise<{ success: boolean; message: string }> {
+  async deactivateLicense(
+    licenseKey: string,
+    deviceId: string
+  ): Promise<{ success: boolean; error?: string }> {
     try {
-      const verification = await this.verifyLicense(DB, key)
-
-      if (!verification.valid) {
-        return {
-          success: false,
-          message: verification.message
-        }
+      // Get license
+      const license = await this.db
+        .prepare('SELECT id FROM license_keys WHERE license_key = ?')
+        .bind(licenseKey)
+        .first<{ id: number }>()
+      
+      if (!license) {
+        return { success: false, error: 'Invalid license key' }
       }
-
-      // Update activation timestamp
-      await DB.prepare(
-        `UPDATE licenses 
-         SET activated_at = datetime('now'), 
-             updated_at = datetime('now')
-         WHERE license_key = ?`
-      ).bind(key).run()
-
-      // Log activation (if you have an activations table)
-      // await this.logActivation(DB, key, metadata)
-
-      return {
-        success: true,
-        message: 'License activated successfully'
-      }
-    } catch (error) {
-      console.error('Error activating license:', error)
-      throw new Error('Failed to activate license')
-    }
-  }
-
-  /**
-   * Revoke a license
-   */
-  static async revokeLicense(
-    DB: D1Database,
-    key: string,
-    reason?: string
-  ): Promise<{ success: boolean; message: string }> {
-    try {
-      const result = await DB.prepare(
-        `UPDATE licenses 
-         SET status = 'revoked', updated_at = datetime('now')
-         WHERE license_key = ?`
-      ).bind(key).run()
-
+      
+      // Delete activation
+      const result = await this.db
+        .prepare('DELETE FROM license_activations WHERE license_key_id = ? AND device_id = ?')
+        .bind(license.id, deviceId)
+        .run()
+      
       if (result.meta.changes === 0) {
-        return {
-          success: false,
-          message: 'License key not found'
-        }
+        return { success: false, error: 'License not activated on this device' }
       }
-
-      return {
-        success: true,
-        message: 'License revoked successfully'
-      }
+      
+      // Update activation count
+      await this.db
+        .prepare(`
+          UPDATE license_keys
+          SET activation_count = activation_count - 1,
+              status = CASE
+                WHEN status = 'activated' AND activation_count - 1 < max_activations THEN 'assigned'
+                ELSE status
+              END
+          WHERE id = ?
+        `)
+        .bind(license.id)
+        .run()
+      
+      return { success: true }
     } catch (error) {
-      console.error('Error revoking license:', error)
-      throw new Error('Failed to revoke license')
+      console.error('License deactivation error:', error)
+      return { success: false, error: 'Failed to deactivate license' }
+    }
+  }
+  
+  /**
+   * Get license information
+   */
+  async getLicenseInfo(licenseKey: string): Promise<LicenseKey | null> {
+    try {
+      const license = await this.db
+        .prepare(`
+          SELECT * FROM license_keys WHERE license_key = ?
+        `)
+        .bind(licenseKey)
+        .first<LicenseKey>()
+      
+      return license
+    } catch (error) {
+      console.error('Get license info error:', error)
+      return null
+    }
+  }
+  
+  /**
+   * Get license activations
+   */
+  async getLicenseActivations(licenseKey: string): Promise<LicenseActivation[]> {
+    try {
+      const license = await this.db
+        .prepare('SELECT id FROM license_keys WHERE license_key = ?')
+        .bind(licenseKey)
+        .first<{ id: number }>()
+      
+      if (!license) {
+        return []
+      }
+      
+      const activations = await this.db
+        .prepare(`
+          SELECT * FROM license_activations 
+          WHERE license_key_id = ? 
+          ORDER BY activated_at DESC
+        `)
+        .bind(license.id)
+        .all()
+      
+      return activations.results as LicenseActivation[]
+    } catch (error) {
+      console.error('Get license activations error:', error)
+      return []
     }
   }
 }
-
-export default LicenseGenerator
