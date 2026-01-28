@@ -13,5 +13,12 @@
       "database_name": "webapp-production",
       "database_id": ""
     }
-  ]
+  ],
+  "triggers": {
+    "crons": [
+      "*/15 * * * *",
+      "0 */6 * * *",
+      "0 3 * * *"
+    ]
+  }
 }

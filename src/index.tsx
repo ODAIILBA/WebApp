@@ -18,14 +18,92 @@ import {
   generateFAQSchema
 } from './utils/helpers'
 
+// Security Middleware
+import { 
+  csrf, 
+  loginRateLimiter, 
+  apiRateLimiter, 
+  adminRateLimiter,
+  securityHeaders,
+  enhancedAdminAuth,
+  bruteForceProtection,
+  requestSizeLimit
+} from './middleware/security'
+
+// Validation
+import { UserSchemas, OrderSchemas, AdminSchemas, ContactSchemas } from './middleware/validation'
+
+// License Management
+import { LicenseManager, LicenseScheduler } from './lib/licenses'
+
+// VAT Calculation
+import { calculateVAT as calculateEUVAT, validateVATNumber } from './lib/vat'
+
+// Audit Logging
+import { AuditLogger, SecurityLogger, auditMiddleware } from './lib/audit'
+
+// Webhook Verification
+import { 
+  verifyStripeSignature, 
+  verifyPayPalSignature,
+  isWebhookProcessed,
+  markWebhookProcessed,
+  validateWebhookPayload,
+  STRIPE_EVENTS,
+  PAYPAL_EVENTS,
+  retryWebhook
+} from './lib/webhook'
+
+// Cron Jobs
+import { handleScheduledTasks, runAllMaintenanceTasks } from './lib/cron'
+
+// Error Handling
+import { 
+  errorHandler, 
+  asyncHandler, 
+  AppError,
+  validationError,
+  authenticationError,
+  authorizationError,
+  notFoundError,
+  paymentError,
+  databaseError
+} from './lib/errors'
+
 type Env = {
   Bindings: CloudflareBindings
 }
 
 const app = new Hono<Env>()
 
+// ============================================
+// GLOBAL SECURITY MIDDLEWARE
+// ============================================
+
+// Security headers (apply to all routes)
+app.use('*', securityHeaders())
+
+// Request size limit (10MB max)
+app.use('*', requestSizeLimit(10 * 1024 * 1024))
+
 // Enable CORS for API routes
 app.use('/api/*', cors())
+
+// Rate limiting for different route groups
+app.use('/api/auth/login', loginRateLimiter.middleware())
+app.use('/api/auth/register', loginRateLimiter.middleware())
+app.use('/api/*', apiRateLimiter.middleware())
+app.use('/admin/*', adminRateLimiter.middleware())
+
+// CSRF protection for state-changing operations
+app.use('/api/*', csrf.middleware())
+app.use('/admin/*', csrf.middleware())
+
+// Global error handler
+app.onError((error, c) => {
+  const isDevelopment = c.env.ENVIRONMENT === 'development' || !c.env.ENVIRONMENT
+  return errorHandler(isDevelopment)(error, c)
+})
 
 // Serve static files
 app.use('/static/*', serveStatic({ root: './public' }))
@@ -450,24 +528,8 @@ app.get('/api/orders/:orderNumber', async (c) => {
 // ============================================
 
 // Admin middleware
-const adminAuth = async (c: any, next: any) => {
-  const db = c.get('db') as DatabaseHelper
-  const authHeader = c.req.header('Authorization')
-  
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return c.json({ success: false, error: 'Unauthorized' }, 401)
-  }
-
-  const token = authHeader.substring(7)
-  const session = await db.getSessionByToken(token)
-
-  if (!session || session.role !== 'admin') {
-    return c.json({ success: false, error: 'Admin access required' }, 403)
-  }
-
-  c.set('currentUser', session)
-  await next()
-}
+// Use enhanced admin authentication from security middleware
+const adminAuth = enhancedAdminAuth
 
 app.get('/api/admin/dashboard', adminAuth, async (c) => {
   try {
@@ -836,70 +898,343 @@ app.get('/kontakt', (c) => {
 // PAYMENT API ENDPOINTS
 // ============================================
 
-// Stripe: Create Payment Intent
+// Stripe: Create Payment Intent (with server-side validation)
 app.post('/api/payments/stripe/create-intent', async (c) => {
   try {
     const body = await c.req.json()
-    const { amount, currency, order_id, metadata } = body
-
-    // In production, use actual Stripe API
-    // For now, return mock response
+    const { order_id } = body
+    
+    // CRITICAL: Always recalculate amount server-side (never trust client)
+    const db = c.get('db') as DatabaseHelper
+    
+    // Fetch order from database
+    const order = await c.env.DB.prepare(`
+      SELECT id, subtotal, tax_amount, discount_amount, total, currency, country, user_id
+      FROM orders 
+      WHERE id = ? AND payment_status = 'pending'
+    `).bind(order_id).first() as any
+    
+    if (!order) {
+      return c.json({ error: 'Order not found or already paid' }, 404)
+    }
+    
+    // Fetch order items to recalculate
+    const orderItems = await c.env.DB.prepare(`
+      SELECT oi.*, p.base_price, p.discount_price, p.vat_rate
+      FROM order_items oi
+      JOIN products p ON oi.product_id = p.id
+      WHERE oi.order_id = ?
+    `).bind(order_id).all()
+    
+    // Recalculate totals server-side
+    let calculatedSubtotal = 0
+    let calculatedTax = 0
+    
+    for (const item of orderItems.results || []) {
+      const price = item.discount_price || item.base_price
+      const itemSubtotal = price * item.quantity
+      calculatedSubtotal += itemSubtotal
+      
+      // Calculate VAT
+      const vatRate = await calculateEUVAT(order.country as string, item.vat_rate as number)
+      calculatedTax += itemSubtotal * (vatRate / 100)
+    }
+    
+    // Apply discount if any
+    const discount = order.discount_amount || 0
+    calculatedSubtotal -= discount
+    
+    const calculatedTotal = calculatedSubtotal + calculatedTax
+    
+    // Verify amounts match (tolerance of 0.01 for rounding)
+    const amountDiff = Math.abs(calculatedTotal - order.total)
+    if (amountDiff > 0.01) {
+      console.error('Amount mismatch:', {
+        calculated: calculatedTotal,
+        stored: order.total,
+        difference: amountDiff
+      })
+      
+      // Update order with correct amounts
+      await c.env.DB.prepare(`
+        UPDATE orders 
+        SET subtotal = ?, tax_amount = ?, total = ?, updated_at = datetime('now')
+        WHERE id = ?
+      `).bind(calculatedSubtotal, calculatedTax, calculatedTotal, order_id).run()
+      
+      // Log security event
+      const securityLogger = new SecurityLogger(c.env.DB)
+      await securityLogger.logSecurityEvent('payment_amount_mismatch', 'high', {
+        order_id,
+        calculated_total: calculatedTotal,
+        stored_total: order.total,
+        difference: amountDiff
+      })
+    }
+    
+    // Use calculated amount for payment intent
+    const amountInCents = Math.round(calculatedTotal * 100)
+    const currency = (order.currency || 'EUR').toLowerCase()
+    
+    // In production, use actual Stripe API:
+    // const paymentIntent = await stripe.paymentIntents.create({
+    //   amount: amountInCents,
+    //   currency: currency,
+    //   metadata: { order_id: order_id.toString() }
+    // })
+    
+    // Mock response for development
     const mockIntentId = 'pi_' + Math.random().toString(36).substring(7)
     const mockClientSecret = mockIntentId + '_secret_' + Math.random().toString(36).substring(7)
+    
+    // Store payment intent ID
+    await c.env.DB.prepare(`
+      UPDATE orders 
+      SET payment_intent_id = ?, updated_at = datetime('now')
+      WHERE id = ?
+    `).bind(mockIntentId, order_id).run()
+    
+    // Audit log
+    const auditLogger = new AuditLogger(c.env.DB)
+    await auditLogger.log({
+      userId: order.user_id,
+      action: 'payment_intent_created',
+      resourceType: 'payment',
+      resourceId: order_id,
+      changes: { 
+        payment_intent_id: mockIntentId,
+        amount: calculatedTotal,
+        currency
+      }
+    })
 
     return c.json({
       success: true,
       data: {
         id: mockIntentId,
         client_secret: mockClientSecret,
-        amount,
+        amount: amountInCents,
         currency,
         status: 'requires_payment_method'
       }
     })
   } catch (error) {
+    console.error('Payment intent creation error:', error)
     return c.json({ success: false, error: String(error) }, 500)
   }
 })
 
-// Stripe: Webhook Handler
+// Stripe: Webhook Handler (with signature verification)
 app.post('/api/payments/stripe/webhook', async (c) => {
   try {
-    const body = await c.req.json()
-    const { type, data } = body
+    const signature = c.req.header('stripe-signature')
+    const body = await c.req.text()
+    
+    // Get webhook secret
+    const webhookSecret = c.env.STRIPE_WEBHOOK_SECRET || 'whsec_test_secret'
+    
+    // Verify webhook signature
+    const isValid = verifyStripeSignature(body, signature, webhookSecret)
+    
+    if (!isValid) {
+      console.error('Invalid Stripe webhook signature')
+      return c.json({ error: 'Invalid signature' }, 401)
+    }
+    
+    const event = JSON.parse(body)
+    const { type, data, id: eventId } = event
+    
+    // Check for duplicate processing (idempotency)
+    if (isWebhookProcessed(eventId)) {
+      console.log('Webhook already processed:', eventId)
+      return c.json({ received: true, duplicate: true })
+    }
+    
+    // Validate payload structure
+    const validation = validateWebhookPayload(event, ['type', 'data'])
+    if (!validation.valid) {
+      return c.json({ error: validation.error }, 400)
+    }
+
+    const db = c.get('db') as DatabaseHelper
+    const auditLogger = new AuditLogger(c.env.DB)
 
     // Handle different webhook events
     if (type === 'payment_intent.succeeded') {
       const paymentIntent = data.object
-      // Update order status in database
-      console.log('Payment succeeded:', paymentIntent.id)
+      
+      // Update order status
+      await c.env.DB.prepare(`
+        UPDATE orders 
+        SET payment_status = 'paid',
+            status = 'processing',
+            updated_at = datetime('now')
+        WHERE payment_intent_id = ?
+      `).bind(paymentIntent.id).run()
+      
+      // Assign licenses
+      const order = await c.env.DB.prepare(`
+        SELECT id, email FROM orders WHERE payment_intent_id = ?
+      `).bind(paymentIntent.id).first()
+      
+      if (order) {
+        const licenseManager = new LicenseManager(c.env.DB)
+        const orderItems = await c.env.DB.prepare(`
+          SELECT product_id, quantity FROM order_items WHERE order_id = ?
+        `).bind(order.id).all()
+        
+        for (const item of orderItems.results || []) {
+          await licenseManager.assignLicense(
+            item.product_id as number,
+            order.id as number,
+            item.quantity as number
+          )
+        }
+      }
+      
+      // Log success
+      await auditLogger.log({
+        action: 'payment_succeeded',
+        resourceType: 'payment',
+        changes: { payment_intent_id: paymentIntent.id }
+      })
+      
     } else if (type === 'payment_intent.payment_failed') {
-      console.log('Payment failed:', data.object.id)
+      const paymentIntent = data.object
+      
+      await c.env.DB.prepare(`
+        UPDATE orders 
+        SET payment_status = 'failed',
+            updated_at = datetime('now')
+        WHERE payment_intent_id = ?
+      `).bind(paymentIntent.id).run()
+      
+      await auditLogger.log({
+        action: 'payment_failed',
+        resourceType: 'payment',
+        changes: { payment_intent_id: paymentIntent.id }
+      })
     }
 
-    return c.json({ success: true })
+    // Mark as processed
+    markWebhookProcessed(eventId)
+    
+    return c.json({ received: true })
   } catch (error) {
-    return c.json({ success: false, error: String(error) }, 500)
+    console.error('Webhook error:', error)
+    
+    // Security logger
+    const securityLogger = new SecurityLogger(c.env.DB)
+    await securityLogger.logSecurityEvent('webhook_error', 'high', {
+      error: String(error),
+      provider: 'stripe'
+    })
+    
+    return c.json({ error: 'Webhook processing failed' }, 400)
   }
 })
 
-// PayPal: Create Order
+// PayPal: Create Order (with server-side validation)
 app.post('/api/payments/paypal/create-order', async (c) => {
   try {
     const body = await c.req.json()
-    const { amount, currency, order_id } = body
-
-    // In production, use actual PayPal API
+    const { order_id } = body
+    
+    // CRITICAL: Always recalculate amount server-side
+    const db = c.get('db') as DatabaseHelper
+    
+    // Fetch order
+    const order = await c.env.DB.prepare(`
+      SELECT id, subtotal, tax_amount, discount_amount, total, currency, country, user_id
+      FROM orders 
+      WHERE id = ? AND payment_status = 'pending'
+    `).bind(order_id).first() as any
+    
+    if (!order) {
+      return c.json({ error: 'Order not found or already paid' }, 404)
+    }
+    
+    // Fetch and recalculate (same logic as Stripe)
+    const orderItems = await c.env.DB.prepare(`
+      SELECT oi.*, p.base_price, p.discount_price, p.vat_rate
+      FROM order_items oi
+      JOIN products p ON oi.product_id = p.id
+      WHERE oi.order_id = ?
+    `).bind(order_id).all()
+    
+    let calculatedSubtotal = 0
+    let calculatedTax = 0
+    
+    for (const item of orderItems.results || []) {
+      const price = item.discount_price || item.base_price
+      const itemSubtotal = price * item.quantity
+      calculatedSubtotal += itemSubtotal
+      
+      const vatRate = await calculateEUVAT(order.country as string, item.vat_rate as number)
+      calculatedTax += itemSubtotal * (vatRate / 100)
+    }
+    
+    const discount = order.discount_amount || 0
+    calculatedSubtotal -= discount
+    const calculatedTotal = calculatedSubtotal + calculatedTax
+    
+    // Verify and update if needed
+    const amountDiff = Math.abs(calculatedTotal - order.total)
+    if (amountDiff > 0.01) {
+      await c.env.DB.prepare(`
+        UPDATE orders 
+        SET subtotal = ?, tax_amount = ?, total = ?, updated_at = datetime('now')
+        WHERE id = ?
+      `).bind(calculatedSubtotal, calculatedTax, calculatedTotal, order_id).run()
+      
+      const securityLogger = new SecurityLogger(c.env.DB)
+      await securityLogger.logSecurityEvent('payment_amount_mismatch', 'high', {
+        order_id,
+        provider: 'paypal',
+        calculated_total: calculatedTotal,
+        stored_total: order.total
+      })
+    }
+    
+    const currency = (order.currency || 'EUR').toUpperCase()
+    
+    // In production, use PayPal API:
+    // const paypalOrder = await paypal.orders.create({...})
+    
     const mockOrderId = 'PAYPAL-' + Math.random().toString(36).substring(7).toUpperCase()
+    
+    // Store PayPal order ID
+    await c.env.DB.prepare(`
+      UPDATE orders 
+      SET payment_intent_id = ?, updated_at = datetime('now')
+      WHERE id = ?
+    `).bind(mockOrderId, order_id).run()
+    
+    // Audit log
+    const auditLogger = new AuditLogger(c.env.DB)
+    await auditLogger.log({
+      userId: order.user_id,
+      action: 'paypal_order_created',
+      resourceType: 'payment',
+      resourceId: order_id,
+      changes: { 
+        paypal_order_id: mockOrderId,
+        amount: calculatedTotal,
+        currency
+      }
+    })
 
     return c.json({
       success: true,
       data: {
         id: mockOrderId,
-        status: 'CREATED'
+        status: 'CREATED',
+        amount: calculatedTotal,
+        currency
       }
     })
   } catch (error) {
+    console.error('PayPal order creation error:', error)
     return c.json({ success: false, error: String(error) }, 500)
   }
 })
@@ -925,19 +1260,126 @@ app.post('/api/payments/paypal/capture', async (c) => {
   }
 })
 
-// PayPal: Webhook Handler
+// PayPal: Webhook Handler (with signature verification)
 app.post('/api/payments/paypal/webhook', async (c) => {
   try {
-    const body = await c.req.json()
-    const { event_type, resource } = body
-
-    if (event_type === 'PAYMENT.CAPTURE.COMPLETED') {
-      console.log('PayPal payment captured:', resource.id)
+    const bodyText = await c.req.text()
+    const body = JSON.parse(bodyText)
+    
+    // Get PayPal webhook headers
+    const transmissionId = c.req.header('paypal-transmission-id')
+    const transmissionTime = c.req.header('paypal-transmission-time')
+    const transmissionSig = c.req.header('paypal-transmission-sig')
+    const certUrl = c.req.header('paypal-cert-url')
+    const authAlgo = c.req.header('paypal-auth-algo')
+    
+    // Get webhook ID from environment
+    const webhookId = c.env.PAYPAL_WEBHOOK_ID || 'WH-test-webhook-id'
+    
+    // Verify webhook signature
+    const isValid = await verifyPayPalSignature(
+      webhookId,
+      bodyText,
+      transmissionId,
+      transmissionTime,
+      transmissionSig,
+      certUrl,
+      authAlgo
+    )
+    
+    if (!isValid) {
+      console.error('Invalid PayPal webhook signature')
+      return c.json({ error: 'Invalid signature' }, 401)
     }
-
-    return c.json({ success: true })
+    
+    const { event_type, resource, id: eventId } = body
+    
+    // Check for duplicate processing
+    if (isWebhookProcessed(eventId)) {
+      console.log('PayPal webhook already processed:', eventId)
+      return c.json({ received: true, duplicate: true })
+    }
+    
+    // Validate payload
+    const validation = validateWebhookPayload(body, ['event_type', 'resource'])
+    if (!validation.valid) {
+      return c.json({ error: validation.error }, 400)
+    }
+    
+    const db = c.get('db') as DatabaseHelper
+    const auditLogger = new AuditLogger(c.env.DB)
+    
+    // Handle PayPal events
+    if (event_type === PAYPAL_EVENTS.PAYMENT_COMPLETED) {
+      const captureId = resource.id
+      
+      // Find order by PayPal order ID
+      const order = await c.env.DB.prepare(`
+        SELECT id, email FROM orders 
+        WHERE payment_intent_id = ? OR payment_intent_id LIKE ?
+      `).bind(captureId, `%${resource.supplementary_data?.related_ids?.order_id || ''}%`).first()
+      
+      if (order) {
+        // Update order status
+        await c.env.DB.prepare(`
+          UPDATE orders 
+          SET payment_status = 'paid',
+              status = 'processing',
+              updated_at = datetime('now')
+          WHERE id = ?
+        `).bind(order.id).run()
+        
+        // Assign licenses
+        const licenseManager = new LicenseManager(c.env.DB)
+        const orderItems = await c.env.DB.prepare(`
+          SELECT product_id, quantity FROM order_items WHERE order_id = ?
+        `).bind(order.id).all()
+        
+        for (const item of orderItems.results || []) {
+          await licenseManager.assignLicense(
+            item.product_id as number,
+            order.id as number,
+            item.quantity as number
+          )
+        }
+        
+        // Log success
+        await auditLogger.log({
+          action: 'paypal_payment_completed',
+          resourceType: 'payment',
+          changes: { capture_id: captureId, order_id: order.id }
+        })
+      }
+    } else if (event_type === PAYPAL_EVENTS.PAYMENT_DENIED) {
+      // Handle payment denial
+      await auditLogger.log({
+        action: 'paypal_payment_denied',
+        resourceType: 'payment',
+        changes: { event_type, resource_id: resource.id }
+      })
+    } else if (event_type === PAYPAL_EVENTS.PAYMENT_REFUNDED) {
+      // Handle refund
+      await auditLogger.log({
+        action: 'paypal_payment_refunded',
+        resourceType: 'payment',
+        changes: { event_type, resource_id: resource.id }
+      })
+    }
+    
+    // Mark as processed
+    markWebhookProcessed(eventId)
+    
+    return c.json({ received: true })
   } catch (error) {
-    return c.json({ success: false, error: String(error) }, 500)
+    console.error('PayPal webhook error:', error)
+    
+    const securityLogger = new SecurityLogger(c.env.DB)
+    await securityLogger.logSecurityEvent('webhook_error', 'high', {
+      error: String(error),
+      provider: 'paypal'
+    })
+    
+    return c.json({ error: 'Webhook processing failed' }, 400)
   }
 })
 
@@ -1021,4 +1463,36 @@ app.post('/api/contact', async (c) => {
   }
 })
 
-export default app
+// ============================================
+// MANUAL MAINTENANCE ENDPOINT (Admin Only)
+// ============================================
+
+app.post('/api/admin/maintenance', enhancedAdminAuth, async (c) => {
+  try {
+    await runAllMaintenanceTasks(c.env.DB)
+    
+    return c.json({ 
+      success: true, 
+      message: 'All maintenance tasks completed successfully' 
+    })
+  } catch (error) {
+    console.error('Maintenance error:', error)
+    return c.json({ 
+      success: false, 
+      error: 'Maintenance tasks failed' 
+    }, 500)
+  }
+})
+
+// ============================================
+// SCHEDULED EVENT HANDLER (Cloudflare Cron)
+// ============================================
+
+export default {
+  fetch: app.fetch,
+  
+  // Cron trigger handler
+  async scheduled(event: ScheduledEvent, env: CloudflareBindings, ctx: ExecutionContext) {
+    ctx.waitUntil(handleScheduledTasks(event, env))
+  }
+}
