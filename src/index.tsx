@@ -812,6 +812,15 @@ app.get('/admin/products/add', (c) => {
   )
 })
 
+app.get('/admin/products/edit/:id', (c) => {
+  const productId = c.req.param('id')
+  return c.html(
+    <AdminLayout title="Edit Product" currentUser={{ first_name: 'Admin' }}>
+      <AdminProductForm isEdit={true} productId={productId} />
+    </AdminLayout>
+  )
+})
+
 // Orders Management
 app.get('/admin/orders', (c) => {
   return c.html(
