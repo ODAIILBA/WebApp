@@ -1991,7 +1991,16 @@ export const HomepagePrestaShopEnhanced = () => {
         <script>
             // Initialize on page load
             document.addEventListener('DOMContentLoaded', () => {
-                CartManager.updateCartCount();
+                // Try to update cart count, but don't block product loading if it fails
+                try {
+                    if (typeof CartManager !== 'undefined' && CartManager.updateCartCount) {
+                        CartManager.updateCartCount();
+                    }
+                } catch (error) {
+                    console.warn('CartManager not available:', error);
+                }
+                
+                // Load products
                 loadProducts();
             });
 
@@ -2012,13 +2021,20 @@ export const HomepagePrestaShopEnhanced = () => {
             // Load Products
             async function loadProducts() {
                 try {
+                    console.log('🔄 Loading products from homepage sections API...');
+                    
                     // Load homepage sections with products
                     const sectionsResponse = await axios.get('/api/homepage-sections?language=de');
+                    console.log('📦 Sections response:', sectionsResponse.data);
+                    
                     if (sectionsResponse.data.success) {
                         const sections = sectionsResponse.data.data;
+                        console.log(\`✅ Found \${sections.length} sections\`);
                         
                         // Find and render each section
                         sections.forEach(section => {
+                            console.log(\`🔍 Processing section: \${section.section_key}, products: \${section.products.length}\`);
+                            
                             // Map API product format to expected format
                             const mappedProducts = section.products.map(p => ({
                                 ...p,
@@ -2029,20 +2045,26 @@ export const HomepagePrestaShopEnhanced = () => {
                             }));
                             
                             if (section.section_key === 'featured_products' && mappedProducts.length > 0) {
+                                console.log(\`✅ Rendering \${mappedProducts.length} products for featured_products (bestsellers)\`);
                                 renderBestsellers(mappedProducts.slice(0, 6));
-                            } else if (section.section_key === 'new_arrivals' && mappedProducts.length > 0) {
+                            } else if (section.section_key === 'new_products' && mappedProducts.length > 0) {
+                                console.log(\`✅ Rendering \${mappedProducts.length} products for new_products\`);
                                 renderNewArrivals(mappedProducts.slice(0, 4));
+                            } else {
+                                console.log(\`⚠️ Skipping section: \${section.section_key}\`);
                             }
                         });
                     }
                     
                     // Fallback: Load Flash Deals (lowest prices) - not managed by sections
+                    console.log('🔄 Loading flash deals...');
                     const flashResponse = await axios.get('/api/products?limit=4&sort=price-asc');
                     if (flashResponse.data.success) {
+                        console.log(\`✅ Rendering \${flashResponse.data.data.length} flash deals\`);
                         renderFlashDeals(flashResponse.data.data.slice(0, 4));
                     }
                 } catch (error) {
-                    console.error('Error loading products:', error);
+                    console.error('❌ Error loading products:', error);
                 }
             }
 
