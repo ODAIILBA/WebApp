@@ -25,6 +25,7 @@ export const AdminHomepageSections: FC = () => {
               <th>Type</th>
               <th>Layout</th>
               <th>Limit</th>
+              <th>Products</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -167,6 +168,56 @@ export const AdminHomepageSections: FC = () => {
         </div>
       </div>
 
+      {/* Product Picker Modal */}
+      <div id="product-picker-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+          <div class="p-6 border-b border-gray-200">
+            <h3 class="text-xl font-bold text-gray-800">Manage Section Products</h3>
+            <p class="text-sm text-gray-600 mt-1" id="picker-section-title"></p>
+          </div>
+          
+          <div class="flex-1 overflow-y-auto p-6">
+            <input type="hidden" id="picker-section-id" />
+            
+            {/* Search */}
+            <div class="mb-4">
+              <input 
+                type="search" 
+                id="product-search" 
+                class="form-control" 
+                placeholder="Search products..."
+                onkeyup="searchProducts()"
+              />
+            </div>
+
+            {/* Selected Products */}
+            <div class="mb-6">
+              <h4 class="font-semibold text-gray-700 mb-3">Selected Products (<span id="selected-count">0</span>)</h4>
+              <div id="selected-products" class="space-y-2 min-h-[100px] bg-gray-50 rounded-lg p-4">
+                <p class="text-gray-400 text-center py-8" id="no-selected">No products selected yet</p>
+              </div>
+            </div>
+
+            {/* Available Products */}
+            <div>
+              <h4 class="font-semibold text-gray-700 mb-3">Available Products</h4>
+              <div id="available-products" class="space-y-2">
+                <p class="text-gray-400 text-center py-8">Loading products...</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="p-6 border-t border-gray-200 flex justify-end gap-3">
+            <button type="button" onclick="closeProductPicker()" class="btn-secondary">
+              Cancel
+            </button>
+            <button type="button" onclick="saveSelectedProducts()" class="btn-primary">
+              <i class="fas fa-save mr-2"></i> Save Products
+            </button>
+          </div>
+        </div>
+      </div>
+
       <script dangerouslySetInnerHTML={{__html: `
         let sections = [];
 
@@ -214,6 +265,16 @@ export const AdminHomepageSections: FC = () => {
               </td>
               <td>
                 <span class="text-sm text-gray-600">\${section.limit_items} items</span>
+              </td>
+              <td>
+                <button 
+                  onclick="openProductPicker(\${section.id}, '\${section.title}')" 
+                  class="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                  title="Manage Products"
+                >
+                  <i class="fas fa-cube"></i>
+                  <span class="badge badge-info">\${section.product_count || 0}</span>
+                </button>
               </td>
               <td>
                 <span class="badge \${section.is_active ? 'badge-success' : 'badge-danger'}">
@@ -343,6 +404,196 @@ export const AdminHomepageSections: FC = () => {
             alert('Error saving section');
           }
         });
+
+        // Product Picker Functions
+        let allProducts = [];
+        let selectedProducts = [];
+        let currentSectionId = null;
+
+        async function openProductPicker(sectionId, sectionTitle) {
+          currentSectionId = sectionId;
+          document.getElementById('picker-section-id').value = sectionId;
+          document.getElementById('picker-section-title').textContent = 'Section: ' + sectionTitle;
+          
+          // Load all products
+          await loadAllProducts();
+          
+          // Load selected products for this section
+          await loadSectionProducts(sectionId);
+          
+          document.getElementById('product-picker-modal').classList.remove('hidden');
+        }
+
+        function closeProductPicker() {
+          document.getElementById('product-picker-modal').classList.add('hidden');
+          selectedProducts = [];
+          allProducts = [];
+        }
+
+        async function loadAllProducts() {
+          try {
+            const response = await fetch('/api/products?limit=100');
+            const data = await response.json();
+            
+            if (data.success && data.data) {
+              allProducts = data.data;
+              renderAvailableProducts();
+            }
+          } catch (error) {
+            console.error('Error loading products:', error);
+          }
+        }
+
+        async function loadSectionProducts(sectionId) {
+          try {
+            const response = await fetch(\`/api/admin/homepage-sections/\${sectionId}/products\`);
+            const data = await response.json();
+            
+            if (data.success && data.data) {
+              selectedProducts = data.data;
+              renderSelectedProducts();
+              renderAvailableProducts();
+            }
+          } catch (error) {
+            console.error('Error loading section products:', error);
+            selectedProducts = [];
+            renderSelectedProducts();
+          }
+        }
+
+        function renderSelectedProducts() {
+          const container = document.getElementById('selected-products');
+          const countEl = document.getElementById('selected-count');
+          const noSelected = document.getElementById('no-selected');
+          
+          countEl.textContent = selectedProducts.length;
+          
+          if (selectedProducts.length === 0) {
+            noSelected.classList.remove('hidden');
+            return;
+          }
+          
+          noSelected.classList.add('hidden');
+          
+          container.innerHTML = selectedProducts.map(product => \`
+            <div class="flex items-center justify-between bg-white p-3 rounded border border-gray-200">
+              <div class="flex items-center gap-3 flex-1">
+                <img src="\${product.image_url || 'https://via.placeholder.com/40'}" 
+                     class="w-10 h-10 object-cover rounded" />
+                <div class="flex-1">
+                  <div class="font-medium text-sm">\${product.name}</div>
+                  <div class="text-xs text-gray-500">€\${(product.discount_price || product.base_price).toFixed(2)}</div>
+                </div>
+                <input 
+                  type="number" 
+                  value="\${product.sort_order || 0}" 
+                  class="form-control w-16 text-sm" 
+                  onchange="updateProductOrder(\${product.id}, this.value)"
+                  placeholder="Order"
+                />
+              </div>
+              <button 
+                onclick="removeProduct(\${product.id})" 
+                class="text-red-600 hover:text-red-700 ml-2"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+          \`).join('');
+        }
+
+        function renderAvailableProducts() {
+          const container = document.getElementById('available-products');
+          const searchTerm = document.getElementById('product-search').value.toLowerCase();
+          
+          const selectedIds = selectedProducts.map(p => p.id);
+          const available = allProducts.filter(p => {
+            const matchesSearch = !searchTerm || p.name.toLowerCase().includes(searchTerm);
+            const notSelected = !selectedIds.includes(p.id);
+            return matchesSearch && notSelected;
+          });
+          
+          if (available.length === 0) {
+            container.innerHTML = '<p class="text-gray-400 text-center py-8">No products found</p>';
+            return;
+          }
+          
+          container.innerHTML = available.map(product => \`
+            <div class="flex items-center justify-between bg-gray-50 p-3 rounded hover:bg-gray-100 transition">
+              <div class="flex items-center gap-3 flex-1">
+                <img src="\${product.image_url || 'https://via.placeholder.com/40'}" 
+                     class="w-10 h-10 object-cover rounded" />
+                <div class="flex-1">
+                  <div class="font-medium text-sm">\${product.name}</div>
+                  <div class="text-xs text-gray-500">SKU: \${product.sku} • €\${(product.discount_price || product.base_price).toFixed(2)}</div>
+                </div>
+              </div>
+              <button 
+                onclick="addProduct(\${product.id})" 
+                class="btn-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+              >
+                <i class="fas fa-plus mr-1"></i> Add
+              </button>
+            </div>
+          \`).join('');
+        }
+
+        function searchProducts() {
+          renderAvailableProducts();
+        }
+
+        function addProduct(productId) {
+          const product = allProducts.find(p => p.id === productId);
+          if (product) {
+            selectedProducts.push({
+              ...product,
+              sort_order: selectedProducts.length
+            });
+            renderSelectedProducts();
+            renderAvailableProducts();
+          }
+        }
+
+        function removeProduct(productId) {
+          selectedProducts = selectedProducts.filter(p => p.id !== productId);
+          renderSelectedProducts();
+          renderAvailableProducts();
+        }
+
+        function updateProductOrder(productId, order) {
+          const product = selectedProducts.find(p => p.id === productId);
+          if (product) {
+            product.sort_order = parseInt(order);
+          }
+        }
+
+        async function saveSelectedProducts() {
+          const sectionId = currentSectionId;
+          const productIds = selectedProducts.map(p => ({
+            product_id: p.id,
+            sort_order: p.sort_order || 0
+          }));
+
+          try {
+            const response = await fetch(\`/api/admin/homepage-sections/\${sectionId}/products\`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ products: productIds })
+            });
+
+            const data = await response.json();
+            if (data.success) {
+              alert('Products saved successfully!');
+              closeProductPicker();
+              loadSections();
+            } else {
+              alert('Error saving products: ' + (data.error || 'Unknown error'));
+            }
+          } catch (error) {
+            console.error('Error:', error);
+            alert('Error saving products');
+          }
+        }
 
         // Load sections on page load
         loadSections();

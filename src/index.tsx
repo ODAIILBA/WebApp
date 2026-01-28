@@ -520,7 +520,13 @@ app.get('/api/admin/homepage-sections', async (c) => {
   try {
     const db = c.get('db') as DatabaseHelper
     const sections = await db.db.prepare(`
-      SELECT * FROM homepage_sections ORDER BY display_order ASC
+      SELECT 
+        hs.*,
+        COUNT(sp.id) as product_count
+      FROM homepage_sections hs
+      LEFT JOIN section_products sp ON hs.id = sp.section_id
+      GROUP BY hs.id
+      ORDER BY hs.display_order ASC
     `).all()
 
     return c.json({ success: true, data: sections.results })
@@ -624,6 +630,60 @@ app.delete('/api/admin/homepage-sections/:id', async (c) => {
   } catch (error) {
     console.error('Error deleting section:', error)
     return c.json({ success: false, error: 'Failed to delete section' }, 500)
+  }
+})
+
+// Get section products
+app.get('/api/admin/homepage-sections/:id/products', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+
+    const products = await db.db.prepare(`
+      SELECT 
+        p.*,
+        pt.name,
+        pt.short_description,
+        pi.image_url,
+        sp.sort_order
+      FROM section_products sp
+      JOIN products p ON sp.product_id = p.id
+      LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = 'de'
+      LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
+      WHERE sp.section_id = ?
+      ORDER BY sp.sort_order ASC
+    `).bind(id).all()
+
+    return c.json({ success: true, data: products.results })
+  } catch (error) {
+    console.error('Error fetching section products:', error)
+    return c.json({ success: false, error: 'Failed to fetch products' }, 500)
+  }
+})
+
+// Save section products
+app.post('/api/admin/homepage-sections/:id/products', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+    const body = await c.req.json()
+    const products = body.products || []
+
+    // Delete existing products for this section
+    await db.db.prepare(`DELETE FROM section_products WHERE section_id = ?`).bind(id).run()
+
+    // Insert new products
+    for (const product of products) {
+      await db.db.prepare(`
+        INSERT INTO section_products (section_id, product_id, sort_order)
+        VALUES (?, ?, ?)
+      `).bind(id, product.product_id, product.sort_order || 0).run()
+    }
+
+    return c.json({ success: true })
+  } catch (error) {
+    console.error('Error saving section products:', error)
+    return c.json({ success: false, error: 'Failed to save products' }, 500)
   }
 })
 
