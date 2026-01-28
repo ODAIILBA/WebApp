@@ -3,6 +3,8 @@ import { Hono } from 'hono'
 import type { CloudflareBindings } from '../types'
 import seedProducts from '../data/seed-products.json'
 import authApi from './auth'
+import LicenseGenerator from '../lib/license-generator'
+import EmailService from '../lib/email-service'
 
 type Env = {
   Bindings: CloudflareBindings
@@ -242,30 +244,133 @@ api.post('/cart/coupon', async (c) => {
 // CHECKOUT API
 // ============================================
 
-// Create order
+// Create order with license generation and email
 api.post('/checkout', async (c) => {
   const orderData = await c.req.json()
+  const { DB } = c.env
   
   try {
     // Validate order data
     if (!orderData.items || orderData.items.length === 0) {
       return c.json({ success: false, error: 'Cart is empty' }, 400)
     }
+
+    if (!orderData.customer || !orderData.customer.email) {
+      return c.json({ success: false, error: 'Customer email required' }, 400)
+    }
     
-    // In production, create order in database
-    const orderNumber = `ORD-${Date.now()}`
+    // Generate order number
+    const orderNumber = `ORD-${Date.now()}-${Math.random().toString(36).substring(7).toUpperCase()}`
+    
+    // Create order in database
+    const orderResult = await DB.prepare(
+      `INSERT INTO orders (
+        order_number, customer_name, customer_email, customer_phone,
+        customer_address, customer_city, customer_zip, customer_country,
+        subtotal, vat, discount, total, status, payment_status,
+        created_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 'pending', datetime('now'))`
+    ).bind(
+      orderNumber,
+      `${orderData.customer.firstName} ${orderData.customer.lastName}`,
+      orderData.customer.email,
+      orderData.customer.phone || null,
+      orderData.customer.address || null,
+      orderData.customer.city || null,
+      orderData.customer.zip || null,
+      orderData.customer.country || 'DE',
+      orderData.subtotal,
+      orderData.vat,
+      orderData.discount || 0,
+      orderData.total
+    ).run()
+
+    const orderId = orderResult.meta.last_row_id as number
+
+    // Create order items
+    for (const item of orderData.items) {
+      await DB.prepare(
+        `INSERT INTO order_items (
+          order_id, product_id, product_name, quantity, price, total
+        ) VALUES (?, ?, ?, ?, ?, ?)`
+      ).bind(
+        orderId,
+        item.id,
+        item.name,
+        item.quantity,
+        item.price,
+        item.price * item.quantity
+      ).run()
+    }
+
+    // Generate licenses for each product
+    const allLicenses: any[] = []
+    for (const item of orderData.items) {
+      const licenses = await LicenseGenerator.createLicense(DB, {
+        productId: item.id,
+        orderId: orderId,
+        quantity: item.quantity
+      })
+      
+      allLicenses.push(...licenses.map(license => ({
+        productName: item.name,
+        key: license.key
+      })))
+    }
+
+    // Send order confirmation email (if email service is configured)
+    try {
+      // Note: Email sending requires API keys to be configured in production
+      // This is a placeholder for the email sending logic
+      /*
+      const emailService = new EmailService({
+        provider: 'sendgrid', // or 'resend'
+        apiKey: c.env.EMAIL_API_KEY,
+        fromEmail: '[email protected]',
+        fromName: 'SoftwareKing24'
+      })
+
+      const emailTemplate = EmailService.generateOrderConfirmation({
+        orderNumber,
+        customerName: `${orderData.customer.firstName} ${orderData.customer.lastName}`,
+        items: orderData.items,
+        subtotal: orderData.subtotal,
+        vat: orderData.vat,
+        total: orderData.total,
+        licenses: allLicenses
+      })
+
+      await emailService.send({
+        to: orderData.customer.email,
+        subject: emailTemplate.subject,
+        html: emailTemplate.html,
+        text: emailTemplate.text
+      })
+      */
+
+      console.log('Order confirmation email would be sent to:', orderData.customer.email)
+      console.log('Licenses generated:', allLicenses)
+    } catch (emailError) {
+      console.error('Email sending failed:', emailError)
+      // Don't fail the order if email fails
+    }
     
     return c.json({
       success: true,
       message: 'Order created successfully',
+      orderNumber,
+      orderId,
+      licenses: allLicenses,
       data: {
         orderNumber,
         status: 'pending',
-        total: orderData.total
+        total: orderData.total,
+        email: orderData.customer.email
       }
     })
   } catch (error: any) {
-    return c.json({ success: false, error: error.message }, 500)
+    console.error('Checkout error:', error)
+    return c.json({ success: false, error: error.message || 'Order creation failed' }, 500)
   }
 })
 
@@ -281,6 +386,82 @@ api.get('/products/featured', async (c) => {
     
     return c.json({ success: true, data: products })
   } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// ============================================
+// LICENSE API
+// ============================================
+
+// Get licenses for an order
+api.get('/licenses/order/:orderNumber', async (c) => {
+  try {
+    const { orderNumber } = c.req.param()
+    const { DB } = c.env
+
+    // Get order
+    const order = await DB.prepare(
+      'SELECT id FROM orders WHERE order_number = ?'
+    ).bind(orderNumber).first() as any
+
+    if (!order) {
+      return c.json({ success: false, error: 'Order not found' }, 404)
+    }
+
+    // Get licenses
+    const licenses = await LicenseGenerator.getLicensesByOrder(DB, order.id)
+
+    return c.json({ success: true, licenses })
+  } catch (error: any) {
+    console.error('Get licenses error:', error)
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// Verify a license key
+api.post('/licenses/verify', async (c) => {
+  try {
+    const { key } = await c.req.json()
+    const { DB } = c.env
+
+    if (!key) {
+      return c.json({ success: false, error: 'License key required' }, 400)
+    }
+
+    const result = await LicenseGenerator.verifyLicense(DB, key)
+
+    return c.json({
+      success: result.valid,
+      valid: result.valid,
+      message: result.message,
+      license: result.license
+    })
+  } catch (error: any) {
+    console.error('Verify license error:', error)
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// Activate a license key
+api.post('/licenses/activate', async (c) => {
+  try {
+    const { key, deviceId } = await c.req.json()
+    const { DB } = c.env
+
+    if (!key) {
+      return c.json({ success: false, error: 'License key required' }, 400)
+    }
+
+    const result = await LicenseGenerator.activateLicense(DB, key, {
+      deviceId,
+      ipAddress: c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For'),
+      userAgent: c.req.header('User-Agent')
+    })
+
+    return c.json(result)
+  } catch (error: any) {
+    console.error('Activate license error:', error)
     return c.json({ success: false, error: error.message }, 500)
   }
 })
