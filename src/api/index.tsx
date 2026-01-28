@@ -466,4 +466,359 @@ api.post('/licenses/activate', async (c) => {
   }
 })
 
+// ============================================
+// ADMIN API ENDPOINTS
+// ============================================
+
+// Admin middleware to verify admin role
+const requireAdmin = async (c: any, next: any) => {
+  try {
+    const authHeader = c.req.header('Authorization')
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return c.json({ success: false, error: 'Unauthorized' }, 401)
+    }
+
+    const token = authHeader.substring(7)
+    const { DB } = c.env
+    
+    // Verify token and get user
+    const sessionResult = await DB.prepare(`
+      SELECT u.id, u.email, u.name, u.role 
+      FROM users u
+      INNER JOIN sessions s ON u.id = s.user_id
+      WHERE s.token = ? AND s.expires_at > datetime('now')
+    `).bind(token).first()
+
+    if (!sessionResult || sessionResult.role !== 'admin') {
+      return c.json({ success: false, error: 'Admin access required' }, 403)
+    }
+
+    c.set('user', sessionResult)
+    await next()
+  } catch (error: any) {
+    return c.json({ success: false, error: 'Authentication failed' }, 401)
+  }
+}
+
+// Get admin dashboard statistics
+api.get('/admin/stats', requireAdmin, async (c) => {
+  try {
+    const { DB } = c.env
+    
+    // Get today's date
+    const today = new Date().toISOString().split('T')[0]
+    
+    // Get statistics
+    const totalOrders = await DB.prepare('SELECT COUNT(*) as count FROM orders').first()
+    const todayOrders = await DB.prepare('SELECT COUNT(*) as count FROM orders WHERE DATE(created_at) = ?').bind(today).first()
+    const totalRevenue = await DB.prepare('SELECT SUM(total_amount) as sum FROM orders WHERE status = ?').bind('completed').first()
+    const todayRevenue = await DB.prepare('SELECT SUM(total_amount) as sum FROM orders WHERE status = ? AND DATE(created_at) = ?').bind('completed', today).first()
+    const totalCustomers = await DB.prepare('SELECT COUNT(*) as count FROM users WHERE role = ?').bind('customer').first()
+    const totalLicenses = await DB.prepare('SELECT COUNT(*) as count FROM license_keys').first()
+    const pendingOrders = await DB.prepare('SELECT COUNT(*) as count FROM orders WHERE status = ?').bind('pending').first()
+
+    // Get revenue for last 7 days
+    const revenueData = await DB.prepare(`
+      SELECT DATE(created_at) as date, SUM(total_amount) as revenue
+      FROM orders
+      WHERE status = 'completed' AND created_at >= datetime('now', '-7 days')
+      GROUP BY DATE(created_at)
+      ORDER BY date ASC
+    `).all()
+
+    // Get order status distribution
+    const statusData = await DB.prepare(`
+      SELECT status, COUNT(*) as count
+      FROM orders
+      GROUP BY status
+    `).all()
+
+    return c.json({
+      success: true,
+      data: {
+        totalOrders: totalOrders?.count || 0,
+        todayOrders: todayOrders?.count || 0,
+        totalRevenue: totalRevenue?.sum || 0,
+        todayRevenue: todayRevenue?.sum || 0,
+        totalCustomers: totalCustomers?.count || 0,
+        totalLicenses: totalLicenses?.count || 0,
+        pendingOrders: pendingOrders?.count || 0,
+        revenueChart: revenueData?.results || [],
+        statusChart: statusData?.results || []
+      }
+    })
+  } catch (error: any) {
+    console.error('Admin stats error:', error)
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// Get all orders with filtering
+api.get('/admin/orders', requireAdmin, async (c) => {
+  try {
+    const { status, search, dateFrom, dateTo, page = '1', limit = '50' } = c.req.query()
+    const { DB } = c.env
+    
+    const offset = (parseInt(page) - 1) * parseInt(limit)
+    let query = `
+      SELECT o.*, u.name as customer_name, u.email as customer_email
+      FROM orders o
+      LEFT JOIN users u ON o.user_id = u.id
+      WHERE 1=1
+    `
+    const bindings: any[] = []
+
+    if (status && status !== 'all') {
+      query += ' AND o.status = ?'
+      bindings.push(status)
+    }
+
+    if (search) {
+      query += ' AND (o.order_number LIKE ? OR u.name LIKE ? OR u.email LIKE ?)'
+      const searchTerm = `%${search}%`
+      bindings.push(searchTerm, searchTerm, searchTerm)
+    }
+
+    if (dateFrom) {
+      query += ' AND DATE(o.created_at) >= ?'
+      bindings.push(dateFrom)
+    }
+
+    if (dateTo) {
+      query += ' AND DATE(o.created_at) <= ?'
+      bindings.push(dateTo)
+    }
+
+    query += ' ORDER BY o.created_at DESC LIMIT ? OFFSET ?'
+    bindings.push(parseInt(limit), offset)
+
+    const orders = await DB.prepare(query).bind(...bindings).all()
+    const total = await DB.prepare('SELECT COUNT(*) as count FROM orders').first()
+
+    return c.json({
+      success: true,
+      data: orders?.results || [],
+      pagination: {
+        total: total?.count || 0,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil((total?.count || 0) / parseInt(limit))
+      }
+    })
+  } catch (error: any) {
+    console.error('Admin orders error:', error)
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// Update order status
+api.patch('/admin/orders/:id/status', requireAdmin, async (c) => {
+  try {
+    const orderId = c.req.param('id')
+    const { status, note } = await c.req.json()
+    const { DB } = c.env
+
+    if (!['pending', 'processing', 'completed', 'cancelled'].includes(status)) {
+      return c.json({ success: false, error: 'Invalid status' }, 400)
+    }
+
+    await DB.prepare(`
+      UPDATE orders 
+      SET status = ?, updated_at = datetime('now')
+      WHERE id = ?
+    `).bind(status, orderId).run()
+
+    // Log the status change
+    if (note) {
+      await DB.prepare(`
+        INSERT INTO order_notes (order_id, note, created_by, created_at)
+        VALUES (?, ?, ?, datetime('now'))
+      `).bind(orderId, note, c.get('user').id).run()
+    }
+
+    return c.json({ success: true, message: 'Order status updated' })
+  } catch (error: any) {
+    console.error('Update order status error:', error)
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// Get all customers
+api.get('/admin/customers', requireAdmin, async (c) => {
+  try {
+    const { search, status, page = '1', limit = '50' } = c.req.query()
+    const { DB } = c.env
+    
+    const offset = (parseInt(page) - 1) * parseInt(limit)
+    let query = `
+      SELECT 
+        u.*,
+        COUNT(DISTINCT o.id) as orders_count,
+        COALESCE(SUM(o.total_amount), 0) as total_spent
+      FROM users u
+      LEFT JOIN orders o ON u.id = o.user_id
+      WHERE u.role = 'customer'
+    `
+    const bindings: any[] = []
+
+    if (search) {
+      query += ' AND (u.name LIKE ? OR u.email LIKE ?)'
+      const searchTerm = `%${search}%`
+      bindings.push(searchTerm, searchTerm)
+    }
+
+    query += ' GROUP BY u.id ORDER BY u.created_at DESC LIMIT ? OFFSET ?'
+    bindings.push(parseInt(limit), offset)
+
+    const customers = await DB.prepare(query).bind(...bindings).all()
+    const total = await DB.prepare('SELECT COUNT(*) as count FROM users WHERE role = ?').bind('customer').first()
+
+    return c.json({
+      success: true,
+      data: customers?.results || [],
+      pagination: {
+        total: total?.count || 0,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil((total?.count || 0) / parseInt(limit))
+      }
+    })
+  } catch (error: any) {
+    console.error('Admin customers error:', error)
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// Get all license keys
+api.get('/admin/licenses', requireAdmin, async (c) => {
+  try {
+    const { status, product, page = '1', limit = '50' } = c.req.query()
+    const { DB } = c.env
+    
+    const offset = (parseInt(page) - 1) * parseInt(limit)
+    let query = `
+      SELECT lk.*, p.name as product_name, o.order_number
+      FROM license_keys lk
+      LEFT JOIN products p ON lk.product_id = p.id
+      LEFT JOIN orders o ON lk.order_id = o.id
+      WHERE 1=1
+    `
+    const bindings: any[] = []
+
+    if (status) {
+      query += ' AND lk.status = ?'
+      bindings.push(status)
+    }
+
+    if (product) {
+      query += ' AND lk.product_id = ?'
+      bindings.push(product)
+    }
+
+    query += ' ORDER BY lk.created_at DESC LIMIT ? OFFSET ?'
+    bindings.push(parseInt(limit), offset)
+
+    const licenses = await DB.prepare(query).bind(...bindings).all()
+    const total = await DB.prepare('SELECT COUNT(*) as count FROM license_keys').first()
+    
+    // Get statistics
+    const stats = await DB.prepare(`
+      SELECT 
+        status,
+        COUNT(*) as count
+      FROM license_keys
+      GROUP BY status
+    `).all()
+
+    return c.json({
+      success: true,
+      data: licenses?.results || [],
+      stats: stats?.results || [],
+      pagination: {
+        total: total?.count || 0,
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil((total?.count || 0) / parseInt(limit))
+      }
+    })
+  } catch (error: any) {
+    console.error('Admin licenses error:', error)
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// Generate new license key
+api.post('/admin/licenses/generate', requireAdmin, async (c) => {
+  try {
+    const { productId, quantity = 1 } = await c.req.json()
+    const { DB } = c.env
+
+    if (!productId) {
+      return c.json({ success: false, error: 'Product ID required' }, 400)
+    }
+
+    const keys = []
+    for (let i = 0; i < quantity; i++) {
+      const licenseKey = await LicenseGenerator.generateLicense(DB, productId)
+      keys.push(licenseKey)
+    }
+
+    return c.json({
+      success: true,
+      message: `Generated ${quantity} license key(s)`,
+      data: keys
+    })
+  } catch (error: any) {
+    console.error('Generate license error:', error)
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// Revoke license key
+api.patch('/admin/licenses/:id/revoke', requireAdmin, async (c) => {
+  try {
+    const licenseId = c.req.param('id')
+    const { reason } = await c.req.json()
+    const { DB } = c.env
+
+    await DB.prepare(`
+      UPDATE license_keys
+      SET status = 'revoked', updated_at = datetime('now')
+      WHERE id = ?
+    `).bind(licenseId).run()
+
+    return c.json({ success: true, message: 'License key revoked' })
+  } catch (error: any) {
+    console.error('Revoke license error:', error)
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// Get recent activities/logs
+api.get('/admin/activities', requireAdmin, async (c) => {
+  try {
+    const { limit = '20' } = c.req.query()
+    const { DB } = c.env
+
+    const activities = await DB.prepare(`
+      SELECT 'order' as type, order_number as reference, created_at, status as detail
+      FROM orders
+      UNION ALL
+      SELECT 'user' as type, email as reference, created_at, 'registered' as detail
+      FROM users
+      ORDER BY created_at DESC
+      LIMIT ?
+    `).bind(parseInt(limit)).all()
+
+    return c.json({
+      success: true,
+      data: activities?.results || []
+    })
+  } catch (error: any) {
+    console.error('Admin activities error:', error)
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
 export default api

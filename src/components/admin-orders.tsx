@@ -1,253 +1,189 @@
-import type { FC } from 'hono/jsx'
-
-export const AdminOrders: FC = () => {
-  return (
-    <div class="admin-orders">
-      <div class="admin-header">
-        <h2><i class="fas fa-shopping-cart"></i> Orders Management</h2>
-        <button class="btn-primary" onclick="exportOrders()">
-          <i class="fas fa-download"></i> Export Orders
-        </button>
-      </div>
-
-      {/* Filters */}
-      <div class="admin-card" style="margin-bottom: 20px;">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-          <input 
-            type="text" 
-            id="search-order" 
-            placeholder="Search orders..." 
-            class="form-control"
-            onkeyup="filterOrders()"
-          />
-          <select id="filter-status" class="form-control" onchange="filterOrders()">
-            <option value="">All Status</option>
-            <option value="pending">Pending</option>
-            <option value="processing">Processing</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-          <select id="filter-payment" class="form-control" onchange="filterOrders()">
-            <option value="">All Payments</option>
-            <option value="paid">Paid</option>
-            <option value="pending">Pending</option>
-            <option value="failed">Failed</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Orders Table */}
-      <div class="admin-card">
-        <div class="table-responsive">
-          <table class="admin-table">
-            <thead>
-              <tr>
-                <th>Order #</th>
-                <th>Customer</th>
-                <th>Items</th>
-                <th>Total</th>
-                <th>Payment</th>
-                <th>Status</th>
-                <th>Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="orders-tbody">
-              <tr>
-                <td colspan="8" style="text-align: center; padding: 40px;">
-                  <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: #1a2a4e;"></i>
-                  <p style="margin-top: 10px;">Loading orders...</p>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <style>{`
-        .admin-orders {
-          padding: 20px;
-        }
-        .admin-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 30px;
-        }
-        .admin-header h2 {
-          margin: 0;
-          color: #1a2a4e;
-        }
-        .table-responsive {
-          overflow-x: auto;
-        }
-        .admin-table {
-          width: 100%;
-          border-collapse: collapse;
-        }
-        .admin-table th {
-          background: #f8f9fa;
-          padding: 12px;
-          text-align: left;
-          font-weight: 600;
-          border-bottom: 2px solid #e5e7eb;
-        }
-        .admin-table td {
-          padding: 12px;
-          border-bottom: 1px solid #e5e7eb;
-        }
-        .admin-table tr:hover {
-          background: #f8f9fa;
-        }
-        .status-badge {
-          padding: 5px 10px;
-          border-radius: 15px;
-          font-size: 12px;
-          font-weight: 600;
-        }
-        .status-pending {
-          background: #fff3cd;
-          color: #856404;
-        }
-        .status-processing {
-          background: #d1ecf1;
-          color: #0c5460;
-        }
-        .status-completed {
-          background: #d4edda;
-          color: #155724;
-        }
-        .status-cancelled {
-          background: #f8d7da;
-          color: #721c24;
-        }
-        .status-paid {
-          background: #d4edda;
-          color: #155724;
-        }
-        .status-failed {
-          background: #f8d7da;
-          color: #721c24;
-        }
-        .action-btn {
-          padding: 5px 10px;
-          margin: 0 2px;
-          border: none;
-          border-radius: 3px;
-          cursor: pointer;
-          font-size: 12px;
-          color: white;
-        }
-        .btn-view {
-          background: #007bff;
-        }
-        .btn-edit {
-          background: #28a745;
-        }
-      `}</style>
-
-      <script dangerouslySetInnerHTML={{ __html: `
-        let ordersData = [];
+export const AdminOrders = () => {
+  return `
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Bestellungen - Admin - SoftwareKing24</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet" />
+        <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+    </head>
+    <body class="bg-gray-100">
         
-        function loadOrders() {
-          // Demo orders
-          ordersData = [
-            {
-              id: 'ORD-2024-001',
-              customer: { name: 'Max Mustermann', email: 'max@example.com' },
-              items: 2,
-              total: 299.98,
-              payment_status: 'paid',
-              status: 'completed',
-              date: '2024-01-15'
-            },
-            {
-              id: 'ORD-2024-002',
-              customer: { name: 'Anna Schmidt', email: 'anna@example.com' },
-              items: 1,
-              total: 149.99,
-              payment_status: 'paid',
-              status: 'processing',
-              date: '2024-01-20'
-            },
-            {
-              id: 'ORD-2024-003',
-              customer: { name: 'Peter Müller', email: 'peter@example.com' },
-              items: 3,
-              total: 449.97,
-              payment_status: 'pending',
-              status: 'pending',
-              date: '2024-01-22'
+        <!-- Top Bar -->
+        <div class="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-3">
+            <div class="max-w-7xl mx-auto px-4 flex items-center justify-between">
+                <div class="flex items-center space-x-4">
+                    <img src="/static/logo.png" alt="SoftwareKing24" class="h-8 brightness-0 invert" />
+                    <span class="text-sm font-semibold">Admin Panel</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-sm" id="admin-name">Admin</span>
+                    <a href="/" class="text-sm hover:text-blue-300"><i class="fas fa-home mr-1"></i>Zur Website</a>
+                    <button onclick="logout()" class="text-sm hover:text-red-300"><i class="fas fa-sign-out-alt mr-1"></i>Abmelden</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex">
+            
+            <!-- Sidebar -->
+            <aside class="w-64 bg-white shadow-lg min-h-screen">
+                <nav class="p-4">
+                    <a href="/admin" class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg mb-2">
+                        <i class="fas fa-chart-line w-5"></i>
+                        <span>Dashboard</span>
+                    </a>
+                    <a href="/admin/orders" class="flex items-center space-x-3 px-4 py-3 bg-blue-50 text-blue-600 rounded-lg mb-2 font-semibold">
+                        <i class="fas fa-shopping-bag w-5"></i>
+                        <span>Bestellungen</span>
+                    </a>
+                    <a href="/admin/licenses" class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg mb-2">
+                        <i class="fas fa-key w-5"></i>
+                        <span>Lizenzen</span>
+                    </a>
+                    <a href="/admin/customers" class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg mb-2">
+                        <i class="fas fa-users w-5"></i>
+                        <span>Kunden</span>
+                    </a>
+                    <a href="/admin/products" class="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg mb-2">
+                        <i class="fas fa-box w-5"></i>
+                        <span>Produkte</span>
+                    </a>
+                </nav>
+            </aside>
+
+            <!-- Main Content -->
+            <main class="flex-1 p-8">
+                
+                <div class="mb-8">
+                    <h1 class="text-3xl font-bold text-gray-800 mb-2">Bestellungen verwalten</h1>
+                    <p class="text-gray-600">Alle Bestellungen im Überblick</p>
+                </div>
+
+                <!-- Filters -->
+                <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Suche</label>
+                            <input type="text" id="search-input" placeholder="Bestellung, Kunde..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                            <select id="status-filter" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                                <option value="all">Alle Status</option>
+                                <option value="pending">Ausstehend</option>
+                                <option value="processing">In Bearbeitung</option>
+                                <option value="completed">Abgeschlossen</option>
+                                <option value="cancelled">Storniert</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Datum von</label>
+                            <input type="date" id="date-from" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Datum bis</label>
+                            <input type="date" id="date-to" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500" />
+                        </div>
+                    </div>
+                    <div class="mt-4 flex justify-end space-x-2">
+                        <button onclick="clearFilters()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                            <i class="fas fa-times mr-2"></i>Zurücksetzen
+                        </button>
+                        <button onclick="applyFilters()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            <i class="fas fa-search mr-2"></i>Filter anwenden
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Orders Table -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead>
+                                <tr class="bg-gray-50 text-left">
+                                    <th class="px-6 py-4 text-sm font-semibold text-gray-700">
+                                        <input type="checkbox" class="w-4 h-4" />
+                                    </th>
+                                    <th class="px-6 py-4 text-sm font-semibold text-gray-700">Bestellung</th>
+                                    <th class="px-6 py-4 text-sm font-semibold text-gray-700">Kunde</th>
+                                    <th class="px-6 py-4 text-sm font-semibold text-gray-700">Datum</th>
+                                    <th class="px-6 py-4 text-sm font-semibold text-gray-700">Produkte</th>
+                                    <th class="px-6 py-4 text-sm font-semibold text-gray-700">Betrag</th>
+                                    <th class="px-6 py-4 text-sm font-semibold text-gray-700">Status</th>
+                                    <th class="px-6 py-4 text-sm font-semibold text-gray-700">Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-table">
+                                <tr>
+                                    <td colspan="8" class="px-6 py-12 text-center text-gray-500">
+                                        <i class="fas fa-inbox text-5xl mb-4 text-gray-300"></i>
+                                        <p class="text-lg font-semibold mb-2">Keine Bestellungen gefunden</p>
+                                        <p class="text-sm">Sobald Kunden Bestellungen aufgeben, werden sie hier angezeigt</p>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', async () => {
+                const token = localStorage.getItem('authToken');
+                
+                if (!token) {
+                    window.location.href = '/login?redirect=/admin/orders';
+                    return;
+                }
+
+                try {
+                    const response = await axios.get('/api/auth/me', {
+                        headers: { 'Authorization': \`Bearer \${token}\` }
+                    });
+
+                    if (response.data.success && response.data.user.role === 'admin') {
+                        document.getElementById('admin-name').textContent = response.data.user.name;
+                        loadOrders();
+                    } else {
+                        throw new Error('Access denied');
+                    }
+                } catch (error) {
+                    window.location.href = '/';
+                }
+            });
+
+            async function loadOrders() {
+                // In production, fetch from API
+                // For now, show empty state
             }
-          ];
-          
-          renderOrders(ordersData);
-        }
-        
-        function renderOrders(orders) {
-          const tbody = document.getElementById('orders-tbody');
-          if (!orders || orders.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px;">No orders found</td></tr>';
-            return;
-          }
-          
-          tbody.innerHTML = orders.map(order => \`
-            <tr>
-              <td><strong>\${order.id}</strong></td>
-              <td>
-                <div>\${order.customer.name}</div>
-                <div style="font-size: 12px; color: #666;">\${order.customer.email}</div>
-              </td>
-              <td>\${order.items}</td>
-              <td>€\${order.total.toFixed(2)}</td>
-              <td><span class="status-badge status-\${order.payment_status}">\${order.payment_status.toUpperCase()}</span></td>
-              <td><span class="status-badge status-\${order.status}">\${order.status.toUpperCase()}</span></td>
-              <td>\${new Date(order.date).toLocaleDateString('de-DE')}</td>
-              <td>
-                <button class="action-btn btn-view" onclick="viewOrder('\${order.id}')">
-                  <i class="fas fa-eye"></i> View
-                </button>
-                <button class="action-btn btn-edit" onclick="updateOrderStatus('\${order.id}')">
-                  <i class="fas fa-edit"></i> Update
-                </button>
-              </td>
-            </tr>
-          \`).join('');
-        }
-        
-        function filterOrders() {
-          const search = document.getElementById('search-order').value.toLowerCase();
-          const status = document.getElementById('filter-status').value;
-          const payment = document.getElementById('filter-payment').value;
-          
-          let filtered = ordersData.filter(order => {
-            const matchesSearch = !search || 
-              order.id.toLowerCase().includes(search) ||
-              order.customer.name.toLowerCase().includes(search) ||
-              order.customer.email.toLowerCase().includes(search);
-            const matchesStatus = !status || order.status === status;
-            const matchesPayment = !payment || order.payment_status === payment;
-            return matchesSearch && matchesStatus && matchesPayment;
-          });
-          
-          renderOrders(filtered);
-        }
-        
-        function viewOrder(orderId) {
-          alert('View order: ' + orderId);
-        }
-        
-        function updateOrderStatus(orderId) {
-          alert('Update order status: ' + orderId);
-        }
-        
-        function exportOrders() {
-          alert('Export orders to CSV');
-        }
-        
-        // Initialize
-        loadOrders();
-      ` }} />
-    </div>
-  )
-}
+
+            function applyFilters() {
+                loadOrders();
+            }
+
+            function clearFilters() {
+                document.getElementById('search-input').value = '';
+                document.getElementById('status-filter').value = 'all';
+                document.getElementById('date-from').value = '';
+                document.getElementById('date-to').value = '';
+                loadOrders();
+            }
+
+            function logout() {
+                if (confirm('Möchten Sie sich wirklich abmelden?')) {
+                    localStorage.removeItem('authToken');
+                    localStorage.removeItem('user');
+                    window.location.href = '/';
+                }
+            }
+        </script>
+    </body>
+    </html>
+  `;
+};
