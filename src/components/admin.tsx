@@ -215,16 +215,6 @@ export const AdminLayout: FC<AdminLayoutProps> = ({ title, currentUser, children
               <span>Add New</span>
             </a>
             
-            <a href="/admin/categories" class="admin-nav-item">
-              <i class="fas fa-folder w-5"></i>
-              <span>Categories</span>
-            </a>
-            
-            <a href="/admin/brands" class="admin-nav-item">
-              <i class="fas fa-copyright w-5"></i>
-              <span>Brands</span>
-            </a>
-            
             <div class="px-4 py-2 text-xs text-gray-400 uppercase font-semibold mt-4">
               Orders & Sales
             </div>
@@ -239,10 +229,14 @@ export const AdminLayout: FC<AdminLayoutProps> = ({ title, currentUser, children
               <span>Customers</span>
             </a>
             
-            <a href="/admin/coupons" class="admin-nav-item">
-              <i class="fas fa-ticket-alt w-5"></i>
-              <span>Coupons</span>
+            <a href="/admin/invoices" class="admin-nav-item">
+              <i class="fas fa-file-invoice w-5"></i>
+              <span>Invoices</span>
             </a>
+            
+            <div class="px-4 py-2 text-xs text-gray-400 uppercase font-semibold mt-4">
+              License Management
+            </div>
             
             <div class="px-4 py-2 text-xs text-gray-400 uppercase font-semibold mt-4">
               License Management
@@ -253,33 +247,23 @@ export const AdminLayout: FC<AdminLayoutProps> = ({ title, currentUser, children
               <span>License Keys</span>
             </a>
             
+            <a href="/admin/certificates" class="admin-nav-item">
+              <i class="fas fa-certificate w-5"></i>
+              <span>Certificates</span>
+            </a>
+            
             <a href="/admin/licenses/import" class="admin-nav-item">
               <i class="fas fa-file-upload w-5"></i>
               <span>Import Keys</span>
             </a>
             
-            <a href="/admin/licenses/export" class="admin-nav-item">
-              <i class="fas fa-file-download w-5"></i>
-              <span>Export Keys</span>
-            </a>
-            
             <div class="px-4 py-2 text-xs text-gray-400 uppercase font-semibold mt-4">
-              Content
+              Analytics
             </div>
             
-            <a href="/admin/pages" class="admin-nav-item">
-              <i class="fas fa-file-alt w-5"></i>
-              <span>Pages</span>
-            </a>
-            
-            <a href="/admin/translations" class="admin-nav-item">
-              <i class="fas fa-language w-5"></i>
-              <span>Translations</span>
-            </a>
-            
-            <a href="/admin/seo" class="admin-nav-item">
-              <i class="fas fa-search w-5"></i>
-              <span>SEO Settings</span>
+            <a href="/admin/reports" class="admin-nav-item">
+              <i class="fas fa-chart-bar w-5"></i>
+              <span>Reports</span>
             </a>
             
             <div class="px-4 py-2 text-xs text-gray-400 uppercase font-semibold mt-4">
@@ -288,12 +272,7 @@ export const AdminLayout: FC<AdminLayoutProps> = ({ title, currentUser, children
             
             <a href="/admin/settings" class="admin-nav-item">
               <i class="fas fa-cog w-5"></i>
-              <span>General Settings</span>
-            </a>
-            
-            <a href="/admin/homepage" class="admin-nav-item">
-              <i class="fas fa-home w-5"></i>
-              <span>Homepage Builder</span>
+              <span>Settings</span>
             </a>
           </nav>
         </div>

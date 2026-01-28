@@ -669,6 +669,12 @@ app.post('/api/admin/licenses/import', adminAuth, async (c) => {
 import { AdminLayout, AdminDashboard } from './components/admin'
 import { AdminProducts, AdminProductForm } from './components/admin-products'
 import { AdminLicenses, AdminLicenseImport } from './components/admin-licenses'
+import { AdminOrders } from './components/admin-orders'
+import { AdminCustomers } from './components/admin-customers'
+import { AdminInvoices } from './components/admin-invoices'
+import { AdminCertificates } from './components/admin-certificates'
+import { AdminSettings } from './components/admin-settings'
+import { AdminReports } from './components/admin-reports'
 
 // Admin Dashboard
 app.get('/admin', (c) => {
@@ -696,6 +702,42 @@ app.get('/admin/products/add', (c) => {
   )
 })
 
+// Orders Management
+app.get('/admin/orders', (c) => {
+  return c.html(
+    <AdminLayout title="Orders" currentUser={{ first_name: 'Admin' }}>
+      <AdminOrders />
+    </AdminLayout>
+  )
+})
+
+// Customers Management
+app.get('/admin/customers', (c) => {
+  return c.html(
+    <AdminLayout title="Customers" currentUser={{ first_name: 'Admin' }}>
+      <AdminCustomers />
+    </AdminLayout>
+  )
+})
+
+// Invoices Management
+app.get('/admin/invoices', (c) => {
+  return c.html(
+    <AdminLayout title="Invoices" currentUser={{ first_name: 'Admin' }}>
+      <AdminInvoices />
+    </AdminLayout>
+  )
+})
+
+// License Certificates Management
+app.get('/admin/certificates', (c) => {
+  return c.html(
+    <AdminLayout title="License Certificates" currentUser={{ first_name: 'Admin' }}>
+      <AdminCertificates />
+    </AdminLayout>
+  )
+})
+
 // License Key Management
 app.get('/admin/licenses', (c) => {
   return c.html(
@@ -709,6 +751,24 @@ app.get('/admin/licenses/import', (c) => {
   return c.html(
     <AdminLayout title="Import License Keys" currentUser={{ first_name: 'Admin' }}>
       <AdminLicenseImport />
+    </AdminLayout>
+  )
+})
+
+// Reports & Analytics
+app.get('/admin/reports', (c) => {
+  return c.html(
+    <AdminLayout title="Reports & Analytics" currentUser={{ first_name: 'Admin' }}>
+      <AdminReports />
+    </AdminLayout>
+  )
+})
+
+// Settings
+app.get('/admin/settings', (c) => {
+  return c.html(
+    <AdminLayout title="Settings" currentUser={{ first_name: 'Admin' }}>
+      <AdminSettings />
     </AdminLayout>
   )
 })
