@@ -694,29 +694,36 @@ export const HomepagePrestaShop = () => {
                 const container = document.getElementById('flash-deals');
                 container.innerHTML = products.slice(0, 4).map(product => {
                     const discount = product.sale_price ? Math.round(((product.price - product.sale_price) / product.price) * 100) : 0;
-                    const displayPrice = product.sale_price || product.price;
+                    const displayPrice = (product.sale_price || product.price) / 100; // Convert from cents
+                    const originalPrice = product.price / 100;
                     
                     return \`
-                        <div class="bg-white rounded-2xl shadow-xl overflow-hidden hover-lift">
-                            <div class="relative">
-                                <img src="\${product.image}" alt="\${product.name}" class="w-full h-48 object-cover" />
+                        <div class="bg-white rounded-2xl shadow-xl overflow-hidden hover-lift transition-all duration-300">
+                            <div class="relative cursor-pointer" onclick="window.location.href='/produkt/\${product.id}'">
+                                <img src="\${product.image_url || 'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=600&h=400&fit=crop'}" alt="\${product.name}" class="w-full h-48 object-cover" />
                                 \${discount > 0 ? \`<div class="absolute top-4 right-4 bg-red-500 text-white px-3 py-1 rounded-full font-bold">-\${discount}%</div>\` : ''}
                             </div>
                             <div class="p-6">
-                                <h3 class="font-bold text-gray-800 mb-2">\${product.name}</h3>
+                                <a href="/produkt/\${product.id}" class="font-bold text-gray-800 mb-2 hover:text-blue-600 transition cursor-pointer block">\${product.name}</a>
+                                <p class="text-gray-600 text-sm mb-4 line-clamp-2">\${product.description || 'Original Software-Lizenz zum Bestpreis'}</p>
                                 <div class="flex items-center justify-between mb-4">
                                     <div>
                                         \${product.sale_price ? \`
                                             <span class="text-2xl font-bold text-red-600">€\${displayPrice.toFixed(2)}</span>
-                                            <span class="text-sm text-gray-500 line-through ml-2">€\${product.price.toFixed(2)}</span>
+                                            <span class="text-sm text-gray-500 line-through ml-2">€\${originalPrice.toFixed(2)}</span>
                                         \` : \`
                                             <span class="text-2xl font-bold text-gray-800">€\${displayPrice.toFixed(2)}</span>
                                         \`}
                                     </div>
                                 </div>
-                                <button onclick="addToCart(\${product.id})" class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg font-bold hover:from-blue-700 hover:to-purple-700 transition">
-                                    <i class="fas fa-shopping-cart mr-2"></i>In den Warenkorb
-                                </button>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <a href="/produkt/\${product.id}" class="bg-gray-100 text-gray-700 py-2 px-4 rounded-lg font-semibold hover:bg-gray-200 transition text-center">
+                                        <i class="fas fa-eye mr-2"></i>Ansehen
+                                    </a>
+                                    <button onclick="event.stopPropagation(); addToCart(\${product.id})" class="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 px-4 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition">
+                                        <i class="fas fa-cart-plus mr-2"></i>Kaufen
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     \`;
@@ -726,18 +733,18 @@ export const HomepagePrestaShop = () => {
             function renderBestsellers(products) {
                 const container = document.getElementById('bestsellers-products');
                 container.innerHTML = products.slice(0, 4).map(product => {
-                    const displayPrice = product.sale_price || product.price;
+                    const displayPrice = (product.sale_price || product.price) / 100;
                     
                     return \`
-                        <div class="bg-white rounded-xl shadow-md overflow-hidden hover-lift">
-                            <div class="relative">
-                                <img src="\${product.image}" alt="\${product.name}" class="w-full h-48 object-cover" />
+                        <div class="bg-white rounded-xl shadow-md overflow-hidden hover-lift transition-all duration-300">
+                            <div class="relative cursor-pointer" onclick="window.location.href='/produkt/\${product.id}'">
+                                <img src="\${product.image_url || 'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=600&h=400&fit=crop'}" alt="\${product.name}" class="w-full h-48 object-cover" />
                                 <div class="absolute top-4 left-4 bg-yellow-400 text-gray-900 px-3 py-1 rounded-full font-bold text-sm">
                                     <i class="fas fa-star mr-1"></i>Bestseller
                                 </div>
                             </div>
                             <div class="p-6">
-                                <h3 class="font-bold text-gray-800 mb-2">\${product.name}</h3>
+                                <a href="/produkt/\${product.id}" class="font-bold text-gray-800 mb-2 hover:text-blue-600 transition cursor-pointer block">\${product.name}</a>
                                 <div class="flex items-center mb-3">
                                     <div class="flex text-yellow-400 text-sm">
                                         <i class="fas fa-star"></i>
@@ -748,10 +755,15 @@ export const HomepagePrestaShop = () => {
                                     </div>
                                     <span class="text-sm text-gray-600 ml-2">(4.9)</span>
                                 </div>
-                                <div class="flex items-center justify-between">
+                                <div class="flex items-center justify-between mb-3">
                                     <span class="text-2xl font-bold text-blue-600">€\${displayPrice.toFixed(2)}</span>
-                                    <button onclick="addToCart(\${product.id})" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-                                        <i class="fas fa-cart-plus"></i>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <a href="/produkt/\${product.id}" class="bg-gray-100 text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-200 transition text-center text-sm">
+                                        <i class="fas fa-eye mr-1"></i>Details
+                                    </a>
+                                    <button onclick="event.stopPropagation(); addToCart(\${product.id})" class="bg-blue-600 text-white py-2 px-3 rounded-lg hover:bg-blue-700 transition text-sm">
+                                        <i class="fas fa-cart-plus mr-1"></i>Kaufen
                                     </button>
                                 </div>
                             </div>
@@ -763,22 +775,28 @@ export const HomepagePrestaShop = () => {
             function renderNewArrivals(products) {
                 const container = document.getElementById('new-arrivals');
                 container.innerHTML = products.slice(0, 4).map(product => {
-                    const displayPrice = product.sale_price || product.price;
+                    const displayPrice = (product.sale_price || product.price) / 100;
                     
                     return \`
-                        <div class="bg-white rounded-xl shadow-md overflow-hidden hover-lift">
-                            <div class="relative">
-                                <img src="\${product.image}" alt="\${product.name}" class="w-full h-48 object-cover" />
+                        <div class="bg-white rounded-xl shadow-md overflow-hidden hover-lift transition-all duration-300">
+                            <div class="relative cursor-pointer" onclick="window.location.href='/produkt/\${product.id}'">
+                                <img src="\${product.image_url || 'https://images.unsplash.com/photo-1587825140708-dfaf72ae4b04?w=600&h=400&fit=crop'}" alt="\${product.name}" class="w-full h-48 object-cover" />
                                 <div class="absolute top-4 left-4 bg-purple-500 text-white px-3 py-1 rounded-full font-bold text-sm">
                                     <i class="fas fa-sparkles mr-1"></i>Neu
                                 </div>
                             </div>
                             <div class="p-6">
-                                <h3 class="font-bold text-gray-800 mb-2">\${product.name}</h3>
-                                <div class="flex items-center justify-between">
+                                <a href="/produkt/\${product.id}" class="font-bold text-gray-800 mb-2 hover:text-purple-600 transition cursor-pointer block">\${product.name}</a>
+                                <p class="text-gray-600 text-sm mb-3 line-clamp-2">\${product.description || 'Neu eingetroffen - Jetzt verfügbar!'}</p>
+                                <div class="flex items-center justify-between mb-3">
                                     <span class="text-2xl font-bold text-purple-600">€\${displayPrice.toFixed(2)}</span>
-                                    <button onclick="addToCart(\${product.id})" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition">
-                                        <i class="fas fa-cart-plus"></i>
+                                </div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <a href="/produkt/\${product.id}" class="bg-gray-100 text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-200 transition text-center text-sm">
+                                        <i class="fas fa-eye mr-1"></i>Details
+                                    </a>
+                                    <button onclick="event.stopPropagation(); addToCart(\${product.id})" class="bg-purple-600 text-white py-2 px-3 rounded-lg hover:bg-purple-700 transition text-sm">
+                                        <i class="fas fa-cart-plus mr-1"></i>Kaufen
                                     </button>
                                 </div>
                             </div>

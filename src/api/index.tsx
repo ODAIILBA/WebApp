@@ -94,6 +94,19 @@ api.get('/products', async (c) => {
   }
 })
 
+// Get featured products (MUST be before /products/:id)
+api.get('/products/featured', async (c) => {
+  try {
+    const products = getAllProducts()
+      .filter(p => p.is_featured)
+      .slice(0, 8)
+    
+    return c.json({ success: true, data: products })
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
 // Get single product
 api.get('/products/:id', async (c) => {
   const id = parseInt(c.req.param('id'))
@@ -371,22 +384,6 @@ api.post('/checkout', async (c) => {
   } catch (error: any) {
     console.error('Checkout error:', error)
     return c.json({ success: false, error: error.message || 'Order creation failed' }, 500)
-  }
-})
-
-// ============================================
-// FEATURED/RECOMMENDED PRODUCTS
-// ============================================
-
-api.get('/products/featured', async (c) => {
-  try {
-    const products = getAllProducts()
-      .filter(p => p.is_featured)
-      .slice(0, 8)
-    
-    return c.json({ success: true, data: products })
-  } catch (error: any) {
-    return c.json({ success: false, error: error.message }, 500)
   }
 })
 
