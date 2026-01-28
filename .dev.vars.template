@@ -64,6 +64,9 @@ MAX_ACTIVATIONS_PER_LICENSE=1
 # ============================================
 # SECURITY SETTINGS
 # ============================================
+# Generate with: openssl rand -hex 32
+CSRF_SECRET=generate-a-secure-random-64-character-hex-string-for-csrf
+
 # Rate limiting (requests per minute)
 RATE_LIMIT_LOGIN=5
 RATE_LIMIT_API=100
