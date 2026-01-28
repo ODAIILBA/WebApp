@@ -14,6 +14,7 @@ export const AdminLayout: FC<AdminLayoutProps> = ({ title, currentUser, children
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>{title} - Admin Panel</title>
         <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
         <link 
           href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" 
           rel="stylesheet" 
