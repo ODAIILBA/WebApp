@@ -2257,26 +2257,34 @@ export const HomepagePrestaShopEnhanced = () => {
             }
 
             // Add to Cart Function
-            function addToCart(productId, productName, price) {
-                CartManager.addToCart(productId, productName, price, 1);
-                
-                // Show success notification
-                const notification = document.createElement('div');
-                notification.className = 'fixed bottom-4 right-4 bg-gold text-navy-dark px-6 py-4 rounded-lg shadow-xl z-50 animate-slideDown';
-                notification.innerHTML = \`
-                    <div class="flex items-center">
-                        <i class="fas fa-check-circle text-2xl mr-3"></i>
-                        <div>
-                            <div class="font-bold">Zum Warenkorb hinzugefügt!</div>
-                            <div class="text-sm">\${productName}</div>
+            async function addToCart(productId, productName, price) {
+                try {
+                    // Use the global cart manager instance
+                    const success = await window.cartManager.addToCart(productId, 1, 'single');
+                    
+                    if (success) {
+                        console.log('Product added to cart:', productId, productName);
+                    }
+                } catch (error) {
+                    console.error('Error adding to cart:', error);
+                    // Show error notification
+                    const notification = document.createElement('div');
+                    notification.className = 'fixed bottom-4 right-4 bg-red-500 text-white px-6 py-4 rounded-lg shadow-xl z-50 animate-slideDown';
+                    notification.innerHTML = \`
+                        <div class="flex items-center">
+                            <i class="fas fa-exclamation-circle text-2xl mr-3"></i>
+                            <div>
+                                <div class="font-bold">Fehler!</div>
+                                <div class="text-sm">Produkt konnte nicht hinzugefügt werden</div>
+                            </div>
                         </div>
-                    </div>
-                \`;
-                document.body.appendChild(notification);
-                
-                setTimeout(() => {
-                    notification.remove();
-                }, 3000);
+                    \`;
+                    document.body.appendChild(notification);
+                    
+                    setTimeout(() => {
+                        notification.remove();
+                    }, 3000);
+                }
             }
 
             // Global Search Function

@@ -472,6 +472,29 @@ app.get('/api/products/new', async (c) => {
   }
 })
 
+// Get single product by ID (for cart operations)
+app.get('/api/products/id/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const language = c.get('language') || 'en'
+    const productId = parseInt(c.req.param('id'))
+
+    if (isNaN(productId)) {
+      return c.json({ success: false, error: 'Invalid product ID' }, 400)
+    }
+
+    const product = await db.getProductById(productId, language)
+
+    if (!product) {
+      return c.json({ success: false, error: 'Product not found' }, 404)
+    }
+
+    return c.json({ success: true, data: product })
+  } catch (error) {
+    return c.json({ success: false, error: 'Failed to fetch product' }, 500)
+  }
+})
+
 app.get('/api/products/:slug', async (c) => {
   try {
     const db = c.get('db') as DatabaseHelper

@@ -54,6 +54,39 @@ export class DatabaseHelper {
     } as any;
   }
 
+  async getProductById(productId: number, language: Language = 'en'): Promise<ProductWithDetails | null> {
+    const product = await this.db.prepare(`
+      SELECT 
+        p.*,
+        pt.name, pt.short_description, pt.long_description, pt.features,
+        pt.meta_title, pt.meta_description,
+        ct.name as category_name,
+        b.name as brand_name, b.logo_url as brand_logo
+      FROM products p
+      LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = ?
+      LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language = ?
+      LEFT JOIN brands b ON p.brand_id = b.id
+      WHERE p.id = ?
+      LIMIT 1
+    `).bind(language, language, productId).first();
+
+    if (!product) return null;
+
+    // Get images
+    const images = await this.db.prepare(`
+      SELECT * FROM product_images 
+      WHERE product_id = ? 
+      ORDER BY sort_order ASC, is_primary DESC
+    `).bind(product.id).all();
+
+    return {
+      ...product,
+      images: images.results || [],
+      faqs: []
+    } as any;
+  }
+
   async getAllProducts(language: Language = 'en', limit: number = 20, offset: number = 0): Promise<ProductWithDetails[]> {
     const products = await this.db.prepare(`
       SELECT 

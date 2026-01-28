@@ -809,9 +809,14 @@ export const ProductsPageModern = () => {
           // Add to cart
           async function addToCart(productId) {
             try {
-              if (window.CartManager) {
-                await CartManager.addItem(productId, 1);
-                showNotification('Produkt zum Warenkorb hinzugefügt!', 'success');
+              if (window.cartManager) {
+                const success = await window.cartManager.addToCart(productId, 1, 'single');
+                if (success) {
+                  // Success notification is shown by cartManager itself
+                  console.log('Product added to cart:', productId);
+                }
+              } else {
+                showNotification('Cart manager not initialized', 'error');
               }
             } catch (error) {
               console.error('Error adding to cart:', error);

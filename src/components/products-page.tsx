@@ -410,16 +410,14 @@ export const ProductsPage = () => {
           // Add to cart
           async function addToCart(productId) {
             try {
-              const response = await axios.post('/api/cart/add', {
-                productId,
-                quantity: 1,
-                licenseType: 'single'
-              });
-
-              if (response.data.success) {
-                // Show success message
-                alert('Produkt wurde zum Warenkorb hinzugefügt!');
-                // Update cart counter (in real app)
+              if (window.cartManager) {
+                const success = await window.cartManager.addToCart(productId, 1, 'single');
+                if (success) {
+                  // Success notification is shown by cartManager itself
+                  console.log('Product added to cart:', productId);
+                }
+              } else {
+                alert('Cart manager not initialized');
               }
             } catch (error) {
               console.error('Error adding to cart:', error);

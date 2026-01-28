@@ -1094,9 +1094,14 @@ export const ProductDetailPageModern = () => {
             if (!currentProduct) return;
 
             try {
-              if (window.CartManager) {
-                await CartManager.addItem(currentProduct.id, quantity);
-                showNotification('✓ Produkt wurde zum Warenkorb hinzugefügt!', 'success');
+              if (window.cartManager) {
+                const success = await window.cartManager.addToCart(currentProduct.id, quantity, 'single');
+                if (success) {
+                  // Success notification is shown by cartManager itself
+                  console.log('Product added to cart:', currentProduct.id);
+                }
+              } else {
+                showNotification('✗ Cart manager not initialized', 'error');
               }
             } catch (error) {
               console.error('Error adding to cart:', error);

@@ -72,8 +72,8 @@ class CartManager {
   // Add product to cart
   async addToCart(productId, quantity = 1, licenseType = 'single') {
     try {
-      // Fetch product details
-      const response = await axios.get('/api/products/' + productId);
+      // Fetch product details using the ID-specific endpoint
+      const response = await axios.get('/api/products/id/' + productId);
       if (!response.data.success) {
         this.showNotification('Produkt konnte nicht geladen werden', 'error');
         return false;
