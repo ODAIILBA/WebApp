@@ -13,6 +13,8 @@ import { CartPage } from './components/cart-page'
 import { RegisterPage } from './components/register-page'
 import { LoginPage } from './components/login-page'
 import { CheckoutPage } from './components/checkout-page'
+import { UserDashboard } from './components/dashboard-overview'
+import { UserOrders } from './components/dashboard-orders'
 import { UserDashboard } from './components/user-dashboard'
 import { 
   formatPrice, 
@@ -215,6 +217,26 @@ app.get('/kasse', (c) => {
 
 app.get('/checkout', (c) => {
   return c.html(<CheckoutPage />)
+})
+
+// ===========================
+// USER DASHBOARD ROUTES
+// ===========================
+
+app.get('/konto', (c) => {
+  return c.html(UserDashboard())
+})
+
+app.get('/konto/bestellungen', (c) => {
+  return c.html(UserOrders())
+})
+
+app.get('/konto/lizenzen', (c) => {
+  return c.html(UserOrders()) // Placeholder
+})
+
+app.get('/konto/profil', (c) => {
+  return c.html(UserOrders()) // Placeholder
 })
 
 // ===========================
