@@ -1,5 +1,6 @@
 // Homepage component for the eCommerce platform
 import type { FC } from 'hono/jsx'
+import { MegaMenu } from './mega-menu'
 
 export const Homepage: FC = () => {
   return (
@@ -80,61 +81,8 @@ export const Homepage: FC = () => {
           </div>
         </div>
 
-        {/* Navigation Menu */}
-        <nav class="bg-primary border-t border-gray-700">
-          <div class="container mx-auto px-4">
-            <ul class="flex space-x-8 py-3">
-              <li class="has-mega-menu relative">
-                <a href="/categories/windows" class="flex items-center space-x-2 hover:text-gold transition">
-                  <i class="fab fa-windows"></i>
-                  <span>Windows</span>
-                  <i class="fas fa-chevron-down text-xs"></i>
-                </a>
-              </li>
-              <li class="has-mega-menu relative">
-                <a href="/categories/office" class="flex items-center space-x-2 hover:text-gold transition">
-                  <i class="fas fa-file-word"></i>
-                  <span>Office</span>
-                  <i class="fas fa-chevron-down text-xs"></i>
-                </a>
-              </li>
-              <li class="has-mega-menu relative">
-                <a href="/categories/server" class="flex items-center space-x-2 hover:text-gold transition">
-                  <i class="fas fa-server"></i>
-                  <span>Server</span>
-                  <i class="fas fa-chevron-down text-xs"></i>
-                </a>
-              </li>
-              <li class="has-mega-menu relative">
-                <a href="/categories/antivirus" class="flex items-center space-x-2 hover:text-gold transition">
-                  <i class="fas fa-shield-alt"></i>
-                  <span>Antivirus</span>
-                  <i class="fas fa-chevron-down text-xs"></i>
-                </a>
-              </li>
-              <li class="has-mega-menu relative">
-                <a href="/categories/games" class="flex items-center space-x-2 hover:text-gold transition">
-                  <i class="fas fa-gamepad"></i>
-                  <span>Games</span>
-                  <i class="fas fa-chevron-down text-xs"></i>
-                </a>
-              </li>
-              <li class="has-mega-menu relative">
-                <a href="/categories/design" class="flex items-center space-x-2 hover:text-gold transition">
-                  <i class="fas fa-palette"></i>
-                  <span>Design</span>
-                  <i class="fas fa-chevron-down text-xs"></i>
-                </a>
-              </li>
-              <li>
-                <a href="/deals" class="flex items-center space-x-2 text-gold font-bold">
-                  <i class="fas fa-fire"></i>
-                  <span>Hot Deals</span>
-                </a>
-              </li>
-            </ul>
-          </div>
-        </nav>
+        {/* Navigation Menu - Enhanced Mega Menu */}
+        <MegaMenu />
       </header>
 
       {/* Hero Banner */}
