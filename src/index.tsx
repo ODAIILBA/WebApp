@@ -753,6 +753,10 @@ import { ProductDetail } from './components/product-detail'
 import { CategoryListing } from './components/category-listing'
 import { ShoppingCart } from './components/cart'
 import { Checkout } from './components/checkout'
+import { UserDashboard } from './components/user-dashboard'
+import { OrdersPage } from './components/orders-page'
+import { LicensesPage } from './components/licenses-page'
+import { ProfilePage } from './components/profile-page'
 
 // Product Detail Page
 app.get('/products/:slug', async (c) => {
@@ -810,6 +814,35 @@ app.get('/cart', (c) => {
 // Checkout Page
 app.get('/checkout', (c) => {
   return c.html(<Checkout />)
+})
+
+// User Dashboard Routes
+app.get('/account', (c) => {
+  return c.html(<UserDashboard activeTab="overview" />)
+})
+
+app.get('/account/orders', (c) => {
+  return c.html(
+    <UserDashboard activeTab="orders">
+      <OrdersPage />
+    </UserDashboard>
+  )
+})
+
+app.get('/account/licenses', (c) => {
+  return c.html(
+    <UserDashboard activeTab="licenses">
+      <LicensesPage />
+    </UserDashboard>
+  )
+})
+
+app.get('/account/profile', (c) => {
+  return c.html(
+    <UserDashboard activeTab="profile">
+      <ProfilePage />
+    </UserDashboard>
+  )
 })
 
 export default app
