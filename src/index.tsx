@@ -48,6 +48,10 @@ import { UserSchemas, OrderSchemas, AdminSchemas, ContactSchemas } from './middl
 
 // License Management
 import { LicenseManager, LicenseScheduler } from './lib/licenses'
+import { LicenseGenerator } from './lib/license-generator'
+
+// Email Service
+import { EmailService } from './lib/email'
 
 // VAT Calculation
 import { calculateVAT as calculateEUVAT, validateVATNumber } from './lib/vat'
@@ -284,7 +288,7 @@ app.get('/account', (c) => {
 // API ROUTES: Products
 // ============================================
 
-// Get all products with pagination
+// Get all products with pagination and search
 app.get('/api/products', async (c) => {
   try {
     const db = c.get('db') as DatabaseHelper
@@ -292,10 +296,134 @@ app.get('/api/products', async (c) => {
     const page = parseInt(c.req.query('page') || '1')
     const limit = parseInt(c.req.query('limit') || '20')
     const offset = (page - 1) * limit
+    const search = c.req.query('search') || ''
+    const sort = c.req.query('sort') || 'newest' // newest, price-asc, price-desc, name, bestseller
+    const category = c.req.query('category') || ''
+    const minPrice = parseFloat(c.req.query('minPrice') || '0')
+    const maxPrice = parseFloat(c.req.query('maxPrice') || '999999')
 
-    const products = await db.getAllProducts(language, limit, offset)
+    let query = `
+      SELECT DISTINCT
+        p.id,
+        p.woocommerce_id,
+        p.sku,
+        p.base_price,
+        p.discount_price,
+        p.discount_percentage,
+        p.is_featured,
+        p.is_bestseller,
+        p.is_new,
+        p.rating_average,
+        p.rating_count,
+        pt.name,
+        pt.short_description,
+        ct.name as category_name,
+        b.name as brand_name,
+        pi.image_url,
+        pi.alt_text
+      FROM products p
+      LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = ?
+      LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language = ?
+      LEFT JOIN brands b ON p.brand_id = b.id
+      LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
+      WHERE p.is_active = 1
+    `
+    
+    const params: any[] = [language, language]
 
-    return c.json({ success: true, data: products })
+    // Search filter
+    if (search) {
+      query += ` AND (pt.name LIKE ? OR pt.short_description LIKE ? OR p.sku LIKE ?)`
+      const searchTerm = `%${search}%`
+      params.push(searchTerm, searchTerm, searchTerm)
+    }
+
+    // Category filter
+    if (category) {
+      query += ` AND ct.slug = ?`
+      params.push(category)
+    }
+
+    // Price filter
+    if (minPrice > 0) {
+      query += ` AND (COALESCE(p.discount_price, p.base_price) >= ?)`
+      params.push(minPrice)
+    }
+    if (maxPrice < 999999) {
+      query += ` AND (COALESCE(p.discount_price, p.base_price) <= ?)`
+      params.push(maxPrice)
+    }
+
+    // Sorting
+    switch (sort) {
+      case 'price-asc':
+        query += ` ORDER BY COALESCE(p.discount_price, p.base_price) ASC`
+        break
+      case 'price-desc':
+        query += ` ORDER BY COALESCE(p.discount_price, p.base_price) DESC`
+        break
+      case 'name':
+        query += ` ORDER BY pt.name ASC`
+        break
+      case 'bestseller':
+        query += ` ORDER BY p.is_bestseller DESC, p.rating_average DESC`
+        break
+      case 'newest':
+      default:
+        query += ` ORDER BY p.created_at DESC`
+        break
+    }
+
+    query += ` LIMIT ? OFFSET ?`
+    params.push(limit, offset)
+
+    const result = await c.env.DB.prepare(query).bind(...params).all()
+    
+    // Get total count for pagination
+    let countQuery = `
+      SELECT COUNT(DISTINCT p.id) as total
+      FROM products p
+      LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = ?
+      LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language = ?
+      WHERE p.is_active = 1
+    `
+    const countParams: any[] = [language, language]
+    
+    if (search) {
+      countQuery += ` AND (pt.name LIKE ? OR pt.short_description LIKE ? OR p.sku LIKE ?)`
+      const searchTerm = `%${search}%`
+      countParams.push(searchTerm, searchTerm, searchTerm)
+    }
+    
+    if (category) {
+      countQuery += ` AND ct.slug = ?`
+      countParams.push(category)
+    }
+    
+    if (minPrice > 0) {
+      countQuery += ` AND (COALESCE(p.discount_price, p.base_price) >= ?)`
+      countParams.push(minPrice)
+    }
+    if (maxPrice < 999999) {
+      countQuery += ` AND (COALESCE(p.discount_price, p.base_price) <= ?)`
+      countParams.push(maxPrice)
+    }
+    
+    const countResult = await c.env.DB.prepare(countQuery).bind(...countParams).first()
+    const total = (countResult as any)?.total || 0
+
+    return c.json({ 
+      success: true, 
+      data: result.results,
+      pagination: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit)
+      }
+    })
   } catch (error) {
     console.error('Failed to fetch products:', error)
     return c.json({ success: false, error: 'Failed to fetch products' }, 500)
@@ -1854,6 +1982,16 @@ app.post('/api/payments/stripe/webhook', async (c) => {
 
     const db = c.get('db') as DatabaseHelper
     const auditLogger = new AuditLogger(c.env.DB)
+    
+    // Initialize email and license services
+    const emailService = new EmailService(
+      c.env.SENDGRID_API_KEY || 'placeholder',
+      c.env.FROM_EMAIL || 'noreply@softwareking24.de',
+      c.env.FROM_NAME || 'SoftwareKing24',
+      c.env.ENVIRONMENT === 'development'
+    )
+    
+    const licenseGenerator = new LicenseGenerator(c.env.DB, c.env.LICENSE_PREFIX || 'SK24')
 
     // Handle different webhook events
     if (type === 'payment_intent.succeeded') {
@@ -1864,35 +2002,94 @@ app.post('/api/payments/stripe/webhook', async (c) => {
         UPDATE orders 
         SET payment_status = 'paid',
             status = 'processing',
+            paid_at = datetime('now'),
             updated_at = datetime('now')
         WHERE payment_intent_id = ?
       `).bind(paymentIntent.id).run()
       
-      // Assign licenses
+      // Get order details with user info
       const order = await c.env.DB.prepare(`
-        SELECT id, email FROM orders WHERE payment_intent_id = ?
+        SELECT o.id, o.order_number, o.billing_email, o.billing_name, o.user_id, o.total,
+               u.first_name, u.last_name, u.email as user_email
+        FROM orders o
+        LEFT JOIN users u ON o.user_id = u.id
+        WHERE o.payment_intent_id = ?
       `).bind(paymentIntent.id).first()
       
       if (order) {
-        const licenseManager = new LicenseManager(c.env.DB)
+        // Get order items with product details
         const orderItems = await c.env.DB.prepare(`
-          SELECT product_id, quantity FROM order_items WHERE order_id = ?
+          SELECT oi.id, oi.product_id, oi.quantity, oi.price,
+                 pt.name, pt.language
+          FROM order_items oi
+          JOIN product_translations pt ON oi.product_id = pt.product_id
+          WHERE oi.order_id = ? AND pt.language = 'de'
         `).bind(order.id).all()
         
+        // Assign and deliver licenses for each item
+        const licenses: Array<{ productName: string; licenseKey: string }> = []
+        
         for (const item of orderItems.results || []) {
-          await licenseManager.assignLicense(
+          // Assign license to order
+          const result = await licenseGenerator.assignToOrder(
             item.product_id as number,
             order.id as number,
-            item.quantity as number
+            order.user_id as number
+          )
+          
+          if (result.success && result.licenseKey) {
+            licenses.push({
+              productName: item.name as string,
+              licenseKey: result.licenseKey
+            })
+            
+            // Send individual license email for each product
+            const email = order.user_email || order.billing_email
+            const firstName = order.first_name || order.billing_name?.split(' ')[0] || 'Customer'
+            
+            await emailService.sendLicenseEmail(
+              email as string,
+              firstName as string,
+              order.order_number as string,
+              item.name as string,
+              result.licenseKey
+            )
+          }
+        }
+        
+        // Send order confirmation email with all items
+        if (licenses.length > 0) {
+          const email = order.user_email || order.billing_email
+          const firstName = order.first_name || order.billing_name?.split(' ')[0] || 'Customer'
+          
+          const items = (orderItems.results || []).map(item => ({
+            name: item.name as string,
+            price: formatPrice(item.price as number / 100, 'EUR', 'de')
+          }))
+          
+          await emailService.sendOrderConfirmationEmail(
+            email as string,
+            firstName as string,
+            order.order_number as string,
+            items,
+            formatPrice(order.total as number / 100, 'EUR', 'de')
           )
         }
+        
+        // Update order status to completed
+        await c.env.DB.prepare(`
+          UPDATE orders 
+          SET status = 'completed',
+              completed_at = datetime('now')
+          WHERE id = ?
+        `).bind(order.id).run()
       }
       
       // Log success
       await auditLogger.log({
         action: 'payment_succeeded',
         resourceType: 'payment',
-        changes: { payment_intent_id: paymentIntent.id }
+        changes: { payment_intent_id: paymentIntent.id, licenses_delivered: true }
       })
       
     } else if (type === 'payment_intent.payment_failed') {

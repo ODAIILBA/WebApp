@@ -88,7 +88,8 @@ export class LicenseGenerator {
         let attempts = 0
         const maxAttempts = 10
         
-        // Generate unique key\n        do {
+        // Generate unique key
+        do {
           licenseKey = generateLicenseKey(this.prefix)
           attempts++
           
