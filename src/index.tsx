@@ -772,6 +772,7 @@ app.post('/api/admin/licenses/import', adminAuth, async (c) => {
 // Import admin components
 import { AdminLayout, AdminDashboard } from './components/admin'
 import { AdminProducts, AdminProductForm } from './components/admin-products'
+import { AdminProductImport } from './components/admin-product-import'
 import { AdminLicenses, AdminLicenseImport } from './components/admin-licenses'
 import { AdminOrders } from './components/admin-orders'
 import { AdminCustomers } from './components/admin-customers'
@@ -817,6 +818,48 @@ app.get('/admin/products/edit/:id', (c) => {
       <AdminProductForm isEdit={true} productId={productId} />
     </AdminLayout>
   )
+})
+
+// Product Import
+app.get('/admin/products/import', (c) => {
+  return c.html(
+    <AdminLayout title="Product Import" currentUser={{ first_name: 'Admin' }}>
+      <AdminProductImport />
+    </AdminLayout>
+  )
+})
+
+// Import API endpoint
+app.post('/api/admin/import/woocommerce', async (c) => {
+  try {
+    const { env } = c;
+    const body = await c.req.parseBody();
+    const csvContent = body.csv as string;
+    const language = (body.language as string) || 'de';
+
+    if (!csvContent) {
+      return c.json({ success: false, error: 'No CSV content provided' }, 400);
+    }
+
+    // Import products
+    const { WooCommerceImporter } = await import('./lib/woocommerce-importer');
+    const importer = new WooCommerceImporter(env.DB);
+    
+    const result = await importer.importProducts(csvContent, language, (current, total, productName) => {
+      console.log(`Importing ${current}/${total}: ${productName}`);
+    });
+
+    return c.json({
+      success: true,
+      data: result
+    });
+  } catch (error: any) {
+    console.error('Import error:', error);
+    return c.json({
+      success: false,
+      error: error.message || 'Import failed'
+    }, 500);
+  }
 })
 
 // Orders Management

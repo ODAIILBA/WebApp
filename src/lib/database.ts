@@ -425,4 +425,67 @@ export class DatabaseHelper {
 
     return brands.results as any[];
   }
+
+  // ============================================
+  // IMPORT HELPER QUERIES
+  // ============================================
+
+  async getProductBySKU(sku: string) {
+    const product = await this.db.prepare(`
+      SELECT * FROM products WHERE sku = ? LIMIT 1
+    `).bind(sku).first();
+
+    return product as any;
+  }
+
+  async getOrCreateCategory(name: string, language: string = 'de') {
+    // Check if category exists
+    const existing = await this.db.prepare(`
+      SELECT c.* FROM categories c
+      JOIN category_translations ct ON c.id = ct.category_id
+      WHERE ct.name = ? AND ct.language = ?
+      LIMIT 1
+    `).bind(name, language).first();
+
+    if (existing) {
+      return existing as any;
+    }
+
+    // Create new category
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const result = await this.db.prepare(`
+      INSERT INTO categories (slug, sort_order, is_active)
+      VALUES (?, 0, 1)
+    `).bind(slug).run();
+
+    const categoryId = result.meta.last_row_id;
+
+    // Insert translation
+    await this.db.prepare(`
+      INSERT INTO category_translations (category_id, language, name, description)
+      VALUES (?, ?, ?, ?)
+    `).bind(categoryId, language, name, name).run();
+
+    return { id: categoryId, slug, sort_order: 0, is_active: 1 };
+  }
+
+  async getOrCreateBrand(name: string, language: string = 'de') {
+    // Check if brand exists
+    const existing = await this.db.prepare(`
+      SELECT * FROM brands WHERE name = ? LIMIT 1
+    `).bind(name).first();
+
+    if (existing) {
+      return existing as any;
+    }
+
+    // Create new brand
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const result = await this.db.prepare(`
+      INSERT INTO brands (name, slug, logo_url, is_featured, sort_order)
+      VALUES (?, ?, ?, 0, 0)
+    `).bind(name, slug, `/static/brands/${slug}.png`).run();
+
+    return { id: result.meta.last_row_id, name, slug };
+  }
 }
