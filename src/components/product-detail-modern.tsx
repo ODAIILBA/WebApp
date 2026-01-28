@@ -774,7 +774,7 @@ export const ProductDetailPageModern = () => {
                 </button>
 
                 <!-- Buy Now Button -->
-                <button class="w-full border-2 py-4 rounded-xl font-bold text-lg transition-all mb-6" style="border-color: var(--gold); color: var(--gold);">
+                <button id="buy-now-btn" class="w-full border-2 py-4 rounded-xl font-bold text-lg transition-all mb-6 hover:opacity-80" style="border-color: var(--gold); color: var(--gold);">
                   <i class="fas fa-bolt mr-2"></i>
                   Jetzt kaufen
                 </button>
@@ -1106,6 +1106,34 @@ export const ProductDetailPageModern = () => {
             } catch (error) {
               console.error('Error adding to cart:', error);
               showNotification('✗ Fehler beim Hinzufügen zum Warenkorb', 'error');
+            }
+          });
+
+          // Buy Now button - Add to cart and go to checkout
+          document.getElementById('buy-now-btn').addEventListener('click', async () => {
+            if (!currentProduct) return;
+
+            try {
+              if (window.cartManager) {
+                // Add product to cart
+                const success = await window.cartManager.addToCart(currentProduct.id, quantity, 'single');
+                if (success) {
+                  // Show brief notification
+                  showNotification('✓ Produkt hinzugefügt - Weiter zur Kasse...', 'success');
+                  
+                  // Redirect to checkout after short delay
+                  setTimeout(() => {
+                    window.location.href = '/kasse';
+                  }, 800);
+                } else {
+                  showNotification('✗ Fehler beim Hinzufügen', 'error');
+                }
+              } else {
+                showNotification('✗ Cart manager not initialized', 'error');
+              }
+            } catch (error) {
+              console.error('Error with buy now:', error);
+              showNotification('✗ Fehler beim Kaufen', 'error');
             }
           });
 
