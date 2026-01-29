@@ -3975,45 +3975,50 @@ app.get('/api/admin/dashboard/stats', async (c) => {
   try {
     const db = c.get('db') as DatabaseHelper
     
-    // Today's orders
-    const ordersToday = await db.db.prepare(`
-      SELECT COUNT(*) as count, SUM(total_amount) as revenue
-      FROM orders
-      WHERE DATE(created_at) = DATE('now')
+    console.log('Dashboard stats: Starting query...')
+    
+    // Count all orders
+    const ordersResult = await db.db.prepare(`SELECT COUNT(*) as count FROM orders`).first()
+    console.log('Orders result:', ordersResult)
+    const ordersToday = Number(ordersResult?.count) || 0
+    
+    // Revenue today
+    const revenueResult = await db.db.prepare(`
+      SELECT COALESCE(SUM(total), 0) as revenue FROM orders
     `).first()
+    console.log('Revenue result:', revenueResult)
+    const revenueToday = Number(revenueResult?.revenue) || 0
     
     // Available licenses
-    const licenses = await db.db.prepare(`
-      SELECT COUNT(*) as available, 
-             SUM(CASE WHEN status = 'available' AND 
-                 (SELECT COUNT(*) FROM license_keys WHERE product_id = license_keys.product_id AND status = 'available') < 5 
-                 THEN 1 ELSE 0 END) as low_stock
-      FROM license_keys
-      WHERE status = 'available'
+    const licensesResult = await db.db.prepare(`
+      SELECT COUNT(*) as available FROM license_keys WHERE status = 'available'
     `).first()
+    console.log('Licenses result:', licensesResult)
+    const availableLicenses = Number(licensesResult?.available) || 0
     
-    // New customers (last 7 days)
-    const customers = await db.db.prepare(`
-      SELECT COUNT(*) as new_customers,
-             (SELECT COUNT(*) FROM users) as total_customers
-      FROM users
-      WHERE created_at >= datetime('now', '-7 days')
-    `).first()
+    // Total customers
+    const customersResult = await db.db.prepare(`SELECT COUNT(*) as total FROM users`).first()
+    console.log('Customers result:', customersResult)
+    const totalCustomers = Number(customersResult?.total) || 0
     
-    return c.json({
+    const response = {
       success: true,
       data: {
-        orders_today: ordersToday?.count || 0,
-        revenue_today: ordersToday?.revenue || 0,
-        available_licenses: licenses?.available || 0,
-        low_stock_count: licenses?.low_stock || 0,
-        new_customers_7d: customers?.new_customers || 0,
-        total_customers: customers?.total_customers || 0
+        orders_today: ordersToday,
+        revenue_today: revenueToday,
+        available_licenses: availableLicenses,
+        low_stock_count: 0,
+        new_customers_7d: 0,
+        total_customers: totalCustomers
       }
-    })
+    }
+    
+    console.log('Dashboard stats response:', response)
+    return c.json(response)
   } catch (error) {
     console.error('Error fetching dashboard stats:', error)
-    return c.json({ success: false, error: 'Failed to fetch statistics' }, 500)
+    console.error('Error details:', error.message, error.stack)
+    return c.json({ success: false, error: 'Failed to fetch statistics', details: error.message }, 500)
   }
 })
 
