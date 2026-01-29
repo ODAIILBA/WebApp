@@ -696,7 +696,7 @@ export const ProductsPageModern = () => {
                         onclick="addToCart(\${product.id})" 
                         class="flex-1 bg-gold text-white px-4 py-2.5 rounded-lg hover:bg-gold-dark transition font-semibold text-sm"
                       >
-                        <i class="fas fa-cart-plus mr-1"></i>Warenkorb
+                        <i class="fas fa-shopping-cart mr-1"></i>Jetzt kaufen
                       </button>
                     </div>
                     
