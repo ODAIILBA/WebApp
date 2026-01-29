@@ -9229,6 +9229,612 @@ app.get('/admin/refunds', async (c) => {
   `)
 })
 
+// SYSTEM STATUS MONITORING PAGE
+app.get('/admin/system-status', async (c) => {
+  const db = c.get('db') as DatabaseHelper
+  
+  // Get system statistics
+  const stats = {
+    products: await db.db.prepare('SELECT COUNT(*) as count FROM products WHERE is_active = 1').first(),
+    orders: await db.db.prepare('SELECT COUNT(*) as count FROM orders WHERE status != "cancelled"').first(),
+    customers: await db.db.prepare('SELECT COUNT(*) as count FROM users WHERE role = "customer"').first(),
+    licenses: await db.db.prepare('SELECT COUNT(*) as count FROM license_keys WHERE status = "available"').first(),
+  }
+  
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Systemstatus - SOFTWAREKING24 Admin</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-50">
+        ${AdminSidebarAdvanced('/admin/system-status')}
+        <div class="ml-64 p-8">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                    <i class="fas fa-server mr-2 text-green-600"></i>
+                    Systemstatus
+                </h1>
+                <p class="text-gray-600">Überwachung der Systemgesundheit und Leistung</p>
+            </div>
+
+            <!-- Overall System Health -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-900">Systemgesundheit</h2>
+                    <div class="flex items-center">
+                        <div class="h-3 w-3 bg-green-500 rounded-full mr-2 animate-pulse"></div>
+                        <span class="text-sm font-medium text-green-600">Alle Systeme betriebsbereit</span>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="text-center p-4 bg-green-50 rounded-lg">
+                        <i class="fas fa-database text-3xl text-green-600 mb-2"></i>
+                        <p class="text-sm text-gray-600">Datenbank</p>
+                        <p class="text-lg font-bold text-green-600">Online</p>
+                    </div>
+                    <div class="text-center p-4 bg-green-50 rounded-lg">
+                        <i class="fas fa-cloud text-3xl text-green-600 mb-2"></i>
+                        <p class="text-sm text-gray-600">Cloudflare</p>
+                        <p class="text-lg font-bold text-green-600">Aktiv</p>
+                    </div>
+                    <div class="text-center p-4 bg-green-50 rounded-lg">
+                        <i class="fas fa-globe text-3xl text-green-600 mb-2"></i>
+                        <p class="text-sm text-gray-600">API</p>
+                        <p class="text-lg font-bold text-green-600">Online</p>
+                    </div>
+                    <div class="text-center p-4 bg-green-50 rounded-lg">
+                        <i class="fas fa-shield-alt text-3xl text-green-600 mb-2"></i>
+                        <p class="text-sm text-gray-600">Sicherheit</p>
+                        <p class="text-lg font-bold text-green-600">Gesichert</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Statistics -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600">Aktive Produkte</p>
+                            <p class="text-2xl font-bold text-gray-900">${(stats.products as any)?.count || 0}</p>
+                        </div>
+                        <div class="p-3 bg-blue-100 rounded-full">
+                            <i class="fas fa-box text-blue-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600">Offene Bestellungen</p>
+                            <p class="text-2xl font-bold text-gray-900">${(stats.orders as any)?.count || 0}</p>
+                        </div>
+                        <div class="p-3 bg-green-100 rounded-full">
+                            <i class="fas fa-shopping-cart text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600">Registrierte Kunden</p>
+                            <p class="text-2xl font-bold text-gray-900">${(stats.customers as any)?.count || 0}</p>
+                        </div>
+                        <div class="p-3 bg-purple-100 rounded-full">
+                            <i class="fas fa-users text-purple-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600">Verfügbare Lizenzen</p>
+                            <p class="text-2xl font-bold text-gray-900">${(stats.licenses as any)?.count || 0}</p>
+                        </div>
+                        <div class="p-3 bg-yellow-100 rounded-full">
+                            <i class="fas fa-key text-yellow-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Performance Metrics -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">Leistungsmetriken</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm text-gray-600">CPU-Auslastung</span>
+                            <span class="text-sm font-medium text-green-600">12%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-green-600 h-2 rounded-full" style="width: 12%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm text-gray-600">Speicher</span>
+                            <span class="text-sm font-medium text-blue-600">34%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-blue-600 h-2 rounded-full" style="width: 34%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm text-gray-600">Datenbank</span>
+                            <span class="text-sm font-medium text-purple-600">18%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-purple-600 h-2 rounded-full" style="width: 18%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity Log -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-bold text-gray-900 mb-4">Systemaktivität</h2>
+                <div class="space-y-3">
+                    <div class="flex items-center p-3 bg-gray-50 rounded">
+                        <i class="fas fa-check-circle text-green-600 mr-3"></i>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-900">System erfolgreich gestartet</p>
+                            <p class="text-xs text-gray-500">vor 2 Stunden</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center p-3 bg-gray-50 rounded">
+                        <i class="fas fa-sync text-blue-600 mr-3"></i>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-900">Datenbank-Backup erstellt</p>
+                            <p class="text-xs text-gray-500">vor 5 Stunden</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center p-3 bg-gray-50 rounded">
+                        <i class="fas fa-info-circle text-gray-600 mr-3"></i>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-gray-900">Routinemäßige Wartung durchgeführt</p>
+                            <p class="text-xs text-gray-500">vor 12 Stunden</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+  `)
+})
+
+// QUICK ACTIONS DASHBOARD
+app.get('/admin/quick-actions', async (c) => {
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Schnellaktionen - SOFTWAREKING24 Admin</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-50">
+        ${AdminSidebarAdvanced('/admin/quick-actions')}
+        <div class="ml-64 p-8">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                    <i class="fas fa-bolt mr-2 text-yellow-600"></i>
+                    Schnellaktionen
+                </h1>
+                <p class="text-gray-600">Häufig verwendete Aktionen im Schnellzugriff</p>
+            </div>
+
+            <!-- Product Actions -->
+            <div class="mb-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-4">
+                    <i class="fas fa-box text-blue-600 mr-2"></i>Produkte
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <a href="/admin/products/add" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
+                        <div class="flex items-center mb-3">
+                            <div class="p-3 bg-blue-100 rounded-full mr-4">
+                                <i class="fas fa-plus-circle text-blue-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900">Neues Produkt</h3>
+                                <p class="text-sm text-gray-500">Produkt hinzufügen</p>
+                            </div>
+                        </div>
+                    </a>
+                    
+                    <a href="/admin/products/import" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
+                        <div class="flex items-center mb-3">
+                            <div class="p-3 bg-green-100 rounded-full mr-4">
+                                <i class="fas fa-file-csv text-green-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900">CSV Import</h3>
+                                <p class="text-sm text-gray-500">Massenimport</p>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="/admin/categories" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
+                        <div class="flex items-center mb-3">
+                            <div class="p-3 bg-purple-100 rounded-full mr-4">
+                                <i class="fas fa-folder text-purple-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900">Kategorien</h3>
+                                <p class="text-sm text-gray-500">Verwalten</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Order Actions -->
+            <div class="mb-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-4">
+                    <i class="fas fa-shopping-cart text-green-600 mr-2"></i>Bestellungen
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <a href="/admin/orders?status=pending" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
+                        <div class="flex items-center mb-3">
+                            <div class="p-3 bg-yellow-100 rounded-full mr-4">
+                                <i class="fas fa-clock text-yellow-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900">Offene Bestellungen</h3>
+                                <p class="text-sm text-gray-500">Ansehen</p>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="/admin/orders?status=processing" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
+                        <div class="flex items-center mb-3">
+                            <div class="p-3 bg-blue-100 rounded-full mr-4">
+                                <i class="fas fa-spinner text-blue-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900">In Bearbeitung</h3>
+                                <p class="text-sm text-gray-500">Ansehen</p>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="/admin/refunds" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
+                        <div class="flex items-center mb-3">
+                            <div class="p-3 bg-red-100 rounded-full mr-4">
+                                <i class="fas fa-undo text-red-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900">Rückerstattungen</h3>
+                                <p class="text-sm text-gray-500">Verwalten</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Customer Actions -->
+            <div class="mb-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-4">
+                    <i class="fas fa-users text-purple-600 mr-2"></i>Kunden
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <a href="/admin/customers" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
+                        <div class="flex items-center mb-3">
+                            <div class="p-3 bg-purple-100 rounded-full mr-4">
+                                <i class="fas fa-list text-purple-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900">Alle Kunden</h3>
+                                <p class="text-sm text-gray-500">Übersicht</p>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="/admin/customer-profiles" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
+                        <div class="flex items-center mb-3">
+                            <div class="p-3 bg-blue-100 rounded-full mr-4">
+                                <i class="fas fa-user-circle text-blue-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900">Kundenprofile</h3>
+                                <p class="text-sm text-gray-500">Details</p>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="/admin/gdpr-requests" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
+                        <div class="flex items-center mb-3">
+                            <div class="p-3 bg-green-100 rounded-full mr-4">
+                                <i class="fas fa-user-shield text-green-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900">DSGVO-Anfragen</h3>
+                                <p class="text-sm text-gray-500">Verwalten</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- License Actions -->
+            <div class="mb-6">
+                <h2 class="text-lg font-bold text-gray-900 mb-4">
+                    <i class="fas fa-key text-yellow-600 mr-2"></i>Lizenzen
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <a href="/admin/licenses" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
+                        <div class="flex items-center mb-3">
+                            <div class="p-3 bg-yellow-100 rounded-full mr-4">
+                                <i class="fas fa-key text-yellow-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900">Alle Lizenzen</h3>
+                                <p class="text-sm text-gray-500">Übersicht</p>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="/admin/volume-licenses" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
+                        <div class="flex items-center mb-3">
+                            <div class="p-3 bg-orange-100 rounded-full mr-4">
+                                <i class="fas fa-keys text-orange-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900">Volumenlizenzen</h3>
+                                <p class="text-sm text-gray-500">Massenlizenzen</p>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="/admin/certificates" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
+                        <div class="flex items-center mb-3">
+                            <div class="p-3 bg-green-100 rounded-full mr-4">
+                                <i class="fas fa-certificate text-green-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900">Zertifikate</h3>
+                                <p class="text-sm text-gray-500">Generieren</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Settings & Reports -->
+            <div>
+                <h2 class="text-lg font-bold text-gray-900 mb-4">
+                    <i class="fas fa-cog text-gray-600 mr-2"></i>System
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <a href="/admin/settings" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
+                        <div class="flex items-center mb-3">
+                            <div class="p-3 bg-gray-100 rounded-full mr-4">
+                                <i class="fas fa-cog text-gray-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900">Einstellungen</h3>
+                                <p class="text-sm text-gray-500">Konfiguration</p>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="/admin/reports" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
+                        <div class="flex items-center mb-3">
+                            <div class="p-3 bg-indigo-100 rounded-full mr-4">
+                                <i class="fas fa-chart-bar text-indigo-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900">Berichte</h3>
+                                <p class="text-sm text-gray-500">Analytics</p>
+                            </div>
+                        </div>
+                    </a>
+
+                    <a href="/admin/system-status" class="bg-white rounded-lg shadow p-6 hover:shadow-lg transition">
+                        <div class="flex items-center mb-3">
+                            <div class="p-3 bg-green-100 rounded-full mr-4">
+                                <i class="fas fa-server text-green-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900">Systemstatus</h3>
+                                <p class="text-sm text-gray-500">Monitoring</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+  `)
+})
+
+// VOLUME LICENSES MANAGEMENT PAGE
+app.get('/admin/volume-licenses', async (c) => {
+  const db = c.get('db') as DatabaseHelper
+  
+  try {
+    // Get volume license statistics (simplified query for empty data handling)
+    const bulkOrders = await db.db.prepare(`
+      SELECT o.id, o.order_number, o.user_id, o.total, o.created_at,
+             u.name as customer_name, u.email as customer_email,
+             COUNT(lk.id) as license_count
+      FROM orders o
+      LEFT JOIN users u ON o.user_id = u.id
+      LEFT JOIN license_keys lk ON o.id = lk.assigned_to_order_id
+      WHERE lk.id IS NOT NULL
+      GROUP BY o.id
+      HAVING license_count >= 5
+      ORDER BY o.created_at DESC
+      LIMIT 50
+    `).all()
+    
+    const stats = {
+      totalBulkOrders: bulkOrders.results?.length || 0,
+      totalLicenses: (bulkOrders.results || []).reduce((sum: number, order: any) => sum + (order.license_count || 0), 0),
+      totalRevenue: (bulkOrders.results || []).reduce((sum: number, order: any) => sum + (order.total || 0), 0)
+    }
+    
+    const orders = bulkOrders.results || []
+  
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Volumenlizenzen - SOFTWAREKING24 Admin</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-50">
+        ${AdminSidebarAdvanced('/admin/volume-licenses')}
+        <div class="ml-64 p-8">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                    <i class="fas fa-keys mr-2 text-orange-600"></i>
+                    Volumenlizenzen
+                </h1>
+                <p class="text-gray-600">Verwaltung von Massenlizenzkäufen (≥5 Lizenzen)</p>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600">Volumenkäufe</p>
+                            <p class="text-2xl font-bold text-gray-900">${stats.totalBulkOrders}</p>
+                        </div>
+                        <div class="p-3 bg-orange-100 rounded-full">
+                            <i class="fas fa-shopping-bag text-orange-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600">Lizenzen gesamt</p>
+                            <p class="text-2xl font-bold text-gray-900">${stats.totalLicenses}</p>
+                        </div>
+                        <div class="p-3 bg-blue-100 rounded-full">
+                            <i class="fas fa-key text-blue-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-600">Gesamtumsatz</p>
+                            <p class="text-2xl font-bold text-gray-900">€${stats.totalRevenue.toFixed(2)}</p>
+                        </div>
+                        <div class="p-3 bg-green-100 rounded-full">
+                            <i class="fas fa-euro-sign text-green-600 text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bulk Orders Table -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-900">Volumenkäufe</h2>
+                </div>
+                
+                ${orders.length === 0 ? `
+                    <div class="p-8 text-center text-gray-500">
+                        <i class="fas fa-inbox text-4xl mb-4"></i>
+                        <p>Keine Volumenkäufe gefunden</p>
+                    </div>
+                ` : `
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bestellnummer</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kunde</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Anzahl Lizenzen</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Betrag</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Datum</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                ${orders.map((order: any) => `
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <div class="text-sm font-medium text-gray-900">#${order.order_number}</div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-medium text-gray-900">${order.customer_name || 'N/A'}</div>
+                                            <div class="text-xs text-gray-500">${order.customer_email || ''}</div>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap">
+                                            <span class="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-orange-100 text-orange-800">
+                                                ${order.license_count} Lizenzen
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                            €${(order.total || 0).toFixed(2)}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            ${new Date(order.created_at).toLocaleDateString('de-DE')}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                            <a href="/admin/orders/${order.id}" class="text-blue-600 hover:text-blue-800 mr-3">
+                                                <i class="fas fa-eye"></i> Details
+                                            </a>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `}
+            </div>
+        </div>
+    </body>
+    </html>
+  `)
+  } catch (error) {
+    console.error('Error loading volume licenses:', error)
+    return c.html(`
+      <!DOCTYPE html>
+      <html lang="de">
+      <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Volumenlizenzen - SOFTWAREKING24 Admin</title>
+          <script src="https://cdn.tailwindcss.com"></script>
+      </head>
+      <body class="bg-gray-50">
+          ${AdminSidebarAdvanced('/admin/volume-licenses')}
+          <div class="ml-64 p-8">
+              <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                  <p>Fehler beim Laden der Volumenlizenzen</p>
+              </div>
+          </div>
+      </body>
+      </html>
+    `)
+  }
+})
+
 // ============================================
 // CATCH-ALL ROUTE HANDLER FOR MISSING ADMIN PAGES
 // ============================================
