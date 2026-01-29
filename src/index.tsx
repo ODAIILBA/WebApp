@@ -993,6 +993,432 @@ app.get('/api/admin/products/:id', async (c) => {
 // END PRODUCTS CRUD API
 // ============================================
 
+// ============================================
+// ORDERS CRUD API ENDPOINTS
+// ============================================
+
+// CREATE: Create new order
+app.post('/api/admin/orders', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const body = await c.req.json()
+
+    if (!body.email || !body.first_name || !body.last_name || !body.country || !body.total) {
+      return c.json({ success: false, error: 'Missing required fields' }, 400)
+    }
+
+    // Generate order number
+    const orderNumber = `ORD-${new Date().getFullYear()}-${String(Date.now()).slice(-8)}`
+
+    const result = await db.db.prepare(`
+      INSERT INTO orders (
+        order_number, user_id, email, first_name, last_name, company, vat_number,
+        country, status, payment_status, payment_method, subtotal, tax_amount,
+        discount_amount, total, currency, language
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      orderNumber,
+      body.user_id || null,
+      body.email,
+      body.first_name,
+      body.last_name,
+      body.company || null,
+      body.vat_number || null,
+      body.country,
+      body.status || 'pending',
+      body.payment_status || 'unpaid',
+      body.payment_method || null,
+      body.subtotal,
+      body.tax_amount || 0,
+      body.discount_amount || 0,
+      body.total,
+      body.currency || 'EUR',
+      body.language || 'de'
+    ).run()
+
+    return c.json({ 
+      success: true, 
+      data: { id: result.meta.last_row_id, order_number: orderNumber },
+      message: 'Order created successfully'
+    })
+  } catch (error: any) {
+    console.error('Error creating order:', error)
+    return c.json({ success: false, error: error.message || 'Failed to create order' }, 500)
+  }
+})
+
+// READ: Get single order
+app.get('/api/admin/orders/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const orderId = c.req.param('id')
+
+    const order = await db.db.prepare(`
+      SELECT o.*, u.email as user_email, u.first_name as user_first_name, u.last_name as user_last_name
+      FROM orders o
+      LEFT JOIN users u ON o.user_id = u.id
+      WHERE o.id = ?
+    `).bind(orderId).first()
+
+    if (!order) {
+      return c.json({ success: false, error: 'Order not found' }, 404)
+    }
+
+    // Get order items
+    const items = await db.db.prepare(`
+      SELECT * FROM order_items WHERE order_id = ?
+    `).bind(orderId).all()
+
+    return c.json({ success: true, data: { ...order, items: items.results } })
+  } catch (error: any) {
+    console.error('Error fetching order:', error)
+    return c.json({ success: false, error: error.message || 'Failed to fetch order' }, 500)
+  }
+})
+
+// UPDATE: Update order
+app.put('/api/admin/orders/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const orderId = c.req.param('id')
+    const body = await c.req.json()
+
+    const existing = await db.db.prepare('SELECT id FROM orders WHERE id = ?').bind(orderId).first()
+    if (!existing) {
+      return c.json({ success: false, error: 'Order not found' }, 404)
+    }
+
+    const updates: string[] = []
+    const values: any[] = []
+
+    const allowedFields = ['status', 'payment_status', 'payment_method', 'notes', 'completed_at']
+    
+    allowedFields.forEach(field => {
+      if (body[field] !== undefined) {
+        updates.push(`${field} = ?`)
+        values.push(body[field])
+      }
+    })
+
+    if (updates.length > 0) {
+      updates.push('updated_at = CURRENT_TIMESTAMP')
+      values.push(orderId)
+
+      await db.db.prepare(`UPDATE orders SET ${updates.join(', ')} WHERE id = ?`).bind(...values).run()
+    }
+
+    return c.json({ success: true, message: 'Order updated successfully' })
+  } catch (error: any) {
+    console.error('Error updating order:', error)
+    return c.json({ success: false, error: error.message || 'Failed to update order' }, 500)
+  }
+})
+
+// DELETE: Cancel order
+app.delete('/api/admin/orders/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const orderId = c.req.param('id')
+
+    const existing = await db.db.prepare('SELECT id FROM orders WHERE id = ?').bind(orderId).first()
+    if (!existing) {
+      return c.json({ success: false, error: 'Order not found' }, 404)
+    }
+
+    await db.db.prepare(`UPDATE orders SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP WHERE id = ?`).bind(orderId).run()
+
+    return c.json({ success: true, message: 'Order cancelled successfully' })
+  } catch (error: any) {
+    console.error('Error cancelling order:', error)
+    return c.json({ success: false, error: error.message || 'Failed to cancel order' }, 500)
+  }
+})
+
+// BULK UPDATE: Update order statuses
+app.post('/api/admin/orders/bulk-update', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const { ids, updates } = await c.req.json()
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return c.json({ success: false, error: 'No order IDs provided' }, 400)
+    }
+
+    const updateFields: string[] = []
+    const values: any[] = []
+
+    if (updates.status) {
+      updateFields.push('status = ?')
+      values.push(updates.status)
+    }
+    if (updates.payment_status) {
+      updateFields.push('payment_status = ?')
+      values.push(updates.payment_status)
+    }
+
+    if (updateFields.length > 0) {
+      updateFields.push('updated_at = CURRENT_TIMESTAMP')
+      const placeholders = ids.map(() => '?').join(',')
+      await db.db.prepare(`UPDATE orders SET ${updateFields.join(', ')} WHERE id IN (${placeholders})`).bind(...values, ...ids).run()
+    }
+
+    return c.json({ success: true, message: `${ids.length} orders updated successfully` })
+  } catch (error: any) {
+    console.error('Error bulk updating orders:', error)
+    return c.json({ success: false, error: error.message || 'Failed to update orders' }, 500)
+  }
+})
+
+// ============================================
+// END ORDERS CRUD API
+// ============================================
+
+// ============================================
+// CUSTOMERS CRUD API ENDPOINTS
+// ============================================
+
+// CREATE: Add new customer
+app.post('/api/admin/customers', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const body = await c.req.json()
+
+    if (!body.email || !body.first_name || !body.last_name) {
+      return c.json({ success: false, error: 'Missing required fields: email, first_name, last_name' }, 400)
+    }
+
+    // Check if email already exists
+    const existing = await db.db.prepare('SELECT id FROM users WHERE email = ?').bind(body.email).first()
+    if (existing) {
+      return c.json({ success: false, error: 'Email already exists' }, 400)
+    }
+
+    const result = await db.db.prepare(`
+      INSERT INTO users (
+        email, password_hash, first_name, last_name, role, status,
+        phone, company, vat_number, language_preference, email_verified
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      body.email,
+      body.password_hash || '$2a$10$defaulthash', // Temporary default
+      body.first_name,
+      body.last_name,
+      body.role || 'customer',
+      body.status || 'active',
+      body.phone || null,
+      body.company || null,
+      body.vat_number || null,
+      body.language_preference || 'de',
+      body.email_verified || 0
+    ).run()
+
+    return c.json({ 
+      success: true, 
+      data: { id: result.meta.last_row_id },
+      message: 'Customer created successfully'
+    })
+  } catch (error: any) {
+    console.error('Error creating customer:', error)
+    return c.json({ success: false, error: error.message || 'Failed to create customer' }, 500)
+  }
+})
+
+// READ: Get single customer
+app.get('/api/admin/customers/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const customerId = c.req.param('id')
+
+    const customer = await db.db.prepare('SELECT * FROM users WHERE id = ?').bind(customerId).first()
+    
+    if (!customer) {
+      return c.json({ success: false, error: 'Customer not found' }, 404)
+    }
+
+    // Get customer orders
+    const orders = await db.db.prepare(`
+      SELECT id, order_number, status, total, created_at 
+      FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 10
+    `).bind(customerId).all()
+
+    return c.json({ success: true, data: { ...customer, recent_orders: orders.results } })
+  } catch (error: any) {
+    console.error('Error fetching customer:', error)
+    return c.json({ success: false, error: error.message || 'Failed to fetch customer' }, 500)
+  }
+})
+
+// UPDATE: Update customer
+app.put('/api/admin/customers/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const customerId = c.req.param('id')
+    const body = await c.req.json()
+
+    const existing = await db.db.prepare('SELECT id FROM users WHERE id = ?').bind(customerId).first()
+    if (!existing) {
+      return c.json({ success: false, error: 'Customer not found' }, 404)
+    }
+
+    const updates: string[] = []
+    const values: any[] = []
+
+    const allowedFields = ['first_name', 'last_name', 'email', 'phone', 'company', 'vat_number', 'status', 'role', 'language_preference']
+    
+    allowedFields.forEach(field => {
+      if (body[field] !== undefined) {
+        updates.push(`${field} = ?`)
+        values.push(body[field])
+      }
+    })
+
+    if (updates.length > 0) {
+      updates.push('updated_at = CURRENT_TIMESTAMP')
+      values.push(customerId)
+
+      await db.db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).bind(...values).run()
+    }
+
+    return c.json({ success: true, message: 'Customer updated successfully' })
+  } catch (error: any) {
+    console.error('Error updating customer:', error)
+    return c.json({ success: false, error: error.message || 'Failed to update customer' }, 500)
+  }
+})
+
+// DELETE: Delete customer (soft delete)
+app.delete('/api/admin/customers/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const customerId = c.req.param('id')
+
+    const existing = await db.db.prepare('SELECT id FROM users WHERE id = ?').bind(customerId).first()
+    if (!existing) {
+      return c.json({ success: false, error: 'Customer not found' }, 404)
+    }
+
+    await db.db.prepare(`UPDATE users SET status = 'deleted', updated_at = CURRENT_TIMESTAMP WHERE id = ?`).bind(customerId).run()
+
+    return c.json({ success: true, message: 'Customer deleted successfully' })
+  } catch (error: any) {
+    console.error('Error deleting customer:', error)
+    return c.json({ success: false, error: error.message || 'Failed to delete customer' }, 500)
+  }
+})
+
+// GDPR: Export customer data
+app.get('/api/admin/customers/:id/gdpr-export', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const customerId = c.req.param('id')
+
+    const customer = await db.db.prepare('SELECT * FROM users WHERE id = ?').bind(customerId).first()
+    if (!customer) {
+      return c.json({ success: false, error: 'Customer not found' }, 404)
+    }
+
+    const orders = await db.db.prepare('SELECT * FROM orders WHERE user_id = ?').bind(customerId).all()
+
+    return c.json({ 
+      success: true, 
+      data: { customer, orders: orders.results },
+      message: 'Customer data exported'
+    })
+  } catch (error: any) {
+    console.error('Error exporting customer data:', error)
+    return c.json({ success: false, error: error.message || 'Failed to export data' }, 500)
+  }
+})
+
+// ============================================
+// END CUSTOMERS CRUD API
+// ============================================
+
+// ============================================
+// DASHBOARD METRICS API
+// ============================================
+
+// Get dashboard statistics
+app.get('/api/admin/dashboard/stats', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+
+    // Get product stats
+    const productStats = await db.db.prepare(`
+      SELECT COUNT(*) as total, SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active
+      FROM products
+    `).first()
+
+    // Get order stats
+    const orderStats = await db.db.prepare(`
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
+        SUM(CASE WHEN status = 'processing' THEN 1 ELSE 0 END) as processing,
+        SUM(CASE WHEN payment_status = 'paid' THEN total ELSE 0 END) as total_revenue
+      FROM orders
+    `).first()
+
+    // Get customer stats
+    const customerStats = await db.db.prepare(`
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN role = 'customer' AND status = 'active' THEN 1 ELSE 0 END) as active
+      FROM users
+    `).first()
+
+    // Get recent orders
+    const recentOrders = await db.db.prepare(`
+      SELECT id, order_number, email, first_name, last_name, total, status, created_at
+      FROM orders
+      ORDER BY created_at DESC
+      LIMIT 10
+    `).all()
+
+    return c.json({ 
+      success: true, 
+      data: {
+        products: productStats,
+        orders: orderStats,
+        customers: customerStats,
+        recent_orders: recentOrders.results
+      }
+    })
+  } catch (error: any) {
+    console.error('Error fetching dashboard stats:', error)
+    return c.json({ success: false, error: error.message || 'Failed to fetch stats' }, 500)
+  }
+})
+
+// Get revenue chart data
+app.get('/api/admin/dashboard/revenue-chart', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const days = parseInt(c.req.query('days') || '30')
+
+    const revenue = await db.db.prepare(`
+      SELECT 
+        DATE(created_at) as date,
+        SUM(total) as revenue,
+        COUNT(*) as orders
+      FROM orders
+      WHERE payment_status = 'paid' AND created_at >= datetime('now', '-${days} days')
+      GROUP BY DATE(created_at)
+      ORDER BY date ASC
+    `).all()
+
+    return c.json({ success: true, data: revenue.results })
+  } catch (error: any) {
+    console.error('Error fetching revenue chart:', error)
+    return c.json({ success: false, error: error.message || 'Failed to fetch revenue data' }, 500)
+  }
+})
+
+// ============================================
+// END DASHBOARD METRICS API
+// ============================================
+
 app.get('/api/products/featured', async (c) => {
   try {
     const db = c.get('db') as DatabaseHelper
