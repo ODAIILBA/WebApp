@@ -1,19 +1,7 @@
 export const AdminCertificateSettings = () => {
-  return `
-    <!DOCTYPE html>
-    <html lang="de">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Zertifikat-Einstellungen - Admin - SOFTWAREKING24</title>
-      <script src="https://cdn.tailwindcss.com"></script>
-      <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
-      <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
-      <style>
-        :root {
-          --navy-dark: #1a2a4e;
-          --gold: #d4af37;
-        }
+  return (
+    <div class="certificate-settings-page">
+      <style>{`
         .admin-sidebar {
           width: 260px;
           background: #1a2a4e;
@@ -50,29 +38,23 @@ export const AdminCertificateSettings = () => {
         .checkbox-input {
           width: 20px;
           height: 20px;
-          cursor: pointer;
         }
-      </style>
-    </head>
-    <body class="bg-gray-100">
-      <div class="flex">
-        <div class="admin-sidebar" id="sidebar"></div>
-        
-        <div class="admin-content p-8">
-          <div class="max-w-5xl mx-auto">
-            <!-- Header -->
+      `}</style>
+
+      <div class="max-w-5xl mx-auto p-8">
+            
             <div class="mb-8">
-              <h1 class="text-4xl font-bold" style="color: var(--navy-dark)">
-                <i class="fas fa-cog mr-3" style="color: var(--gold)"></i>
+              <h1 class="text-4xl font-bold" style="color: #1a2a4e">
+                <i class="fas fa-cog mr-3" style="color: #d4af37"></i>
                 Zertifikat-Einstellungen
               </h1>
               <p class="text-gray-600 mt-2">Automatische Generierung von Lizenz-Zertifikaten konfigurieren</p>
             </div>
 
-            <!-- Auto-Generation Triggers -->
+            
             <div class="settings-card">
-              <h2 class="text-2xl font-bold mb-4" style="color: var(--navy-dark)">
-                <i class="fas fa-magic mr-2" style="color: var(--gold)"></i>
+              <h2 class="text-2xl font-bold mb-4" style="color: #1a2a4e">
+                <i class="fas fa-magic mr-2" style="color: #d4af37"></i>
                 Automatische Generierung
               </h2>
               <p class="text-gray-600 mb-6">Wählen Sie aus, wann Zertifikate automatisch erstellt werden sollen</p>
@@ -112,10 +94,10 @@ export const AdminCertificateSettings = () => {
               </div>
             </div>
 
-            <!-- Enabled Brands -->
+            
             <div class="settings-card">
-              <h2 class="text-2xl font-bold mb-4" style="color: var(--navy-dark)">
-                <i class="fas fa-trademark mr-2" style="color: var(--gold)"></i>
+              <h2 class="text-2xl font-bold mb-4" style="color: #1a2a4e">
+                <i class="fas fa-trademark mr-2" style="color: #d4af37"></i>
                 Aktivierte Marken
               </h2>
               <p class="text-gray-600 mb-6">Wählen Sie, für welche Marken Zertifikate generiert werden sollen</p>
@@ -175,10 +157,10 @@ export const AdminCertificateSettings = () => {
               </div>
             </div>
 
-            <!-- Email Automation -->
+            
             <div class="settings-card">
-              <h2 class="text-2xl font-bold mb-4" style="color: var(--navy-dark)">
-                <i class="fas fa-envelope mr-2" style="color: var(--gold)"></i>
+              <h2 class="text-2xl font-bold mb-4" style="color: #1a2a4e">
+                <i class="fas fa-envelope mr-2" style="color: #d4af37"></i>
                 E-Mail Automation
               </h2>
               <p class="text-gray-600 mb-6">Konfigurieren Sie den automatischen Versand von Zertifikaten</p>
@@ -234,10 +216,10 @@ Ihr SoftwareKing24 Team</textarea>
               </div>
             </div>
 
-            <!-- Certificate Numbering -->
+            
             <div class="settings-card">
-              <h2 class="text-2xl font-bold mb-4" style="color: var(--navy-dark)">
-                <i class="fas fa-hashtag mr-2" style="color: var(--gold)"></i>
+              <h2 class="text-2xl font-bold mb-4" style="color: #1a2a4e">
+                <i class="fas fa-hashtag mr-2" style="color: #d4af37"></i>
                 Zertifikat-Nummerierung
               </h2>
               <p class="text-gray-600 mb-6">Legen Sie das Format für Zertifikat-Nummern fest</p>
@@ -275,37 +257,22 @@ Ihr SoftwareKing24 Team</textarea>
               </div>
             </div>
 
-            <!-- Save Button -->
+            
             <div class="flex justify-end gap-4">
               <button onclick="resetSettings()" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 font-semibold">
                 <i class="fas fa-undo mr-2"></i>Zurücksetzen
               </button>
-              <button onclick="saveSettings()" class="px-6 py-3 text-white rounded-lg font-semibold hover:opacity-90" style="background: var(--gold)">
+              <button onclick="saveSettings()" class="px-6 py-3 text-white rounded-lg font-semibold hover:opacity-90" style="background: #d4af37">
                 <i class="fas fa-save mr-2"></i>Einstellungen speichern
               </button>
-            </div>
           </div>
         </div>
-      </div>
 
-      <script src="/static/auth.js"></script>
-      <script>
-        document.addEventListener('DOMContentLoaded', () => {
-          initSidebar();
+        <script dangerouslySetInnerHTML={{__html: `
+          // Load settings on page load
           loadSettings();
-        });
 
-        function initSidebar() {
-          const sidebar = document.getElementById('sidebar');
-          const items = [
-            { path: '/admin', icon: 'fas fa-tachometer-alt', label: 'Dashboard' },
-            { path: '/admin/products', icon: 'fas fa-box', label: 'Produkte' },
-            { path: '/admin/orders', icon: 'fas fa-shopping-cart', label: 'Bestellungen' },
-            { path: '/admin/customers', icon: 'fas fa-users', label: 'Kunden' },
-            { path: '/admin/invoices', icon: 'fas fa-file-invoice', label: 'Rechnungen' },
-            { path: '/admin/certificates', icon: 'fas fa-certificate', label: 'Zertifikate' },
-            { path: '/admin/certificate-settings', icon: 'fas fa-cog', label: 'Zertifikat-Einstellungen', active: true },
-            { path: '/admin/licenses', icon: 'fas fa-key', label: 'Lizenzen' },
+          async function loadSettings() {
             { path: '/admin/sliders', icon: 'fas fa-images', label: 'Slider' },
             { path: '/admin/homepage-sections', icon: 'fas fa-th-large', label: 'Homepage' },
             { path: '/admin/pages', icon: 'fas fa-file-alt', label: 'Seiten' },
@@ -314,7 +281,7 @@ Ihr SoftwareKing24 Team</textarea>
 
           sidebar.innerHTML = \`
             <div class="p-6 border-b border-gray-700">
-              <h2 class="text-xl font-bold" style="color: var(--gold)">SOFTWAREKING24</h2>
+              <h2 class="text-xl font-bold" style="color: #d4af37">SOFTWAREKING24</h2>
               <p class="text-sm text-gray-400">Admin Panel</p>
             </div>
             <nav class="p-4">
@@ -408,8 +375,7 @@ Ihr SoftwareKing24 Team</textarea>
             loadSettings();
           }
         }
-      </script>
-    </body>
-    </html>
-  `;
+      `}} />
+    </div>
+  );
 };

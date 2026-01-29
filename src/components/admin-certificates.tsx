@@ -1,7 +1,7 @@
 export const AdminCertificates = () => {
-  return `
+  return (
     <div class="certificate-management">
-      <style>
+      <style>{`
         .certificate-management {
           padding: 30px;
         }
@@ -280,7 +280,7 @@ export const AdminCertificates = () => {
           padding: 40px;
           color: #666;
         }
-      </style>
+      `}</style>
       
       <div class="page-header">
         <h1>📜 Zertifikatsverwaltung</h1>
@@ -339,15 +339,15 @@ export const AdminCertificates = () => {
           </div>
           <div class="filter-group">
             <label>Kunde suchen</label>
-            <input type="text" id="filter-customer" placeholder="Name oder E-Mail" onkeyup="loadCertificates()">
+            <input type="text" id="filter-customer" placeholder="Name oder E-Mail" onkeyup="loadCertificates()" />
           </div>
           <div class="filter-group">
             <label>Datum von</label>
-            <input type="date" id="filter-date-from" onchange="loadCertificates()">
+            <input type="date" id="filter-date-from" onchange="loadCertificates()" />
           </div>
           <div class="filter-group">
             <label>Datum bis</label>
-            <input type="date" id="filter-date-to" onchange="loadCertificates()">
+            <input type="date" id="filter-date-to" onchange="loadCertificates()" />
           </div>
         </div>
       </div>
@@ -366,8 +366,7 @@ export const AdminCertificates = () => {
         </div>
       </div>
       
-      <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
-      <script>
+      <script dangerouslySetInnerHTML={{__html: `
         async function loadStats() {
           try {
             const response = await axios.get('/api/admin/certificates/stats');
@@ -537,7 +536,7 @@ export const AdminCertificates = () => {
         // Load data on page load
         loadStats();
         loadCertificates();
-      </script>
+      `}} />
     </div>
-  `;
+  );
 };
