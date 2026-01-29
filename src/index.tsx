@@ -10770,6 +10770,1120 @@ app.get('/admin/reviews', async (c) => {
     `, 500)
   }
 })
+// ============================================
+// FOOTER SETTINGS PAGE
+// ============================================
+app.get('/admin/footer-settings', async (c) => {
+  try {
+    const { env } = c;
+    const db = env.DB;
+
+    // Get footer settings
+    const footerSettings = await db.prepare(`
+      SELECT setting_key, setting_value, category
+      FROM system_settings
+      WHERE category = 'footer' OR setting_key LIKE 'footer_%'
+    `).all();
+
+    return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Footer-Einstellungen - SOFTWAREKING24 Admin</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-50">
+        ${AdminSidebarAdvanced('/admin/footer-settings')}
+        
+        <div class="ml-64 p-8">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900">
+                    <i class="fas fa-shoe-prints mr-3"></i>Footer-Einstellungen
+                </h1>
+                <p class="text-gray-600 mt-2">Fußzeilen-Links, Social Media und Copyright verwalten</p>
+            </div>
+
+            <!-- Footer Configuration Tabs -->
+            <div class="bg-white rounded-lg shadow mb-8">
+                <div class="border-b border-gray-200">
+                    <nav class="flex">
+                        <button class="footer-tab px-6 py-4 text-sm font-medium border-b-2 border-blue-500 text-blue-600" data-tab="links">
+                            <i class="fas fa-link mr-2"></i>Links
+                        </button>
+                        <button class="footer-tab px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="social">
+                            <i class="fas fa-share-alt mr-2"></i>Social Media
+                        </button>
+                        <button class="footer-tab px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="copyright">
+                            <i class="fas fa-copyright mr-2"></i>Copyright
+                        </button>
+                        <button class="footer-tab px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="newsletter">
+                            <i class="fas fa-envelope mr-2"></i>Newsletter
+                        </button>
+                    </nav>
+                </div>
+
+                <div class="p-6">
+                    <!-- Links Tab -->
+                    <div id="tab-links" class="footer-tab-content">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Footer-Links verwalten</h3>
+                        <div class="space-y-6">
+                            <!-- Column 1: Über uns -->
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h4 class="font-bold text-gray-900 mb-3">
+                                    <i class="fas fa-info-circle text-blue-600 mr-2"></i>Über uns
+                                </h4>
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between bg-gray-50 p-2 rounded">
+                                        <span class="text-gray-700">Über SOFTWAREKING24</span>
+                                        <div>
+                                            <button class="text-blue-600 hover:text-blue-800 mr-2">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="text-red-600 hover:text-red-800">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between bg-gray-50 p-2 rounded">
+                                        <span class="text-gray-700">Kontakt</span>
+                                        <div>
+                                            <button class="text-blue-600 hover:text-blue-800 mr-2">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="text-red-600 hover:text-red-800">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between bg-gray-50 p-2 rounded">
+                                        <span class="text-gray-700">Jobs</span>
+                                        <div>
+                                            <button class="text-blue-600 hover:text-blue-800 mr-2">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="text-red-600 hover:text-red-800">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <button class="w-full mt-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600">
+                                        <i class="fas fa-plus mr-2"></i>Link hinzufügen
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Column 2: Kundenservice -->
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h4 class="font-bold text-gray-900 mb-3">
+                                    <i class="fas fa-headset text-green-600 mr-2"></i>Kundenservice
+                                </h4>
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between bg-gray-50 p-2 rounded">
+                                        <span class="text-gray-700">FAQ</span>
+                                        <div>
+                                            <button class="text-blue-600 hover:text-blue-800 mr-2">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="text-red-600 hover:text-red-800">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between bg-gray-50 p-2 rounded">
+                                        <span class="text-gray-700">Support</span>
+                                        <div>
+                                            <button class="text-blue-600 hover:text-blue-800 mr-2">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="text-red-600 hover:text-red-800">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between bg-gray-50 p-2 rounded">
+                                        <span class="text-gray-700">Versand & Lieferung</span>
+                                        <div>
+                                            <button class="text-blue-600 hover:text-blue-800 mr-2">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="text-red-600 hover:text-red-800">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <button class="w-full mt-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600">
+                                        <i class="fas fa-plus mr-2"></i>Link hinzufügen
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Column 3: Rechtliches -->
+                            <div class="border border-gray-200 rounded-lg p-4">
+                                <h4 class="font-bold text-gray-900 mb-3">
+                                    <i class="fas fa-balance-scale text-purple-600 mr-2"></i>Rechtliches
+                                </h4>
+                                <div class="space-y-2">
+                                    <div class="flex items-center justify-between bg-gray-50 p-2 rounded">
+                                        <span class="text-gray-700">Impressum</span>
+                                        <div>
+                                            <button class="text-blue-600 hover:text-blue-800 mr-2">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="text-red-600 hover:text-red-800">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between bg-gray-50 p-2 rounded">
+                                        <span class="text-gray-700">Datenschutz</span>
+                                        <div>
+                                            <button class="text-blue-600 hover:text-blue-800 mr-2">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="text-red-600 hover:text-red-800">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between bg-gray-50 p-2 rounded">
+                                        <span class="text-gray-700">AGB</span>
+                                        <div>
+                                            <button class="text-blue-600 hover:text-blue-800 mr-2">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="text-red-600 hover:text-red-800">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between bg-gray-50 p-2 rounded">
+                                        <span class="text-gray-700">Widerrufsrecht</span>
+                                        <div>
+                                            <button class="text-blue-600 hover:text-blue-800 mr-2">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="text-red-600 hover:text-red-800">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <button class="w-full mt-2 px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600">
+                                        <i class="fas fa-plus mr-2"></i>Link hinzufügen
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Social Media Tab -->
+                    <div id="tab-social" class="footer-tab-content hidden">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Social Media Links</h3>
+                        <div class="space-y-4">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fab fa-facebook text-blue-600 mr-2"></i>Facebook
+                                    </label>
+                                    <input type="url" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="https://facebook.com/softwareking24">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fab fa-twitter text-blue-400 mr-2"></i>Twitter / X
+                                    </label>
+                                    <input type="url" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="https://twitter.com/softwareking24">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fab fa-instagram text-pink-600 mr-2"></i>Instagram
+                                    </label>
+                                    <input type="url" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="https://instagram.com/softwareking24">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fab fa-linkedin text-blue-700 mr-2"></i>LinkedIn
+                                    </label>
+                                    <input type="url" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="https://linkedin.com/company/softwareking24">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fab fa-youtube text-red-600 mr-2"></i>YouTube
+                                    </label>
+                                    <input type="url" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="https://youtube.com/@softwareking24">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                                        <i class="fab fa-tiktok text-gray-900 mr-2"></i>TikTok
+                                    </label>
+                                    <input type="url" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="https://tiktok.com/@softwareking24">
+                                </div>
+                            </div>
+                            <button class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                <i class="fas fa-save mr-2"></i>Social Media Links speichern
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Copyright Tab -->
+                    <div id="tab-copyright" class="footer-tab-content hidden">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Copyright & Impressum</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Copyright-Text</label>
+                                <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg" value="© 2024 SOFTWAREKING24. Alle Rechte vorbehalten.">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Firmenname</label>
+                                <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg" value="SOFTWAREKING24 GmbH">
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">USt-ID</label>
+                                    <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="DE123456789">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Handelsregister</label>
+                                    <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="HRB 12345">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Zusatztext</label>
+                                <textarea rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Original Software-Lizenzen zu fairen Preisen..."></textarea>
+                            </div>
+                            <button class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                <i class="fas fa-save mr-2"></i>Copyright-Einstellungen speichern
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Newsletter Tab -->
+                    <div id="tab-newsletter" class="footer-tab-content hidden">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Newsletter-Anmeldung</h3>
+                        <div class="space-y-4">
+                            <div class="flex items-center">
+                                <input type="checkbox" id="newsletter-enabled" class="w-4 h-4 text-blue-600 border-gray-300 rounded">
+                                <label for="newsletter-enabled" class="ml-2 text-sm font-medium text-gray-700">Newsletter-Anmeldung im Footer anzeigen</label>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Überschrift</label>
+                                <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg" value="Newsletter abonnieren">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Beschreibung</label>
+                                <textarea rows="2" class="w-full px-4 py-2 border border-gray-300 rounded-lg">Erhalten Sie exklusive Angebote und Updates zu neuen Produkten.</textarea>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Platzhalter-Text</label>
+                                <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg" value="Ihre E-Mail-Adresse">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Button-Text</label>
+                                <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg" value="Abonnieren">
+                            </div>
+                            <button class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                <i class="fas fa-save mr-2"></i>Newsletter-Einstellungen speichern
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">
+                    <i class="fas fa-eye mr-2"></i>Footer-Vorschau
+                </h3>
+                <div class="bg-gray-900 text-white p-8 rounded-lg">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                        <div>
+                            <h4 class="font-bold mb-4">Über uns</h4>
+                            <ul class="space-y-2 text-gray-300 text-sm">
+                                <li><a href="#" class="hover:text-white">Über SOFTWAREKING24</a></li>
+                                <li><a href="#" class="hover:text-white">Kontakt</a></li>
+                                <li><a href="#" class="hover:text-white">Jobs</a></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-bold mb-4">Kundenservice</h4>
+                            <ul class="space-y-2 text-gray-300 text-sm">
+                                <li><a href="#" class="hover:text-white">FAQ</a></li>
+                                <li><a href="#" class="hover:text-white">Support</a></li>
+                                <li><a href="#" class="hover:text-white">Versand & Lieferung</a></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-bold mb-4">Rechtliches</h4>
+                            <ul class="space-y-2 text-gray-300 text-sm">
+                                <li><a href="#" class="hover:text-white">Impressum</a></li>
+                                <li><a href="#" class="hover:text-white">Datenschutz</a></li>
+                                <li><a href="#" class="hover:text-white">AGB</a></li>
+                                <li><a href="#" class="hover:text-white">Widerrufsrecht</a></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 class="font-bold mb-4">Newsletter</h4>
+                            <p class="text-gray-300 text-sm mb-4">Erhalten Sie exklusive Angebote</p>
+                            <input type="email" class="w-full px-4 py-2 rounded bg-gray-800 text-white" placeholder="Ihre E-Mail">
+                        </div>
+                    </div>
+                    <div class="border-t border-gray-800 pt-6 flex justify-between items-center">
+                        <p class="text-gray-400 text-sm">© 2024 SOFTWAREKING24. Alle Rechte vorbehalten.</p>
+                        <div class="flex space-x-4">
+                            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-facebook"></i></a>
+                            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-twitter"></i></a>
+                            <a href="#" class="text-gray-400 hover:text-white"><i class="fab fa-instagram"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // Tab switching
+            document.querySelectorAll('.footer-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetTab = tab.getAttribute('data-tab');
+                    
+                    document.querySelectorAll('.footer-tab').forEach(t => {
+                        t.classList.remove('border-blue-500', 'text-blue-600');
+                        t.classList.add('border-transparent', 'text-gray-500');
+                    });
+                    tab.classList.remove('border-transparent', 'text-gray-500');
+                    tab.classList.add('border-blue-500', 'text-blue-600');
+                    
+                    document.querySelectorAll('.footer-tab-content').forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    document.getElementById('tab-' + targetTab).classList.remove('hidden');
+                });
+            });
+        </script>
+    </body>
+    </html>
+    `)
+  } catch (error) {
+    console.error('Footer settings error:', error);
+    return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <title>Fehler - SOFTWAREKING24 Admin</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-50 flex items-center justify-center min-h-screen">
+        <div class="text-center">
+            <i class="fas fa-exclamation-triangle text-red-500 text-5xl mb-4"></i>
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Fehler beim Laden</h1>
+            <p class="text-gray-600">Footer-Einstellungen konnten nicht geladen werden</p>
+        </div>
+    </body>
+    </html>
+    `, 500)
+  }
+})
+
+// ============================================
+// THEMES MANAGEMENT PAGE
+// ============================================
+app.get('/admin/themes', async (c) => {
+  try {
+    return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Design & Themes - SOFTWAREKING24 Admin</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-50">
+        ${AdminSidebarAdvanced('/admin/themes')}
+        
+        <div class="ml-64 p-8">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900">
+                    <i class="fas fa-palette mr-3"></i>Design & Themes
+                </h1>
+                <p class="text-gray-600 mt-2">Farben, Schriftarten und Corporate Design anpassen</p>
+            </div>
+
+            <!-- Theme Tabs -->
+            <div class="bg-white rounded-lg shadow mb-8">
+                <div class="border-b border-gray-200">
+                    <nav class="flex">
+                        <button class="theme-tab px-6 py-4 text-sm font-medium border-b-2 border-blue-500 text-blue-600" data-tab="colors">
+                            <i class="fas fa-fill-drip mr-2"></i>Farben
+                        </button>
+                        <button class="theme-tab px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="typography">
+                            <i class="fas fa-font mr-2"></i>Typografie
+                        </button>
+                        <button class="theme-tab px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="logo">
+                            <i class="fas fa-image mr-2"></i>Logo & Branding
+                        </button>
+                        <button class="theme-tab px-6 py-4 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700" data-tab="layout">
+                            <i class="fas fa-th-large mr-2"></i>Layout
+                        </button>
+                    </nav>
+                </div>
+
+                <div class="p-6">
+                    <!-- Colors Tab -->
+                    <div id="tab-colors" class="theme-tab-content">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Farbschema anpassen</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Primärfarbe</label>
+                                <div class="flex items-center space-x-4">
+                                    <input type="color" class="w-16 h-16 border border-gray-300 rounded cursor-pointer" value="#3B82F6">
+                                    <div>
+                                        <input type="text" class="px-4 py-2 border border-gray-300 rounded-lg font-mono" value="#3B82F6">
+                                        <p class="text-xs text-gray-500 mt-1">Hauptfarbe für Buttons, Links</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Sekundärfarbe</label>
+                                <div class="flex items-center space-x-4">
+                                    <input type="color" class="w-16 h-16 border border-gray-300 rounded cursor-pointer" value="#10B981">
+                                    <div>
+                                        <input type="text" class="px-4 py-2 border border-gray-300 rounded-lg font-mono" value="#10B981">
+                                        <p class="text-xs text-gray-500 mt-1">Akzentfarbe für Highlights</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Header-Hintergrund</label>
+                                <div class="flex items-center space-x-4">
+                                    <input type="color" class="w-16 h-16 border border-gray-300 rounded cursor-pointer" value="#1F2937">
+                                    <div>
+                                        <input type="text" class="px-4 py-2 border border-gray-300 rounded-lg font-mono" value="#1F2937">
+                                        <p class="text-xs text-gray-500 mt-1">Hintergrundfarbe des Headers</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Footer-Hintergrund</label>
+                                <div class="flex items-center space-x-4">
+                                    <input type="color" class="w-16 h-16 border border-gray-300 rounded cursor-pointer" value="#111827">
+                                    <div>
+                                        <input type="text" class="px-4 py-2 border border-gray-300 rounded-lg font-mono" value="#111827">
+                                        <p class="text-xs text-gray-500 mt-1">Hintergrundfarbe des Footers</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Erfolgsfarbe</label>
+                                <div class="flex items-center space-x-4">
+                                    <input type="color" class="w-16 h-16 border border-gray-300 rounded cursor-pointer" value="#10B981">
+                                    <div>
+                                        <input type="text" class="px-4 py-2 border border-gray-300 rounded-lg font-mono" value="#10B981">
+                                        <p class="text-xs text-gray-500 mt-1">Erfolgsmeldungen</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Fehlerfarbe</label>
+                                <div class="flex items-center space-x-4">
+                                    <input type="color" class="w-16 h-16 border border-gray-300 rounded cursor-pointer" value="#EF4444">
+                                    <div>
+                                        <input type="text" class="px-4 py-2 border border-gray-300 rounded-lg font-mono" value="#EF4444">
+                                        <p class="text-xs text-gray-500 mt-1">Fehlermeldungen</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-6">
+                            <button class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                <i class="fas fa-save mr-2"></i>Farbschema speichern
+                            </button>
+                            <button class="ml-2 px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                                <i class="fas fa-undo mr-2"></i>Zurücksetzen
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Typography Tab -->
+                    <div id="tab-typography" class="theme-tab-content hidden">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Schriftarten anpassen</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Hauptschriftart</label>
+                                <select class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                    <option>Inter (Standard)</option>
+                                    <option>Roboto</option>
+                                    <option>Open Sans</option>
+                                    <option>Lato</option>
+                                    <option>Montserrat</option>
+                                    <option>Poppins</option>
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Verwendet für Fließtext</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Überschriften-Schriftart</label>
+                                <select class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                    <option>Inter (Standard)</option>
+                                    <option>Roboto</option>
+                                    <option>Open Sans</option>
+                                    <option>Lato</option>
+                                    <option>Montserrat</option>
+                                    <option>Poppins</option>
+                                </select>
+                                <p class="text-xs text-gray-500 mt-1">Verwendet für Überschriften (H1-H6)</p>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Basis-Schriftgröße</label>
+                                    <select class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                        <option>14px</option>
+                                        <option selected>16px (Standard)</option>
+                                        <option>18px</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">Zeilenhöhe</label>
+                                    <select class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                        <option>1.4</option>
+                                        <option selected>1.5 (Standard)</option>
+                                        <option>1.6</option>
+                                        <option>1.8</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="bg-gray-50 p-6 rounded-lg">
+                                <h4 class="text-2xl font-bold mb-2" style="font-family: Inter">Vorschau Überschrift</h4>
+                                <p style="font-family: Inter">Dies ist ein Beispieltext zur Vorschau der Schriftart. Original Software-Lizenzen zu fairen Preisen bei SOFTWAREKING24.</p>
+                            </div>
+                        </div>
+                        <div class="mt-6">
+                            <button class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                <i class="fas fa-save mr-2"></i>Typografie speichern
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Logo & Branding Tab -->
+                    <div id="tab-logo" class="theme-tab-content hidden">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Logo & Branding</h3>
+                        <div class="space-y-6">
+                            <div class="border border-gray-200 rounded-lg p-6">
+                                <h4 class="font-bold text-gray-900 mb-4">Hauptlogo</h4>
+                                <div class="flex items-center space-x-6">
+                                    <div class="w-48 h-24 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                                        <div class="text-center">
+                                            <i class="fas fa-image text-gray-400 text-3xl mb-2"></i>
+                                            <p class="text-xs text-gray-500">Logo-Vorschau</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mb-2">
+                                            <i class="fas fa-upload mr-2"></i>Logo hochladen
+                                        </button>
+                                        <p class="text-xs text-gray-500">PNG, JPG oder SVG • Max. 2 MB • Empfohlen: 400x100px</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="border border-gray-200 rounded-lg p-6">
+                                <h4 class="font-bold text-gray-900 mb-4">Favicon</h4>
+                                <div class="flex items-center space-x-6">
+                                    <div class="w-24 h-24 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-star text-gray-400 text-2xl"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mb-2">
+                                            <i class="fas fa-upload mr-2"></i>Favicon hochladen
+                                        </button>
+                                        <p class="text-xs text-gray-500">ICO, PNG • 16x16, 32x32, 64x64px</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="border border-gray-200 rounded-lg p-6">
+                                <h4 class="font-bold text-gray-900 mb-4">Mobile App Icon</h4>
+                                <div class="flex items-center space-x-6">
+                                    <div class="w-24 h-24 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-mobile-alt text-gray-400 text-2xl"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 mb-2">
+                                            <i class="fas fa-upload mr-2"></i>App Icon hochladen
+                                        </button>
+                                        <p class="text-xs text-gray-500">PNG • 512x512px</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Layout Tab -->
+                    <div id="tab-layout" class="theme-tab-content hidden">
+                        <h3 class="text-lg font-bold text-gray-900 mb-4">Layout-Optionen</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Container-Breite</label>
+                                <select class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                    <option>1200px (Standard)</option>
+                                    <option>1280px</option>
+                                    <option>1366px</option>
+                                    <option>1440px</option>
+                                    <option>Vollbreite</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Header-Stil</label>
+                                <div class="grid grid-cols-3 gap-4">
+                                    <div class="border-2 border-blue-500 rounded-lg p-4 cursor-pointer">
+                                        <div class="bg-gray-800 h-12 rounded mb-2"></div>
+                                        <p class="text-sm font-medium text-center">Standard</p>
+                                    </div>
+                                    <div class="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-blue-500">
+                                        <div class="bg-white border-2 h-12 rounded mb-2"></div>
+                                        <p class="text-sm font-medium text-center">Transparent</p>
+                                    </div>
+                                    <div class="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-blue-500">
+                                        <div class="bg-gray-800 h-8 rounded mb-2"></div>
+                                        <p class="text-sm font-medium text-center">Kompakt</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Produktkarten-Stil</label>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div class="border-2 border-blue-500 rounded-lg p-4 cursor-pointer">
+                                        <div class="bg-gray-100 h-32 rounded mb-2"></div>
+                                        <div class="bg-gray-200 h-4 rounded mb-1"></div>
+                                        <div class="bg-gray-200 h-4 rounded w-2/3"></div>
+                                        <p class="text-sm font-medium text-center mt-2">Schatten</p>
+                                    </div>
+                                    <div class="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-blue-500">
+                                        <div class="border-2 border-gray-300 h-32 rounded mb-2"></div>
+                                        <div class="bg-gray-200 h-4 rounded mb-1"></div>
+                                        <div class="bg-gray-200 h-4 rounded w-2/3"></div>
+                                        <p class="text-sm font-medium text-center mt-2">Rahmen</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-center space-x-4">
+                                <input type="checkbox" id="rounded-corners" class="w-4 h-4" checked>
+                                <label for="rounded-corners" class="text-sm font-medium text-gray-700">Abgerundete Ecken verwenden</label>
+                            </div>
+
+                            <div class="flex items-center space-x-4">
+                                <input type="checkbox" id="animations" class="w-4 h-4" checked>
+                                <label for="animations" class="text-sm font-medium text-gray-700">Animationen aktivieren</label>
+                            </div>
+                        </div>
+                        <div class="mt-6">
+                            <button class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                                <i class="fas fa-save mr-2"></i>Layout speichern
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preset Themes -->
+            <div class="bg-white rounded-lg shadow p-6">
+                <h3 class="text-lg font-bold text-gray-900 mb-4">
+                    <i class="fas fa-swatchbook mr-2"></i>Vordefinierte Themes
+                </h3>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="border-2 border-blue-500 rounded-lg p-4 cursor-pointer">
+                        <div class="flex space-x-2 mb-3">
+                            <div class="w-8 h-8 rounded bg-blue-600"></div>
+                            <div class="w-8 h-8 rounded bg-gray-900"></div>
+                            <div class="w-8 h-8 rounded bg-white border"></div>
+                        </div>
+                        <h4 class="font-bold mb-1">Standard</h4>
+                        <p class="text-xs text-gray-600">Aktuelles Theme</p>
+                    </div>
+                    <div class="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-blue-500">
+                        <div class="flex space-x-2 mb-3">
+                            <div class="w-8 h-8 rounded bg-purple-600"></div>
+                            <div class="w-8 h-8 rounded bg-purple-900"></div>
+                            <div class="w-8 h-8 rounded bg-white border"></div>
+                        </div>
+                        <h4 class="font-bold mb-1">Purple</h4>
+                        <p class="text-xs text-gray-600">Elegant & Modern</p>
+                    </div>
+                    <div class="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-blue-500">
+                        <div class="flex space-x-2 mb-3">
+                            <div class="w-8 h-8 rounded bg-green-600"></div>
+                            <div class="w-8 h-8 rounded bg-green-900"></div>
+                            <div class="w-8 h-8 rounded bg-white border"></div>
+                        </div>
+                        <h4 class="font-bold mb-1">Green</h4>
+                        <p class="text-xs text-gray-600">Frisch & Klar</p>
+                    </div>
+                    <div class="border-2 border-gray-300 rounded-lg p-4 cursor-pointer hover:border-blue-500">
+                        <div class="flex space-x-2 mb-3">
+                            <div class="w-8 h-8 rounded bg-gray-800"></div>
+                            <div class="w-8 h-8 rounded bg-gray-900"></div>
+                            <div class="w-8 h-8 rounded bg-gray-100 border"></div>
+                        </div>
+                        <h4 class="font-bold mb-1">Dark</h4>
+                        <p class="text-xs text-gray-600">Minimalistisch</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.querySelectorAll('.theme-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const targetTab = tab.getAttribute('data-tab');
+                    
+                    document.querySelectorAll('.theme-tab').forEach(t => {
+                        t.classList.remove('border-blue-500', 'text-blue-600');
+                        t.classList.add('border-transparent', 'text-gray-500');
+                    });
+                    tab.classList.remove('border-transparent', 'text-gray-500');
+                    tab.classList.add('border-blue-500', 'text-blue-600');
+                    
+                    document.querySelectorAll('.theme-tab-content').forEach(content => {
+                        content.classList.add('hidden');
+                    });
+                    document.getElementById('tab-' + targetTab).classList.remove('hidden');
+                });
+            });
+        </script>
+    </body>
+    </html>
+    `)
+  } catch (error) {
+    console.error('Themes error:', error);
+    return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <title>Fehler - SOFTWAREKING24 Admin</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-50 flex items-center justify-center min-h-screen">
+        <div class="text-center">
+            <i class="fas fa-exclamation-triangle text-red-500 text-5xl mb-4"></i>
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Fehler beim Laden</h1>
+            <p class="text-gray-600">Design-Einstellungen konnten nicht geladen werden</p>
+        </div>
+    </body>
+    </html>
+    `, 500)
+  }
+})
+
+// ============================================
+// PAYMENT METHODS CONFIGURATION PAGE
+// ============================================
+app.get('/admin/payment-methods', async (c) => {
+  try {
+    const { env } = c;
+    const db = env.DB;
+
+    // Get payment settings
+    const paymentSettings = await db.prepare(`
+      SELECT setting_key, setting_value
+      FROM system_settings
+      WHERE category = 'payment' OR setting_key LIKE 'payment_%'
+    `).all();
+
+    const settings = {};
+    paymentSettings.results.forEach(row => {
+      settings[row.setting_key] = row.setting_value;
+    });
+
+    return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Zahlungsmethoden - SOFTWAREKING24 Admin</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-50">
+        ${AdminSidebarAdvanced('/admin/payment-methods')}
+        
+        <div class="ml-64 p-8">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900">
+                    <i class="fas fa-credit-card mr-3"></i>Zahlungsmethoden
+                </h1>
+                <p class="text-gray-600 mt-2">Payment Gateway Konfiguration und Einstellungen</p>
+            </div>
+
+            <!-- Payment Methods Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                                <i class="fab fa-stripe text-purple-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900">Stripe</h3>
+                                <p class="text-xs text-gray-500">Kreditkarte & SEPA</p>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" class="sr-only peer" ${settings.stripe_enabled === '1' ? 'checked' : ''}>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        <p class="mb-2">Status: ${settings.stripe_enabled === '1' ? '<span class="text-green-600 font-medium">Aktiv</span>' : '<span class="text-gray-500">Inaktiv</span>'}</p>
+                        <a href="#stripe-config" class="text-blue-600 hover:underline">
+                            <i class="fas fa-cog mr-1"></i>Konfigurieren
+                        </a>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                <i class="fab fa-paypal text-blue-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900">PayPal</h3>
+                                <p class="text-xs text-gray-500">PayPal & Lastschrift</p>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" class="sr-only peer" ${settings.paypal_enabled === '1' ? 'checked' : ''}>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        <p class="mb-2">Status: ${settings.paypal_enabled === '1' ? '<span class="text-green-600 font-medium">Aktiv</span>' : '<span class="text-gray-500">Inaktiv</span>'}</p>
+                        <a href="#paypal-config" class="text-blue-600 hover:underline">
+                            <i class="fas fa-cog mr-1"></i>Konfigurieren
+                        </a>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-lg shadow p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                                <i class="fas fa-university text-green-600 text-xl"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-gray-900">Überweisung</h3>
+                                <p class="text-xs text-gray-500">Banküberweisung</p>
+                            </div>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" class="sr-only peer" ${settings.bank_transfer_enabled === '1' ? 'checked' : ''}>
+                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
+                    </div>
+                    <div class="text-sm text-gray-600">
+                        <p class="mb-2">Status: ${settings.bank_transfer_enabled === '1' ? '<span class="text-green-600 font-medium">Aktiv</span>' : '<span class="text-gray-500">Inaktiv</span>'}</p>
+                        <a href="#bank-config" class="text-blue-600 hover:underline">
+                            <i class="fas fa-cog mr-1"></i>Konfigurieren
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stripe Configuration -->
+            <div id="stripe-config" class="bg-white rounded-lg shadow mb-8">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-900">
+                        <i class="fab fa-stripe mr-2 text-purple-600"></i>Stripe Konfiguration
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Publishable Key</label>
+                                <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg font-mono text-sm" placeholder="pk_live_...">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Secret Key</label>
+                                <input type="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg font-mono text-sm" placeholder="sk_live_...">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Webhook Secret</label>
+                            <input type="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg font-mono text-sm" placeholder="whsec_...">
+                        </div>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <p class="text-sm text-blue-800">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                <strong>Webhook URL:</strong> https://softwareking24.de/api/webhooks/stripe
+                            </p>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <input type="checkbox" id="stripe-test-mode" class="w-4 h-4">
+                            <label for="stripe-test-mode" class="text-sm font-medium text-gray-700">Testmodus aktivieren</label>
+                        </div>
+                        <button class="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700">
+                            <i class="fas fa-save mr-2"></i>Stripe-Einstellungen speichern
+                        </button>
+                        <button class="ml-2 px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                            <i class="fas fa-vial mr-2"></i>Verbindung testen
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PayPal Configuration -->
+            <div id="paypal-config" class="bg-white rounded-lg shadow mb-8">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-900">
+                        <i class="fab fa-paypal mr-2 text-blue-600"></i>PayPal Konfiguration
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Client ID</label>
+                                <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg font-mono text-sm" placeholder="AYSq3R...">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Secret</label>
+                                <input type="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg font-mono text-sm" placeholder="EOuR3v...">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Webhook ID</label>
+                            <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg font-mono text-sm" placeholder="9AB12...">
+                        </div>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <p class="text-sm text-blue-800">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                <strong>Webhook URL:</strong> https://softwareking24.de/api/webhooks/paypal
+                            </p>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <input type="checkbox" id="paypal-sandbox" class="w-4 h-4">
+                            <label for="paypal-sandbox" class="text-sm font-medium text-gray-700">Sandbox-Modus aktivieren</label>
+                        </div>
+                        <button class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            <i class="fas fa-save mr-2"></i>PayPal-Einstellungen speichern
+                        </button>
+                        <button class="ml-2 px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                            <i class="fas fa-vial mr-2"></i>Verbindung testen
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bank Transfer Configuration -->
+            <div id="bank-config" class="bg-white rounded-lg shadow mb-8">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-900">
+                        <i class="fas fa-university mr-2 text-green-600"></i>Banküberweisung Konfiguration
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Bankname</label>
+                            <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Sparkasse Berlin">
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Kontoinhaber</label>
+                                <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="SOFTWAREKING24 GmbH">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">BIC</label>
+                                <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg font-mono" placeholder="BELADEBEXXX">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">IBAN</label>
+                            <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg font-mono" placeholder="DE89 3704 0044 0532 0130 00">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Verwendungszweck-Hinweis</label>
+                            <textarea rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg" placeholder="Bitte geben Sie Ihre Bestellnummer als Verwendungszweck an."></textarea>
+                        </div>
+                        <button class="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                            <i class="fas fa-save mr-2"></i>Bankdaten speichern
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- General Payment Settings -->
+            <div class="bg-white rounded-lg shadow">
+                <div class="p-6 border-b border-gray-200">
+                    <h2 class="text-xl font-bold text-gray-900">
+                        <i class="fas fa-sliders-h mr-2"></i>Allgemeine Zahlungseinstellungen
+                    </h2>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Standard-Währung</label>
+                            <select class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                <option selected>EUR (€)</option>
+                                <option>USD ($)</option>
+                                <option>GBP (£)</option>
+                                <option>CHF (Fr.)</option>
+                            </select>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <input type="checkbox" id="auto-capture" class="w-4 h-4" checked>
+                            <label for="auto-capture" class="text-sm font-medium text-gray-700">Zahlungen automatisch erfassen</label>
+                        </div>
+                        <div class="flex items-center space-x-4">
+                            <input type="checkbox" id="save-cards" class="w-4 h-4">
+                            <label for="save-cards" class="text-sm font-medium text-gray-700">Kunden erlauben, Zahlungsmethoden zu speichern</label>
+                        </div>
+                        <button class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            <i class="fas fa-save mr-2"></i>Einstellungen speichern
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    `)
+  } catch (error) {
+    console.error('Payment methods error:', error);
+    return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <title>Fehler - SOFTWAREKING24 Admin</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-gray-50 flex items-center justify-center min-h-screen">
+        <div class="text-center">
+            <i class="fas fa-exclamation-triangle text-red-500 text-5xl mb-4"></i>
+            <h1 class="text-2xl font-bold text-gray-900 mb-2">Fehler beim Laden</h1>
+            <p class="text-gray-600">Zahlungsmethoden konnten nicht geladen werden</p>
+        </div>
+    </body>
+    </html>
+    `, 500)
+  }
+})
 
 // My-* routes (alternative user panel paths)
 app.get('/my-*', (c) => {
