@@ -4066,7 +4066,7 @@ app.get('/api/admin/invoices/stats', async (c) => {
         COUNT(*) as total,
         SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as paid,
         SUM(CASE WHEN status = 'overdue' THEN 1 ELSE 0 END) as overdue,
-        SUM(CASE WHEN status = 'paid' THEN total_amount ELSE 0 END) as total_revenue
+        SUM(CASE WHEN status = 'paid' THEN total ELSE 0 END) as total_revenue
       FROM invoices
     `).first()
 
@@ -4125,7 +4125,7 @@ app.post('/api/admin/invoices', async (c) => {
         invoice_number, customer_name, customer_email, customer_company, customer_tax_id,
         billing_address, billing_city, billing_postal_code, billing_country,
         invoice_date, due_date, status, notes, terms,
-        subtotal, tax_rate, tax_amount, total_amount
+        subtotal, tax_rate, tax_amount, total
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       body.invoice_number,
@@ -4204,7 +4204,7 @@ app.put('/api/admin/invoices/:id', async (c) => {
         invoice_number = ?, customer_name = ?, customer_email = ?, customer_company = ?, customer_tax_id = ?,
         billing_address = ?, billing_city = ?, billing_postal_code = ?, billing_country = ?,
         invoice_date = ?, due_date = ?, status = ?, notes = ?, terms = ?,
-        subtotal = ?, tax_rate = ?, tax_amount = ?, total_amount = ?,
+        subtotal = ?, tax_rate = ?, tax_amount = ?, total = ?,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).bind(
@@ -4719,7 +4719,7 @@ app.get('/api/marketing/traffic', async (c) => {
       SELECT 
         COUNT(DISTINCT id) as visitors,
         COUNT(*) as pageviews,
-        AVG(total_amount) as avg_order_value
+        AVG(total) as avg_order_value
       FROM orders
       WHERE created_at >= datetime('now', '-${daysAgo} days')
     `).first()
@@ -7706,7 +7706,7 @@ app.get('/api/admin/dashboard/charts', async (c) => {
     
     // Revenue last 7 days
     const revenue = await db.db.prepare(`
-      SELECT DATE(created_at) as date, SUM(total_amount) as revenue
+      SELECT DATE(created_at) as date, SUM(total) as revenue
       FROM orders
       WHERE created_at >= datetime('now', '-7 days')
       GROUP BY DATE(created_at)
@@ -9964,7 +9964,7 @@ app.get('/admin/marketing/campaigns', async (c) => {
         c.*,
         COUNT(DISTINCT co.id) as coupon_count,
         COUNT(DISTINCT cu.id) as usage_count,
-        COALESCE(SUM(o.total_amount), 0) as total_revenue
+        COALESCE(SUM(o.total), 0) as total_revenue
       FROM (
         SELECT 
           id, name, campaign_type, status, start_date, end_date,
@@ -10550,7 +10550,7 @@ app.get('/admin/marketing/coupons', async (c) => {
       SELECT 
         c.*,
         COUNT(DISTINCT cu.id) as usage_count,
-        COALESCE(SUM(o.total_amount), 0) as total_revenue
+        COALESCE(SUM(o.total), 0) as total_revenue
       FROM coupons c
       LEFT JOIN coupon_usage cu ON cu.coupon_id = c.id
       LEFT JOIN orders o ON o.id = cu.order_id
@@ -11013,8 +11013,8 @@ app.get('/admin/marketing/analytics', async (c) => {
       SELECT 
         COUNT(DISTINCT c.id) as total_campaigns,
         COUNT(DISTINCT cu.id) as total_conversions,
-        COALESCE(SUM(o.total_amount), 0) as total_revenue,
-        COALESCE(AVG(o.total_amount), 0) as avg_order_value
+        COALESCE(SUM(o.total), 0) as total_revenue,
+        COALESCE(AVG(o.total), 0) as avg_order_value
       FROM coupons c
       LEFT JOIN coupon_usage cu ON cu.coupon_id = c.id
       LEFT JOIN orders o ON o.id = cu.order_id
