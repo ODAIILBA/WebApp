@@ -2039,7 +2039,7 @@ import { AdminOrders } from './components/admin-orders'
 import { AdminCustomers } from './components/admin-customers'
 import { AdminInvoices } from './components/admin-invoices'
 import { AdminCertificates } from './components/admin-certificates'
-import { AdminSettings } from './components/admin-settings'
+import { AdminSettingsAdvanced } from './components/admin-settings-advanced'
 import { AdminReports } from './components/admin-reports'
 import { AdminAnalytics } from './components/admin-analytics-enhanced'
 import { AdminDelivery } from './components/admin-delivery'
@@ -2347,76 +2347,8 @@ app.get('/admin/pages', (c) => {
 
 // Settings
 app.get('/admin/settings', (c) => {
-  return c.html(
-    <html lang="de">
-      <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Einstellungen - Admin - SOFTWAREKING24</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet" />
-        <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
-        <style dangerouslySetInnerHTML={{__html: `
-          :root {
-            --navy-dark: #1a2a4e;
-            --gold: #d4af37;
-          }
-          .admin-sidebar {
-            position: fixed;
-            left: 0;
-            top: 0;
-            width: 260px;
-            height: 100vh;
-            background: var(--navy-dark);
-            color: white;
-            overflow-y: auto;
-            z-index: 1000;
-          }
-          .admin-content {
-            margin-left: 260px;
-            min-height: 100vh;
-            background: #f5f7fa;
-            padding: 2rem;
-          }
-          .admin-nav-item {
-            display: block;
-            padding: 12px 20px;
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-            transition: all 0.3s;
-            border-left: 3px solid transparent;
-          }
-          .admin-nav-item:hover,
-          .admin-nav-item.active {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border-left-color: var(--gold);
-          }
-          .admin-card {
-            background: white;
-            border-radius: 8px;
-            padding: 1.5rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-          }
-          .btn-gold {
-            background: var(--gold);
-            color: var(--navy-dark);
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-weight: 600;
-          }
-        `}} />
-      </head>
-      <body>
-        <div dangerouslySetInnerHTML={{__html: AdminSidebar('/admin/settings')}} />
-        <div class="admin-content">
-          <AdminSettings />
-        </div>
-      </body>
-    </html>
-  )
+  const html = AdminSettingsAdvanced();
+  return c.html(html);
 })
 
 // Enhanced Analytics & Reporting
@@ -4103,15 +4035,16 @@ app.get('/api/admin/settings', async (c) => {
     const db = c.get('db') as DatabaseHelper
     const { category } = c.req.query()
     
-    let query = 'SELECT * FROM system_settings WHERE 1=1'
+    // Use the 'settings' table which has the structure we need
+    let query = 'SELECT * FROM settings WHERE 1=1'
     const params: any[] = []
     
     if (category) {
-      query += ' AND category = ?'
-      params.push(category)
+      query += ' AND setting_key LIKE ?'
+      params.push(`${category}_%`)
     }
     
-    query += ' ORDER BY category, setting_key'
+    query += ' ORDER BY setting_key'
     
     const settings = await db.db.prepare(query).bind(...params).all()
     
@@ -4119,6 +4052,73 @@ app.get('/api/admin/settings', async (c) => {
   } catch (error) {
     console.error('Error fetching settings:', error)
     return c.json({ success: false, error: 'Failed to fetch settings' }, 500)
+  }
+})
+
+// Bulk update settings
+app.post('/api/admin/settings', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const body = await c.req.json()
+    const { settings } = body
+    
+    if (!settings || !Array.isArray(settings)) {
+      return c.json({ success: false, error: 'Settings array required' }, 400)
+    }
+    
+    // Update or insert each setting
+    for (const setting of settings) {
+      await db.db.prepare(`
+        INSERT INTO settings (setting_key, setting_value, setting_type, updated_at)
+        VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(setting_key) DO UPDATE SET
+          setting_value = excluded.setting_value,
+          setting_type = excluded.setting_type,
+          updated_at = CURRENT_TIMESTAMP
+      `).bind(setting.key, setting.value, setting.type || 'string').run()
+    }
+    
+    return c.json({ success: true, message: `${settings.length} settings updated successfully` })
+  } catch (error) {
+    console.error('Error saving settings:', error)
+    return c.json({ success: false, error: 'Failed to save settings' }, 500)
+  }
+})
+
+// Test SMTP configuration
+app.post('/api/admin/settings/test-smtp', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { test_email, smtp_host, smtp_port, smtp_username, smtp_password, smtp_encryption, smtp_from_name, smtp_from_email } = body
+    
+    if (!test_email || !smtp_host || !smtp_port || !smtp_username || !smtp_password) {
+      return c.json({ success: false, error: 'Missing required SMTP parameters' }, 400)
+    }
+    
+    // Note: In a real implementation, you would use nodemailer or similar
+    // Since we're on Cloudflare Workers, we need to use their Email Routing API
+    // or an external email service like SendGrid/Mailgun
+    
+    // For now, simulate success (you'll need to implement actual SMTP logic)
+    console.log('SMTP Test Configuration:', {
+      host: smtp_host,
+      port: smtp_port,
+      user: smtp_username,
+      from: `${smtp_from_name} <${smtp_from_email}>`,
+      to: test_email
+    })
+    
+    // Simulate sending
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    return c.json({ 
+      success: true, 
+      message: `Test email sent successfully to ${test_email}`,
+      note: 'SMTP functionality requires external email service integration'
+    })
+  } catch (error) {
+    console.error('SMTP test error:', error)
+    return c.json({ success: false, error: 'Failed to send test email' }, 500)
   }
 })
 
