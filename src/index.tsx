@@ -2773,11 +2773,88 @@ app.get('/admin/customers', (c) => {
 
 // Invoices Management
 app.get('/admin/invoices', (c) => {
-  return c.html(
-    <AdminLayout title="Invoices" currentUser={{ first_name: 'Admin' }}>
-      <AdminInvoices />
-    </AdminLayout>
-  )
+  const html = AdminInvoices()
+  return c.html(html)
+})
+
+// Invoice Preview with new template
+app.get('/admin/invoices/:id/preview', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+
+    const invoice = await db.db.prepare(`SELECT * FROM invoices WHERE id = ?`).bind(id).first()
+    if (!invoice) {
+      return c.text('Invoice not found', 404)
+    }
+
+    const items = await db.db.prepare(`
+      SELECT * FROM invoice_items WHERE invoice_id = ? ORDER BY sort_order
+    `).bind(id).all()
+
+    const { InvoiceTemplate } = await import('./components/invoice-template')
+    const html = InvoiceTemplate({ ...invoice, items: items.results || [] })
+    return c.html(html)
+  } catch (error) {
+    console.error('Error loading invoice preview:', error)
+    return c.text('Error loading invoice', 500)
+  }
+})
+
+// Generate Certificate for Invoice
+app.get('/admin/invoices/:id/certificate', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+
+    const invoice = await db.db.prepare(`SELECT * FROM invoices WHERE id = ?`).bind(id).first()
+    if (!invoice) {
+      return c.text('Invoice not found', 404)
+    }
+
+    const items = await db.db.prepare(`
+      SELECT ii.*, p.sku as product_sku, pt.name as product_name
+      FROM invoice_items ii
+      LEFT JOIN products p ON ii.product_id = p.id
+      LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = 'de'
+      WHERE ii.invoice_id = ?
+      ORDER BY ii.sort_order
+    `).bind(id).all()
+
+    // Get first product for certificate
+    const mainProduct = items.results?.[0]
+    
+    // Get license key if available
+    const licenseResult = await db.db.prepare(`
+      SELECT license_key FROM license_keys 
+      WHERE product_id = ? AND status = 'sold' 
+      LIMIT 1
+    `).bind(mainProduct?.product_id).first()
+
+    const { CertificateTemplate } = await import('./components/certificate-template')
+    const certificateData = {
+      customer_name: invoice.customer_name,
+      customer_email: invoice.customer_email,
+      customer_company: invoice.customer_company,
+      customer_address: invoice.billing_address,
+      customer_city: invoice.billing_city,
+      customer_postal: invoice.billing_postal_code,
+      customer_phone: invoice.customer_phone,
+      product_name: mainProduct?.product_name || mainProduct?.description,
+      mpn_id: '7027901',
+      invoice_number: invoice.invoice_number,
+      invoice_date: invoice.invoice_date,
+      order_number: invoice.invoice_number,
+      order_date: invoice.invoice_date,
+      license_key: licenseResult?.license_key || 'XXXXX-XXXXX-XXXXX-XXXXX-XXXXX'
+    }
+
+    const html = CertificateTemplate(certificateData)
+    return c.html(html)
+  } catch (error) {
+    console.error('Error generating certificate:', error)
+    return c.text('Error generating certificate', 500)
+  }
 })
 
 // License Certificates Management

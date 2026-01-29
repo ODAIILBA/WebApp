@@ -519,8 +519,11 @@ export const AdminInvoices = () => {
                     <button onclick="editInvoice(\${invoice.id})" class="text-yellow-600 hover:text-yellow-800" title="Bearbeiten">
                       <i class="fas fa-edit"></i>
                     </button>
-                    <button onclick="downloadInvoice(\${invoice.id})" class="text-green-600 hover:text-green-800" title="PDF">
-                      <i class="fas fa-download"></i>
+                    <button onclick="downloadInvoice(\${invoice.id})" class="text-green-600 hover:text-green-800" title="PDF Rechnung">
+                      <i class="fas fa-file-pdf"></i>
+                    </button>
+                    <button onclick="viewCertificate(\${invoice.id})" class="text-purple-600 hover:text-purple-800" title="Lizenz-Zertifikat">
+                      <i class="fas fa-certificate"></i>
                     </button>
                     <button onclick="deleteInvoice(\${invoice.id})" class="text-red-600 hover:text-red-800" title="Löschen">
                       <i class="fas fa-trash"></i>
@@ -770,7 +773,11 @@ export const AdminInvoices = () => {
         }
 
         async function downloadInvoice(id) {
-          window.open(\`/api/admin/invoices/\${id}/pdf\`, '_blank');
+          window.open(\`/admin/invoices/\${id}/preview\`, '_blank');
+        }
+
+        async function viewCertificate(id) {
+          window.open(\`/admin/invoices/\${id}/certificate\`, '_blank');
         }
 
         async function deleteInvoice(id) {
