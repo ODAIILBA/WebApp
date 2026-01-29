@@ -11563,6 +11563,1904 @@ app.get('/admin/marketing/automation', async (c) => {
   `);
 });
 
+
+// ============================================================================
+// BATCH 10: USERS & PERMISSIONS - 7 PAGES
+// ============================================================================
+
+
+// ============================================================================
+// BATCH 10: USERS & PERMISSIONS - 7 PAGES
+// ============================================================================
+
+// PAGE 1: ALL USERS - /admin/users
+app.get('/admin/users', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper;
+    const page = parseInt(c.req.query('page') || '1');
+    const limit = parseInt(c.req.query('limit') || '20');
+    const offset = (page - 1) * limit;
+    const role = c.req.query('role') || 'all';
+    const status = c.req.query('status') || 'all';
+    const search = c.req.query('search') || '';
+
+    // Build query conditions
+    let whereClause = 'WHERE 1=1';
+    const params: any[] = [];
+
+    if (role !== 'all') {
+      whereClause += ' AND role = ?';
+      params.push(role);
+    }
+
+    if (status !== 'all') {
+      whereClause += ' AND status = ?';
+      params.push(status);
+    }
+
+    if (search) {
+      whereClause += ' AND (email LIKE ? OR first_name LIKE ? OR last_name LIKE ?)';
+      const searchPattern = `%${search}%`;
+      params.push(searchPattern, searchPattern, searchPattern);
+    }
+
+    // Get users
+    const usersQuery = `
+      SELECT 
+        id, email, first_name, last_name, role, status, 
+        email_verified, last_login, created_at
+      FROM users
+      ${whereClause}
+      ORDER BY created_at DESC
+      LIMIT ? OFFSET ?
+    `;
+    params.push(limit, offset);
+
+    const users = await db.db.prepare(usersQuery).bind(...params).all();
+
+    // Get total count
+    const countQuery = `SELECT COUNT(*) as total FROM users ${whereClause}`;
+    const countResult = await db.db.prepare(countQuery).bind(...params.slice(0, -2)).first() as any;
+    const total = countResult?.total || 0;
+
+    // Get stats
+    const statsQuery = `
+      SELECT 
+        COUNT(*) as total_users,
+        COUNT(CASE WHEN role = 'admin' THEN 1 END) as admin_users,
+        COUNT(CASE WHEN role = 'customer' THEN 1 END) as customer_users,
+        COUNT(CASE WHEN status = 'active' THEN 1 END) as active_users,
+        COUNT(CASE WHEN email_verified = 1 THEN 1 END) as verified_users
+      FROM users
+    `;
+    const stats = await db.db.prepare(statsQuery).first() as any;
+
+    return c.html(`
+      <!DOCTYPE html>
+      <html lang="de">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Benutzer - Admin - SOFTWAREKING24</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <style>
+          :root {
+            --navy-dark: #1e3a5f;
+            --navy: #2c5282;
+          }
+          .gradient-header {
+            background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 100%);
+          }
+          .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+          }
+        </style>
+      </head>
+      <body class="bg-gray-50">
+        ${AdminSidebarAdvanced('/admin/users')}
+        
+        <div class="lg:ml-64 min-h-screen">
+          <div class="gradient-header text-white p-6 shadow-lg">
+            <div class="max-w-7xl mx-auto">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h1 class="text-3xl font-bold mb-2">
+                    <i class="fas fa-users mr-3"></i>Benutzerverwaltung
+                  </h1>
+                  <p class="text-blue-100">Alle Benutzer, Rollen und Berechtigungen verwalten</p>
+                </div>
+                <button onclick="window.location.href='/admin/users/create'" 
+                        class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-6 py-3 rounded-lg font-semibold">
+                  <i class="fas fa-user-plus mr-2"></i>Neuer Benutzer
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="max-w-7xl mx-auto p-6">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+              <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-600 text-sm font-medium mb-1">Gesamt</p>
+                    <p class="text-3xl font-bold text-gray-800">${stats?.total_users || 0}</p>
+                  </div>
+                  <div class="bg-blue-100 p-4 rounded-full">
+                    <i class="fas fa-users text-blue-600 text-2xl"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-600 text-sm font-medium mb-1">Admins</p>
+                    <p class="text-3xl font-bold text-purple-600">${stats?.admin_users || 0}</p>
+                  </div>
+                  <div class="bg-purple-100 p-4 rounded-full">
+                    <i class="fas fa-user-shield text-purple-600 text-2xl"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-600 text-sm font-medium mb-1">Kunden</p>
+                    <p class="text-3xl font-bold text-green-600">${stats?.customer_users || 0}</p>
+                  </div>
+                  <div class="bg-green-100 p-4 rounded-full">
+                    <i class="fas fa-user text-green-600 text-2xl"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-600 text-sm font-medium mb-1">Aktiv</p>
+                    <p class="text-3xl font-bold text-blue-600">${stats?.active_users || 0}</p>
+                  </div>
+                  <div class="bg-blue-100 p-4 rounded-full">
+                    <i class="fas fa-check-circle text-blue-600 text-2xl"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-600 text-sm font-medium mb-1">Verifiziert</p>
+                    <p class="text-3xl font-bold text-yellow-600">${stats?.verified_users || 0}</p>
+                  </div>
+                  <div class="bg-yellow-100 p-4 rounded-full">
+                    <i class="fas fa-certificate text-yellow-600 text-2xl"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+              <form method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Suche</label>
+                  <input type="text" name="search" value="${search}" 
+                         placeholder="Name oder E-Mail..."
+                         class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Rolle</label>
+                  <select name="role" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="all" ${role === 'all' ? 'selected' : ''}>Alle Rollen</option>
+                    <option value="admin" ${role === 'admin' ? 'selected' : ''}>Administrator</option>
+                    <option value="customer" ${role === 'customer' ? 'selected' : ''}>Kunde</option>
+                    <option value="moderator" ${role === 'moderator' ? 'selected' : ''}>Moderator</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                  <select name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="all" ${status === 'all' ? 'selected' : ''}>Alle Status</option>
+                    <option value="active" ${status === 'active' ? 'selected' : ''}>Aktiv</option>
+                    <option value="inactive" ${status === 'inactive' ? 'selected' : ''}>Inaktiv</option>
+                    <option value="suspended" ${status === 'suspended' ? 'selected' : ''}>Gesperrt</option>
+                  </select>
+                </div>
+
+                <div class="flex items-end space-x-2">
+                  <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                    <i class="fas fa-search mr-2"></i>Suchen
+                  </button>
+                  <a href="/admin/users" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+                    <i class="fas fa-redo"></i>
+                  </a>
+                </div>
+              </form>
+            </div>
+
+            <!-- Users Table -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Benutzer</th>
+                      <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">E-Mail</th>
+                      <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Rolle</th>
+                      <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                      <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Letzter Login</th>
+                      <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Aktionen</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200">
+                    ${users.results && users.results.length > 0 ? users.results.map((user: any) => `
+                      <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                          <div class="flex items-center space-x-3">
+                            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+                              ${(user.first_name?.[0] || 'U').toUpperCase()}
+                            </div>
+                            <div>
+                              <div class="font-semibold text-gray-900">${user.first_name || ''} ${user.last_name || ''}</div>
+                              ${user.email_verified ? '<i class="fas fa-check-circle text-green-600 text-xs" title="Verifiziert"></i>' : '<i class="fas fa-exclamation-circle text-gray-400 text-xs" title="Nicht verifiziert"></i>'}
+                            </div>
+                          </div>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900">${user.email || 'N/A'}</td>
+                        <td class="px-6 py-4">
+                          <span class="px-3 py-1 rounded-full text-xs font-medium ${
+                            user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                            user.role === 'moderator' ? 'bg-blue-100 text-blue-800' :
+                            'bg-green-100 text-green-800'
+                          }">
+                            ${user.role === 'admin' ? 'Administrator' : 
+                              user.role === 'moderator' ? 'Moderator' : 'Kunde'}
+                          </span>
+                        </td>
+                        <td class="px-6 py-4">
+                          <span class="px-3 py-1 rounded-full text-xs font-medium ${
+                            user.status === 'active' ? 'bg-green-100 text-green-800' :
+                            user.status === 'suspended' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }">
+                            ${user.status === 'active' ? 'Aktiv' : 
+                              user.status === 'suspended' ? 'Gesperrt' : 'Inaktiv'}
+                          </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-600">${user.last_login || 'Nie'}</td>
+                        <td class="px-6 py-4">
+                          <div class="flex space-x-2">
+                            <button onclick="window.location.href='/admin/users/${user.id}'" 
+                                    class="text-blue-600 hover:text-blue-800" title="Bearbeiten">
+                              <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="window.location.href='/admin/users/${user.id}/permissions'" 
+                                    class="text-green-600 hover:text-green-800" title="Berechtigungen">
+                              <i class="fas fa-key"></i>
+                            </button>
+                            <button onclick="if(confirm('Benutzer löschen?')) window.location.href='/admin/users/${user.id}/delete'" 
+                                    class="text-red-600 hover:text-red-800" title="Löschen">
+                              <i class="fas fa-trash"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    `).join('') : `
+                      <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                          <i class="fas fa-users text-4xl mb-4 text-gray-300"></i>
+                          <p>Keine Benutzer gefunden</p>
+                        </td>
+                      </tr>
+                    `}
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Pagination -->
+              ${total > limit ? `
+                <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+                  <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-600">
+                      Zeige ${offset + 1}-${Math.min(offset + limit, total)} von ${total} Benutzern
+                    </div>
+                    <div class="flex space-x-2">
+                      ${page > 1 ? `
+                        <a href="?page=${page - 1}&role=${role}&status=${status}&search=${search}" 
+                           class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                          <i class="fas fa-chevron-left"></i>
+                        </a>
+                      ` : ''}
+                      ${offset + limit < total ? `
+                        <a href="?page=${page + 1}&role=${role}&status=${status}&search=${search}" 
+                           class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                          <i class="fas fa-chevron-right"></i>
+                        </a>
+                      ` : ''}
+                    </div>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `);
+
+  } catch (error) {
+    console.error('Error loading users:', error);
+    return c.html(`
+      <!DOCTYPE html>
+      <html lang="de">
+      <head>
+        <meta charset="UTF-8">
+        <title>Fehler - SOFTWAREKING24 Admin</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+      </head>
+      <body class="bg-gray-50 flex items-center justify-center min-h-screen">
+        <div class="text-center">
+          <h1 class="text-4xl font-bold text-red-600 mb-4">Fehler</h1>
+          <p class="text-gray-600 mb-6">Fehler beim Laden der Benutzer</p>
+          <a href="/admin/users" class="text-blue-600 hover:underline">Zurück</a>
+        </div>
+      </body>
+      </html>
+    `);
+  }
+});
+
+
+// PAGE 2: ROLES MANAGEMENT - /admin/users/roles
+app.get('/admin/users/roles', async (c) => {
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Rollen - Admin - SOFTWAREKING24</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+      <style>
+        :root {
+          --navy-dark: #1e3a5f;
+          --navy: #2c5282;
+        }
+        .gradient-header {
+          background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 100%);
+        }
+        .role-card {
+          transition: all 0.3s ease;
+        }
+        .role-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+      </style>
+    </head>
+    <body class="bg-gray-50">
+      ${AdminSidebarAdvanced('/admin/users/roles')}
+      
+      <div class="lg:ml-64 min-h-screen">
+        <div class="gradient-header text-white p-6 shadow-lg">
+          <div class="max-w-7xl mx-auto">
+            <div class="flex items-center justify-between">
+              <div>
+                <h1 class="text-3xl font-bold mb-2">
+                  <i class="fas fa-user-tag mr-3"></i>Rollenverwaltung
+                </h1>
+                <p class="text-blue-100">Benutzerrollen und Zugriffsrechte definieren</p>
+              </div>
+              <button onclick="window.location.href='/admin/users/roles/create'" 
+                      class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-6 py-3 rounded-lg font-semibold">
+                <i class="fas fa-plus mr-2"></i>Neue Rolle
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto p-6">
+          <!-- Roles Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <!-- Administrator Role -->
+            <div class="role-card bg-white rounded-xl shadow-md overflow-hidden">
+              <div class="bg-gradient-to-br from-purple-500 to-purple-700 p-6 text-white">
+                <div class="flex items-center justify-between mb-4">
+                  <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-crown text-3xl"></i>
+                  </div>
+                  <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm font-semibold">1 Benutzer</span>
+                </div>
+                <h3 class="text-2xl font-bold mb-2">Administrator</h3>
+                <p class="text-purple-100 text-sm">Voller Zugriff auf alle Funktionen</p>
+              </div>
+              <div class="p-6">
+                <div class="space-y-3 mb-6">
+                  <div class="flex items-center text-sm">
+                    <i class="fas fa-check-circle text-green-600 mr-3"></i>
+                    <span class="text-gray-700">Alle Berechtigungen</span>
+                  </div>
+                  <div class="flex items-center text-sm">
+                    <i class="fas fa-check-circle text-green-600 mr-3"></i>
+                    <span class="text-gray-700">Benutzerverwaltung</span>
+                  </div>
+                  <div class="flex items-center text-sm">
+                    <i class="fas fa-check-circle text-green-600 mr-3"></i>
+                    <span class="text-gray-700">Systemeinstellungen</span>
+                  </div>
+                  <div class="flex items-center text-sm">
+                    <i class="fas fa-check-circle text-green-600 mr-3"></i>
+                    <span class="text-gray-700">Datenbankzugriff</span>
+                  </div>
+                </div>
+                <div class="flex space-x-2">
+                  <button onclick="alert('Administrator-Rolle bearbeiten')" 
+                          class="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors">
+                    <i class="fas fa-edit mr-2"></i>Bearbeiten
+                  </button>
+                  <button class="px-4 py-2 bg-gray-200 text-gray-400 rounded-lg cursor-not-allowed" disabled title="Kann nicht gelöscht werden">
+                    <i class="fas fa-lock"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Moderator Role -->
+            <div class="role-card bg-white rounded-xl shadow-md overflow-hidden">
+              <div class="bg-gradient-to-br from-blue-500 to-blue-700 p-6 text-white">
+                <div class="flex items-center justify-between mb-4">
+                  <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-shield-alt text-3xl"></i>
+                  </div>
+                  <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm font-semibold">0 Benutzer</span>
+                </div>
+                <h3 class="text-2xl font-bold mb-2">Moderator</h3>
+                <p class="text-blue-100 text-sm">Content-Verwaltung und Support</p>
+              </div>
+              <div class="p-6">
+                <div class="space-y-3 mb-6">
+                  <div class="flex items-center text-sm">
+                    <i class="fas fa-check-circle text-green-600 mr-3"></i>
+                    <span class="text-gray-700">Produktverwaltung</span>
+                  </div>
+                  <div class="flex items-center text-sm">
+                    <i class="fas fa-check-circle text-green-600 mr-3"></i>
+                    <span class="text-gray-700">Bestellungen ansehen</span>
+                  </div>
+                  <div class="flex items-center text-sm">
+                    <i class="fas fa-check-circle text-green-600 mr-3"></i>
+                    <span class="text-gray-700">Support-Tickets</span>
+                  </div>
+                  <div class="flex items-center text-sm">
+                    <i class="fas fa-times-circle text-red-600 mr-3"></i>
+                    <span class="text-gray-400">Systemeinstellungen</span>
+                  </div>
+                </div>
+                <div class="flex space-x-2">
+                  <button onclick="alert('Moderator-Rolle bearbeiten')" 
+                          class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                    <i class="fas fa-edit mr-2"></i>Bearbeiten
+                  </button>
+                  <button onclick="if(confirm('Rolle löschen?')) alert('Löschen')" 
+                          class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Customer Role -->
+            <div class="role-card bg-white rounded-xl shadow-md overflow-hidden">
+              <div class="bg-gradient-to-br from-green-500 to-green-700 p-6 text-white">
+                <div class="flex items-center justify-between mb-4">
+                  <div class="w-16 h-16 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                    <i class="fas fa-user text-3xl"></i>
+                  </div>
+                  <span class="px-3 py-1 bg-white bg-opacity-20 rounded-full text-sm font-semibold">0 Benutzer</span>
+                </div>
+                <h3 class="text-2xl font-bold mb-2">Kunde</h3>
+                <p class="text-green-100 text-sm">Standard-Kundenrechte</p>
+              </div>
+              <div class="p-6">
+                <div class="space-y-3 mb-6">
+                  <div class="flex items-center text-sm">
+                    <i class="fas fa-check-circle text-green-600 mr-3"></i>
+                    <span class="text-gray-700">Produkte kaufen</span>
+                  </div>
+                  <div class="flex items-center text-sm">
+                    <i class="fas fa-check-circle text-green-600 mr-3"></i>
+                    <span class="text-gray-700">Eigene Bestellungen</span>
+                  </div>
+                  <div class="flex items-center text-sm">
+                    <i class="fas fa-check-circle text-green-600 mr-3"></i>
+                    <span class="text-gray-700">Profil bearbeiten</span>
+                  </div>
+                  <div class="flex items-center text-sm">
+                    <i class="fas fa-times-circle text-red-600 mr-3"></i>
+                    <span class="text-gray-400">Admin-Bereich</span>
+                  </div>
+                </div>
+                <div class="flex space-x-2">
+                  <button onclick="alert('Kunden-Rolle bearbeiten')" 
+                          class="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                    <i class="fas fa-edit mr-2"></i>Bearbeiten
+                  </button>
+                  <button class="px-4 py-2 bg-gray-200 text-gray-400 rounded-lg cursor-not-allowed" disabled title="Kann nicht gelöscht werden">
+                    <i class="fas fa-lock"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Permissions Matrix -->
+          <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="p-6 border-b border-gray-200">
+              <h2 class="text-xl font-bold text-gray-800">
+                <i class="fas fa-table mr-2"></i>Berechtigungsmatrix
+              </h2>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th class="px-6 py-4 text-left text-sm font-semibold text-gray-600">Berechtigung</th>
+                    <th class="px-6 py-4 text-center text-sm font-semibold text-gray-600">Administrator</th>
+                    <th class="px-6 py-4 text-center text-sm font-semibold text-gray-600">Moderator</th>
+                    <th class="px-6 py-4 text-center text-sm font-semibold text-gray-600">Kunde</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 text-sm text-gray-900">Benutzerverwaltung</td>
+                    <td class="px-6 py-4 text-center"><i class="fas fa-check-circle text-green-600 text-xl"></i></td>
+                    <td class="px-6 py-4 text-center"><i class="fas fa-times-circle text-red-600 text-xl"></i></td>
+                    <td class="px-6 py-4 text-center"><i class="fas fa-times-circle text-red-600 text-xl"></i></td>
+                  </tr>
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 text-sm text-gray-900">Produktverwaltung</td>
+                    <td class="px-6 py-4 text-center"><i class="fas fa-check-circle text-green-600 text-xl"></i></td>
+                    <td class="px-6 py-4 text-center"><i class="fas fa-check-circle text-green-600 text-xl"></i></td>
+                    <td class="px-6 py-4 text-center"><i class="fas fa-times-circle text-red-600 text-xl"></i></td>
+                  </tr>
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 text-sm text-gray-900">Bestellungen verwalten</td>
+                    <td class="px-6 py-4 text-center"><i class="fas fa-check-circle text-green-600 text-xl"></i></td>
+                    <td class="px-6 py-4 text-center"><i class="fas fa-check-circle text-green-600 text-xl"></i></td>
+                    <td class="px-6 py-4 text-center"><i class="fas fa-minus-circle text-yellow-600 text-xl" title="Nur eigene"></i></td>
+                  </tr>
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 text-sm text-gray-900">Marketing-Tools</td>
+                    <td class="px-6 py-4 text-center"><i class="fas fa-check-circle text-green-600 text-xl"></i></td>
+                    <td class="px-6 py-4 text-center"><i class="fas fa-check-circle text-green-600 text-xl"></i></td>
+                    <td class="px-6 py-4 text-center"><i class="fas fa-times-circle text-red-600 text-xl"></i></td>
+                  </tr>
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 text-sm text-gray-900">Systemeinstellungen</td>
+                    <td class="px-6 py-4 text-center"><i class="fas fa-check-circle text-green-600 text-xl"></i></td>
+                    <td class="px-6 py-4 text-center"><i class="fas fa-times-circle text-red-600 text-xl"></i></td>
+                    <td class="px-6 py-4 text-center"><i class="fas fa-times-circle text-red-600 text-xl"></i></td>
+                  </tr>
+                  <tr class="hover:bg-gray-50">
+                    <td class="px-6 py-4 text-sm text-gray-900">Berichte & Analytics</td>
+                    <td class="px-6 py-4 text-center"><i class="fas fa-check-circle text-green-600 text-xl"></i></td>
+                    <td class="px-6 py-4 text-center"><i class="fas fa-check-circle text-green-600 text-xl"></i></td>
+                    <td class="px-6 py-4 text-center"><i class="fas fa-times-circle text-red-600 text-xl"></i></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
+// PAGE 3: PERMISSIONS - /admin/users/permissions
+app.get('/admin/users/permissions', async (c) => {
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Berechtigungen - Admin - SOFTWAREKING24</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+      <style>
+        :root {
+          --navy-dark: #1e3a5f;
+          --navy: #2c5282;
+        }
+        .gradient-header {
+          background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 100%);
+        }
+        .permission-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          transition: all 0.3s ease;
+        }
+      </style>
+    </head>
+    <body class="bg-gray-50">
+      ${AdminSidebarAdvanced('/admin/users/permissions')}
+      
+      <div class="lg:ml-64 min-h-screen">
+        <div class="gradient-header text-white p-6 shadow-lg">
+          <div class="max-w-7xl mx-auto">
+            <h1 class="text-3xl font-bold mb-2">
+              <i class="fas fa-key mr-3"></i>Berechtigungsverwaltung
+            </h1>
+            <p class="text-blue-100">Granulare Zugriffsrechte definieren und zuweisen</p>
+          </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto p-6">
+          <!-- Permission Categories -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- User Management Permissions -->
+            <div class="permission-card bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-users text-purple-600 text-xl"></i>
+                </div>
+                <span class="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-semibold">5 Rechte</span>
+              </div>
+              <h3 class="text-lg font-bold text-gray-800 mb-4">Benutzerverwaltung</h3>
+              <div class="space-y-3">
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" checked class="w-5 h-5 text-purple-600 rounded">
+                  <span class="text-sm text-gray-700">Benutzer erstellen</span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" checked class="w-5 h-5 text-purple-600 rounded">
+                  <span class="text-sm text-gray-700">Benutzer bearbeiten</span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" checked class="w-5 h-5 text-purple-600 rounded">
+                  <span class="text-sm text-gray-700">Benutzer löschen</span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" checked class="w-5 h-5 text-purple-600 rounded">
+                  <span class="text-sm text-gray-700">Rollen zuweisen</span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" class="w-5 h-5 text-purple-600 rounded">
+                  <span class="text-sm text-gray-700">Benutzer sperren</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Product Management -->
+            <div class="permission-card bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-box text-blue-600 text-xl"></i>
+                </div>
+                <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">6 Rechte</span>
+              </div>
+              <h3 class="text-lg font-bold text-gray-800 mb-4">Produktverwaltung</h3>
+              <div class="space-y-3">
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" checked class="w-5 h-5 text-blue-600 rounded">
+                  <span class="text-sm text-gray-700">Produkte erstellen</span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" checked class="w-5 h-5 text-blue-600 rounded">
+                  <span class="text-sm text-gray-700">Produkte bearbeiten</span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" checked class="w-5 h-5 text-blue-600 rounded">
+                  <span class="text-sm text-gray-700">Produkte löschen</span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" checked class="w-5 h-5 text-blue-600 rounded">
+                  <span class="text-sm text-gray-700">Preise ändern</span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" class="w-5 h-5 text-blue-600 rounded">
+                  <span class="text-sm text-gray-700">Lagerbestand verwalten</span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" class="w-5 h-5 text-blue-600 rounded">
+                  <span class="text-sm text-gray-700">Kategorien verwalten</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Order Management -->
+            <div class="permission-card bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-shopping-cart text-green-600 text-xl"></i>
+                </div>
+                <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">4 Rechte</span>
+              </div>
+              <h3 class="text-lg font-bold text-gray-800 mb-4">Bestellverwaltung</h3>
+              <div class="space-y-3">
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" checked class="w-5 h-5 text-green-600 rounded">
+                  <span class="text-sm text-gray-700">Bestellungen ansehen</span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" checked class="w-5 h-5 text-green-600 rounded">
+                  <span class="text-sm text-gray-700">Status ändern</span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" checked class="w-5 h-5 text-green-600 rounded">
+                  <span class="text-sm text-gray-700">Rückerstattungen</span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" class="w-5 h-5 text-green-600 rounded">
+                  <span class="text-sm text-gray-700">Bestellungen stornieren</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Marketing -->
+            <div class="permission-card bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-bullhorn text-yellow-600 text-xl"></i>
+                </div>
+                <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">5 Rechte</span>
+              </div>
+              <h3 class="text-lg font-bold text-gray-800 mb-4">Marketing</h3>
+              <div class="space-y-3">
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" checked class="w-5 h-5 text-yellow-600 rounded">
+                  <span class="text-sm text-gray-700">Kampagnen erstellen</span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" checked class="w-5 h-5 text-yellow-600 rounded">
+                  <span class="text-sm text-gray-700">E-Mails versenden</span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" checked class="w-5 h-5 text-yellow-600 rounded">
+                  <span class="text-sm text-gray-700">Gutscheine verwalten</span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" class="w-5 h-5 text-yellow-600 rounded">
+                  <span class="text-sm text-gray-700">Analytics ansehen</span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" class="w-5 h-5 text-yellow-600 rounded">
+                  <span class="text-sm text-gray-700">SEO-Einstellungen</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Settings -->
+            <div class="permission-card bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-cog text-red-600 text-xl"></i>
+                </div>
+                <span class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">4 Rechte</span>
+              </div>
+              <h3 class="text-lg font-bold text-gray-800 mb-4">Systemeinstellungen</h3>
+              <div class="space-y-3">
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" checked class="w-5 h-5 text-red-600 rounded">
+                  <span class="text-sm text-gray-700">Shop-Einstellungen</span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" checked class="w-5 h-5 text-red-600 rounded">
+                  <span class="text-sm text-gray-700">Zahlungsmethoden</span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" class="w-5 h-5 text-red-600 rounded">
+                  <span class="text-sm text-gray-700">Datenbank-Zugriff</span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" class="w-5 h-5 text-red-600 rounded">
+                  <span class="text-sm text-gray-700">Backup & Restore</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Reports -->
+            <div class="permission-card bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-chart-bar text-indigo-600 text-xl"></i>
+                </div>
+                <span class="px-3 py-1 bg-indigo-100 text-indigo-800 rounded-full text-xs font-semibold">3 Rechte</span>
+              </div>
+              <h3 class="text-lg font-bold text-gray-800 mb-4">Berichte & Analytics</h3>
+              <div class="space-y-3">
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" checked class="w-5 h-5 text-indigo-600 rounded">
+                  <span class="text-sm text-gray-700">Verkaufsberichte</span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" checked class="w-5 h-5 text-indigo-600 rounded">
+                  <span class="text-sm text-gray-700">Kundenanalysen</span>
+                </label>
+                <label class="flex items-center space-x-3 cursor-pointer">
+                  <input type="checkbox" class="w-5 h-5 text-indigo-600 rounded">
+                  <span class="text-sm text-gray-700">Finanzberichte</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="mt-8 flex justify-end space-x-4">
+            <button onclick="window.location.href='/admin/users/roles'" 
+                    class="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors">
+              Abbrechen
+            </button>
+            <button onclick="alert('Berechtigungen gespeichert')" 
+                    class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors">
+              <i class="fas fa-save mr-2"></i>Änderungen speichern
+            </button>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
+
+// ============================================================================
+// BATCH 10 - PART 3: USER ACTIVITY & AUDIT LOGS (Pages 3-4)
+// ============================================================================
+
+// Page 3: User Activity
+app.get('/admin/users/activity', async (c) => {
+  const page = parseInt(c.req.query('page') || '1');
+  const limit = 20;
+  const offset = (page - 1) * limit;
+  const search = c.req.query('search') || '';
+  const actionType = c.req.query('action') || '';
+
+  try {
+    // Get total activity count
+    const countResult = await c.env.DB.prepare(`
+      SELECT COUNT(*) as total FROM user_activity_logs 
+      WHERE 1=1
+      ${search ? "AND (user_email LIKE ? OR action LIKE ? OR details LIKE ?)" : ''}
+      ${actionType ? "AND action = ?" : ''}
+    `)
+    .bind(...(search ? [`%${search}%`, `%${search}%`, `%${search}%`] : []), ...(actionType ? [actionType] : []))
+    .first();
+
+    const total = countResult?.total || 0;
+    const totalPages = Math.ceil(total / limit);
+
+    // Get activity logs with pagination
+    const activities = await c.env.DB.prepare(`
+      SELECT * FROM user_activity_logs 
+      WHERE 1=1
+      ${search ? "AND (user_email LIKE ? OR action LIKE ? OR details LIKE ?)" : ''}
+      ${actionType ? "AND action = ?" : ''}
+      ORDER BY created_at DESC 
+      LIMIT ? OFFSET ?
+    `)
+    .bind(...(search ? [`%${search}%`, `%${search}%`, `%${search}%`] : []), ...(actionType ? [actionType] : []), limit, offset)
+    .all();
+
+    // Get activity statistics
+    const stats = await c.env.DB.prepare(`
+      SELECT 
+        COUNT(*) as total_activities,
+        COUNT(DISTINCT user_id) as active_users,
+        SUM(CASE WHEN created_at >= datetime('now', '-1 day') THEN 1 ELSE 0 END) as today_activities,
+        SUM(CASE WHEN created_at >= datetime('now', '-7 days') THEN 1 ELSE 0 END) as week_activities
+      FROM user_activity_logs
+    `).first();
+
+    return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Benutzeraktivität - Admin - SOFTWAREKING24</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-50">
+      <div class="min-h-screen">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-blue-600 to-blue-800 text-white p-6 shadow-lg">
+          <div class="max-w-7xl mx-auto">
+            <div class="flex items-center justify-between">
+              <div>
+                <h1 class="text-3xl font-bold">Benutzeraktivität</h1>
+                <p class="text-blue-100 mt-1">Überwachen Sie alle Benutzeraktionen in Echtzeit</p>
+              </div>
+              <a href="/admin" class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors">
+                <i class="fas fa-home mr-2"></i>Dashboard
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="max-w-7xl mx-auto px-4 py-6">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-500">Gesamt Aktivitäten</p>
+                  <h3 class="text-2xl font-bold text-gray-800 mt-1">${stats?.total_activities || 0}</h3>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-history text-blue-600 text-xl"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-500">Aktive Benutzer</p>
+                  <h3 class="text-2xl font-bold text-gray-800 mt-1">${stats?.active_users || 0}</h3>
+                </div>
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-users text-green-600 text-xl"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-500">Heute</p>
+                  <h3 class="text-2xl font-bold text-gray-800 mt-1">${stats?.today_activities || 0}</h3>
+                </div>
+                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-calendar-day text-purple-600 text-xl"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-500">Diese Woche</p>
+                  <h3 class="text-2xl font-bold text-gray-800 mt-1">${stats?.week_activities || 0}</h3>
+                </div>
+                <div class="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-chart-line text-orange-600 text-xl"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <form method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Suche</label>
+                <input type="text" name="search" value="${search}" 
+                       placeholder="Benutzer, Aktion, Details..."
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Aktionstyp</label>
+                <select name="action" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                  <option value="">Alle Aktionen</option>
+                  <option value="login" ${actionType === 'login' ? 'selected' : ''}>Login</option>
+                  <option value="logout" ${actionType === 'logout' ? 'selected' : ''}>Logout</option>
+                  <option value="create" ${actionType === 'create' ? 'selected' : ''}>Erstellt</option>
+                  <option value="update" ${actionType === 'update' ? 'selected' : ''}>Aktualisiert</option>
+                  <option value="delete" ${actionType === 'delete' ? 'selected' : ''}>Gelöscht</option>
+                </select>
+              </div>
+              <div class="flex items-end">
+                <button type="submit" class="w-full px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors">
+                  <i class="fas fa-search mr-2"></i>Filtern
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Activity Timeline -->
+          <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="p-6 border-b border-gray-200">
+              <h2 class="text-xl font-bold text-gray-800">
+                <i class="fas fa-timeline mr-2 text-blue-600"></i>Aktivitäts-Timeline
+              </h2>
+            </div>
+            <div class="divide-y divide-gray-200">
+              ${activities?.results?.length ? activities.results.map((activity: any) => `
+                <div class="p-6 hover:bg-gray-50 transition-colors">
+                  <div class="flex items-start justify-between">
+                    <div class="flex items-start space-x-4 flex-1">
+                      <div class="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
+                        ${activity.user_email?.charAt(0).toUpperCase() || 'U'}
+                      </div>
+                      <div class="flex-1">
+                        <div class="flex items-center space-x-2 mb-1">
+                          <span class="font-semibold text-gray-800">${activity.user_email || 'Unbekannt'}</span>
+                          <span class="px-2 py-1 ${
+                            activity.action === 'login' ? 'bg-green-100 text-green-800' :
+                            activity.action === 'logout' ? 'bg-gray-100 text-gray-800' :
+                            activity.action === 'create' ? 'bg-blue-100 text-blue-800' :
+                            activity.action === 'update' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          } text-xs font-semibold rounded-full">${activity.action}</span>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-2">${activity.details || 'Keine Details'}</p>
+                        <div class="flex items-center space-x-4 text-xs text-gray-500">
+                          <span><i class="far fa-clock mr-1"></i>${new Date(activity.created_at).toLocaleString('de-DE')}</span>
+                          <span><i class="fas fa-network-wired mr-1"></i>${activity.ip_address || 'N/A'}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <button class="px-3 py-1 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors text-sm">
+                      Details
+                    </button>
+                  </div>
+                </div>
+              `).join('') : '<div class="p-8 text-center text-gray-500">Keine Aktivitäten gefunden</div>'}
+            </div>
+
+            <!-- Pagination -->
+            ${totalPages > 1 ? `
+            <div class="p-6 border-t border-gray-200 bg-gray-50">
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600">Seite ${page} von ${totalPages}</span>
+                <div class="flex space-x-2">
+                  ${page > 1 ? `<a href="?page=${page - 1}${search ? '&search=' + search : ''}${actionType ? '&action=' + actionType : ''}" class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Zurück</a>` : ''}
+                  ${page < totalPages ? `<a href="?page=${page + 1}${search ? '&search=' + search : ''}${actionType ? '&action=' + actionType : ''}" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">Weiter</a>` : ''}
+                </div>
+              </div>
+            </div>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `);
+  } catch (error: any) {
+    return c.html(`<h1>Fehler</h1><pre>${error.message}</pre>`, 500);
+  }
+});
+
+// Page 4: Audit Logs
+app.get('/admin/users/audit', async (c) => {
+  const page = parseInt(c.req.query('page') || '1');
+  const limit = 20;
+  const offset = (page - 1) * limit;
+  const search = c.req.query('search') || '';
+  const severity = c.req.query('severity') || '';
+
+  try {
+    // Get total audit count
+    const countResult = await c.env.DB.prepare(`
+      SELECT COUNT(*) as total FROM audit_logs 
+      WHERE 1=1
+      ${search ? "AND (user_email LIKE ? OR action LIKE ? OR resource LIKE ?)" : ''}
+      ${severity ? "AND severity = ?" : ''}
+    `)
+    .bind(...(search ? [`%${search}%`, `%${search}%`, `%${search}%`] : []), ...(severity ? [severity] : []))
+    .first();
+
+    const total = countResult?.total || 0;
+    const totalPages = Math.ceil(total / limit);
+
+    // Get audit logs with pagination
+    const audits = await c.env.DB.prepare(`
+      SELECT * FROM audit_logs 
+      WHERE 1=1
+      ${search ? "AND (user_email LIKE ? OR action LIKE ? OR resource LIKE ?)" : ''}
+      ${severity ? "AND severity = ?" : ''}
+      ORDER BY created_at DESC 
+      LIMIT ? OFFSET ?
+    `)
+    .bind(...(search ? [`%${search}%`, `%${search}%`, `%${search}%`] : []), ...(severity ? [severity] : []), limit, offset)
+    .all();
+
+    // Get audit statistics
+    const stats = await c.env.DB.prepare(`
+      SELECT 
+        COUNT(*) as total_audits,
+        SUM(CASE WHEN severity = 'critical' THEN 1 ELSE 0 END) as critical_count,
+        SUM(CASE WHEN severity = 'warning' THEN 1 ELSE 0 END) as warning_count,
+        SUM(CASE WHEN severity = 'info' THEN 1 ELSE 0 END) as info_count
+      FROM audit_logs
+    `).first();
+
+    return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Audit Logs - Admin - SOFTWAREKING24</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-50">
+      <div class="min-h-screen">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-red-600 to-red-800 text-white p-6 shadow-lg">
+          <div class="max-w-7xl mx-auto">
+            <div class="flex items-center justify-between">
+              <div>
+                <h1 class="text-3xl font-bold">Audit Logs</h1>
+                <p class="text-red-100 mt-1">Sicherheitsereignisse und kritische Aktionen</p>
+              </div>
+              <a href="/admin" class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors">
+                <i class="fas fa-home mr-2"></i>Dashboard
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="max-w-7xl mx-auto px-4 py-6">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-500">Gesamt</p>
+                  <h3 class="text-2xl font-bold text-gray-800 mt-1">${stats?.total_audits || 0}</h3>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-clipboard-list text-blue-600 text-xl"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-500">Kritisch</p>
+                  <h3 class="text-2xl font-bold text-red-600 mt-1">${stats?.critical_count || 0}</h3>
+                </div>
+                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-exclamation-triangle text-red-600 text-xl"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-500">Warnung</p>
+                  <h3 class="text-2xl font-bold text-yellow-600 mt-1">${stats?.warning_count || 0}</h3>
+                </div>
+                <div class="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-exclamation-circle text-yellow-600 text-xl"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-500">Info</p>
+                  <h3 class="text-2xl font-bold text-blue-600 mt-1">${stats?.info_count || 0}</h3>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-info-circle text-blue-600 text-xl"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <form method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Suche</label>
+                <input type="text" name="search" value="${search}" 
+                       placeholder="Benutzer, Aktion, Ressource..."
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Schweregrad</label>
+                <select name="severity" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500">
+                  <option value="">Alle</option>
+                  <option value="critical" ${severity === 'critical' ? 'selected' : ''}>Kritisch</option>
+                  <option value="warning" ${severity === 'warning' ? 'selected' : ''}>Warnung</option>
+                  <option value="info" ${severity === 'info' ? 'selected' : ''}>Info</option>
+                </select>
+              </div>
+              <div class="flex items-end">
+                <button type="submit" class="w-full px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors">
+                  <i class="fas fa-search mr-2"></i>Filtern
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Audit Log Table -->
+          <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Zeitstempel</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Benutzer</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Aktion</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Ressource</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Schweregrad</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">IP</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                  ${audits?.results?.length ? audits.results.map((audit: any) => `
+                    <tr class="hover:bg-gray-50 transition-colors">
+                      <td class="px-6 py-4 text-sm text-gray-600">
+                        ${new Date(audit.created_at).toLocaleString('de-DE')}
+                      </td>
+                      <td class="px-6 py-4 text-sm">
+                        <div class="flex items-center space-x-2">
+                          <div class="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center text-white text-xs font-semibold">
+                            ${audit.user_email?.charAt(0).toUpperCase() || 'U'}
+                          </div>
+                          <span class="font-medium text-gray-800">${audit.user_email || 'System'}</span>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 text-sm font-medium text-gray-800">${audit.action || 'N/A'}</td>
+                      <td class="px-6 py-4 text-sm text-gray-600">${audit.resource || 'N/A'}</td>
+                      <td class="px-6 py-4">
+                        <span class="px-3 py-1 ${
+                          audit.severity === 'critical' ? 'bg-red-100 text-red-800' :
+                          audit.severity === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                          'bg-blue-100 text-blue-800'
+                        } text-xs font-semibold rounded-full">${audit.severity || 'info'}</span>
+                      </td>
+                      <td class="px-6 py-4 text-sm text-gray-600">${audit.ip_address || 'N/A'}</td>
+                    </tr>
+                  `).join('') : `
+                    <tr>
+                      <td colspan="6" class="px-6 py-8 text-center text-gray-500">Keine Audit Logs gefunden</td>
+                    </tr>
+                  `}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            ${totalPages > 1 ? `
+            <div class="p-6 border-t border-gray-200 bg-gray-50">
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600">Seite ${page} von ${totalPages}</span>
+                <div class="flex space-x-2">
+                  ${page > 1 ? `<a href="?page=${page - 1}${search ? '&search=' + search : ''}${severity ? '&severity=' + severity : ''}" class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Zurück</a>` : ''}
+                  ${page < totalPages ? `<a href="?page=${page + 1}${search ? '&search=' + search : ''}${severity ? '&severity=' + severity : ''}" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">Weiter</a>` : ''}
+                </div>
+              </div>
+            </div>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `);
+  } catch (error: any) {
+    return c.html(`<h1>Fehler</h1><pre>${error.message}</pre>`, 500);
+  }
+});
+
+
+// ============================================================================
+// BATCH 10 - PART 4: SESSIONS, LOGIN HISTORY & USER GROUPS (Pages 5-7)
+// ============================================================================
+
+// Page 5: Active Sessions
+app.get('/admin/users/sessions', async (c) => {
+  const page = parseInt(c.req.query('page') || '1');
+  const limit = 20;
+  const offset = (page - 1) * limit;
+
+  try {
+    // Get total sessions count
+    const countResult = await c.env.DB.prepare(`
+      SELECT COUNT(*) as total FROM user_sessions WHERE is_active = 1
+    `).first();
+
+    const total = countResult?.total || 0;
+    const totalPages = Math.ceil(total / limit);
+
+    // Get active sessions
+    const sessions = await c.env.DB.prepare(`
+      SELECT 
+        s.*,
+        u.email as user_email,
+        u.first_name || ' ' || u.last_name as user_name
+      FROM user_sessions s
+      LEFT JOIN users u ON s.user_id = u.id
+      WHERE s.is_active = 1
+      ORDER BY s.last_activity DESC 
+      LIMIT ? OFFSET ?
+    `)
+    .bind(limit, offset)
+    .all();
+
+    // Get session statistics
+    const stats = await c.env.DB.prepare(`
+      SELECT 
+        COUNT(*) as total_sessions,
+        SUM(CASE WHEN last_activity >= datetime('now', '-5 minutes') THEN 1 ELSE 0 END) as active_now,
+        SUM(CASE WHEN last_activity >= datetime('now', '-1 hour') THEN 1 ELSE 0 END) as last_hour,
+        COUNT(DISTINCT user_id) as unique_users
+      FROM user_sessions
+      WHERE is_active = 1
+    `).first();
+
+    return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Aktive Sessions - Admin - SOFTWAREKING24</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-50">
+      <div class="min-h-screen">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-green-600 to-green-800 text-white p-6 shadow-lg">
+          <div class="max-w-7xl mx-auto">
+            <div class="flex items-center justify-between">
+              <div>
+                <h1 class="text-3xl font-bold">Aktive Sessions</h1>
+                <p class="text-green-100 mt-1">Überwachen Sie alle aktiven Benutzersessions</p>
+              </div>
+              <a href="/admin" class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors">
+                <i class="fas fa-home mr-2"></i>Dashboard
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="max-w-7xl mx-auto px-4 py-6">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-500">Gesamt Sessions</p>
+                  <h3 class="text-2xl font-bold text-gray-800 mt-1">${stats?.total_sessions || 0}</h3>
+                </div>
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-desktop text-green-600 text-xl"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-500">Aktiv Jetzt</p>
+                  <h3 class="text-2xl font-bold text-green-600 mt-1">${stats?.active_now || 0}</h3>
+                </div>
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-circle text-green-600 text-xl"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-500">Letzte Stunde</p>
+                  <h3 class="text-2xl font-bold text-gray-800 mt-1">${stats?.last_hour || 0}</h3>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-clock text-blue-600 text-xl"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-500">Unique Benutzer</p>
+                  <h3 class="text-2xl font-bold text-gray-800 mt-1">${stats?.unique_users || 0}</h3>
+                </div>
+                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-users text-purple-600 text-xl"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sessions Table -->
+          <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+              <h2 class="text-xl font-bold text-gray-800">
+                <i class="fas fa-list mr-2 text-green-600"></i>Sessions Liste
+              </h2>
+              <button onclick="alert('Alle Sessions beenden')" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold transition-colors">
+                <i class="fas fa-sign-out-alt mr-2"></i>Alle beenden
+              </button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Benutzer</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">IP Adresse</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Browser</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Erstellt</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Letzte Aktivität</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Aktionen</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                  ${sessions?.results?.length ? sessions.results.map((session: any) => `
+                    <tr class="hover:bg-gray-50 transition-colors">
+                      <td class="px-6 py-4 text-sm">
+                        <div class="flex items-center space-x-3">
+                          <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center text-white font-semibold">
+                            ${session.user_name?.charAt(0).toUpperCase() || 'U'}
+                          </div>
+                          <div>
+                            <div class="font-medium text-gray-800">${session.user_name || 'Unknown User'}</div>
+                            <div class="text-xs text-gray-500">${session.user_email || 'N/A'}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 text-sm text-gray-600">${session.ip_address || 'N/A'}</td>
+                      <td class="px-6 py-4 text-sm text-gray-600">
+                        <div class="max-w-xs truncate">${session.user_agent || 'Unknown'}</div>
+                      </td>
+                      <td class="px-6 py-4 text-sm text-gray-600">
+                        ${new Date(session.created_at).toLocaleString('de-DE')}
+                      </td>
+                      <td class="px-6 py-4 text-sm text-gray-600">
+                        ${new Date(session.last_activity).toLocaleString('de-DE')}
+                      </td>
+                      <td class="px-6 py-4">
+                        <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
+                          <i class="fas fa-circle text-xs mr-1"></i>Aktiv
+                        </span>
+                      </td>
+                      <td class="px-6 py-4">
+                        <button onclick="alert('Session beenden: ${session.id}')" 
+                                class="px-3 py-1 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-sm">
+                          <i class="fas fa-sign-out-alt"></i> Beenden
+                        </button>
+                      </td>
+                    </tr>
+                  `).join('') : `
+                    <tr>
+                      <td colspan="7" class="px-6 py-8 text-center text-gray-500">Keine aktiven Sessions gefunden</td>
+                    </tr>
+                  `}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            ${totalPages > 1 ? `
+            <div class="p-6 border-t border-gray-200 bg-gray-50">
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600">Seite ${page} von ${totalPages}</span>
+                <div class="flex space-x-2">
+                  ${page > 1 ? `<a href="?page=${page - 1}" class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Zurück</a>` : ''}
+                  ${page < totalPages ? `<a href="?page=${page + 1}" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">Weiter</a>` : ''}
+                </div>
+              </div>
+            </div>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `);
+  } catch (error: any) {
+    return c.html(`<h1>Fehler</h1><pre>${error.message}</pre>`, 500);
+  }
+});
+
+// Page 6: Login History
+app.get('/admin/users/login-history', async (c) => {
+  const page = parseInt(c.req.query('page') || '1');
+  const limit = 20;
+  const offset = (page - 1) * limit;
+  const search = c.req.query('search') || '';
+  const status = c.req.query('status') || '';
+
+  try {
+    // Get total login history count
+    const countResult = await c.env.DB.prepare(`
+      SELECT COUNT(*) as total FROM login_history 
+      WHERE 1=1
+      ${search ? "AND (user_email LIKE ? OR ip_address LIKE ?)" : ''}
+      ${status ? "AND status = ?" : ''}
+    `)
+    .bind(...(search ? [`%${search}%`, `%${search}%`] : []), ...(status ? [status] : []))
+    .first();
+
+    const total = countResult?.total || 0;
+    const totalPages = Math.ceil(total / limit);
+
+    // Get login history
+    const logins = await c.env.DB.prepare(`
+      SELECT * FROM login_history 
+      WHERE 1=1
+      ${search ? "AND (user_email LIKE ? OR ip_address LIKE ?)" : ''}
+      ${status ? "AND status = ?" : ''}
+      ORDER BY created_at DESC 
+      LIMIT ? OFFSET ?
+    `)
+    .bind(...(search ? [`%${search}%`, `%${search}%`] : []), ...(status ? [status] : []), limit, offset)
+    .all();
+
+    // Get login statistics
+    const stats = await c.env.DB.prepare(`
+      SELECT 
+        COUNT(*) as total_logins,
+        SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) as successful_logins,
+        SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed_logins,
+        SUM(CASE WHEN created_at >= datetime('now', '-1 day') THEN 1 ELSE 0 END) as today_logins
+      FROM login_history
+    `).first();
+
+    return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Login Verlauf - Admin - SOFTWAREKING24</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-50">
+      <div class="min-h-screen">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-purple-600 to-purple-800 text-white p-6 shadow-lg">
+          <div class="max-w-7xl mx-auto">
+            <div class="flex items-center justify-between">
+              <div>
+                <h1 class="text-3xl font-bold">Login Verlauf</h1>
+                <p class="text-purple-100 mt-1">Alle Login-Versuche und Authentifizierungen</p>
+              </div>
+              <a href="/admin" class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors">
+                <i class="fas fa-home mr-2"></i>Dashboard
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="max-w-7xl mx-auto px-4 py-6">
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-500">Gesamt Logins</p>
+                  <h3 class="text-2xl font-bold text-gray-800 mt-1">${stats?.total_logins || 0}</h3>
+                </div>
+                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-sign-in-alt text-purple-600 text-xl"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-500">Erfolgreich</p>
+                  <h3 class="text-2xl font-bold text-green-600 mt-1">${stats?.successful_logins || 0}</h3>
+                </div>
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-500">Fehlgeschlagen</p>
+                  <h3 class="text-2xl font-bold text-red-600 mt-1">${stats?.failed_logins || 0}</h3>
+                </div>
+                <div class="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-times-circle text-red-600 text-xl"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-500">Heute</p>
+                  <h3 class="text-2xl font-bold text-gray-800 mt-1">${stats?.today_logins || 0}</h3>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-calendar-day text-blue-600 text-xl"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filters -->
+          <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+            <form method="GET" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Suche</label>
+                <input type="text" name="search" value="${search}" 
+                       placeholder="E-Mail oder IP-Adresse..."
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select name="status" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                  <option value="">Alle</option>
+                  <option value="success" ${status === 'success' ? 'selected' : ''}>Erfolgreich</option>
+                  <option value="failed" ${status === 'failed' ? 'selected' : ''}>Fehlgeschlagen</option>
+                </select>
+              </div>
+              <div class="flex items-end">
+                <button type="submit" class="w-full px-6 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition-colors">
+                  <i class="fas fa-search mr-2"></i>Filtern
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Login History Table -->
+          <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="overflow-x-auto">
+              <table class="w-full">
+                <thead class="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Zeitstempel</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Benutzer</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">IP Adresse</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Browser</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Grund</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                  ${logins?.results?.length ? logins.results.map((login: any) => `
+                    <tr class="hover:bg-gray-50 transition-colors">
+                      <td class="px-6 py-4 text-sm text-gray-600">
+                        ${new Date(login.created_at).toLocaleString('de-DE')}
+                      </td>
+                      <td class="px-6 py-4 text-sm">
+                        <div class="flex items-center space-x-2">
+                          <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center text-white text-xs font-semibold">
+                            ${login.user_email?.charAt(0).toUpperCase() || 'U'}
+                          </div>
+                          <span class="font-medium text-gray-800">${login.user_email || 'Unknown'}</span>
+                        </div>
+                      </td>
+                      <td class="px-6 py-4 text-sm text-gray-600">${login.ip_address || 'N/A'}</td>
+                      <td class="px-6 py-4 text-sm text-gray-600">
+                        <div class="max-w-xs truncate">${login.user_agent || 'Unknown'}</div>
+                      </td>
+                      <td class="px-6 py-4">
+                        <span class="px-3 py-1 ${login.status === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} text-xs font-semibold rounded-full">
+                          <i class="fas ${login.status === 'success' ? 'fa-check' : 'fa-times'} mr-1"></i>
+                          ${login.status === 'success' ? 'Erfolgreich' : 'Fehlgeschlagen'}
+                        </span>
+                      </td>
+                      <td class="px-6 py-4 text-sm text-gray-600">${login.failure_reason || '-'}</td>
+                    </tr>
+                  `).join('') : `
+                    <tr>
+                      <td colspan="6" class="px-6 py-8 text-center text-gray-500">Kein Login Verlauf gefunden</td>
+                    </tr>
+                  `}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Pagination -->
+            ${totalPages > 1 ? `
+            <div class="p-6 border-t border-gray-200 bg-gray-50">
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-gray-600">Seite ${page} von ${totalPages}</span>
+                <div class="flex space-x-2">
+                  ${page > 1 ? `<a href="?page=${page - 1}${search ? '&search=' + search : ''}${status ? '&status=' + status : ''}" class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">Zurück</a>` : ''}
+                  ${page < totalPages ? `<a href="?page=${page + 1}${search ? '&search=' + search : ''}${status ? '&status=' + status : ''}" class="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors">Weiter</a>` : ''}
+                </div>
+              </div>
+            </div>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `);
+  } catch (error: any) {
+    return c.html(`<h1>Fehler</h1><pre>${error.message}</pre>`, 500);
+  }
+});
+
+// Page 7: User Groups
+app.get('/admin/users/groups', async (c) => {
+  try {
+    // Get user groups with member counts
+    const groups = await c.env.DB.prepare(`
+      SELECT 
+        g.*,
+        COUNT(DISTINCT ug.user_id) as member_count
+      FROM user_groups g
+      LEFT JOIN user_group_members ug ON g.id = ug.group_id
+      GROUP BY g.id
+      ORDER BY g.name ASC
+    `).all();
+
+    // Get statistics
+    const stats = await c.env.DB.prepare(`
+      SELECT 
+        COUNT(DISTINCT g.id) as total_groups,
+        COUNT(DISTINCT ugm.user_id) as users_in_groups,
+        MAX(member_counts.count) as largest_group
+      FROM user_groups g
+      LEFT JOIN user_group_members ugm ON g.id = ugm.group_id
+      LEFT JOIN (
+        SELECT group_id, COUNT(*) as count
+        FROM user_group_members
+        GROUP BY group_id
+      ) member_counts ON g.id = member_counts.group_id
+    `).first();
+
+    return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Benutzergruppen - Admin - SOFTWAREKING24</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-50">
+      <div class="min-h-screen">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-indigo-600 to-indigo-800 text-white p-6 shadow-lg">
+          <div class="max-w-7xl mx-auto">
+            <div class="flex items-center justify-between">
+              <div>
+                <h1 class="text-3xl font-bold">Benutzergruppen</h1>
+                <p class="text-indigo-100 mt-1">Verwalten Sie Benutzergruppen und Mitgliedschaften</p>
+              </div>
+              <div class="flex space-x-3">
+                <button onclick="alert('Neue Gruppe erstellen')" 
+                        class="px-4 py-2 bg-white text-indigo-600 hover:bg-indigo-50 rounded-lg font-semibold transition-colors">
+                  <i class="fas fa-plus mr-2"></i>Neue Gruppe
+                </button>
+                <a href="/admin" class="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg transition-colors">
+                  <i class="fas fa-home mr-2"></i>Dashboard
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="max-w-7xl mx-auto px-4 py-6">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-500">Gesamt Gruppen</p>
+                  <h3 class="text-2xl font-bold text-gray-800 mt-1">${stats?.total_groups || 0}</h3>
+                </div>
+                <div class="w-12 h-12 bg-indigo-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-layer-group text-indigo-600 text-xl"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-500">Benutzer in Gruppen</p>
+                  <h3 class="text-2xl font-bold text-gray-800 mt-1">${stats?.users_in_groups || 0}</h3>
+                </div>
+                <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-users text-green-600 text-xl"></i>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between">
+                <div>
+                  <p class="text-sm text-gray-500">Größte Gruppe</p>
+                  <h3 class="text-2xl font-bold text-gray-800 mt-1">${stats?.largest_group || 0}</h3>
+                </div>
+                <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                  <i class="fas fa-crown text-purple-600 text-xl"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Groups Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            ${groups?.results?.length ? groups.results.map((group: any) => `
+              <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+                <div class="p-6">
+                  <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                      <div class="flex items-center space-x-3 mb-2">
+                        <div class="w-12 h-12 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-lg flex items-center justify-center text-white text-xl">
+                          <i class="fas ${group.icon || 'fa-users'}"></i>
+                        </div>
+                        <div>
+                          <h3 class="text-lg font-bold text-gray-800">${group.name}</h3>
+                          <span class="px-2 py-1 ${group.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'} text-xs font-semibold rounded-full">
+                            ${group.is_active ? 'Aktiv' : 'Inaktiv'}
+                          </span>
+                        </div>
+                      </div>
+                      <p class="text-sm text-gray-600 mb-4">${group.description || 'Keine Beschreibung'}</p>
+                    </div>
+                  </div>
+
+                  <!-- Stats -->
+                  <div class="grid grid-cols-2 gap-4 mb-4 pb-4 border-b border-gray-200">
+                    <div class="text-center">
+                      <div class="text-2xl font-bold text-indigo-600">${group.member_count || 0}</div>
+                      <div class="text-xs text-gray-500">Mitglieder</div>
+                    </div>
+                    <div class="text-center">
+                      <div class="text-2xl font-bold text-green-600">${group.permissions_count || 0}</div>
+                      <div class="text-xs text-gray-500">Berechtigungen</div>
+                    </div>
+                  </div>
+
+                  <!-- Actions -->
+                  <div class="flex space-x-2">
+                    <button onclick="alert('Gruppe bearbeiten: ${group.id}')" 
+                            class="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-lg transition-colors">
+                      <i class="fas fa-edit mr-1"></i>Bearbeiten
+                    </button>
+                    <button onclick="alert('Mitglieder verwalten: ${group.id}')" 
+                            class="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm rounded-lg transition-colors">
+                      <i class="fas fa-users mr-1"></i>Mitglieder
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `).join('') : `
+              <div class="col-span-full bg-white rounded-xl shadow-md p-12 text-center">
+                <i class="fas fa-layer-group text-6xl text-gray-300 mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-600 mb-2">Keine Gruppen vorhanden</h3>
+                <p class="text-gray-500 mb-6">Erstellen Sie Ihre erste Benutzergruppe</p>
+                <button onclick="alert('Neue Gruppe erstellen')" 
+                        class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-colors">
+                  <i class="fas fa-plus mr-2"></i>Erste Gruppe erstellen
+                </button>
+              </div>
+            `}
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `);
+  } catch (error: any) {
+    return c.html(`<h1>Fehler</h1><pre>${error.message}</pre>`, 500);
+  }
+});
+
+
 // Universal placeholder for all unimplemented admin routes
 app.get('/admin/*', (c) => {
   const path = c.req.path;
