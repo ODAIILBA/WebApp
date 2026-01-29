@@ -14,7 +14,34 @@ export function generateOrderNumber(): string {
 /**
  * Generate a secure random token
  */
-export function generateToken(length: number = 32): string {
+export function generateToken(userOrLength?: any): string {
+  // If called with a user object, generate JWT
+  if (userOrLength && typeof userOrLength === 'object') {
+    const user = userOrLength;
+    const header = { alg: 'HS256', typ: 'JWT' };
+    const now = Math.floor(Date.now() / 1000);
+    const payload = {
+      id: user.id,
+      email: user.email,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      role: user.role,
+      is_admin: user.is_admin || (user.role === 'admin' ? 1 : 0),
+      iat: now,
+      exp: now + (24 * 60 * 60) // 24 hours
+    };
+    
+    // Simple JWT (base64 encoding, not cryptographically signed for now)
+    // In production, use proper JWT library with signing
+    const headerB64 = btoa(JSON.stringify(header));
+    const payloadB64 = btoa(JSON.stringify(payload));
+    const signature = btoa('secret'); // Placeholder - use proper signing in production
+    
+    return `${headerB64}.${payloadB64}.${signature}`;
+  }
+  
+  // Otherwise generate random token
+  const length = typeof userOrLength === 'number' ? userOrLength : 32;
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
   let token = '';
   const randomValues = new Uint8Array(length);

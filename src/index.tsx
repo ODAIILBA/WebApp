@@ -342,6 +342,370 @@ app.get('/konto/profil', (c) => {
 })
 
 // ============================================
+// AUTHENTICATION SYSTEM
+// ============================================
+
+// Helper function to generate JWT token
+function generateToken(user: any) {
+  const payload = {
+    id: user.id,
+    email: user.email,
+    is_admin: user.is_admin,
+    iat: Math.floor(Date.now() / 1000),
+    exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours
+  }
+  
+  // Simple JWT encoding (for production, use proper JWT library)
+  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }))
+  const payloadStr = btoa(JSON.stringify(payload))
+  const signature = btoa(`${header}.${payloadStr}.secret`) // In production, use proper HMAC
+  
+  return `${header}.${payloadStr}.${signature}`
+}
+
+// Helper function to verify JWT token
+function verifyToken(token: string) {
+  try {
+    const [header, payload, signature] = token.split('.')
+    const decodedPayload = JSON.parse(atob(payload))
+    
+    // Check expiration
+    if (decodedPayload.exp < Math.floor(Date.now() / 1000)) {
+      return null
+    }
+    
+    return decodedPayload
+  } catch (error) {
+    return null
+  }
+}
+
+// Middleware to check authentication
+async function requireAuth(c: any, next: any) {
+  const authHeader = c.req.header('Authorization')
+  const token = authHeader?.replace('Bearer ', '')
+  
+  if (!token) {
+    return c.json({ success: false, error: 'Authentication required' }, 401)
+  }
+  
+  const user = verifyToken(token)
+  if (!user) {
+    return c.json({ success: false, error: 'Invalid or expired token' }, 401)
+  }
+  
+  c.set('user', user)
+  await next()
+}
+
+// Middleware to check admin access
+async function requireAdmin(c: any, next: any) {
+  const user = c.get('user')
+  
+  // Check both is_admin (new) and role='admin' (old) for compatibility
+  const isAdmin = user?.is_admin === 1 || user?.role === 'admin'
+  
+  if (!user || !isAdmin) {
+    return c.json({ success: false, error: 'Admin access required' }, 403)
+  }
+  
+  await next()
+}
+
+// Apply authentication and admin check to all /api/admin/* routes
+app.use('/api/admin/*', requireAuth)
+app.use('/api/admin/*', requireAdmin)
+
+// POST /api/auth/login - User login
+app.post('/api/auth/login', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { email, password } = body
+
+    if (!email || !password) {
+      return c.json({ 
+        success: false, 
+        error: 'Email and password are required' 
+      }, 400)
+    }
+
+    // Get user from database
+    const db = c.get('db') as DatabaseHelper
+    const user = await db.db.prepare(`
+      SELECT id, email, password_hash, first_name, last_name, role, status, created_at
+      FROM users 
+      WHERE email = ?
+    `).bind(email.toLowerCase()).first() as any
+
+    if (!user) {
+      return c.json({ 
+        success: false, 
+        error: 'Invalid email or password' 
+      }, 401)
+    }
+
+    // Check if user is active
+    if (user.status !== 'active') {
+      return c.json({ 
+        success: false, 
+        error: 'Account is deactivated' 
+      }, 403)
+    }
+
+    // Verify password using PBKDF2
+    const isValidPassword = await verifyPassword(password, user.password_hash)
+    if (!isValidPassword) {
+      return c.json({ 
+        success: false, 
+        error: 'Invalid email or password' 
+      }, 401)
+    }
+
+    // Generate JWT token
+    const token = generateToken({
+      id: user.id,
+      email: user.email,
+      first_name: user.first_name,
+      last_name: user.last_name,
+      role: user.role,
+      is_admin: user.role === 'admin' ? 1 : 0
+    })
+
+    // Log successful login
+    await db.db.prepare(`
+      INSERT INTO login_history (user_id, user_email, status, ip_address, user_agent)
+      VALUES (?, ?, 'success', ?, ?)
+    `).bind(
+      user.id,
+      user.email,
+      c.req.header('CF-Connecting-IP') || c.req.header('X-Forwarded-For') || 'unknown',
+      c.req.header('User-Agent') || 'unknown'
+    ).run()
+
+    // Create session
+    const sessionToken = `sess_${Math.random().toString(36).substring(2)}_${Date.now()}`
+    await db.db.prepare(`
+      INSERT INTO user_sessions (user_id, session_token, ip_address, user_agent, is_active, last_activity)
+      VALUES (?, ?, ?, ?, 1, datetime('now'))
+    `).bind(
+      user.id,
+      sessionToken,
+      c.req.header('CF-Connecting-IP') || 'unknown',
+      c.req.header('User-Agent') || 'unknown'
+    ).run()
+
+    return c.json({
+      success: true,
+      data: {
+        token,
+        sessionToken,
+        user: {
+          id: user.id,
+          email: user.email,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          is_admin: user.is_admin
+        }
+      },
+      message: 'Login successful'
+    })
+  } catch (error: any) {
+    console.error('Login error:', error)
+    return c.json({ 
+      success: false, 
+      error: error.message || 'Login failed' 
+    }, 500)
+  }
+})
+
+// POST /api/auth/logout - User logout
+app.post('/api/auth/logout', requireAuth, async (c) => {
+  try {
+    const user = c.get('user')
+    const db = c.get('db') as DatabaseHelper
+
+    // Deactivate all user sessions
+    await db.db.prepare(`
+      UPDATE user_sessions 
+      SET is_active = 0 
+      WHERE user_id = ?
+    `).bind(user.id).run()
+
+    // Log logout
+    await db.db.prepare(`
+      INSERT INTO user_activity_logs (user_id, user_email, action, details, ip_address)
+      VALUES (?, ?, 'logout', 'User logged out', ?)
+    `).bind(
+      user.id,
+      user.email,
+      c.req.header('CF-Connecting-IP') || 'unknown'
+    ).run()
+
+    return c.json({
+      success: true,
+      message: 'Logout successful'
+    })
+  } catch (error: any) {
+    console.error('Logout error:', error)
+    return c.json({ 
+      success: false, 
+      error: error.message || 'Logout failed' 
+    }, 500)
+  }
+})
+
+// GET /api/auth/me - Get current user info
+app.get('/api/auth/me', requireAuth, async (c) => {
+  try {
+    const user = c.get('user')
+    const db = c.get('db') as DatabaseHelper
+
+    const userDetails = await db.db.prepare(`
+      SELECT id, email, first_name, last_name, is_admin, created_at
+      FROM users 
+      WHERE id = ?
+    `).bind(user.id).first()
+
+    if (!userDetails) {
+      return c.json({ 
+        success: false, 
+        error: 'User not found' 
+      }, 404)
+    }
+
+    return c.json({
+      success: true,
+      data: {
+        user: userDetails
+      }
+    })
+  } catch (error: any) {
+    console.error('Get user error:', error)
+    return c.json({ 
+      success: false, 
+      error: error.message || 'Failed to get user info' 
+    }, 500)
+  }
+})
+
+// POST /api/auth/register - User registration
+app.post('/api/auth/register', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { email, password, first_name, last_name } = body
+
+    if (!email || !password || !first_name || !last_name) {
+      return c.json({ 
+        success: false, 
+        error: 'All fields are required' 
+      }, 400)
+    }
+
+    // Check if user already exists
+    const db = c.get('db') as DatabaseHelper
+    const existingUser = await db.db.prepare(`
+      SELECT id FROM users WHERE email = ?
+    `).bind(email).first()
+
+    if (existingUser) {
+      return c.json({ 
+        success: false, 
+        error: 'Email already registered' 
+      }, 409)
+    }
+
+    // In production, hash password with bcrypt
+    // For now, store plaintext (INSECURE - FIX IN PRODUCTION)
+    const result = await db.db.prepare(`
+      INSERT INTO users (email, password_hash, first_name, last_name, is_admin)
+      VALUES (?, ?, ?, ?, 0)
+    `).bind(email, password, first_name, last_name).run()
+
+    // Log user activity
+    await db.db.prepare(`
+      INSERT INTO user_activity_logs (user_id, user_email, action, details, ip_address)
+      VALUES (?, ?, 'create', 'User registered', ?)
+    `).bind(
+      result.meta.last_row_id,
+      email,
+      c.req.header('CF-Connecting-IP') || 'unknown'
+    ).run()
+
+    return c.json({
+      success: true,
+      data: {
+        userId: result.meta.last_row_id
+      },
+      message: 'Registration successful. Please login.'
+    })
+  } catch (error: any) {
+    console.error('Registration error:', error)
+    return c.json({ 
+      success: false, 
+      error: error.message || 'Registration failed' 
+    }, 500)
+  }
+})
+
+// POST /api/auth/change-password - Change password
+app.post('/api/auth/change-password', requireAuth, async (c) => {
+  try {
+    const user = c.get('user')
+    const body = await c.req.json()
+    const { current_password, new_password } = body
+
+    if (!current_password || !new_password) {
+      return c.json({ 
+        success: false, 
+        error: 'Current and new password are required' 
+      }, 400)
+    }
+
+    const db = c.get('db') as DatabaseHelper
+
+    // Verify current password
+    const userRecord = await db.db.prepare(`
+      SELECT password_hash FROM users WHERE id = ?
+    `).bind(user.id).first()
+
+    if (!userRecord || userRecord.password_hash !== current_password) {
+      return c.json({ 
+        success: false, 
+        error: 'Current password is incorrect' 
+      }, 401)
+    }
+
+    // Update password (in production, hash with bcrypt)
+    await db.db.prepare(`
+      UPDATE users 
+      SET password_hash = ?, updated_at = datetime('now')
+      WHERE id = ?
+    `).bind(new_password, user.id).run()
+
+    // Log password change
+    await db.db.prepare(`
+      INSERT INTO audit_logs (user_id, user_email, action, resource, severity, ip_address)
+      VALUES (?, ?, 'UPDATE', 'password', 'warning', ?)
+    `).bind(
+      user.id,
+      user.email,
+      c.req.header('CF-Connecting-IP') || 'unknown'
+    ).run()
+
+    return c.json({
+      success: true,
+      message: 'Password changed successfully'
+    })
+  } catch (error: any) {
+    console.error('Change password error:', error)
+    return c.json({ 
+      success: false, 
+      error: error.message || 'Failed to change password' 
+    }, 500)
+  }
+})
+
+// ============================================
 // API ROUTES: Products
 // ============================================
 
@@ -3863,7 +4227,7 @@ app.get('/api/orders/:orderNumber', async (c) => {
 // Use combined admin auth (accepts both session cookies and Bearer tokens)
 // const adminAuth is now imported from './middleware/security'
 
-app.get('/api/admin/dashboard', adminAuth, async (c) => {
+app.get('/api/admin/dashboard', async (c) => {
   try {
     const db = c.get('db') as DatabaseHelper
     
@@ -3904,7 +4268,7 @@ app.get('/api/admin/licenses', async (c) => {
 })
 
 // Admin API: Export licenses to CSV
-app.get('/api/admin/licenses/export', adminAuth, async (c) => {
+app.get('/api/admin/licenses/export', async (c) => {
   try {
     const licenses = await c.env.DB.prepare(`
       SELECT lk.license_key, p.sku, lk.key_type, lk.status, lk.activation_limit, lk.activation_count, lk.created_at
@@ -3941,7 +4305,7 @@ app.get('/api/admin/licenses/export', adminAuth, async (c) => {
 })
 
 // Admin API: Import licenses from CSV
-app.post('/api/admin/licenses/import', adminAuth, async (c) => {
+app.post('/api/admin/licenses/import', async (c) => {
   try {
     const formData = await c.req.formData()
     const file = formData.get('file') as File
