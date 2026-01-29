@@ -21,7 +21,10 @@ import { UserDashboard } from './components/dashboard-overview'
 import { UserOrders } from './components/dashboard-orders'
 import { DashboardPage } from './components/dashboard'
 import { ContactPage } from './components/contact-page'
+import { CMSPage } from './components/cms-page'
 import { AdminContactMessages } from './components/admin-contact-messages'
+import { AdminFooterSettings } from './components/admin-footer-settings'
+import { AdminPagesManagement } from './components/admin-pages-management'
 import { 
   formatPrice, 
   generateOrderNumber, 
@@ -2066,6 +2069,16 @@ app.get('/admin/contact', (c) => {
   return c.html(AdminContactMessages())
 })
 
+// Footer Management
+app.get('/admin/footer', (c) => {
+  return c.html(AdminFooterSettings())
+})
+
+// Pages Management
+app.get('/admin/pages', (c) => {
+  return c.html(AdminPagesManagement())
+})
+
 // Settings
 app.get('/admin/settings', (c) => {
   return c.html(
@@ -2290,6 +2303,69 @@ app.get('/faq', (c) => {
 // Über Uns (About Us) Page
 app.get('/ueber-uns', (c) => {
   return c.html(<UeberUnsPage />)
+})
+
+// CMS Pages - Dynamic routes
+app.get('/agb', (c) => {
+  return c.html(<CMSPage slug="agb" />)
+})
+
+app.get('/datenschutz', (c) => {
+  return c.html(<CMSPage slug="datenschutz" />)
+})
+
+app.get('/impressum', (c) => {
+  return c.html(<CMSPage slug="impressum" />)
+})
+
+app.get('/versand', (c) => {
+  return c.html(<CMSPage slug="versand" />)
+})
+
+app.get('/widerruf', (c) => {
+  return c.html(<CMSPage slug="widerruf" />)
+})
+
+app.get('/zahlung', (c) => {
+  return c.html(<CMSPage slug="zahlung" />)
+})
+
+app.get('/cookies', (c) => {
+  return c.html(<CMSPage slug="cookies" />)
+})
+
+// ============================================
+// PUBLIC API: CMS Pages
+// ============================================
+
+// Get page by slug (public)
+app.get('/api/pages/:slug', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const slug = c.req.param('slug')
+    
+    const page = await db.db.prepare(`
+      SELECT 
+        p.id,
+        p.slug,
+        p.page_type,
+        p.is_active,
+        pt.title,
+        pt.content
+      FROM pages p
+      LEFT JOIN page_translations pt ON p.id = pt.page_id AND pt.language = 'de'
+      WHERE p.slug = ? AND p.is_active = 1
+    `).bind(slug).first()
+
+    if (!page) {
+      return c.json({ success: false, error: 'Page not found' }, 404)
+    }
+
+    return c.json({ success: true, data: page })
+  } catch (error) {
+    console.error('Error fetching page:', error)
+    return c.json({ success: false, error: 'Failed to fetch page' }, 500)
+  }
 })
 
 // ============================================
@@ -3187,6 +3263,204 @@ app.delete('/api/admin/contact-messages/:id', async (c) => {
       success: false, 
       error: 'Failed to delete contact message' 
     }, 500)
+  }
+})
+
+// ============================================
+// API ROUTES: Footer Settings
+// ============================================
+
+// Get all footer settings
+app.get('/api/admin/footer-settings', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const settings = await db.db.prepare(`
+      SELECT * FROM footer_settings WHERE is_active = 1 ORDER BY sort_order ASC
+    `).all()
+
+    return c.json({ success: true, data: settings.results })
+  } catch (error) {
+    console.error('Error fetching footer settings:', error)
+    return c.json({ success: false, error: 'Failed to fetch footer settings' }, 500)
+  }
+})
+
+// Update footer setting
+app.patch('/api/admin/footer-settings/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+    const body = await c.req.json()
+
+    const updates = []
+    const params = []
+
+    if (body.section_title !== undefined) {
+      updates.push('section_title = ?')
+      params.push(body.section_title)
+    }
+    if (body.content !== undefined) {
+      updates.push('content = ?')
+      params.push(body.content)
+    }
+    if (body.links !== undefined) {
+      updates.push('links = ?')
+      params.push(typeof body.links === 'string' ? body.links : JSON.stringify(body.links))
+    }
+    if (body.is_active !== undefined) {
+      updates.push('is_active = ?')
+      params.push(body.is_active)
+    }
+    
+    updates.push('updated_at = CURRENT_TIMESTAMP')
+    params.push(id)
+
+    if (updates.length === 0) {
+      return c.json({ success: false, error: 'No fields to update' }, 400)
+    }
+
+    await db.db.prepare(`
+      UPDATE footer_settings
+      SET ${updates.join(', ')}
+      WHERE id = ?
+    `).bind(...params).run()
+
+    return c.json({ success: true, message: 'Footer setting updated successfully' })
+  } catch (error) {
+    console.error('Error updating footer setting:', error)
+    return c.json({ success: false, error: 'Failed to update footer setting' }, 500)
+  }
+})
+
+// ============================================
+// API ROUTES: Pages Management
+// ============================================
+
+// Get all pages
+app.get('/api/admin/pages', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const pages = await db.db.prepare(`
+      SELECT 
+        p.id,
+        p.slug,
+        p.page_type,
+        p.is_active,
+        p.created_at,
+        p.updated_at,
+        pt.title,
+        pt.content
+      FROM pages p
+      LEFT JOIN page_translations pt ON p.id = pt.page_id AND pt.language = 'de'
+      ORDER BY p.created_at DESC
+    `).all()
+
+    return c.json({ success: true, data: pages.results })
+  } catch (error) {
+    console.error('Error fetching pages:', error)
+    return c.json({ success: false, error: 'Failed to fetch pages' }, 500)
+  }
+})
+
+// Get single page
+app.get('/api/admin/pages/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+    
+    const page = await db.db.prepare(`
+      SELECT 
+        p.id,
+        p.slug,
+        p.page_type,
+        p.is_active,
+        pt.title,
+        pt.content
+      FROM pages p
+      LEFT JOIN page_translations pt ON p.id = pt.page_id AND pt.language = 'de'
+      WHERE p.id = ?
+    `).bind(id).first()
+
+    return c.json({ success: true, data: page })
+  } catch (error) {
+    console.error('Error fetching page:', error)
+    return c.json({ success: false, error: 'Failed to fetch page' }, 500)
+  }
+})
+
+// Create page
+app.post('/api/admin/pages', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const body = await c.req.json()
+
+    // Insert page
+    const result = await db.db.prepare(`
+      INSERT INTO pages (slug, page_type, is_active)
+      VALUES (?, ?, ?)
+    `).bind(body.slug, body.page_type || 'cms', body.is_active || 1).run()
+
+    // Insert translation
+    await db.db.prepare(`
+      INSERT INTO page_translations (page_id, language, title, content, meta_description)
+      VALUES (?, 'de', ?, ?, ?)
+    `).bind(result.meta.last_row_id, body.title, body.content, body.title).run()
+
+    return c.json({ success: true, message: 'Page created successfully', id: result.meta.last_row_id })
+  } catch (error) {
+    console.error('Error creating page:', error)
+    return c.json({ success: false, error: 'Failed to create page' }, 500)
+  }
+})
+
+// Update page
+app.patch('/api/admin/pages/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+    const body = await c.req.json()
+
+    // Update page
+    await db.db.prepare(`
+      UPDATE pages
+      SET slug = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(body.slug, body.is_active, id).run()
+
+    // Update translation
+    await db.db.prepare(`
+      UPDATE page_translations
+      SET title = ?, content = ?
+      WHERE page_id = ? AND language = 'de'
+    `).bind(body.title, body.content, id).run()
+
+    return c.json({ success: true, message: 'Page updated successfully' })
+  } catch (error) {
+    console.error('Error updating page:', error)
+    return c.json({ success: false, error: 'Failed to update page' }, 500)
+  }
+})
+
+// Delete page
+app.delete('/api/admin/pages/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+
+    // Delete translations
+    await db.db.prepare(`
+      DELETE FROM page_translations WHERE page_id = ?
+    `).bind(id).run()
+
+    // Delete page
+    await db.db.prepare(`
+      DELETE FROM pages WHERE id = ?
+    `).bind(id).run()
+
+    return c.json({ success: true, message: 'Page deleted successfully' })
+  } catch (error) {
+    console.error('Error deleting page:', error)
+    return c.json({ success: false, error: 'Failed to delete page' }, 500)
   }
 })
 
