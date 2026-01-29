@@ -680,6 +680,319 @@ app.get('/api/admin/products/stats', async (c) => {
   }
 })
 
+// ============================================
+// PRODUCTS CRUD API ENDPOINTS
+// ============================================
+
+// CREATE: Add new product
+app.post('/api/admin/products', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const body = await c.req.json()
+
+    // Validation
+    if (!body.sku || !body.category_id || !body.slug || !body.base_price) {
+      return c.json({ 
+        success: false, 
+        error: 'Missing required fields: sku, category_id, slug, base_price' 
+      }, 400)
+    }
+
+    // Insert product (core fields only)
+    const result = await db.db.prepare(`
+      INSERT INTO products (
+        sku, category_id, brand_id, slug, product_type,
+        base_price, discount_price, discount_percentage, vat_rate,
+        stock_type, available_licenses, license_type, license_duration,
+        delivery_type, activation_limit, is_featured, is_new, is_active
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      body.sku,
+      body.category_id,
+      body.brand_id || null,
+      body.slug,
+      body.product_type || 'license',
+      body.base_price,
+      body.discount_price || null,
+      body.discount_percentage || null,
+      body.vat_rate || 19.00,
+      body.stock_type || 'unlimited',
+      body.available_licenses || 0,
+      body.license_type || null,
+      body.license_duration || null,
+      body.delivery_type || 'instant',
+      body.activation_limit || 1,
+      body.is_featured || 0,
+      body.is_new || 0,
+      body.is_active !== undefined ? body.is_active : 1
+    ).run()
+
+    const productId = result.meta.last_row_id
+
+    // Add translations if name provided
+    if (body.name) {
+      const language = body.language || 'de'
+      await db.db.prepare(`
+        INSERT INTO product_translations (product_id, language, name, short_description, long_description)
+        VALUES (?, ?, ?, ?, ?)
+      `).bind(
+        productId,
+        language,
+        body.name,
+        body.short_description || '',
+        body.description || ''
+      ).run()
+    }
+
+    return c.json({ 
+      success: true, 
+      data: { id: productId },
+      message: 'Product created successfully'
+    })
+  } catch (error: any) {
+    console.error('Error creating product:', error)
+    return c.json({ 
+      success: false, 
+      error: error.message || 'Failed to create product' 
+    }, 500)
+  }
+})
+
+// UPDATE: Edit existing product
+app.put('/api/admin/products/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const productId = c.req.param('id')
+    const body = await c.req.json()
+
+    // Check if product exists
+    const existing = await db.db.prepare('SELECT id FROM products WHERE id = ?').bind(productId).first()
+    if (!existing) {
+      return c.json({ success: false, error: 'Product not found' }, 404)
+    }
+
+    // Build dynamic update query for products table
+    const updates: string[] = []
+    const values: any[] = []
+
+    const productFields = [
+      'sku', 'category_id', 'brand_id', 'slug', 'product_type',
+      'base_price', 'discount_price', 'discount_percentage', 'vat_rate',
+      'stock_type', 'available_licenses', 'license_type', 'license_duration',
+      'delivery_type', 'activation_limit', 'is_featured', 'is_new', 'is_active'
+    ]
+
+    productFields.forEach(field => {
+      if (body[field] !== undefined) {
+        updates.push(`${field} = ?`)
+        values.push(body[field])
+      }
+    })
+
+    if (updates.length > 0) {
+      updates.push('updated_at = CURRENT_TIMESTAMP')
+      values.push(productId)
+
+      await db.db.prepare(`
+        UPDATE products 
+        SET ${updates.join(', ')}
+        WHERE id = ?
+      `).bind(...values).run()
+    }
+
+    // Update translations if name provided
+    if (body.name) {
+      const language = body.language || 'de'
+      
+      // Check if translation exists
+      const translation = await db.db.prepare(`
+        SELECT id FROM product_translations WHERE product_id = ? AND language = ?
+      `).bind(productId, language).first()
+
+      if (translation) {
+        // Update existing translation
+        await db.db.prepare(`
+          UPDATE product_translations 
+          SET name = ?, short_description = ?, long_description = ?
+          WHERE product_id = ? AND language = ?
+        `).bind(
+          body.name,
+          body.short_description || '',
+          body.description || '',
+          productId,
+          language
+        ).run()
+      } else {
+        // Insert new translation
+        await db.db.prepare(`
+          INSERT INTO product_translations (product_id, language, name, short_description, long_description)
+          VALUES (?, ?, ?, ?, ?)
+        `).bind(
+          productId,
+          language,
+          body.name,
+          body.short_description || '',
+          body.description || ''
+        ).run()
+      }
+    }
+
+    return c.json({ 
+      success: true, 
+      message: 'Product updated successfully'
+    })
+  } catch (error: any) {
+    console.error('Error updating product:', error)
+    return c.json({ 
+      success: false, 
+      error: error.message || 'Failed to update product' 
+    }, 500)
+  }
+})
+
+// DELETE: Remove product
+app.delete('/api/admin/products/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const productId = c.req.param('id')
+
+    // Check if product exists
+    const existing = await db.db.prepare('SELECT id, name FROM products WHERE id = ?').bind(productId).first()
+    if (!existing) {
+      return c.json({ success: false, error: 'Product not found' }, 404)
+    }
+
+    // Soft delete (set is_active = 0) instead of hard delete
+    await db.db.prepare('UPDATE products SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?').bind(productId).run()
+
+    return c.json({ 
+      success: true, 
+      message: 'Product deleted successfully'
+    })
+  } catch (error: any) {
+    console.error('Error deleting product:', error)
+    return c.json({ 
+      success: false, 
+      error: error.message || 'Failed to delete product' 
+    }, 500)
+  }
+})
+
+// BULK DELETE: Remove multiple products
+app.post('/api/admin/products/bulk-delete', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const { ids } = await c.req.json()
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return c.json({ success: false, error: 'No product IDs provided' }, 400)
+    }
+
+    const placeholders = ids.map(() => '?').join(',')
+    await db.db.prepare(`
+      UPDATE products 
+      SET is_active = 0, updated_at = CURRENT_TIMESTAMP 
+      WHERE id IN (${placeholders})
+    `).bind(...ids).run()
+
+    return c.json({ 
+      success: true, 
+      message: `${ids.length} products deleted successfully`
+    })
+  } catch (error: any) {
+    console.error('Error bulk deleting products:', error)
+    return c.json({ 
+      success: false, 
+      error: error.message || 'Failed to delete products' 
+    }, 500)
+  }
+})
+
+// BULK UPDATE: Update multiple products (status, price, etc.)
+app.post('/api/admin/products/bulk-update', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const { ids, updates } = await c.req.json()
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return c.json({ success: false, error: 'No product IDs provided' }, 400)
+    }
+
+    if (!updates || Object.keys(updates).length === 0) {
+      return c.json({ success: false, error: 'No updates provided' }, 400)
+    }
+
+    const updateFields: string[] = []
+    const values: any[] = []
+
+    // Allowed bulk update fields (only core product table fields)
+    const allowedFields = ['is_active', 'is_featured', 'is_new', 'discount_percentage', 'stock_type', 'is_bestseller']
+    
+    Object.keys(updates).forEach(key => {
+      if (allowedFields.includes(key)) {
+        updateFields.push(`${key} = ?`)
+        values.push(updates[key])
+      }
+    })
+
+    if (updateFields.length === 0) {
+      return c.json({ success: false, error: 'No valid fields to update' }, 400)
+    }
+
+    updateFields.push('updated_at = CURRENT_TIMESTAMP')
+    
+    const placeholders = ids.map(() => '?').join(',')
+    await db.db.prepare(`
+      UPDATE products 
+      SET ${updateFields.join(', ')}
+      WHERE id IN (${placeholders})
+    `).bind(...values, ...ids).run()
+
+    return c.json({ 
+      success: true, 
+      message: `${ids.length} products updated successfully`
+    })
+  } catch (error: any) {
+    console.error('Error bulk updating products:', error)
+    return c.json({ 
+      success: false, 
+      error: error.message || 'Failed to update products' 
+    }, 500)
+  }
+})
+
+// GET: Single product by ID (for editing)
+app.get('/api/admin/products/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const productId = c.req.param('id')
+
+    const product = await db.db.prepare(`
+      SELECT p.*, b.name as brand_name, c.slug as category_slug
+      FROM products p
+      LEFT JOIN brands b ON p.brand_id = b.id
+      LEFT JOIN categories c ON p.category_id = c.id
+      WHERE p.id = ?
+    `).bind(productId).first()
+
+    if (!product) {
+      return c.json({ success: false, error: 'Product not found' }, 404)
+    }
+
+    return c.json({ success: true, data: product })
+  } catch (error: any) {
+    console.error('Error fetching product:', error)
+    return c.json({ 
+      success: false, 
+      error: error.message || 'Failed to fetch product' 
+    }, 500)
+  }
+})
+
+// ============================================
+// END PRODUCTS CRUD API
+// ============================================
+
 app.get('/api/products/featured', async (c) => {
   try {
     const db = c.get('db') as DatabaseHelper
