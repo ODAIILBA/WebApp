@@ -2184,6 +2184,7 @@ import { AdminInvoices } from './components/admin-invoices'
 import { AdminCertificates } from './components/admin-certificates'
 import { AdminSettingsAdvanced } from './components/admin-settings-advanced'
 import { AdminEmailTemplates } from './components/admin-email-templates'
+import { AdminCookies } from './components/admin-cookies'
 import { AdminReports } from './components/admin-reports'
 import { AdminAnalytics } from './components/admin-analytics-enhanced'
 import { AdminDelivery } from './components/admin-delivery'
@@ -2492,6 +2493,12 @@ app.get('/admin/pages', (c) => {
 // Email Templates
 app.get('/admin/email-templates', (c) => {
   const html = AdminEmailTemplates();
+  return c.html(html);
+})
+
+// Cookies Management
+app.get('/admin/cookies', (c) => {
+  const html = AdminCookies();
   return c.html(html);
 })
 
@@ -4355,6 +4362,280 @@ app.patch('/api/admin/email-templates/:key/toggle', async (c) => {
   } catch (error) {
     console.error('Error toggling template:', error)
     return c.json({ success: false, error: 'Failed to toggle template' }, 500)
+  }
+})
+
+// ============================================
+// COOKIE MANAGEMENT API
+// ============================================
+
+// Get all cookies
+app.get('/api/admin/cookies', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    
+    const cookies = await db.db.prepare(`
+      SELECT * FROM cookie_settings 
+      ORDER BY category, name
+    `).all()
+    
+    return c.json({ success: true, data: cookies.results })
+  } catch (error) {
+    console.error('Error fetching cookies:', error)
+    return c.json({ success: false, error: 'Failed to fetch cookies' }, 500)
+  }
+})
+
+// Get cookie statistics
+app.get('/api/admin/cookies/stats', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    
+    const total = await db.db.prepare(`SELECT COUNT(*) as count FROM cookie_settings`).first()
+    const enabled = await db.db.prepare(`SELECT COUNT(*) as count FROM cookie_settings WHERE is_enabled = 1`).first()
+    const consents = await db.db.prepare(`SELECT COUNT(*) as count FROM cookie_consents`).first()
+    
+    const acceptanceRate = consents?.count > 0 
+      ? Math.round((consents.count / (consents.count + 1)) * 100) 
+      : 0
+    
+    return c.json({ 
+      success: true, 
+      data: {
+        total: total?.count || 0,
+        enabled: enabled?.count || 0,
+        consents: consents?.count || 0,
+        acceptance_rate: acceptanceRate + '%'
+      }
+    })
+  } catch (error) {
+    console.error('Error fetching cookie stats:', error)
+    return c.json({ success: false, error: 'Failed to fetch stats' }, 500)
+  }
+})
+
+// Create cookie
+app.post('/api/admin/cookies', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const body = await c.req.json()
+    
+    await db.db.prepare(`
+      INSERT INTO cookie_settings (
+        category, name, description, provider, purpose, expiry, type, 
+        is_essential, is_enabled, api_endpoint, api_key_setting, tracking_code
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      body.category,
+      body.name,
+      body.description || '',
+      body.provider || '',
+      body.purpose || '',
+      body.expiry || '',
+      body.type || 'http',
+      body.is_essential ? 1 : 0,
+      body.is_enabled ? 1 : 0,
+      body.api_endpoint || '',
+      body.api_key_setting || '',
+      body.tracking_code || ''
+    ).run()
+    
+    return c.json({ success: true, message: 'Cookie created successfully' })
+  } catch (error) {
+    console.error('Error creating cookie:', error)
+    return c.json({ success: false, error: 'Failed to create cookie' }, 500)
+  }
+})
+
+// Update cookie
+app.put('/api/admin/cookies/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+    const body = await c.req.json()
+    
+    await db.db.prepare(`
+      UPDATE cookie_settings 
+      SET name = ?, provider = ?, description = ?, category = ?, purpose = ?,
+          expiry = ?, type = ?, api_endpoint = ?, api_key_setting = ?, tracking_code = ?,
+          is_essential = ?, is_enabled = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(
+      body.name,
+      body.provider || '',
+      body.description || '',
+      body.category,
+      body.purpose || '',
+      body.expiry || '',
+      body.type || 'http',
+      body.api_endpoint || '',
+      body.api_key_setting || '',
+      body.tracking_code || '',
+      body.is_essential ? 1 : 0,
+      body.is_enabled ? 1 : 0,
+      parseInt(id)
+    ).run()
+    
+    return c.json({ success: true, message: 'Cookie updated successfully' })
+  } catch (error) {
+    console.error('Error updating cookie:', error)
+    return c.json({ success: false, error: 'Failed to update cookie' }, 500)
+  }
+})
+
+// Delete cookie
+app.delete('/api/admin/cookies/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+    
+    // Check if cookie is essential
+    const cookie = await db.db.prepare(`
+      SELECT is_essential FROM cookie_settings WHERE id = ?
+    `).bind(parseInt(id)).first()
+    
+    if (cookie && cookie.is_essential) {
+      return c.json({ success: false, error: 'Cannot delete essential cookies' }, 400)
+    }
+    
+    await db.db.prepare(`
+      DELETE FROM cookie_settings WHERE id = ?
+    `).bind(parseInt(id)).run()
+    
+    return c.json({ success: true, message: 'Cookie deleted successfully' })
+  } catch (error) {
+    console.error('Error deleting cookie:', error)
+    return c.json({ success: false, error: 'Failed to delete cookie' }, 500)
+  }
+})
+
+// Toggle cookie enabled status
+app.patch('/api/admin/cookies/:id/toggle', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+    
+    await db.db.prepare(`
+      UPDATE cookie_settings 
+      SET is_enabled = NOT is_enabled, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ? AND is_essential = 0
+    `).bind(parseInt(id)).run()
+    
+    return c.json({ success: true, message: 'Cookie status toggled' })
+  } catch (error) {
+    console.error('Error toggling cookie:', error)
+    return c.json({ success: false, error: 'Failed to toggle cookie' }, 500)
+  }
+})
+
+// Save user consent
+app.post('/api/cookies/consent', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const body = await c.req.json()
+    const sessionId = c.req.header('x-session-id') || crypto.randomUUID()
+    const ipAddress = c.req.header('cf-connecting-ip') || c.req.header('x-forwarded-for') || 'unknown'
+    const userAgent = c.req.header('user-agent') || ''
+    
+    // Check if consent already exists for this session
+    const existing = await db.db.prepare(`
+      SELECT id FROM cookie_consents WHERE session_id = ?
+    `).bind(sessionId).first()
+    
+    if (existing) {
+      // Update existing consent
+      await db.db.prepare(`
+        UPDATE cookie_consents 
+        SET essential = ?, functional = ?, analytics = ?, marketing = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE session_id = ?
+      `).bind(
+        body.essential ? 1 : 0,
+        body.functional ? 1 : 0,
+        body.analytics ? 1 : 0,
+        body.marketing ? 1 : 0,
+        sessionId
+      ).run()
+    } else {
+      // Insert new consent
+      await db.db.prepare(`
+        INSERT INTO cookie_consents (session_id, ip_address, user_agent, essential, functional, analytics, marketing)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).bind(
+        sessionId,
+        ipAddress,
+        userAgent,
+        body.essential ? 1 : 0,
+        body.functional ? 1 : 0,
+        body.analytics ? 1 : 0,
+        body.marketing ? 1 : 0
+      ).run()
+    }
+    
+    return c.json({ success: true, sessionId, message: 'Consent saved' })
+  } catch (error) {
+    console.error('Error saving consent:', error)
+    return c.json({ success: false, error: 'Failed to save consent' }, 500)
+  }
+})
+
+// Get enabled tracking scripts
+app.get('/api/cookies/scripts', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    
+    const scripts = await db.db.prepare(`
+      SELECT category, tracking_code 
+      FROM cookie_settings 
+      WHERE is_enabled = 1 AND tracking_code IS NOT NULL AND tracking_code != ''
+      ORDER BY category
+    `).all()
+    
+    return c.json({ success: true, data: scripts.results })
+  } catch (error) {
+    console.error('Error fetching scripts:', error)
+    return c.json({ success: false, error: 'Failed to fetch scripts' }, 500)
+  }
+})
+
+// Get enabled cookies for frontend banner
+app.get('/api/cookies/settings', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    
+    const cookies = await db.db.prepare(`
+      SELECT * FROM cookie_settings 
+      WHERE is_enabled = 1
+      ORDER BY category, name
+    `).all()
+    
+    return c.json({ success: true, data: cookies.results })
+  } catch (error) {
+    console.error('Error fetching cookie settings:', error)
+    return c.json({ success: false, error: 'Failed to fetch cookie settings' }, 500)
+  }
+})
+
+// Get consent statistics for admin
+app.get('/api/admin/cookies/consent-stats', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    
+    const stats = await db.db.prepare(`
+      SELECT 
+        COUNT(*) as total_consents,
+        SUM(essential) as essential,
+        SUM(functional) as functional,
+        SUM(analytics) as analytics,
+        SUM(marketing) as marketing
+      FROM cookie_consents
+    `).first()
+    
+    return c.json({ success: true, data: stats })
+  } catch (error) {
+    console.error('Error fetching consent stats:', error)
+    return c.json({ success: false, error: 'Failed to fetch consent stats' }, 500)
   }
 })
 

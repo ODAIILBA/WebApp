@@ -2502,6 +2502,7 @@ export const HomepagePrestaShopEnhanced = () => {
                 }
             });
         </script>
+        <script src="/static/cookie-consent.js"></script>
         <script src="/static/auth.js"></script>
     </body>
     </html>
