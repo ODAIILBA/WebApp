@@ -1905,7 +1905,8 @@ import { AdminTracking } from './components/admin-tracking'
 
 // Admin Dashboard
 app.get('/admin', (c) => {
-  return c.html(<AdminDashboardAdvanced />)
+  const html = AdminDashboardAdvanced()
+  return c.html(html)
 })
 
 // Products Management
