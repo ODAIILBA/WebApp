@@ -11053,13 +11053,549 @@ app.get('/admin/security/sessions', async (c) => {
   }
 })
 
-// Placeholder routes for remaining security pages
+// PAGE 4: AUDIT LOG - /admin/security/audit-log
 app.get('/admin/security/audit-log', async (c) => {
-  return c.html('<h1>Audit Log - Coming Soon</h1><p>Systemereignisse werden hier angezeigt</p>')
+  const db = c.get('db') as DatabaseHelper
+  
+  try {
+    const page = parseInt(c.req.query('page') || '1')
+    const limit = parseInt(c.req.query('limit') || '50')
+    const action = c.req.query('action') || 'all'
+    const resource = c.req.query('resource') || 'all'
+    const offset = (page - 1) * limit
+
+    // Build WHERE clause
+    let whereConditions = ['1=1']
+    const params: any[] = []
+
+    if (action !== 'all') {
+      whereConditions.push('al.action = ?')
+      params.push(action)
+    }
+
+    if (resource !== 'all') {
+      whereConditions.push('al.resource = ?')
+      params.push(resource)
+    }
+
+    const whereClause = whereConditions.join(' AND ')
+
+    // Get total count
+    const countResult = await db.db.prepare(`
+      SELECT COUNT(*) as total
+      FROM audit_logs al
+      WHERE ${whereClause}
+    `).bind(...params).first() as any
+
+    const total = countResult?.total || 0
+
+    // Get audit logs
+    const auditLogs = await db.db.prepare(`
+      SELECT 
+        al.*,
+        u.email as user_email,
+        u.first_name,
+        u.last_name
+      FROM audit_logs al
+      LEFT JOIN users u ON al.user_id = u.id
+      WHERE ${whereClause}
+      ORDER BY al.created_at DESC
+      LIMIT ? OFFSET ?
+    `).bind(...params, limit, offset).all()
+
+    // Get unique actions for filter
+    const actions = await db.db.prepare(`
+      SELECT DISTINCT action FROM audit_logs ORDER BY action
+    `).all()
+
+    // Get unique resource types for filter
+    const resourceTypes = await db.db.prepare(`
+      SELECT DISTINCT resource FROM audit_logs WHERE resource IS NOT NULL ORDER BY resource
+    `).all()
+
+    // Get statistics
+    const stats = await db.db.prepare(`
+      SELECT 
+        COUNT(*) as total_events,
+        COUNT(DISTINCT user_id) as unique_users,
+        COUNT(CASE WHEN created_at > datetime('now', '-24 hours') THEN 1 END) as events_24h,
+        COUNT(CASE WHEN created_at > datetime('now', '-1 hour') THEN 1 END) as events_1h
+      FROM audit_logs
+    `).first() as any
+
+    return c.html(`
+      <!DOCTYPE html>
+      <html lang="de">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Audit Log - Admin - SOFTWAREKING24</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+      </head>
+      <body class="bg-gray-50">
+        <div class="flex">
+          ${AdminSidebar()}
+          
+          <div class="flex-1 ml-64">
+            <div class="p-8">
+              <div class="mb-8">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                      <i class="fas fa-clipboard-list mr-3 text-purple-600"></i>
+                      Audit Log
+                    </h1>
+                    <p class="text-gray-600">Systemereignisse und Benutzeraktionen</p>
+                  </div>
+                  <a href="/admin/security" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                    <i class="fas fa-arrow-left mr-2"></i>Zurück
+                  </a>
+                </div>
+              </div>
+
+              <!-- Statistics -->
+              <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+                <div class="bg-white rounded-lg shadow p-6">
+                  <p class="text-sm text-gray-600 mb-1">Gesamt Ereignisse</p>
+                  <p class="text-2xl font-bold text-gray-900">${stats?.total_events || 0}</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                  <p class="text-sm text-gray-600 mb-1">Eindeutige Benutzer</p>
+                  <p class="text-2xl font-bold text-blue-600">${stats?.unique_users || 0}</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                  <p class="text-sm text-gray-600 mb-1">Ereignisse (24h)</p>
+                  <p class="text-2xl font-bold text-purple-600">${stats?.events_24h || 0}</p>
+                </div>
+                <div class="bg-white rounded-lg shadow p-6">
+                  <p class="text-sm text-gray-600 mb-1">Ereignisse (1h)</p>
+                  <p class="text-2xl font-bold text-green-600">${stats?.events_1h || 0}</p>
+                </div>
+              </div>
+
+              <!-- Filters -->
+              <div class="bg-white rounded-lg shadow mb-6 p-6">
+                <div class="flex gap-4">
+                  <select id="actionFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="all" ${action === 'all' ? 'selected' : ''}>Alle Aktionen</option>
+                    ${actions.results?.map((a: any) => `
+                      <option value="${a.action}" ${action === a.action ? 'selected' : ''}>${a.action}</option>
+                    `).join('') || ''}
+                  </select>
+                  
+                  <select id="resourceFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="all" ${resource === 'all' ? 'selected' : ''}>Alle Ressourcen</option>
+                    ${resourceTypes.results?.map((r: any) => `
+                      <option value="${r.resource}" ${resource === r.resource ? 'selected' : ''}>${r.resource}</option>
+                    `).join('') || ''}
+                  </select>
+
+                  <button onclick="applyFilters()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    <i class="fas fa-filter mr-2"></i>Filtern
+                  </button>
+                  <button onclick="resetFilters()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300">
+                    <i class="fas fa-times mr-2"></i>Zurücksetzen
+                  </button>
+                  <div class="flex-1"></div>
+                  <button onclick="exportAuditLog()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">
+                    <i class="fas fa-file-export mr-2"></i>Exportieren
+                  </button>
+                </div>
+              </div>
+
+              <!-- Audit Log Table -->
+              <div class="bg-white rounded-lg shadow overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Zeitpunkt</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Benutzer</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktion</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ressource</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP-Adresse</th>
+                      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Details</th>
+                    </tr>
+                  </thead>
+                  <tbody class="bg-white divide-y divide-gray-200">
+                    ${auditLogs.results?.length > 0 ? auditLogs.results.map((log: any) => `
+                      <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap">
+                          <p class="text-sm text-gray-900">${new Date(log.created_at).toLocaleDateString('de-DE')}</p>
+                          <p class="text-xs text-gray-500">${new Date(log.created_at).toLocaleTimeString('de-DE')}</p>
+                        </td>
+                        <td class="px-6 py-4">
+                          ${log.user_email ? `
+                            <p class="text-sm font-medium text-gray-900">${log.first_name || ''} ${log.last_name || ''}</p>
+                            <p class="text-xs text-gray-500">${log.user_email}</p>
+                          ` : `
+                            <p class="text-sm text-gray-500 italic">System</p>
+                          `}
+                        </td>
+                        <td class="px-6 py-4">
+                          <span class="px-2 py-1 text-xs rounded-full ${
+                            log.action?.includes('create') ? 'bg-green-100 text-green-800' :
+                            log.action?.includes('update') ? 'bg-blue-100 text-blue-800' :
+                            log.action?.includes('delete') ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }">
+                            ${log.action || '-'}
+                          </span>
+                        </td>
+                        <td class="px-6 py-4">
+                          <p class="text-sm text-gray-900">${log.resource || '-'}</p>
+                        </td>
+                        <td class="px-6 py-4">
+                          <p class="text-sm font-mono text-gray-900">${log.ip_address || '-'}</p>
+                        </td>
+                        <td class="px-6 py-4">
+                          <button onclick="showDetails(${log.id})" class="text-blue-600 hover:text-blue-900">
+                            <i class="fas fa-info-circle"></i> Details
+                          </button>
+                        </td>
+                      </tr>
+                    `).join('') : `
+                      <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                          <i class="fas fa-inbox text-4xl mb-2"></i>
+                          <p>Keine Audit-Ereignisse gefunden</p>
+                        </td>
+                      </tr>
+                    `}
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Pagination -->
+              ${total > limit ? `
+                <div class="mt-6 flex items-center justify-between">
+                  <div class="text-sm text-gray-700">
+                    Zeige ${offset + 1} bis ${Math.min(offset + limit, total)} von ${total} Einträgen
+                  </div>
+                  <div class="flex gap-2">
+                    ${page > 1 ? `
+                      <a href="?page=${page - 1}&action=${action}&resource=${resource}" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        <i class="fas fa-chevron-left"></i>
+                      </a>
+                    ` : ''}
+                    ${page < Math.ceil(total / limit) ? `
+                      <a href="?page=${page + 1}&action=${action}&resource=${resource}" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        <i class="fas fa-chevron-right"></i>
+                      </a>
+                    ` : ''}
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+
+        <script>
+          function applyFilters() {
+            const action = document.getElementById('actionFilter').value
+            const resource = document.getElementById('resourceFilter').value
+            window.location.href = '/admin/security/audit-log?action=' + action + '&resource=' + resource
+          }
+
+          function resetFilters() {
+            window.location.href = '/admin/security/audit-log'
+          }
+
+          function showDetails(id) {
+            alert('Audit Log Details für ID ' + id + ' - Feature wird implementiert')
+          }
+
+          function exportAuditLog() {
+            window.location.href = '/api/admin/security/audit-log/export'
+          }
+        </script>
+      </body>
+      </html>
+    `)
+  } catch (error) {
+    console.error('Error loading audit log:', error)
+    return c.html('<h1>Error loading audit log</h1>', 500)
+  }
 })
 
+// PAGE 5: SECURITY SETTINGS - /admin/security/settings
 app.get('/admin/security/settings', async (c) => {
-  return c.html('<h1>Security Settings - Coming Soon</h1><p>Sicherheitseinstellungen konfigurieren</p>')
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Sicherheitseinstellungen - Admin - SOFTWAREKING24</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-50">
+      <div class="flex">
+        ${AdminSidebar()}
+        
+        <div class="flex-1 ml-64">
+          <div class="p-8">
+            <div class="mb-8">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                    <i class="fas fa-cog mr-3 text-gray-600"></i>
+                    Sicherheitseinstellungen
+                  </h1>
+                  <p class="text-gray-600">Konfigurieren Sie Sicherheitsrichtlinien</p>
+                </div>
+                <a href="/admin/security" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                  <i class="fas fa-arrow-left mr-2"></i>Zurück
+                </a>
+              </div>
+            </div>
+
+            <!-- Settings Sections -->
+            <div class="space-y-6">
+              <!-- Password Policy -->
+              <div class="bg-white rounded-lg shadow">
+                <div class="p-6 border-b border-gray-200">
+                  <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+                    <i class="fas fa-key text-blue-600 mr-3"></i>
+                    Passwort-Richtlinien
+                  </h2>
+                </div>
+                <div class="p-6 space-y-4">
+                  <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                      <label class="font-medium text-gray-900">Minimale Passwortlänge</label>
+                      <p class="text-sm text-gray-600">Mindestanzahl Zeichen für Passwörter</p>
+                    </div>
+                    <input type="number" value="8" min="6" max="32" class="w-20 px-3 py-2 border border-gray-300 rounded-lg">
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                      <label class="font-medium text-gray-900">Großbuchstaben erforderlich</label>
+                      <p class="text-sm text-gray-600">Mindestens ein Großbuchstabe erforderlich</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" checked class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                      <label class="font-medium text-gray-900">Zahlen erforderlich</label>
+                      <p class="text-sm text-gray-600">Mindestens eine Zahl erforderlich</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" checked class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                      <label class="font-medium text-gray-900">Sonderzeichen erforderlich</label>
+                      <p class="text-sm text-gray-600">Mindestens ein Sonderzeichen erforderlich</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                      <label class="font-medium text-gray-900">Passwort-Ablauf</label>
+                      <p class="text-sm text-gray-600">Passwörter müssen nach X Tagen geändert werden</p>
+                    </div>
+                    <select class="px-4 py-2 border border-gray-300 rounded-lg">
+                      <option value="0">Nie</option>
+                      <option value="30">30 Tage</option>
+                      <option value="60">60 Tage</option>
+                      <option value="90" selected>90 Tage</option>
+                      <option value="180">180 Tage</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Session Management -->
+              <div class="bg-white rounded-lg shadow">
+                <div class="p-6 border-b border-gray-200">
+                  <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+                    <i class="fas fa-clock text-green-600 mr-3"></i>
+                    Sitzungsverwaltung
+                  </h2>
+                </div>
+                <div class="p-6 space-y-4">
+                  <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                      <label class="font-medium text-gray-900">Sitzungsdauer</label>
+                      <p class="text-sm text-gray-600">Automatische Abmeldung nach Inaktivität</p>
+                    </div>
+                    <select class="px-4 py-2 border border-gray-300 rounded-lg">
+                      <option value="15">15 Minuten</option>
+                      <option value="30">30 Minuten</option>
+                      <option value="60" selected>1 Stunde</option>
+                      <option value="120">2 Stunden</option>
+                      <option value="480">8 Stunden</option>
+                      <option value="1440">24 Stunden</option>
+                    </select>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                      <label class="font-medium text-gray-900">Gleichzeitige Sitzungen</label>
+                      <p class="text-sm text-gray-600">Maximale Anzahl aktiver Sitzungen pro Benutzer</p>
+                    </div>
+                    <input type="number" value="3" min="1" max="10" class="w-20 px-3 py-2 border border-gray-300 rounded-lg">
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                      <label class="font-medium text-gray-900">Session Remember Me</label>
+                      <p class="text-sm text-gray-600">Benutzer können "Angemeldet bleiben" wählen</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" checked class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Login Security -->
+              <div class="bg-white rounded-lg shadow">
+                <div class="p-6 border-b border-gray-200">
+                  <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+                    <i class="fas fa-shield-alt text-red-600 mr-3"></i>
+                    Anmeldesicherheit
+                  </h2>
+                </div>
+                <div class="p-6 space-y-4">
+                  <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                      <label class="font-medium text-gray-900">Max. Fehlversuche</label>
+                      <p class="text-sm text-gray-600">Account wird nach X fehlgeschlagenen Anmeldungen gesperrt</p>
+                    </div>
+                    <input type="number" value="5" min="3" max="20" class="w-20 px-3 py-2 border border-gray-300 rounded-lg">
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                      <label class="font-medium text-gray-900">Sperrzeit</label>
+                      <p class="text-sm text-gray-600">Dauer der Account-Sperre in Minuten</p>
+                    </div>
+                    <select class="px-4 py-2 border border-gray-300 rounded-lg">
+                      <option value="5">5 Minuten</option>
+                      <option value="15" selected>15 Minuten</option>
+                      <option value="30">30 Minuten</option>
+                      <option value="60">1 Stunde</option>
+                      <option value="1440">24 Stunden</option>
+                    </select>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                      <label class="font-medium text-gray-900">Zwei-Faktor-Authentifizierung</label>
+                      <p class="text-sm text-gray-600">Benutzer müssen 2FA für Anmeldung aktivieren</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                      <label class="font-medium text-gray-900">IP-Whitelist aktivieren</label>
+                      <p class="text-sm text-gray-600">Nur bestimmte IP-Adressen dürfen sich anmelden</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Data Protection -->
+              <div class="bg-white rounded-lg shadow">
+                <div class="p-6 border-b border-gray-200">
+                  <h2 class="text-xl font-semibold text-gray-900 flex items-center">
+                    <i class="fas fa-database text-purple-600 mr-3"></i>
+                    Datenschutz & Audit
+                  </h2>
+                </div>
+                <div class="p-6 space-y-4">
+                  <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                      <label class="font-medium text-gray-900">Audit-Protokollierung</label>
+                      <p class="text-sm text-gray-600">Alle Benutzeraktionen protokollieren</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" checked class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                      <label class="font-medium text-gray-900">Protokoll-Aufbewahrung</label>
+                      <p class="text-sm text-gray-600">Wie lange Audit-Logs gespeichert werden</p>
+                    </div>
+                    <select class="px-4 py-2 border border-gray-300 rounded-lg">
+                      <option value="30">30 Tage</option>
+                      <option value="90" selected>90 Tage</option>
+                      <option value="180">180 Tage</option>
+                      <option value="365">1 Jahr</option>
+                      <option value="0">Unbegrenzt</option>
+                    </select>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                      <label class="font-medium text-gray-900">Daten-Verschlüsselung</label>
+                      <p class="text-sm text-gray-600">Sensible Daten in der Datenbank verschlüsseln</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" checked class="sr-only peer">
+                      <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    </label>
+                  </div>
+                  <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                      <label class="font-medium text-gray-900">GDPR-Compliance</label>
+                      <p class="text-sm text-gray-600">Automatische Löschung inaktiver Accounts</p>
+                    </div>
+                    <select class="px-4 py-2 border border-gray-300 rounded-lg">
+                      <option value="0">Deaktiviert</option>
+                      <option value="365">Nach 1 Jahr</option>
+                      <option value="730" selected>Nach 2 Jahren</option>
+                      <option value="1095">Nach 3 Jahren</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex gap-4 justify-end">
+                <button onclick="resetToDefaults()" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 font-medium">
+                  <i class="fas fa-undo mr-2"></i>Auf Standardwerte zurücksetzen
+                </button>
+                <button onclick="saveSettings()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                  <i class="fas fa-save mr-2"></i>Einstellungen speichern
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        function saveSettings() {
+          // Collect all settings
+          alert('Einstellungen speichern - Feature wird implementiert')
+        }
+
+        function resetToDefaults() {
+          if (confirm('Möchten Sie wirklich alle Einstellungen auf Standardwerte zurücksetzen?')) {
+            alert('Auf Standardwerte zurücksetzen - Feature wird implementiert')
+          }
+        }
+      </script>
+    </body>
+    </html>
+  `)
 })
 
 // ============================================================================
