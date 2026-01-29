@@ -1725,6 +1725,29 @@ app.put('/api/admin/categories/:id', async (c) => {
   }
 })
 
+app.get('/api/admin/categories/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const categoryId = c.req.param('id')
+    
+    const category = await db.db.prepare(`
+      SELECT c.*, ct.name, ct.description
+      FROM categories c
+      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language = 'de'
+      WHERE c.id = ?
+    `).bind(categoryId).first()
+    
+    if (!category) {
+      return c.json({ success: false, error: 'Category not found' }, 404)
+    }
+    
+    return c.json({ success: true, data: category })
+  } catch (error: any) {
+    console.error('Error fetching category:', error)
+    return c.json({ success: false, error: 'Failed to fetch category' }, 500)
+  }
+})
+
 app.delete('/api/admin/categories/:id', async (c) => {
   try {
     const db = c.get('db') as DatabaseHelper
@@ -1796,6 +1819,24 @@ app.put('/api/admin/brands/:id', async (c) => {
   } catch (error: any) {
     console.error('Error updating brand:', error)
     return c.json({ success: false, error: error.message || 'Failed to update brand' }, 500)
+  }
+})
+
+app.get('/api/admin/brands/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const brandId = c.req.param('id')
+    
+    const brand = await db.db.prepare('SELECT * FROM brands WHERE id = ?').bind(brandId).first()
+    
+    if (!brand) {
+      return c.json({ success: false, error: 'Brand not found' }, 404)
+    }
+    
+    return c.json({ success: true, data: brand })
+  } catch (error: any) {
+    console.error('Error fetching brand:', error)
+    return c.json({ success: false, error: 'Failed to fetch brand' }, 500)
   }
 })
 
@@ -8460,6 +8501,457 @@ app.get('/konto/rechnungen', (c) => c.html(FrontendPlaceholder('/konto/rechnunge
 // Addresses
 app.get('/account/addresses', (c) => c.html(FrontendPlaceholder('/account/addresses', 'Meine Adressen')))
 app.get('/konto/adressen', (c) => c.html(FrontendPlaceholder('/konto/adressen', 'Meine Adressen')))
+
+// ============================================
+// TIER 1: CRITICAL ADMIN PAGES IMPLEMENTATION
+// ============================================
+
+// CATEGORIES MANAGEMENT PAGE
+app.get('/admin/categories', async (c) => {
+  const db = c.get('db') as DatabaseHelper
+  const categories = await db.db.prepare(`
+    SELECT c.*, ct.name, ct.description, 
+           COUNT(DISTINCT p.id) as product_count
+    FROM categories c
+    LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language = 'de'
+    LEFT JOIN products p ON c.id = p.category_id AND p.is_active = 1
+    GROUP BY c.id
+    ORDER BY c.sort_order ASC, c.id DESC
+  `).all()
+  
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Kategorien - SOFTWAREKING24 Admin</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+    </head>
+    <body class="bg-gray-50">
+        ${AdminSidebarAdvanced('/admin/categories')}
+        <div class="ml-64 p-8">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                    <i class="fas fa-folder-open mr-2 text-blue-600"></i>
+                    Kategorien verwalten
+                </h1>
+                <p class="text-gray-600">Produkt-Kategorien erstellen, bearbeiten und organisieren</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <div class="flex justify-between items-center mb-6">
+                    <div class="flex gap-4">
+                        <input type="text" id="searchInput" placeholder="Kategorien durchsuchen..." 
+                               class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64">
+                        <button onclick="loadCategories()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                            <i class="fas fa-sync-alt mr-2"></i>Aktualisieren
+                        </button>
+                    </div>
+                    <button onclick="showCreateModal()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                        <i class="fas fa-plus-circle mr-2"></i>Neue Kategorie
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Slug</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Icon</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produkte</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Sortierung</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoriesTable">
+                            ${categories.results.map((cat: any) => `
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="px-6 py-4 text-sm text-gray-900">${cat.id}</td>
+                                    <td class="px-6 py-4">
+                                        <div class="font-medium text-gray-900">${cat.name || cat.slug}</div>
+                                        ${cat.description ? `<div class="text-sm text-gray-500">${cat.description}</div>` : ''}
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-500">${cat.slug}</td>
+                                    <td class="px-6 py-4 text-sm">
+                                        ${cat.icon ? `<i class="fas fa-${cat.icon} text-blue-600"></i>` : '-'}
+                                    </td>
+                                    <td class="px-6 py-4 text-sm">
+                                        <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full">${cat.product_count || 0}</span>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-gray-500">${cat.sort_order}</td>
+                                    <td class="px-6 py-4">
+                                        <span class="px-2 py-1 text-xs rounded-full ${cat.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}">
+                                            ${cat.is_active ? 'Aktiv' : 'Inaktiv'}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm">
+                                        <button onclick="editCategory(${cat.id})" class="text-blue-600 hover:text-blue-800 mr-3">
+                                            <i class="fas fa-edit"></i> Bearbeiten
+                                        </button>
+                                        <button onclick="deleteCategory(${cat.id})" class="text-red-600 hover:text-red-800">
+                                            <i class="fas fa-trash"></i> Löschen
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create/Edit Modal -->
+        <div id="categoryModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                <h2 id="modalTitle" class="text-2xl font-bold mb-6">Neue Kategorie</h2>
+                <form id="categoryForm" onsubmit="saveCategory(event)">
+                    <input type="hidden" id="categoryId">
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Name (Deutsch) *</label>
+                        <input type="text" id="categoryName" required 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Slug (URL) *</label>
+                        <input type="text" id="categorySlug" required 
+                               class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Beschreibung</label>
+                        <textarea id="categoryDescription" rows="3"
+                                  class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Icon (FontAwesome)</label>
+                            <input type="text" id="categoryIcon" placeholder="box-open"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Sortierung</label>
+                            <input type="number" id="categorySortOrder" value="0"
+                                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="categoryActive" checked class="mr-2">
+                            <span class="text-sm font-medium text-gray-700">Kategorie ist aktiv</span>
+                        </label>
+                    </div>
+                    
+                    <div class="flex justify-end gap-4">
+                        <button type="button" onclick="closeModal()" 
+                                class="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">
+                            Abbrechen
+                        </button>
+                        <button type="submit" 
+                                class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            <i class="fas fa-save mr-2"></i>Speichern
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            function showCreateModal() {
+                document.getElementById('modalTitle').textContent = 'Neue Kategorie';
+                document.getElementById('categoryForm').reset();
+                document.getElementById('categoryId').value = '';
+                document.getElementById('categoryModal').classList.remove('hidden');
+            }
+
+            function closeModal() {
+                document.getElementById('categoryModal').classList.add('hidden');
+            }
+
+            async function editCategory(id) {
+                try {
+                    const response = await axios.get(\`/api/admin/categories/\${id}\`);
+                    const cat = response.data.data;
+                    
+                    document.getElementById('modalTitle').textContent = 'Kategorie bearbeiten';
+                    document.getElementById('categoryId').value = cat.id;
+                    document.getElementById('categoryName').value = cat.name || '';
+                    document.getElementById('categorySlug').value = cat.slug;
+                    document.getElementById('categoryDescription').value = cat.description || '';
+                    document.getElementById('categoryIcon').value = cat.icon || '';
+                    document.getElementById('categorySortOrder').value = cat.sort_order || 0;
+                    document.getElementById('categoryActive').checked = cat.is_active;
+                    
+                    document.getElementById('categoryModal').classList.remove('hidden');
+                } catch (error) {
+                    alert('Fehler beim Laden der Kategorie');
+                }
+            }
+
+            async function saveCategory(event) {
+                event.preventDefault();
+                
+                const id = document.getElementById('categoryId').value;
+                const data = {
+                    name: document.getElementById('categoryName').value,
+                    slug: document.getElementById('categorySlug').value,
+                    description: document.getElementById('categoryDescription').value,
+                    icon: document.getElementById('categoryIcon').value,
+                    sort_order: parseInt(document.getElementById('categorySortOrder').value),
+                    is_active: document.getElementById('categoryActive').checked ? 1 : 0,
+                    language: 'de'
+                };
+                
+                try {
+                    if (id) {
+                        await axios.put(\`/api/admin/categories/\${id}\`, data);
+                    } else {
+                        await axios.post('/api/admin/categories', data);
+                    }
+                    
+                    closeModal();
+                    location.reload();
+                } catch (error) {
+                    alert('Fehler beim Speichern: ' + (error.response?.data?.error || error.message));
+                }
+            }
+
+            async function deleteCategory(id) {
+                if (!confirm('Kategorie wirklich löschen?')) return;
+                
+                try {
+                    await axios.delete(\`/api/admin/categories/\${id}\`);
+                    location.reload();
+                } catch (error) {
+                    alert('Fehler beim Löschen: ' + (error.response?.data?.error || error.message));
+                }
+            }
+
+            async function loadCategories() {
+                location.reload();
+            }
+        </script>
+    </body>
+    </html>
+  `)
+})
+
+// BRANDS MANAGEMENT PAGE  
+app.get('/admin/brands', async (c) => {
+  const db = c.get('db') as DatabaseHelper
+  const brands = await db.db.prepare(`
+    SELECT b.*, COUNT(DISTINCT p.id) as product_count
+    FROM brands b
+    LEFT JOIN products p ON b.id = p.brand_id AND p.is_active = 1
+    GROUP BY b.id
+    ORDER BY b.sort_order ASC, b.name ASC
+  `).all()
+  
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Marken - SOFTWAREKING24 Admin</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+        <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+    </head>
+    <body class="bg-gray-50">
+        ${AdminSidebarAdvanced('/admin/brands')}
+        <div class="ml-64 p-8">
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 mb-2">
+                    <i class="fas fa-trademark mr-2 text-blue-600"></i>
+                    Marken / Hersteller verwalten
+                </h1>
+                <p class="text-gray-600">Produktmarken erstellen und verwalten</p>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <div class="flex gap-4">
+                        <input type="text" id="searchInput" placeholder="Marken durchsuchen..." 
+                               class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 w-64">
+                        <button onclick="loadBrands()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">
+                            <i class="fas fa-sync-alt mr-2"></i>Aktualisieren
+                        </button>
+                    </div>
+                    <button onclick="showCreateModal()" class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        <i class="fas fa-plus-circle mr-2"></i>Neue Marke
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    ${brands.results.map((brand: any) => `
+                        <div class="border border-gray-200 rounded-lg p-6 hover:shadow-lg transition">
+                            ${brand.logo_url ? `
+                                <img src="${brand.logo_url}" alt="${brand.name}" class="h-16 object-contain mb-4">
+                            ` : `
+                                <div class="h-16 bg-gray-100 rounded flex items-center justify-center mb-4">
+                                    <i class="fas fa-trademark text-3xl text-gray-400"></i>
+                                </div>
+                            `}
+                            <h3 class="text-lg font-bold text-gray-900 mb-2">${brand.name}</h3>
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-sm text-gray-500">${brand.product_count || 0} Produkte</span>
+                                ${brand.is_featured ? '<span class="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">Featured</span>' : ''}
+                            </div>
+                            ${brand.website_url ? `
+                                <a href="${brand.website_url}" target="_blank" class="text-sm text-blue-600 hover:underline block mb-4">
+                                    <i class="fas fa-external-link-alt mr-1"></i>Website besuchen
+                                </a>
+                            ` : ''}
+                            <div class="flex gap-2">
+                                <button onclick="editBrand(${brand.id})" class="flex-1 px-3 py-2 bg-blue-50 text-blue-600 rounded hover:bg-blue-100">
+                                    <i class="fas fa-edit mr-1"></i>Bearbeiten
+                                </button>
+                                <button onclick="deleteBrand(${brand.id})" class="flex-1 px-3 py-2 bg-red-50 text-red-600 rounded hover:bg-red-100">
+                                    <i class="fas fa-trash mr-1"></i>Löschen
+                                </button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        </div>
+
+        <!-- Brand Modal -->
+        <div id="brandModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-8 max-w-2xl w-full">
+                <h2 id="modalTitle" class="text-2xl font-bold mb-6">Neue Marke</h2>
+                <form id="brandForm" onsubmit="saveBrand(event)">
+                    <input type="hidden" id="brandId">
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Markenname *</label>
+                        <input type="text" id="brandName" required 
+                               class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Slug (URL) *</label>
+                        <input type="text" id="brandSlug" required 
+                               class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Logo URL</label>
+                        <input type="url" id="brandLogo" 
+                               class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Website URL</label>
+                        <input type="url" id="brandWebsite" 
+                               class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="brandFeatured" class="mr-2">
+                            <span class="text-sm font-medium text-gray-700">Als Featured markieren</span>
+                        </label>
+                    </div>
+                    
+                    <div class="flex justify-end gap-4">
+                        <button type="button" onclick="closeModal()" 
+                                class="px-6 py-2 border rounded-lg hover:bg-gray-50">Abbrechen</button>
+                        <button type="submit" 
+                                class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                            <i class="fas fa-save mr-2"></i>Speichern
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            function showCreateModal() {
+                document.getElementById('modalTitle').textContent = 'Neue Marke';
+                document.getElementById('brandForm').reset();
+                document.getElementById('brandId').value = '';
+                document.getElementById('brandModal').classList.remove('hidden');
+            }
+
+            function closeModal() {
+                document.getElementById('brandModal').classList.add('hidden');
+            }
+
+            async function editBrand(id) {
+                try {
+                    const response = await axios.get(\`/api/admin/brands/\${id}\`);
+                    const brand = response.data.data;
+                    
+                    document.getElementById('modalTitle').textContent = 'Marke bearbeiten';
+                    document.getElementById('brandId').value = brand.id;
+                    document.getElementById('brandName').value = brand.name;
+                    document.getElementById('brandSlug').value = brand.slug;
+                    document.getElementById('brandLogo').value = brand.logo_url || '';
+                    document.getElementById('brandWebsite').value = brand.website_url || '';
+                    document.getElementById('brandFeatured').checked = brand.is_featured;
+                    
+                    document.getElementById('brandModal').classList.remove('hidden');
+                } catch (error) {
+                    alert('Fehler beim Laden der Marke');
+                }
+            }
+
+            async function saveBrand(event) {
+                event.preventDefault();
+                
+                const id = document.getElementById('brandId').value;
+                const data = {
+                    name: document.getElementById('brandName').value,
+                    slug: document.getElementById('brandSlug').value,
+                    logo_url: document.getElementById('brandLogo').value,
+                    website_url: document.getElementById('brandWebsite').value,
+                    is_featured: document.getElementById('brandFeatured').checked ? 1 : 0
+                };
+                
+                try {
+                    if (id) {
+                        await axios.put(\`/api/admin/brands/\${id}\`, data);
+                    } else {
+                        await axios.post('/api/admin/brands', data);
+                    }
+                    
+                    closeModal();
+                    location.reload();
+                } catch (error) {
+                    alert('Fehler: ' + (error.response?.data?.error || error.message));
+                }
+            }
+
+            async function deleteBrand(id) {
+                if (!confirm('Marke wirklich löschen?')) return;
+                
+                try {
+                    await axios.delete(\`/api/admin/brands/\${id}\`);
+                    location.reload();
+                } catch (error) {
+                    alert('Fehler: ' + (error.response?.data?.error || error.message));
+                }
+            }
+
+            function loadBrands() {
+                location.reload();
+            }
+        </script>
+    </body>
+    </html>
+  `)
+})
 
 // ============================================
 // CATCH-ALL ROUTE HANDLER FOR MISSING ADMIN PAGES
