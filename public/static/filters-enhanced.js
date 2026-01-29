@@ -17,6 +17,11 @@
       category: '',
       search: ''
     },
+    
+    // Cache for brands API
+    brandsCache: null,
+    brandsCacheTime: null,
+    brandsCacheDuration: 5 * 60 * 1000, // 5 minutes
 
     /**
      * Initialize filters system
@@ -26,6 +31,159 @@
       this.setupEventListeners();
       this.renderRatingFilter();
       this.renderOnSaleToggle();
+      this.setupMobileDrawer();
+    },
+
+    /**
+     * Setup mobile filter drawer
+     */
+    setupMobileDrawer: function() {
+      // Create mobile filter button if not exists
+      if (!document.getElementById('mobile-filter-toggle')) {
+        const mobileBtn = document.createElement('button');
+        mobileBtn.id = 'mobile-filter-toggle';
+        mobileBtn.innerHTML = '<i class="fas fa-sliders-h text-xl"></i>';
+        mobileBtn.setAttribute('aria-label', 'Filter öffnen');
+        document.body.appendChild(mobileBtn);
+
+        mobileBtn.addEventListener('click', () => {
+          this.openMobileDrawer();
+        });
+      }
+
+      // Create drawer overlay
+      if (!document.querySelector('.filter-drawer-overlay')) {
+        const overlay = document.createElement('div');
+        overlay.className = 'filter-drawer-overlay';
+        overlay.addEventListener('click', () => {
+          this.closeMobileDrawer();
+        });
+        document.body.appendChild(overlay);
+      }
+
+      // Create drawer
+      if (!document.querySelector('.filter-drawer')) {
+        const sidebar = document.querySelector('aside.filters-sidebar, aside');
+        if (sidebar) {
+          const drawer = document.createElement('div');
+          drawer.className = 'filter-drawer';
+          drawer.innerHTML = `
+            <div class="filter-drawer-header">
+              <h2><i class="fas fa-filter mr-2"></i>Filter</h2>
+              <button class="filter-drawer-close" aria-label="Schließen">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <div class="filter-drawer-content">
+              ${sidebar.innerHTML}
+            </div>
+          `;
+          document.body.appendChild(drawer);
+
+          // Close button
+          drawer.querySelector('.filter-drawer-close').addEventListener('click', () => {
+            this.closeMobileDrawer();
+          });
+
+          // Re-attach event listeners to drawer content
+          this.attachDrawerEventListeners();
+        }
+      }
+    },
+
+    /**
+     * Attach event listeners to drawer elements
+     */
+    attachDrawerEventListeners: function() {
+      const drawer = document.querySelector('.filter-drawer');
+      if (!drawer) return;
+
+      // Brand checkboxes
+      drawer.querySelectorAll('input[name="brand"]').forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+          this.updateBrandFilter();
+          // Sync with main sidebar
+          const mainCheckbox = document.querySelector(`aside input[name="brand"][value="${checkbox.value}"]`);
+          if (mainCheckbox) mainCheckbox.checked = checkbox.checked;
+        });
+      });
+
+      // Price range
+      const priceRange = drawer.querySelector('#price-range');
+      const priceValue = drawer.querySelector('#price-value');
+      if (priceRange && priceValue) {
+        priceRange.addEventListener('input', (e) => {
+          const value = e.target.value;
+          priceValue.textContent = value + ' €';
+          this.state.maxPrice = parseInt(value);
+          // Sync with main sidebar
+          const mainRange = document.querySelector('aside #price-range');
+          const mainValue = document.querySelector('aside #price-value');
+          if (mainRange) mainRange.value = value;
+          if (mainValue) mainValue.textContent = value + ' €';
+        });
+
+        priceRange.addEventListener('change', () => {
+          this.triggerFilterUpdate();
+        });
+      }
+
+      // Apply button
+      const applyBtn = drawer.querySelector('#apply-filters');
+      if (applyBtn) {
+        applyBtn.addEventListener('click', () => {
+          this.applyFilters();
+          this.closeMobileDrawer();
+        });
+      }
+
+      // Reset button
+      const resetBtn = drawer.querySelector('#reset-filters');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+          this.resetFilters();
+        });
+      }
+
+      // On-sale checkbox
+      const onSaleCheckbox = drawer.querySelector('#onsale-checkbox');
+      if (onSaleCheckbox) {
+        onSaleCheckbox.addEventListener('change', (e) => {
+          this.state.onSale = e.target.checked;
+          // Sync with main sidebar
+          const mainCheckbox = document.querySelector('aside #onsale-checkbox');
+          if (mainCheckbox) mainCheckbox.checked = e.target.checked;
+          this.triggerFilterUpdate();
+        });
+      }
+    },
+
+    /**
+     * Open mobile drawer
+     */
+    openMobileDrawer: function() {
+      const overlay = document.querySelector('.filter-drawer-overlay');
+      const drawer = document.querySelector('.filter-drawer');
+      
+      if (overlay) overlay.classList.add('active');
+      if (drawer) {
+        drawer.classList.add('active');
+        // Prevent body scroll
+        document.body.style.overflow = 'hidden';
+      }
+    },
+
+    /**
+     * Close mobile drawer
+     */
+    closeMobileDrawer: function() {
+      const overlay = document.querySelector('.filter-drawer-overlay');
+      const drawer = document.querySelector('.filter-drawer');
+      
+      if (overlay) overlay.classList.remove('active');
+      if (drawer) drawer.classList.remove('active');
+      // Restore body scroll
+      document.body.style.overflow = '';
     },
 
     /**
@@ -33,10 +191,23 @@
      */
     loadBrandsFromAPI: async function() {
       try {
+        // Check cache first
+        const now = Date.now();
+        if (this.brandsCache && this.brandsCacheTime && (now - this.brandsCacheTime < this.brandsCacheDuration)) {
+          console.log('Using cached brands data');
+          this.renderBrandFilters(this.brandsCache);
+          return;
+        }
+
         const response = await axios.get('/api/brands');
         
         if (response.data && response.data.success && response.data.data) {
           const brands = response.data.data;
+          
+          // Cache the brands data
+          this.brandsCache = brands;
+          this.brandsCacheTime = now;
+          
           this.renderBrandFilters(brands);
         } else {
           console.warn('No brands data available');

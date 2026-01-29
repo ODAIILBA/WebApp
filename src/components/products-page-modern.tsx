@@ -222,7 +222,7 @@ export const ProductsPageModern = () => {
         <main className="container mx-auto px-6 py-8">
           <div className="flex gap-8">
             {/* Sidebar Filters */}
-            <aside className="w-80 flex-shrink-0">
+            <aside className="w-80 flex-shrink-0 filters-sidebar">
               <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-24">
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-xl font-bold text-navy-dark">
@@ -311,7 +311,7 @@ export const ProductsPageModern = () => {
             </aside>
 
             {/* Products Section */}
-            <div className="flex-1">
+            <div className="flex-1 products-main-content">
               {/* Active Filters */}
               <div id="active-filters" className="mb-6 flex flex-wrap gap-2">
                 {/* Dynamically added filter pills */}
@@ -319,7 +319,7 @@ export const ProductsPageModern = () => {
 
               {/* Toolbar */}
               <div className="bg-white rounded-2xl shadow-lg p-4 mb-6">
-                <div className="flex justify-between items-center">
+                <div className="products-toolbar flex justify-between items-center">
                   <div className="flex items-center space-x-4">
                     <span className="text-gray-600 font-semibold" id="result-count">
                       <i className="fas fa-box-open mr-2"></i>Lädt Produkte...
@@ -554,8 +554,25 @@ export const ProductsPageModern = () => {
           function renderProducts(products) {
             const container = document.getElementById('products-container');
             
-            if (products.length === 0) {
-              container.innerHTML = '<div class="col-span-full text-center text-gray-500 py-12"><i class="fas fa-search text-6xl mb-4 text-gray-300"></i><p class="text-xl">Keine Produkte gefunden</p></div>';
+            if (!products || products.length === 0) {
+              container.innerHTML = \`
+                <div class="col-span-full text-center py-16">
+                  <div class="max-w-md mx-auto">
+                    <i class="fas fa-search text-8xl mb-6 text-gray-300"></i>
+                    <h3 class="text-2xl font-bold text-navy-dark mb-3">Keine Produkte gefunden</h3>
+                    <p class="text-gray-600 mb-6">
+                      Versuchen Sie, Ihre Filter anzupassen oder die Suche zu ändern.
+                    </p>
+                    <button 
+                      onclick="document.getElementById('reset-filters').click()" 
+                      class="bg-gold text-white px-6 py-3 rounded-lg hover:bg-gold-dark transition font-semibold inline-flex items-center"
+                    >
+                      <i class="fas fa-redo mr-2"></i>
+                      Filter zurücksetzen
+                    </button>
+                  </div>
+                </div>
+              \`;
               return;
             }
 
