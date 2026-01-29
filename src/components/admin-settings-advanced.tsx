@@ -953,7 +953,8 @@ Musterstraße 123
         
         // Edit email template
         function editTemplate(template) {
-          alert('E-Mail-Vorlagen-Editor wird in Kürze verfügbar sein!');
+          // Redirect to email templates editor
+          window.location.href = '/admin/email-templates';
         }
         
         // Create backup
