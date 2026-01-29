@@ -413,7 +413,7 @@ export function AdminOrdersAdvanced() {
             }
         }
 
-        function renderOrders() {
+        async function renderOrders() {
             const container = document.getElementById('orders-list');
             
             if (orders.length === 0) {
@@ -424,6 +424,29 @@ export function AdminOrdersAdvanced() {
                     </div>
                 \`;
                 return;
+            }
+            
+            // Fetch certificates for all orders
+            const orderIds = orders.map(o => o.id).filter(Boolean);
+            let certificatesMap = {};
+            
+            if (orderIds.length > 0) {
+                try {
+                    const certResponse = await axios.get('/api/admin/certificates', {
+                        params: { order_ids: orderIds.join(',') }
+                    });
+                    
+                    if (certResponse.data.success && certResponse.data.data) {
+                        certResponse.data.data.forEach(cert => {
+                            if (!certificatesMap[cert.order_id]) {
+                                certificatesMap[cert.order_id] = [];
+                            }
+                            certificatesMap[cert.order_id].push(cert);
+                        });
+                    }
+                } catch (err) {
+                    console.error('[Orders] Failed to load certificates:', err);
+                }
             }
             
             container.innerHTML = orders.map(order => {
@@ -445,6 +468,22 @@ export function AdminOrdersAdvanced() {
                 
                 const orderDate = new Date(order.created_at).toLocaleString('de-DE');
                 
+                // Certificate badge and button
+                const orderCertificates = certificatesMap[order.id] || [];
+                const hasCertificate = orderCertificates.length > 0;
+                const certificateBadge = hasCertificate 
+                    ? \`<span class="badge" style="background: #10b981; color: white;">
+                         <i class="fas fa-certificate mr-1"></i>Zertifikat
+                       </span>\`
+                    : '';
+                
+                const certificateButton = hasCertificate
+                    ? \`<button onclick="viewCertificate('\${orderCertificates[0].id}')" 
+                               class="btn-primary text-sm" style="background: #10b981;">
+                         <i class="fas fa-certificate mr-1"></i>Zertifikat
+                       </button>\`
+                    : '';
+                
                 return \`
                     <div class="p-4 hover:bg-gray-50 transition">
                         <div class="flex items-center justify-between">
@@ -452,6 +491,7 @@ export function AdminOrdersAdvanced() {
                                 <div class="flex items-center gap-4 mb-2">
                                     <h3 class="font-bold text-lg text-gray-800">#\${order.order_number}</h3>
                                     <span class="badge \${statusClass}">\${statusText}</span>
+                                    \${certificateBadge}
                                 </div>
                                 
                                 <div class="grid grid-cols-2 gap-4 text-sm">
@@ -497,6 +537,7 @@ export function AdminOrdersAdvanced() {
                                         class="btn-primary text-sm">
                                     <i class="fas fa-file-pdf mr-1"></i>Rechnung
                                 </button>
+                                \${certificateButton}
                             </div>
                         </div>
                     </div>
@@ -745,6 +786,16 @@ export function AdminOrdersAdvanced() {
             } catch (error) {
                 console.error('Error sending email:', error);
                 alert('Fehler beim Senden der E-Mail');
+            }
+        }
+
+        async function viewCertificate(certificateId) {
+            try {
+                // Open certificate preview in new window
+                window.open(\`/admin/certificates/\${certificateId}/preview\`, '_blank');
+            } catch (error) {
+                console.error('Error viewing certificate:', error);
+                alert('Fehler beim Anzeigen des Zertifikats');
             }
         }
 

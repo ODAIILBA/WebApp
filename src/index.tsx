@@ -2765,7 +2765,7 @@ async function autogenerateCertificate(db: any, orderId: number, orderStatus: st
 app.get('/api/admin/certificates', async (c) => {
   try {
     const db = c.get('db') as DatabaseHelper
-    const { brand, order_id, customer, date_from, date_to, status } = c.req.query()
+    const { brand, order_id, order_ids, customer, date_from, date_to, status } = c.req.query()
     
     let sql = `
       SELECT c.*, o.order_number, p.name as product_name
@@ -2784,6 +2784,16 @@ app.get('/api/admin/certificates', async (c) => {
     if (order_id) {
       sql += ` AND c.order_id = ?`
       params.push(order_id)
+    }
+    
+    // Support for multiple order IDs (comma-separated)
+    if (order_ids) {
+      const orderIdArray = order_ids.split(',').map((id: string) => id.trim()).filter(Boolean)
+      if (orderIdArray.length > 0) {
+        const placeholders = orderIdArray.map(() => '?').join(',')
+        sql += ` AND c.order_id IN (${placeholders})`
+        params.push(...orderIdArray)
+      }
     }
     
     if (customer) {
