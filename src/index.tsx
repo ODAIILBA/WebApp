@@ -504,7 +504,7 @@ app.post('/api/auth/login', async (c) => {
           email: user.email,
           first_name: user.first_name,
           last_name: user.last_name,
-          is_admin: user.is_admin
+          role: user.role
         }
       },
       message: 'Login successful'
@@ -561,7 +561,7 @@ app.get('/api/auth/me', requireAuth, async (c) => {
     const db = c.get('db') as DatabaseHelper
 
     const userDetails = await db.db.prepare(`
-      SELECT id, email, first_name, last_name, is_admin, created_at
+      SELECT id, email, first_name, last_name, role, created_at
       FROM users 
       WHERE id = ?
     `).bind(user.id).first()
@@ -617,7 +617,7 @@ app.post('/api/auth/register', async (c) => {
     // In production, hash password with bcrypt
     // For now, store plaintext (INSECURE - FIX IN PRODUCTION)
     const result = await db.db.prepare(`
-      INSERT INTO users (email, password_hash, first_name, last_name, is_admin)
+      INSERT INTO users (email, password_hash, first_name, last_name, role)
       VALUES (?, ?, ?, ?, 0)
     `).bind(email, password, first_name, last_name).run()
 
