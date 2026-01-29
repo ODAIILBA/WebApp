@@ -306,10 +306,13 @@ app.get('/api/products', async (c) => {
     const limit = parseInt(c.req.query('limit') || '20')
     const offset = (page - 1) * limit
     const search = c.req.query('search') || ''
-    const sort = c.req.query('sort') || 'newest' // newest, price-asc, price-desc, name, bestseller
+    const sort = c.req.query('sort') || 'newest' // newest, price-asc, price-desc, name, bestseller, rating, popular
     const category = c.req.query('category') || ''
+    const brand = c.req.query('brand') || '' // Brand filter (comma-separated IDs: "1,2,3")
+    const minRating = parseFloat(c.req.query('minRating') || '0') // Minimum rating filter (0-5)
     const minPrice = parseFloat(c.req.query('minPrice') || '0')
     const maxPrice = parseFloat(c.req.query('maxPrice') || '999999')
+    const onSale = c.req.query('onSale') === 'true' // Only show products on sale
 
     let query = `
       SELECT DISTINCT
@@ -354,6 +357,26 @@ app.get('/api/products', async (c) => {
       params.push(category)
     }
 
+    // Brand filter (supports multiple brands: "1,2,3")
+    if (brand) {
+      const brandIds = brand.split(',').map((id: string) => parseInt(id.trim())).filter((id: number) => !isNaN(id))
+      if (brandIds.length > 0) {
+        query += ` AND p.brand_id IN (${brandIds.map(() => '?').join(',')})`
+        params.push(...brandIds)
+      }
+    }
+
+    // Rating filter
+    if (minRating > 0) {
+      query += ` AND p.rating_average >= ?`
+      params.push(minRating)
+    }
+
+    // On sale filter
+    if (onSale) {
+      query += ` AND p.discount_price IS NOT NULL AND p.discount_price < p.base_price`
+    }
+
     // Price filter
     if (minPrice > 0) {
       query += ` AND (COALESCE(p.discount_price, p.base_price) >= ?)`
@@ -377,6 +400,12 @@ app.get('/api/products', async (c) => {
         break
       case 'bestseller':
         query += ` ORDER BY p.is_bestseller DESC, p.rating_average DESC`
+        break
+      case 'rating':
+        query += ` ORDER BY p.rating_average DESC, p.rating_count DESC`
+        break
+      case 'popular':
+        query += ` ORDER BY p.rating_count DESC, p.rating_average DESC`
         break
       case 'newest':
       default:
@@ -409,6 +438,26 @@ app.get('/api/products', async (c) => {
     if (category) {
       countQuery += ` AND ct.slug = ?`
       countParams.push(category)
+    }
+
+    // Brand filter for count query
+    if (brand) {
+      const brandIds = brand.split(',').map((id: string) => parseInt(id.trim())).filter((id: number) => !isNaN(id))
+      if (brandIds.length > 0) {
+        countQuery += ` AND p.brand_id IN (${brandIds.map(() => '?').join(',')})`
+        countParams.push(...brandIds)
+      }
+    }
+
+    // Rating filter for count query
+    if (minRating > 0) {
+      countQuery += ` AND p.rating_average >= ?`
+      countParams.push(minRating)
+    }
+
+    // On sale filter for count query
+    if (onSale) {
+      countQuery += ` AND p.discount_price IS NOT NULL AND p.discount_price < p.base_price`
     }
     
     if (minPrice > 0) {
@@ -522,6 +571,64 @@ app.get('/api/products/:slug', async (c) => {
   }
 })
 
+// Autocomplete search endpoint (fast, lightweight)
+app.get('/api/products/search/autocomplete', async (c) => {
+  try {
+    const query = c.req.query('q') || ''
+    const language = c.get('language') || 'de'
+    const limit = parseInt(c.req.query('limit') || '5')
+
+    if (query.length < 2) {
+      return c.json({ success: true, data: [] })
+    }
+
+    const searchQuery = `
+      SELECT DISTINCT
+        p.id,
+        p.slug,
+        pt.name,
+        p.base_price,
+        p.discount_price,
+        ct.name as category_name,
+        b.name as brand_name,
+        pi.image_url
+      FROM products p
+      LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = ?
+      LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language = ?
+      LEFT JOIN brands b ON p.brand_id = b.id
+      LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
+      WHERE p.is_active = 1
+        AND (pt.name LIKE ? OR pt.short_description LIKE ? OR p.sku LIKE ? OR b.name LIKE ?)
+      ORDER BY 
+        CASE 
+          WHEN pt.name LIKE ? THEN 1
+          WHEN pt.name LIKE ? THEN 2
+          ELSE 3
+        END,
+        p.is_bestseller DESC,
+        p.rating_average DESC
+      LIMIT ?
+    `
+
+    const searchTerm = `%${query}%`
+    const startsWith = `${query}%`
+    const result = await c.env.DB.prepare(searchQuery)
+      .bind(language, language, searchTerm, searchTerm, searchTerm, searchTerm, startsWith, searchTerm, limit)
+      .all()
+
+    return c.json({ 
+      success: true, 
+      data: result.results || [],
+      query: query,
+      count: result.results?.length || 0
+    })
+  } catch (error) {
+    console.error('Autocomplete search error:', error)
+    return c.json({ success: false, error: 'Search failed' }, 500)
+  }
+})
+
 // ============================================
 // API ROUTES: Categories
 // ============================================
@@ -558,6 +665,32 @@ app.get('/api/categories/:slug/products', async (c) => {
 // ============================================
 // API ROUTES: Brands
 // ============================================
+
+// Get all brands
+app.get('/api/brands', async (c) => {
+  try {
+    const query = `
+      SELECT 
+        b.id,
+        b.name,
+        b.slug,
+        b.logo_url,
+        COUNT(p.id) as product_count
+      FROM brands b
+      LEFT JOIN products p ON b.id = p.brand_id AND p.is_active = 1
+      GROUP BY b.id
+      HAVING product_count > 0
+      ORDER BY b.name ASC
+    `
+    
+    const result = await c.env.DB.prepare(query).all()
+    
+    return c.json({ success: true, data: result.results || [] })
+  } catch (error) {
+    console.error('Brands fetch error:', error)
+    return c.json({ success: false, error: 'Failed to fetch brands', details: (error as any).message }, 500)
+  }
+})
 
 app.get('/api/brands/featured', async (c) => {
   try {
