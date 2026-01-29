@@ -30,6 +30,7 @@ import { AdminLicensesAdvanced } from './components/admin-licenses-advanced'
 import { AdminProductsAdvanced } from './components/admin-products-advanced'
 import { AdminOrdersAdvanced } from './components/admin-orders-advanced'
 import { AdminCustomersAdvanced } from './components/admin-customers-advanced'
+import { AdminSidebar } from './components/admin-sidebar'
 import { 
   formatPrice, 
   generateOrderNumber, 
@@ -1947,18 +1948,148 @@ app.get('/admin/products/import', (c) => {
 // Admin Sliders Management
 app.get('/admin/sliders', (c) => {
   return c.html(
-    <AdminLayout title="Hero Sliders" currentUser={{ first_name: 'Admin' }}>
-      <AdminSliders />
-    </AdminLayout>
+    <html lang="de">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Slider - Admin - SOFTWAREKING24</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet" />
+        <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+        <style dangerouslySetInnerHTML={{__html: `
+          :root {
+            --navy-dark: #1a2a4e;
+            --gold: #d4af37;
+          }
+          .admin-sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: var(--navy-dark);
+            color: white;
+            overflow-y: auto;
+            z-index: 1000;
+          }
+          .admin-content {
+            margin-left: 260px;
+            min-height: 100vh;
+            background: #f5f7fa;
+            padding: 2rem;
+          }
+          .admin-nav-item {
+            display: block;
+            padding: 12px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+          }
+          .admin-nav-item:hover,
+          .admin-nav-item.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-left-color: var(--gold);
+          }
+          .admin-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          }
+          .btn-gold {
+            background: var(--gold);
+            color: var(--navy-dark);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+          }
+        `}} />
+      </head>
+      <body>
+        <div dangerouslySetInnerHTML={{__html: AdminSidebar('/admin/sliders')}} />
+        <div class="admin-content">
+          <AdminSliders />
+        </div>
+      </body>
+    </html>
   )
 })
 
 // Admin Homepage Sections Management
 app.get('/admin/homepage-sections', (c) => {
   return c.html(
-    <AdminLayout title="Homepage Sections" currentUser={{ first_name: 'Admin' }}>
-      <AdminHomepageSections />
-    </AdminLayout>
+    <html lang="de">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Homepage-Sektionen - Admin - SOFTWAREKING24</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet" />
+        <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+        <style dangerouslySetInnerHTML={{__html: `
+          :root {
+            --navy-dark: #1a2a4e;
+            --gold: #d4af37;
+          }
+          .admin-sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: var(--navy-dark);
+            color: white;
+            overflow-y: auto;
+            z-index: 1000;
+          }
+          .admin-content {
+            margin-left: 260px;
+            min-height: 100vh;
+            background: #f5f7fa;
+            padding: 2rem;
+          }
+          .admin-nav-item {
+            display: block;
+            padding: 12px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+          }
+          .admin-nav-item:hover,
+          .admin-nav-item.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-left-color: var(--gold);
+          }
+          .admin-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          }
+          .btn-gold {
+            background: var(--gold);
+            color: var(--navy-dark);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+          }
+        `}} />
+      </head>
+      <body>
+        <div dangerouslySetInnerHTML={{__html: AdminSidebar('/admin/homepage-sections')}} />
+        <div class="admin-content">
+          <AdminHomepageSections />
+        </div>
+      </body>
+    </html>
   )
 })
 
@@ -2071,9 +2202,74 @@ app.get('/admin/pages', (c) => {
 // Settings
 app.get('/admin/settings', (c) => {
   return c.html(
-    <AdminLayout title="Settings" currentUser={{ first_name: 'Admin' }}>
-      <AdminSettings />
-    </AdminLayout>
+    <html lang="de">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Einstellungen - Admin - SOFTWAREKING24</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet" />
+        <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+        <style dangerouslySetInnerHTML={{__html: `
+          :root {
+            --navy-dark: #1a2a4e;
+            --gold: #d4af37;
+          }
+          .admin-sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 260px;
+            height: 100vh;
+            background: var(--navy-dark);
+            color: white;
+            overflow-y: auto;
+            z-index: 1000;
+          }
+          .admin-content {
+            margin-left: 260px;
+            min-height: 100vh;
+            background: #f5f7fa;
+            padding: 2rem;
+          }
+          .admin-nav-item {
+            display: block;
+            padding: 12px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+          }
+          .admin-nav-item:hover,
+          .admin-nav-item.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border-left-color: var(--gold);
+          }
+          .admin-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+          }
+          .btn-gold {
+            background: var(--gold);
+            color: var(--navy-dark);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+          }
+        `}} />
+      </head>
+      <body>
+        <div dangerouslySetInnerHTML={{__html: AdminSidebar('/admin/settings')}} />
+        <div class="admin-content">
+          <AdminSettings />
+        </div>
+      </body>
+    </html>
   )
 })
 
