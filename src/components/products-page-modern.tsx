@@ -164,6 +164,19 @@ export const ProductsPageModern = () => {
                 }} />
               </a>
 
+              {/* Navigation */}
+              <nav className="hidden lg:flex items-center space-x-6">
+                <a href="/" className="text-gray-700 hover:text-gold transition font-medium">
+                  <i className="fas fa-home mr-2"></i>Home
+                </a>
+                <a href="/produkte" className="text-gold font-bold">
+                  <i className="fas fa-box-open mr-2"></i>Produkte
+                </a>
+                <a href="/kontakt" className="text-gray-700 hover:text-gold transition font-medium">
+                  <i className="fas fa-envelope mr-2"></i>Kontakt
+                </a>
+              </nav>
+
               {/* Search Bar */}
               <div className="flex-1 max-w-2xl mx-8">
                 <div className="relative search-container">

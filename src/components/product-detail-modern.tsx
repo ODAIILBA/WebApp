@@ -382,6 +382,19 @@ export const ProductDetailPageModern = () => {
                 <img src="/static/logo.png" alt="SOFTWAREKING24" class="h-16" onerror="this.outerHTML='<div class=\\'w-12 h-12 bg-gradient-to-br from-navy-dark to-navy-light rounded-lg flex items-center justify-center text-white font-bold text-xl\\' style=\\'background: linear-gradient(135deg, var(--navy-dark), var(--navy-light))\\'>SK24</div>';" />
               </a>
 
+              <!-- Navigation -->
+              <nav class="hidden lg:flex items-center space-x-6">
+                <a href="/" class="text-gray-700 hover:text-gold transition font-medium">
+                  <i class="fas fa-home mr-2"></i>Home
+                </a>
+                <a href="/produkte" class="text-gray-700 hover:text-gold transition font-medium">
+                  <i class="fas fa-box-open mr-2"></i>Produkte
+                </a>
+                <a href="/kontakt" class="text-gray-700 hover:text-gold transition font-medium">
+                  <i class="fas fa-envelope mr-2"></i>Kontakt
+                </a>
+              </nav>
+
               <!-- Search Bar with Autocomplete -->
               <div class="flex-1 max-w-2xl mx-8">
                 <div class="relative search-container">
