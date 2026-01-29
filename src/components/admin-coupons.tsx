@@ -1,16 +1,7 @@
-import { AdminSidebar } from './admin-sidebar'
-
-export function AdminCoupons() {
-  return `<!DOCTYPE html>
-<html lang="de">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gutscheinverwaltung - Admin - SOFTWAREKING24</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
-    <style>
+export const AdminCoupons = () => {
+  return `
+    <div class="coupon-management">
+      <style>
         :root {
             --navy-dark: #1a2a4e;
             --gold: #d4af37;
@@ -215,11 +206,8 @@ export function AdminCoupons() {
             width: auto;
         }
     </style>
-</head>
-<body>
-    ${AdminSidebar('/admin/coupons')}
     
-    <div class="admin-content">
+    <div style="padding: 30px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
             <div>
                 <h1 style="font-size: 28px; font-weight: 700; color: var(--navy-dark); margin-bottom: 8px;">
@@ -689,7 +677,6 @@ export function AdminCoupons() {
             if (e.key === 'Escape') closeModal();
         });
     </script>
-</body>
-</html>
+    </div>
   `
 }
