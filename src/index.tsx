@@ -27,6 +27,8 @@ import { AdminFooterSettings } from './components/admin-footer-settings'
 import { AdminPagesManagement } from './components/admin-pages-management'
 import { AdminDashboardAdvanced } from './components/admin-dashboard-advanced'
 import { AdminLicensesAdvanced } from './components/admin-licenses-advanced'
+import { AdminProductsAdvanced } from './components/admin-products-advanced'
+import { AdminOrdersAdvanced } from './components/admin-orders-advanced'
 import { 
   formatPrice, 
   generateOrderNumber, 
@@ -1911,11 +1913,8 @@ app.get('/admin', (c) => {
 
 // Products Management
 app.get('/admin/products', (c) => {
-  return c.html(
-    <AdminLayout title="Products" currentUser={{ first_name: 'Admin' }}>
-      <AdminProducts />
-    </AdminLayout>
-  )
+  const html = AdminProductsAdvanced()
+  return c.html(html)
 })
 
 app.get('/admin/products/add', (c) => {
@@ -1999,11 +1998,8 @@ app.post('/api/admin/import/woocommerce', async (c) => {
 
 // Orders Management
 app.get('/admin/orders', (c) => {
-  return c.html(
-    <AdminLayout title="Orders" currentUser={{ first_name: 'Admin' }}>
-      <AdminOrders />
-    </AdminLayout>
-  )
+  const html = AdminOrdersAdvanced()
+  return c.html(html)
 })
 
 // Customers Management
