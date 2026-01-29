@@ -552,17 +552,31 @@ app.get('/api/admin/products', async (c) => {
 
     let query = `
       SELECT 
-        p.*,
+        p.id,
+        p.sku,
+        p.category_id,
+        p.brand_id,
+        p.slug,
+        p.base_price,
+        p.discount_price,
+        p.discount_percentage,
+        p.is_featured,
+        p.is_new,
+        p.is_bestseller,
+        p.is_active,
+        p.available_licenses,
+        p.stock_type,
+        p.created_at,
         pt.name,
         pt.short_description,
-        c.name as category_name,
+        ct.name as category_name,
         b.name as brand_name,
-        COUNT(DISTINCT pi.id) as image_count
+        (SELECT COUNT(*) FROM product_images WHERE product_id = p.id) as image_count
       FROM products p
       LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = 'de'
       LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language = 'de'
       LEFT JOIN brands b ON p.brand_id = b.id
-      LEFT JOIN product_images pi ON p.id = pi.product_id
       WHERE 1=1
     `
     
@@ -597,7 +611,7 @@ app.get('/api/admin/products', async (c) => {
       query += ` AND p.is_new = 1`
     }
 
-    query += ` GROUP BY p.id ORDER BY p.created_at DESC LIMIT ? OFFSET ?`
+    query += ` ORDER BY p.created_at DESC LIMIT ? OFFSET ?`
     params.push(limit, offset)
 
     const products = await db.db.prepare(query).bind(...params).all()
