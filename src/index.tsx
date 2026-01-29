@@ -2160,7 +2160,8 @@ app.get('/admin/certificates', (c) => {
 
 // License Key Management
 app.get('/admin/licenses', (c) => {
-  return c.html(<AdminLicensesAdvanced />)
+  const html = AdminLicensesAdvanced()
+  return c.html(html)
 })
 
 app.get('/admin/licenses/import', (c) => {
@@ -2187,6 +2188,11 @@ app.get('/admin/contact-messages', (c) => {
 
 app.get('/admin/contact', (c) => {
   return c.html(AdminContactMessages())
+})
+
+// Notifications - Redirect to dashboard (notifications shown there)
+app.get('/admin/notifications', (c) => {
+  return c.redirect('/admin')
 })
 
 // Footer Management
