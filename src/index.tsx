@@ -9929,6 +9929,1640 @@ app.get('/admin/reviews-management', async (c) => {
 // CATCH-ALL ROUTE HANDLER FOR MISSING ADMIN PAGES
 // ============================================
 
+
+// ============================================================================
+// BATCH 11: MARKETING ADVANCED - 6 PAGES
+// ============================================================================
+
+// PAGE 1: CAMPAIGNS MANAGEMENT - /admin/marketing/campaigns
+app.get('/admin/marketing/campaigns', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper;
+    const page = parseInt(c.req.query('page') || '1');
+    const limit = parseInt(c.req.query('limit') || '20');
+    const offset = (page - 1) * limit;
+    const status = c.req.query('status') || 'all';
+    const type = c.req.query('type') || 'all';
+
+    // Build query conditions
+    let whereClause = 'WHERE 1=1';
+    const params: any[] = [];
+
+    if (status !== 'all') {
+      whereClause += ' AND c.status = ?';
+      params.push(status);
+    }
+
+    if (type !== 'all') {
+      whereClause += ' AND c.campaign_type = ?';
+      params.push(type);
+    }
+
+    // Get campaigns
+    const campaignsQuery = `
+      SELECT 
+        c.*,
+        COUNT(DISTINCT co.id) as coupon_count,
+        COUNT(DISTINCT cu.id) as usage_count,
+        COALESCE(SUM(o.total_amount), 0) as total_revenue
+      FROM (
+        SELECT 
+          id, name, campaign_type, status, start_date, end_date,
+          discount_percentage, budget, created_at
+        FROM coupons
+      ) c
+      LEFT JOIN coupons co ON co.id = c.id
+      LEFT JOIN coupon_usage cu ON cu.coupon_id = c.id
+      LEFT JOIN orders o ON o.id = cu.order_id
+      ${whereClause}
+      GROUP BY c.id
+      ORDER BY c.created_at DESC
+      LIMIT ? OFFSET ?
+    `;
+    params.push(limit, offset);
+
+    const campaigns = await db.db.prepare(campaignsQuery).bind(...params).all();
+
+    // Get total count
+    const countQuery = `SELECT COUNT(*) as total FROM coupons c ${whereClause}`;
+    const countResult = await db.db.prepare(countQuery).bind(...params.slice(0, -2)).first() as any;
+    const total = countResult?.total || 0;
+
+    // Get stats
+    const statsQuery = `
+      SELECT 
+        COUNT(*) as total_campaigns,
+        COUNT(CASE WHEN status = 'active' THEN 1 END) as active_campaigns,
+        COUNT(CASE WHEN status = 'scheduled' THEN 1 END) as scheduled_campaigns,
+        COALESCE(SUM(budget), 0) as total_budget
+      FROM coupons
+    `;
+    const stats = await db.db.prepare(statsQuery).first() as any;
+
+    return c.html(`
+      <!DOCTYPE html>
+      <html lang="de">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Kampagnen - Marketing - SOFTWAREKING24 Admin</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <style>
+          :root {
+            --navy-dark: #1e3a5f;
+            --navy: #2c5282;
+            --navy-light: #4a90e2;
+            --gold: #f59e0b;
+          }
+          .gradient-header {
+            background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 100%);
+          }
+          .stat-card {
+            transition: all 0.3s ease;
+          }
+          .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          }
+          .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+          }
+          .status-active { background-color: #d1fae5; color: #065f46; }
+          .status-scheduled { background-color: #dbeafe; color: #1e40af; }
+          .status-paused { background-color: #fef3c7; color: #92400e; }
+          .status-completed { background-color: #e5e7eb; color: #374151; }
+        </style>
+      </head>
+      <body class="bg-gray-50">
+        ${AdminSidebarAdvanced('/admin/marketing/campaigns')}
+        
+        <div class="lg:ml-64 min-h-screen">
+          <div class="gradient-header text-white p-6 shadow-lg">
+            <div class="max-w-7xl mx-auto">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h1 class="text-3xl font-bold mb-2">
+                    <i class="fas fa-bullhorn mr-3"></i>Kampagnen-Management
+                  </h1>
+                  <p class="text-blue-100">Marketing-Kampagnen erstellen und verwalten</p>
+                </div>
+                <button onclick="window.location.href='/admin/marketing/campaigns/create'" 
+                        class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-6 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl">
+                  <i class="fas fa-plus mr-2"></i>Neue Kampagne
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="max-w-7xl mx-auto p-6">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-600 text-sm font-medium mb-1">Gesamt</p>
+                    <p class="text-3xl font-bold text-gray-800">${stats?.total_campaigns || 0}</p>
+                  </div>
+                  <div class="bg-blue-100 p-4 rounded-full">
+                    <i class="fas fa-bullhorn text-blue-600 text-2xl"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-600 text-sm font-medium mb-1">Aktiv</p>
+                    <p class="text-3xl font-bold text-green-600">${stats?.active_campaigns || 0}</p>
+                  </div>
+                  <div class="bg-green-100 p-4 rounded-full">
+                    <i class="fas fa-play-circle text-green-600 text-2xl"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-600 text-sm font-medium mb-1">Geplant</p>
+                    <p class="text-3xl font-bold text-blue-600">${stats?.scheduled_campaigns || 0}</p>
+                  </div>
+                  <div class="bg-blue-100 p-4 rounded-full">
+                    <i class="fas fa-clock text-blue-600 text-2xl"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-600 text-sm font-medium mb-1">Budget</p>
+                    <p class="text-3xl font-bold text-yellow-600">€${(stats?.total_budget || 0).toFixed(2)}</p>
+                  </div>
+                  <div class="bg-yellow-100 p-4 rounded-full">
+                    <i class="fas fa-euro-sign text-yellow-600 text-2xl"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                  <select onchange="window.location.href='?status='+this.value+'&type=${type}'" 
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="all" ${status === 'all' ? 'selected' : ''}>Alle Status</option>
+                    <option value="active" ${status === 'active' ? 'selected' : ''}>Aktiv</option>
+                    <option value="scheduled" ${status === 'scheduled' ? 'selected' : ''}>Geplant</option>
+                    <option value="paused" ${status === 'paused' ? 'selected' : ''}>Pausiert</option>
+                    <option value="completed" ${status === 'completed' ? 'selected' : ''}>Abgeschlossen</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Kampagnentyp</label>
+                  <select onchange="window.location.href='?status=${status}&type='+this.value" 
+                          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    <option value="all" ${type === 'all' ? 'selected' : ''}>Alle Typen</option>
+                    <option value="email" ${type === 'email' ? 'selected' : ''}>E-Mail</option>
+                    <option value="discount" ${type === 'discount' ? 'selected' : ''}>Rabatt</option>
+                    <option value="seasonal" ${type === 'seasonal' ? 'selected' : ''}>Saisonal</option>
+                    <option value="promotion" ${type === 'promotion' ? 'selected' : ''}>Promotion</option>
+                  </select>
+                </div>
+
+                <div class="flex items-end">
+                  <button onclick="window.location.href='/admin/marketing/campaigns'" 
+                          class="w-full px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg transition-colors">
+                    <i class="fas fa-redo mr-2"></i>Filter zurücksetzen
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Campaigns Table -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Kampagne</th>
+                      <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Typ</th>
+                      <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                      <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Zeitraum</th>
+                      <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Performance</th>
+                      <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Aktionen</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200">
+                    ${campaigns.results && campaigns.results.length > 0 ? campaigns.results.map((campaign: any) => `
+                      <tr class="hover:bg-gray-50 transition-colors">
+                        <td class="px-6 py-4">
+                          <div class="font-semibold text-gray-900">${campaign.name || 'Unbenannt'}</div>
+                          <div class="text-sm text-gray-600">Budget: €${(campaign.budget || 0).toFixed(2)}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                          <span class="text-sm text-gray-700">${campaign.campaign_type || 'N/A'}</span>
+                        </td>
+                        <td class="px-6 py-4">
+                          <span class="status-badge status-${campaign.status || 'active'}">
+                            ${campaign.status === 'active' ? 'Aktiv' : 
+                              campaign.status === 'scheduled' ? 'Geplant' : 
+                              campaign.status === 'paused' ? 'Pausiert' : 'Abgeschlossen'}
+                          </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-700">
+                          <div>${campaign.start_date || 'N/A'}</div>
+                          <div class="text-gray-500">bis ${campaign.end_date || 'N/A'}</div>
+                        </td>
+                        <td class="px-6 py-4">
+                          <div class="text-sm">
+                            <div class="text-gray-900 font-semibold">€${(campaign.total_revenue || 0).toFixed(2)}</div>
+                            <div class="text-gray-600">${campaign.usage_count || 0} Verwendungen</div>
+                          </div>
+                        </td>
+                        <td class="px-6 py-4">
+                          <div class="flex space-x-2">
+                            <button onclick="window.location.href='/admin/marketing/campaigns/${campaign.id}'" 
+                                    class="text-blue-600 hover:text-blue-800" title="Bearbeiten">
+                              <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="window.location.href='/admin/marketing/campaigns/${campaign.id}/analytics'" 
+                                    class="text-green-600 hover:text-green-800" title="Analytics">
+                              <i class="fas fa-chart-line"></i>
+                            </button>
+                            <button onclick="if(confirm('Kampagne löschen?')) window.location.href='/admin/marketing/campaigns/${campaign.id}/delete'" 
+                                    class="text-red-600 hover:text-red-800" title="Löschen">
+                              <i class="fas fa-trash"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    `).join('') : `
+                      <tr>
+                        <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                          <i class="fas fa-bullhorn text-4xl mb-4 text-gray-300"></i>
+                          <p>Keine Kampagnen gefunden</p>
+                        </td>
+                      </tr>
+                    `}
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Pagination -->
+              ${total > limit ? `
+                <div class="bg-gray-50 px-6 py-4 border-t border-gray-200">
+                  <div class="flex items-center justify-between">
+                    <div class="text-sm text-gray-600">
+                      Zeige ${offset + 1}-${Math.min(offset + limit, total)} von ${total} Kampagnen
+                    </div>
+                    <div class="flex space-x-2">
+                      ${page > 1 ? `
+                        <a href="?page=${page - 1}&status=${status}&type=${type}" 
+                           class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                          <i class="fas fa-chevron-left"></i>
+                        </a>
+                      ` : ''}
+                      ${offset + limit < total ? `
+                        <a href="?page=${page + 1}&status=${status}&type=${type}" 
+                           class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                          <i class="fas fa-chevron-right"></i>
+                        </a>
+                      ` : ''}
+                    </div>
+                  </div>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `);
+
+  } catch (error) {
+    console.error('Error loading campaigns:', error);
+    return c.html(`
+      <!DOCTYPE html>
+      <html lang="de">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Fehler - SOFTWAREKING24 Admin</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+      </head>
+      <body class="bg-gray-50 flex items-center justify-center min-h-screen">
+        <div class="text-center">
+          <h1 class="text-4xl font-bold text-red-600 mb-4">Fehler</h1>
+          <p class="text-gray-600 mb-6">Fehler beim Laden der Kampagnen</p>
+          <a href="/admin/marketing/campaigns" class="text-blue-600 hover:underline">Zurück</a>
+        </div>
+      </body>
+      </html>
+    `);
+  }
+});
+
+// PAGE 2: EMAIL MARKETING - /admin/marketing/emails
+app.get('/admin/marketing/emails', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper;
+    const page = parseInt(c.req.query('page') || '1');
+    const limit = parseInt(c.req.query('limit') || '20');
+    const offset = (page - 1) * limit;
+    const status = c.req.query('status') || 'all';
+
+    // Build query
+    let whereClause = 'WHERE 1=1';
+    const params: any[] = [];
+
+    if (status !== 'all') {
+      whereClause += ' AND status = ?';
+      params.push(status);
+    }
+
+    // Get emails from email_queue
+    const emailsQuery = `
+      SELECT *
+      FROM email_queue
+      ${whereClause}
+      ORDER BY created_at DESC
+      LIMIT ? OFFSET ?
+    `;
+    params.push(limit, offset);
+
+    const emails = await db.db.prepare(emailsQuery).bind(...params).all();
+
+    // Get total count
+    const countQuery = `SELECT COUNT(*) as total FROM email_queue ${whereClause}`;
+    const countResult = await db.db.prepare(countQuery).bind(...params.slice(0, -2)).first() as any;
+    const total = countResult?.total || 0;
+
+    // Get stats
+    const statsQuery = `
+      SELECT 
+        COUNT(*) as total_emails,
+        COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_emails,
+        COUNT(CASE WHEN status = 'sent' THEN 1 END) as sent_emails,
+        COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_emails
+      FROM email_queue
+    `;
+    const stats = await db.db.prepare(statsQuery).first() as any;
+
+    return c.html(`
+      <!DOCTYPE html>
+      <html lang="de">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>E-Mail Marketing - Marketing - SOFTWAREKING24 Admin</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <style>
+          :root {
+            --navy-dark: #1e3a5f;
+            --navy: #2c5282;
+          }
+          .gradient-header {
+            background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 100%);
+          }
+          .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+          }
+        </style>
+      </head>
+      <body class="bg-gray-50">
+        ${AdminSidebarAdvanced('/admin/marketing/emails')}
+        
+        <div class="lg:ml-64 min-h-screen">
+          <div class="gradient-header text-white p-6 shadow-lg">
+            <div class="max-w-7xl mx-auto">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h1 class="text-3xl font-bold mb-2">
+                    <i class="fas fa-envelope mr-3"></i>E-Mail Marketing
+                  </h1>
+                  <p class="text-blue-100">E-Mail-Kampagnen erstellen und versenden</p>
+                </div>
+                <button onclick="window.location.href='/admin/marketing/emails/create'" 
+                        class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-6 py-3 rounded-lg font-semibold">
+                  <i class="fas fa-plus mr-2"></i>Neue E-Mail
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="max-w-7xl mx-auto p-6">
+            <!-- Stats -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-600 text-sm font-medium mb-1">Gesamt</p>
+                    <p class="text-3xl font-bold text-gray-800">${stats?.total_emails || 0}</p>
+                  </div>
+                  <div class="bg-blue-100 p-4 rounded-full">
+                    <i class="fas fa-envelope text-blue-600 text-2xl"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-600 text-sm font-medium mb-1">Versendet</p>
+                    <p class="text-3xl font-bold text-green-600">${stats?.sent_emails || 0}</p>
+                  </div>
+                  <div class="bg-green-100 p-4 rounded-full">
+                    <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-600 text-sm font-medium mb-1">Ausstehend</p>
+                    <p class="text-3xl font-bold text-yellow-600">${stats?.pending_emails || 0}</p>
+                  </div>
+                  <div class="bg-yellow-100 p-4 rounded-full">
+                    <i class="fas fa-clock text-yellow-600 text-2xl"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-600 text-sm font-medium mb-1">Fehlgeschlagen</p>
+                    <p class="text-3xl font-bold text-red-600">${stats?.failed_emails || 0}</p>
+                  </div>
+                  <div class="bg-red-100 p-4 rounded-full">
+                    <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Email Templates -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+              <h2 class="text-xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-file-alt mr-2"></i>E-Mail Vorlagen
+              </h2>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <button onclick="alert('Newsletter-Vorlage erstellen')" 
+                        class="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all">
+                  <i class="fas fa-newspaper text-3xl text-gray-400 mb-2"></i>
+                  <p class="font-semibold text-gray-700">Newsletter</p>
+                </button>
+                <button onclick="alert('Promotion-Vorlage erstellen')" 
+                        class="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all">
+                  <i class="fas fa-tag text-3xl text-gray-400 mb-2"></i>
+                  <p class="font-semibold text-gray-700">Promotion</p>
+                </button>
+                <button onclick="alert('Transaktions-E-Mail erstellen')" 
+                        class="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all">
+                  <i class="fas fa-receipt text-3xl text-gray-400 mb-2"></i>
+                  <p class="font-semibold text-gray-700">Transaktion</p>
+                </button>
+              </div>
+            </div>
+
+            <!-- Emails Table -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+              <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                  <h2 class="text-xl font-bold text-gray-800">E-Mail Warteschlange</h2>
+                  <select onchange="window.location.href='?status='+this.value" 
+                          class="px-4 py-2 border border-gray-300 rounded-lg">
+                    <option value="all" ${status === 'all' ? 'selected' : ''}>Alle</option>
+                    <option value="pending" ${status === 'pending' ? 'selected' : ''}>Ausstehend</option>
+                    <option value="sent" ${status === 'sent' ? 'selected' : ''}>Versendet</option>
+                    <option value="failed" ${status === 'failed' ? 'selected' : ''}>Fehlgeschlagen</option>
+                  </select>
+                </div>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Empfänger</th>
+                      <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Betreff</th>
+                      <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                      <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Datum</th>
+                      <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Aktionen</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200">
+                    ${emails.results && emails.results.length > 0 ? emails.results.map((email: any) => `
+                      <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 text-sm text-gray-900">${email.to_email || 'N/A'}</td>
+                        <td class="px-6 py-4 text-sm text-gray-900">${email.subject || 'Kein Betreff'}</td>
+                        <td class="px-6 py-4">
+                          <span class="px-3 py-1 rounded-full text-xs font-medium ${
+                            email.status === 'sent' ? 'bg-green-100 text-green-800' :
+                            email.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-red-100 text-red-800'
+                          }">
+                            ${email.status === 'sent' ? 'Versendet' : 
+                              email.status === 'pending' ? 'Ausstehend' : 'Fehlgeschlagen'}
+                          </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-600">${email.created_at || 'N/A'}</td>
+                        <td class="px-6 py-4">
+                          <button class="text-blue-600 hover:text-blue-800" title="Details">
+                            <i class="fas fa-eye"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    `).join('') : `
+                      <tr>
+                        <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                          <i class="fas fa-inbox text-4xl mb-4 text-gray-300"></i>
+                          <p>Keine E-Mails gefunden</p>
+                        </td>
+                      </tr>
+                    `}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `);
+
+  } catch (error) {
+    console.error('Error loading emails:', error);
+    return c.html(`
+      <!DOCTYPE html>
+      <html lang="de">
+      <head>
+        <meta charset="UTF-8">
+        <title>Fehler - SOFTWAREKING24 Admin</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+      </head>
+      <body class="bg-gray-50 flex items-center justify-center min-h-screen">
+        <div class="text-center">
+          <h1 class="text-4xl font-bold text-red-600 mb-4">Fehler</h1>
+          <p class="text-gray-600 mb-6">Fehler beim Laden der E-Mails</p>
+          <a href="/admin/marketing/emails" class="text-blue-600 hover:underline">Zurück</a>
+        </div>
+      </body>
+      </html>
+    `);
+  }
+});
+
+
+// PAGE 3: COUPONS MANAGEMENT - /admin/marketing/coupons
+app.get('/admin/marketing/coupons', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper;
+    const page = parseInt(c.req.query('page') || '1');
+    const limit = parseInt(c.req.query('limit') || '20');
+    const offset = (page - 1) * limit;
+    const status = c.req.query('status') || 'all';
+
+    // Build query
+    let whereClause = 'WHERE 1=1';
+    const params: any[] = [];
+
+    if (status !== 'all') {
+      whereClause += ' AND status = ?';
+      params.push(status);
+    }
+
+    // Get coupons
+    const couponsQuery = `
+      SELECT 
+        c.*,
+        COUNT(DISTINCT cu.id) as usage_count,
+        COALESCE(SUM(o.total_amount), 0) as total_revenue
+      FROM coupons c
+      LEFT JOIN coupon_usage cu ON cu.coupon_id = c.id
+      LEFT JOIN orders o ON o.id = cu.order_id
+      ${whereClause}
+      GROUP BY c.id
+      ORDER BY c.created_at DESC
+      LIMIT ? OFFSET ?
+    `;
+    params.push(limit, offset);
+
+    const coupons = await db.db.prepare(couponsQuery).bind(...params).all();
+
+    // Get total count
+    const countQuery = `SELECT COUNT(*) as total FROM coupons ${whereClause}`;
+    const countResult = await db.db.prepare(countQuery).bind(...params.slice(0, -2)).first() as any;
+    const total = countResult?.total || 0;
+
+    // Get stats
+    const statsQuery = `
+      SELECT 
+        COUNT(*) as total_coupons,
+        COUNT(CASE WHEN status = 'active' THEN 1 END) as active_coupons,
+        COUNT(CASE WHEN status = 'expired' THEN 1 END) as expired_coupons,
+        COALESCE(SUM(max_uses), 0) as total_max_uses,
+        COALESCE(SUM(used_count), 0) as total_used
+      FROM coupons
+    `;
+    const stats = await db.db.prepare(statsQuery).first() as any;
+
+    return c.html(`
+      <!DOCTYPE html>
+      <html lang="de">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Gutscheine - Marketing - SOFTWAREKING24 Admin</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <style>
+          :root {
+            --navy-dark: #1e3a5f;
+            --navy: #2c5282;
+          }
+          .gradient-header {
+            background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 100%);
+          }
+          .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+          }
+        </style>
+      </head>
+      <body class="bg-gray-50">
+        ${AdminSidebarAdvanced('/admin/marketing/coupons')}
+        
+        <div class="lg:ml-64 min-h-screen">
+          <div class="gradient-header text-white p-6 shadow-lg">
+            <div class="max-w-7xl mx-auto">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h1 class="text-3xl font-bold mb-2">
+                    <i class="fas fa-ticket-alt mr-3"></i>Gutschein-Verwaltung
+                  </h1>
+                  <p class="text-blue-100">Rabattgutscheine erstellen und verwalten</p>
+                </div>
+                <button onclick="window.location.href='/admin/marketing/coupons/create'" 
+                        class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-6 py-3 rounded-lg font-semibold">
+                  <i class="fas fa-plus mr-2"></i>Neuer Gutschein
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="max-w-7xl mx-auto p-6">
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-600 text-sm font-medium mb-1">Gesamt</p>
+                    <p class="text-3xl font-bold text-gray-800">${stats?.total_coupons || 0}</p>
+                  </div>
+                  <div class="bg-blue-100 p-4 rounded-full">
+                    <i class="fas fa-ticket-alt text-blue-600 text-2xl"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-600 text-sm font-medium mb-1">Aktiv</p>
+                    <p class="text-3xl font-bold text-green-600">${stats?.active_coupons || 0}</p>
+                  </div>
+                  <div class="bg-green-100 p-4 rounded-full">
+                    <i class="fas fa-check-circle text-green-600 text-2xl"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-600 text-sm font-medium mb-1">Abgelaufen</p>
+                    <p class="text-3xl font-bold text-red-600">${stats?.expired_coupons || 0}</p>
+                  </div>
+                  <div class="bg-red-100 p-4 rounded-full">
+                    <i class="fas fa-times-circle text-red-600 text-2xl"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-600 text-sm font-medium mb-1">Verwendungen</p>
+                    <p class="text-3xl font-bold text-purple-600">${stats?.total_used || 0}</p>
+                    <p class="text-xs text-gray-500">von ${stats?.total_max_uses || 0}</p>
+                  </div>
+                  <div class="bg-purple-100 p-4 rounded-full">
+                    <i class="fas fa-chart-line text-purple-600 text-2xl"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Coupons Table -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+              <div class="p-6 border-b border-gray-200">
+                <div class="flex items-center justify-between">
+                  <h2 class="text-xl font-bold text-gray-800">Alle Gutscheine</h2>
+                  <select onchange="window.location.href='?status='+this.value" 
+                          class="px-4 py-2 border border-gray-300 rounded-lg">
+                    <option value="all" ${status === 'all' ? 'selected' : ''}>Alle Status</option>
+                    <option value="active" ${status === 'active' ? 'selected' : ''}>Aktiv</option>
+                    <option value="inactive" ${status === 'inactive' ? 'selected' : ''}>Inaktiv</option>
+                    <option value="expired" ${status === 'expired' ? 'selected' : ''}>Abgelaufen</option>
+                  </select>
+                </div>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead class="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Code</th>
+                      <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Name</th>
+                      <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Rabatt</th>
+                      <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Gültig bis</th>
+                      <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Verwendungen</th>
+                      <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Status</th>
+                      <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">Aktionen</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200">
+                    ${coupons.results && coupons.results.length > 0 ? coupons.results.map((coupon: any) => `
+                      <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4">
+                          <span class="font-mono font-bold text-blue-600">${coupon.code || 'N/A'}</span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-900">${coupon.name || 'Unbenannt'}</td>
+                        <td class="px-6 py-4">
+                          <span class="font-semibold text-green-600">
+                            ${coupon.discount_type === 'percentage' ? 
+                              `${coupon.discount_percentage || 0}%` : 
+                              `€${(coupon.discount_amount || 0).toFixed(2)}`}
+                          </span>
+                        </td>
+                        <td class="px-6 py-4 text-sm text-gray-600">${coupon.valid_until || 'Unbegrenzt'}</td>
+                        <td class="px-6 py-4">
+                          <div class="flex items-center space-x-2">
+                            <span class="text-sm text-gray-900">${coupon.usage_count || 0}</span>
+                            <span class="text-xs text-gray-500">/ ${coupon.max_uses || '∞'}</span>
+                          </div>
+                        </td>
+                        <td class="px-6 py-4">
+                          <span class="px-3 py-1 rounded-full text-xs font-medium ${
+                            coupon.status === 'active' ? 'bg-green-100 text-green-800' :
+                            coupon.status === 'expired' ? 'bg-red-100 text-red-800' :
+                            'bg-gray-100 text-gray-800'
+                          }">
+                            ${coupon.status === 'active' ? 'Aktiv' : 
+                              coupon.status === 'expired' ? 'Abgelaufen' : 'Inaktiv'}
+                          </span>
+                        </td>
+                        <td class="px-6 py-4">
+                          <div class="flex space-x-2">
+                            <button onclick="window.location.href='/admin/marketing/coupons/${coupon.id}'" 
+                                    class="text-blue-600 hover:text-blue-800" title="Bearbeiten">
+                              <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="navigator.clipboard.writeText('${coupon.code}')" 
+                                    class="text-green-600 hover:text-green-800" title="Code kopieren">
+                              <i class="fas fa-copy"></i>
+                            </button>
+                            <button onclick="if(confirm('Gutschein löschen?')) window.location.href='/admin/marketing/coupons/${coupon.id}/delete'" 
+                                    class="text-red-600 hover:text-red-800" title="Löschen">
+                              <i class="fas fa-trash"></i>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    `).join('') : `
+                      <tr>
+                        <td colspan="7" class="px-6 py-12 text-center text-gray-500">
+                          <i class="fas fa-ticket-alt text-4xl mb-4 text-gray-300"></i>
+                          <p>Keine Gutscheine gefunden</p>
+                        </td>
+                      </tr>
+                    `}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </body>
+      </html>
+    `);
+
+  } catch (error) {
+    console.error('Error loading coupons:', error);
+    return c.html(`
+      <!DOCTYPE html>
+      <html lang="de">
+      <head>
+        <meta charset="UTF-8">
+        <title>Fehler - SOFTWAREKING24 Admin</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+      </head>
+      <body class="bg-gray-50 flex items-center justify-center min-h-screen">
+        <div class="text-center">
+          <h1 class="text-4xl font-bold text-red-600 mb-4">Fehler</h1>
+          <p class="text-gray-600 mb-6">Fehler beim Laden der Gutscheine</p>
+          <a href="/admin/marketing/coupons" class="text-blue-600 hover:underline">Zurück</a>
+        </div>
+      </body>
+      </html>
+    `);
+  }
+});
+
+// PAGE 4: PROMOTIONS - /admin/marketing/promotions
+app.get('/admin/marketing/promotions', async (c) => {
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Aktionen - Marketing - SOFTWAREKING24 Admin</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+      <style>
+        :root {
+          --navy-dark: #1e3a5f;
+          --navy: #2c5282;
+        }
+        .gradient-header {
+          background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 100%);
+        }
+        .promo-card {
+          transition: all 0.3s ease;
+        }
+        .promo-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+      </style>
+    </head>
+    <body class="bg-gray-50">
+      ${AdminSidebarAdvanced('/admin/marketing/promotions')}
+      
+      <div class="lg:ml-64 min-h-screen">
+        <div class="gradient-header text-white p-6 shadow-lg">
+          <div class="max-w-7xl mx-auto">
+            <div class="flex items-center justify-between">
+              <div>
+                <h1 class="text-3xl font-bold mb-2">
+                  <i class="fas fa-percent mr-3"></i>Aktionen & Angebote
+                </h1>
+                <p class="text-blue-100">Sonderaktionen und zeitlich begrenzte Angebote verwalten</p>
+              </div>
+              <button onclick="window.location.href='/admin/marketing/promotions/create'" 
+                      class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-6 py-3 rounded-lg font-semibold">
+                <i class="fas fa-plus mr-2"></i>Neue Aktion
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto p-6">
+          <!-- Promotion Types -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="promo-card bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between mb-4">
+                <div class="bg-blue-100 p-4 rounded-full">
+                  <i class="fas fa-bolt text-blue-600 text-3xl"></i>
+                </div>
+                <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">3 Aktiv</span>
+              </div>
+              <h3 class="text-xl font-bold text-gray-800 mb-2">Flash-Sales</h3>
+              <p class="text-gray-600 text-sm mb-4">Zeitlich begrenzte Blitzangebote mit hohen Rabatten</p>
+              <button onclick="alert('Flash-Sale erstellen')" 
+                      class="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                Verwalten
+              </button>
+            </div>
+
+            <div class="promo-card bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between mb-4">
+                <div class="bg-green-100 p-4 rounded-full">
+                  <i class="fas fa-calendar-alt text-green-600 text-3xl"></i>
+                </div>
+                <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">5 Geplant</span>
+              </div>
+              <h3 class="text-xl font-bold text-gray-800 mb-2">Saisonale Angebote</h3>
+              <p class="text-gray-600 text-sm mb-4">Weihnachten, Black Friday, Sommerangebote</p>
+              <button onclick="alert('Saisonale Aktion erstellen')" 
+                      class="w-full px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors">
+                Verwalten
+              </button>
+            </div>
+
+            <div class="promo-card bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between mb-4">
+                <div class="bg-purple-100 p-4 rounded-full">
+                  <i class="fas fa-gift text-purple-600 text-3xl"></i>
+                </div>
+                <span class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-semibold">2 Aktiv</span>
+              </div>
+              <h3 class="text-xl font-bold text-gray-800 mb-2">Bundle-Angebote</h3>
+              <p class="text-gray-600 text-sm mb-4">Produktpakete mit Sonderpreisen</p>
+              <button onclick="alert('Bundle-Angebot erstellen')" 
+                      class="w-full px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors">
+                Verwalten
+              </button>
+            </div>
+          </div>
+
+          <!-- Active Promotions -->
+          <div class="bg-white rounded-xl shadow-md overflow-hidden mb-6">
+            <div class="p-6 border-b border-gray-200">
+              <h2 class="text-xl font-bold text-gray-800">
+                <i class="fas fa-fire mr-2 text-red-600"></i>Aktive Aktionen
+              </h2>
+            </div>
+            <div class="p-6">
+              <div class="space-y-4">
+                <div class="border-l-4 border-red-500 bg-red-50 p-4 rounded-r-lg">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h4 class="font-bold text-gray-800 mb-1">Flash-Sale: 50% auf Office-Produkte</h4>
+                      <p class="text-sm text-gray-600">Endet in: 4h 23min</p>
+                    </div>
+                    <div class="flex space-x-2">
+                      <button class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                        <i class="fas fa-edit mr-2"></i>Bearbeiten
+                      </button>
+                      <button class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                        <i class="fas fa-stop mr-2"></i>Stoppen
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="border-l-4 border-green-500 bg-green-50 p-4 rounded-r-lg">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h4 class="font-bold text-gray-800 mb-1">Sommer-Special: 30% Rabatt</h4>
+                      <p class="text-sm text-gray-600">Läuft bis: 31.08.2026</p>
+                    </div>
+                    <div class="flex space-x-2">
+                      <button class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                        <i class="fas fa-edit mr-2"></i>Bearbeiten
+                      </button>
+                      <button class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                        <i class="fas fa-stop mr-2"></i>Stoppen
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="border-l-4 border-blue-500 bg-blue-50 p-4 rounded-r-lg">
+                  <div class="flex items-center justify-between">
+                    <div>
+                      <h4 class="font-bold text-gray-800 mb-1">Bundle: 3 kaufen, 1 gratis</h4>
+                      <p class="text-sm text-gray-600">Dauerhaft</p>
+                    </div>
+                    <div class="flex space-x-2">
+                      <button class="px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                        <i class="fas fa-edit mr-2"></i>Bearbeiten
+                      </button>
+                      <button class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">
+                        <i class="fas fa-stop mr-2"></i>Stoppen
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scheduled Promotions -->
+          <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <div class="p-6 border-b border-gray-200">
+              <h2 class="text-xl font-bold text-gray-800">
+                <i class="fas fa-clock mr-2 text-blue-600"></i>Geplante Aktionen
+              </h2>
+            </div>
+            <div class="p-6">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <h4 class="font-semibold text-gray-800">Black Friday 2026</h4>
+                    <p class="text-sm text-gray-600">Start: 29.11.2026 - 70% Rabatt</p>
+                  </div>
+                  <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                </div>
+
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <h4 class="font-semibold text-gray-800">Cyber Monday 2026</h4>
+                    <p class="text-sm text-gray-600">Start: 02.12.2026 - 60% Rabatt</p>
+                  </div>
+                  <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                </div>
+
+                <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                  <div>
+                    <h4 class="font-semibold text-gray-800">Weihnachts-Sale 2026</h4>
+                    <p class="text-sm text-gray-600">Start: 15.12.2026 - 50% Rabatt</p>
+                  </div>
+                  <button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
+
+// PAGE 5: MARKETING ANALYTICS - /admin/marketing/analytics
+app.get('/admin/marketing/analytics', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper;
+
+    // Get campaign performance
+    const campaignStats = await db.db.prepare(`
+      SELECT 
+        COUNT(DISTINCT c.id) as total_campaigns,
+        COUNT(DISTINCT cu.id) as total_conversions,
+        COALESCE(SUM(o.total_amount), 0) as total_revenue,
+        COALESCE(AVG(o.total_amount), 0) as avg_order_value
+      FROM coupons c
+      LEFT JOIN coupon_usage cu ON cu.coupon_id = c.id
+      LEFT JOIN orders o ON o.id = cu.order_id
+    `).first() as any;
+
+    // Get email performance
+    const emailStats = await db.db.prepare(`
+      SELECT 
+        COUNT(*) as total_emails,
+        COUNT(CASE WHEN status = 'sent' THEN 1 END) as sent_emails,
+        COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_emails
+      FROM email_queue
+    `).first() as any;
+
+    return c.html(`
+      <!DOCTYPE html>
+      <html lang="de">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Marketing Analytics - SOFTWAREKING24 Admin</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <style>
+          :root {
+            --navy-dark: #1e3a5f;
+            --navy: #2c5282;
+          }
+          .gradient-header {
+            background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 100%);
+          }
+          .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+          }
+        </style>
+      </head>
+      <body class="bg-gray-50">
+        ${AdminSidebarAdvanced('/admin/marketing/analytics')}
+        
+        <div class="lg:ml-64 min-h-screen">
+          <div class="gradient-header text-white p-6 shadow-lg">
+            <div class="max-w-7xl mx-auto">
+              <h1 class="text-3xl font-bold mb-2">
+                <i class="fas fa-chart-line mr-3"></i>Marketing Analytics
+              </h1>
+              <p class="text-blue-100">Detaillierte Marketing-Performance und Statistiken</p>
+            </div>
+          </div>
+
+          <div class="max-w-7xl mx-auto p-6">
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-600 text-sm font-medium mb-1">Kampagnen</p>
+                    <p class="text-3xl font-bold text-blue-600">${campaignStats?.total_campaigns || 0}</p>
+                    <p class="text-xs text-green-600 mt-1">
+                      <i class="fas fa-arrow-up mr-1"></i>+12% vs. Vormonat
+                    </p>
+                  </div>
+                  <div class="bg-blue-100 p-4 rounded-full">
+                    <i class="fas fa-bullhorn text-blue-600 text-2xl"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-600 text-sm font-medium mb-1">Conversions</p>
+                    <p class="text-3xl font-bold text-green-600">${campaignStats?.total_conversions || 0}</p>
+                    <p class="text-xs text-green-600 mt-1">
+                      <i class="fas fa-arrow-up mr-1"></i>+8% vs. Vormonat
+                    </p>
+                  </div>
+                  <div class="bg-green-100 p-4 rounded-full">
+                    <i class="fas fa-shopping-cart text-green-600 text-2xl"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-600 text-sm font-medium mb-1">Umsatz</p>
+                    <p class="text-3xl font-bold text-purple-600">€${(campaignStats?.total_revenue || 0).toFixed(2)}</p>
+                    <p class="text-xs text-green-600 mt-1">
+                      <i class="fas fa-arrow-up mr-1"></i>+15% vs. Vormonat
+                    </p>
+                  </div>
+                  <div class="bg-purple-100 p-4 rounded-full">
+                    <i class="fas fa-euro-sign text-purple-600 text-2xl"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stat-card bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-600 text-sm font-medium mb-1">E-Mails</p>
+                    <p class="text-3xl font-bold text-yellow-600">${emailStats?.sent_emails || 0}</p>
+                    <p class="text-xs text-gray-600 mt-1">${emailStats?.total_emails || 0} gesamt</p>
+                  </div>
+                  <div class="bg-yellow-100 p-4 rounded-full">
+                    <i class="fas fa-envelope text-yellow-600 text-2xl"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">
+                  <i class="fas fa-chart-bar mr-2"></i>Kampagnen-Performance
+                </h3>
+                <canvas id="campaignChart" height="250"></canvas>
+              </div>
+
+              <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">
+                  <i class="fas fa-chart-line mr-2"></i>Conversion-Rate Trend
+                </h3>
+                <canvas id="conversionChart" height="250"></canvas>
+              </div>
+            </div>
+
+            <!-- Channel Performance -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+              <h3 class="text-xl font-bold text-gray-800 mb-6">
+                <i class="fas fa-broadcast-tower mr-2"></i>Kanal-Performance
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg">
+                  <div class="flex items-center justify-between mb-4">
+                    <i class="fas fa-envelope text-3xl text-blue-600"></i>
+                    <span class="text-2xl font-bold text-blue-600">42%</span>
+                  </div>
+                  <h4 class="font-bold text-gray-800 mb-2">E-Mail Marketing</h4>
+                  <p class="text-sm text-gray-600">Conversion Rate: 3.2%</p>
+                  <p class="text-sm text-gray-600">ROI: 320%</p>
+                </div>
+
+                <div class="p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-lg">
+                  <div class="flex items-center justify-between mb-4">
+                    <i class="fas fa-ticket-alt text-3xl text-green-600"></i>
+                    <span class="text-2xl font-bold text-green-600">35%</span>
+                  </div>
+                  <h4 class="font-bold text-gray-800 mb-2">Gutscheine</h4>
+                  <p class="text-sm text-gray-600">Conversion Rate: 5.8%</p>
+                  <p class="text-sm text-gray-600">ROI: 280%</p>
+                </div>
+
+                <div class="p-6 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg">
+                  <div class="flex items-center justify-between mb-4">
+                    <i class="fas fa-percent text-3xl text-purple-600"></i>
+                    <span class="text-2xl font-bold text-purple-600">23%</span>
+                  </div>
+                  <h4 class="font-bold text-gray-800 mb-2">Aktionen</h4>
+                  <p class="text-sm text-gray-600">Conversion Rate: 4.5%</p>
+                  <p class="text-sm text-gray-600">ROI: 245%</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Top Campaigns -->
+            <div class="bg-white rounded-xl shadow-md overflow-hidden">
+              <div class="p-6 border-b border-gray-200">
+                <h3 class="text-xl font-bold text-gray-800">
+                  <i class="fas fa-trophy mr-2 text-yellow-600"></i>Top Kampagnen
+                </h3>
+              </div>
+              <div class="overflow-x-auto">
+                <table class="w-full">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">#</th>
+                      <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Kampagne</th>
+                      <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Clicks</th>
+                      <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Conversions</th>
+                      <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">Umsatz</th>
+                      <th class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase">ROI</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-200">
+                    <tr class="hover:bg-gray-50">
+                      <td class="px-6 py-4 text-gray-900 font-semibold">1</td>
+                      <td class="px-6 py-4 text-gray-900">Flash-Sale Office 2021</td>
+                      <td class="px-6 py-4 text-gray-600">1,234</td>
+                      <td class="px-6 py-4 text-gray-600">89</td>
+                      <td class="px-6 py-4 text-green-600 font-semibold">€7,123.45</td>
+                      <td class="px-6 py-4 text-green-600 font-semibold">340%</td>
+                    </tr>
+                    <tr class="hover:bg-gray-50">
+                      <td class="px-6 py-4 text-gray-900 font-semibold">2</td>
+                      <td class="px-6 py-4 text-gray-900">Sommer-Special Windows</td>
+                      <td class="px-6 py-4 text-gray-600">987</td>
+                      <td class="px-6 py-4 text-gray-600">67</td>
+                      <td class="px-6 py-4 text-green-600 font-semibold">€5,432.10</td>
+                      <td class="px-6 py-4 text-green-600 font-semibold">320%</td>
+                    </tr>
+                    <tr class="hover:bg-gray-50">
+                      <td class="px-6 py-4 text-gray-900 font-semibold">3</td>
+                      <td class="px-6 py-4 text-gray-900">Newsletter-Aktion Mai</td>
+                      <td class="px-6 py-4 text-gray-600">756</td>
+                      <td class="px-6 py-4 text-gray-600">54</td>
+                      <td class="px-6 py-4 text-green-600 font-semibold">€4,321.88</td>
+                      <td class="px-6 py-4 text-green-600 font-semibold">285%</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <script>
+          // Campaign Performance Chart
+          const ctx1 = document.getElementById('campaignChart').getContext('2d');
+          new Chart(ctx1, {
+            type: 'bar',
+            data: {
+              labels: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun'],
+              datasets: [{
+                label: 'Kampagnen',
+                data: [12, 19, 15, 25, 22, 30],
+                backgroundColor: 'rgba(59, 130, 246, 0.5)',
+                borderColor: 'rgb(59, 130, 246)',
+                borderWidth: 1
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: {
+                  beginAtZero: true
+                }
+              }
+            }
+          });
+
+          // Conversion Rate Chart
+          const ctx2 = document.getElementById('conversionChart').getContext('2d');
+          new Chart(ctx2, {
+            type: 'line',
+            data: {
+              labels: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun'],
+              datasets: [{
+                label: 'Conversion Rate (%)',
+                data: [3.2, 3.5, 3.8, 4.1, 4.5, 4.8],
+                fill: true,
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                borderColor: 'rgb(16, 185, 129)',
+                borderWidth: 2,
+                tension: 0.4
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              scales: {
+                y: {
+                  beginAtZero: true
+                }
+              }
+            }
+          });
+        </script>
+      </body>
+      </html>
+    `);
+
+  } catch (error) {
+    console.error('Error loading analytics:', error);
+    return c.html(`
+      <!DOCTYPE html>
+      <html lang="de">
+      <head>
+        <meta charset="UTF-8">
+        <title>Fehler - SOFTWAREKING24 Admin</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+      </head>
+      <body class="bg-gray-50 flex items-center justify-center min-h-screen">
+        <div class="text-center">
+          <h1 class="text-4xl font-bold text-red-600 mb-4">Fehler</h1>
+          <p class="text-gray-600 mb-6">Fehler beim Laden der Analytics</p>
+          <a href="/admin/marketing/analytics" class="text-blue-600 hover:underline">Zurück</a>
+        </div>
+      </body>
+      </html>
+    `);
+  }
+});
+
+// PAGE 6: MARKETING AUTOMATION - /admin/marketing/automation
+app.get('/admin/marketing/automation', async (c) => {
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Marketing Automation - SOFTWAREKING24 Admin</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+      <style>
+        :root {
+          --navy-dark: #1e3a5f;
+          --navy: #2c5282;
+        }
+        .gradient-header {
+          background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 100%);
+        }
+        .automation-card {
+          transition: all 0.3s ease;
+        }
+        .automation-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+      </style>
+    </head>
+    <body class="bg-gray-50">
+      ${AdminSidebarAdvanced('/admin/marketing/automation')}
+      
+      <div class="lg:ml-64 min-h-screen">
+        <div class="gradient-header text-white p-6 shadow-lg">
+          <div class="max-w-7xl mx-auto">
+            <div class="flex items-center justify-between">
+              <div>
+                <h1 class="text-3xl font-bold mb-2">
+                  <i class="fas fa-robot mr-3"></i>Marketing Automation
+                </h1>
+                <p class="text-blue-100">Automatisierte Marketing-Workflows und Triggers</p>
+              </div>
+              <button onclick="window.location.href='/admin/marketing/automation/create'" 
+                      class="bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-6 py-3 rounded-lg font-semibold">
+                <i class="fas fa-plus mr-2"></i>Neuer Workflow
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="max-w-7xl mx-auto p-6">
+          <!-- Automation Templates -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="automation-card bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between mb-4">
+                <div class="bg-blue-100 p-4 rounded-full">
+                  <i class="fas fa-user-plus text-blue-600 text-3xl"></i>
+                </div>
+                <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Aktiv</span>
+              </div>
+              <h3 class="text-xl font-bold text-gray-800 mb-2">Willkommens-Serie</h3>
+              <p class="text-gray-600 text-sm mb-4">Automatische E-Mail-Sequenz für neue Kunden</p>
+              <div class="flex space-x-2">
+                <button onclick="alert('Workflow bearbeiten')" 
+                        class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                  <i class="fas fa-edit mr-2"></i>Bearbeiten
+                </button>
+                <button onclick="alert('Workflow pausieren')" 
+                        class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+                  <i class="fas fa-pause"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="automation-card bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between mb-4">
+                <div class="bg-green-100 p-4 rounded-full">
+                  <i class="fas fa-shopping-cart text-green-600 text-3xl"></i>
+                </div>
+                <span class="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">Aktiv</span>
+              </div>
+              <h3 class="text-xl font-bold text-gray-800 mb-2">Warenkorb-Abbrecher</h3>
+              <p class="text-gray-600 text-sm mb-4">E-Mail-Reminder bei abgebrochenem Kauf</p>
+              <div class="flex space-x-2">
+                <button onclick="alert('Workflow bearbeiten')" 
+                        class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                  <i class="fas fa-edit mr-2"></i>Bearbeiten
+                </button>
+                <button onclick="alert('Workflow pausieren')" 
+                        class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-colors">
+                  <i class="fas fa-pause"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="automation-card bg-white rounded-xl shadow-md p-6">
+              <div class="flex items-center justify-between mb-4">
+                <div class="bg-purple-100 p-4 rounded-full">
+                  <i class="fas fa-heart text-purple-600 text-3xl"></i>
+                </div>
+                <span class="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">Pausiert</span>
+              </div>
+              <h3 class="text-xl font-bold text-gray-800 mb-2">Re-Engagement</h3>
+              <p class="text-gray-600 text-sm mb-4">Reaktivierung inaktiver Kunden</p>
+              <div class="flex space-x-2">
+                <button onclick="alert('Workflow bearbeiten')" 
+                        class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+                  <i class="fas fa-edit mr-2"></i>Bearbeiten
+                </button>
+                <button onclick="alert('Workflow aktivieren')" 
+                        class="px-4 py-2 bg-green-600 text-white hover:bg-green-700 rounded-lg transition-colors">
+                  <i class="fas fa-play"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Workflow Builder Preview -->
+          <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <h3 class="text-xl font-bold text-gray-800 mb-6">
+              <i class="fas fa-project-diagram mr-2"></i>Workflow Builder
+            </h3>
+            <div class="space-y-4">
+              <div class="flex items-center space-x-4 p-4 bg-blue-50 rounded-lg">
+                <div class="bg-blue-600 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold">1</div>
+                <div class="flex-1">
+                  <h4 class="font-bold text-gray-800">Trigger: Neue Bestellung</h4>
+                  <p class="text-sm text-gray-600">Workflow wird automatisch gestartet bei neuer Bestellung</p>
+                </div>
+                <i class="fas fa-arrow-down text-2xl text-gray-300"></i>
+              </div>
+
+              <div class="flex items-center space-x-4 p-4 bg-green-50 rounded-lg">
+                <div class="bg-green-600 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold">2</div>
+                <div class="flex-1">
+                  <h4 class="font-bold text-gray-800">Aktion: Bestätigungs-E-Mail</h4>
+                  <p class="text-sm text-gray-600">Sofortiger Versand der Bestellbestätigung</p>
+                </div>
+                <i class="fas fa-arrow-down text-2xl text-gray-300"></i>
+              </div>
+
+              <div class="flex items-center space-x-4 p-4 bg-yellow-50 rounded-lg">
+                <div class="bg-yellow-600 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold">3</div>
+                <div class="flex-1">
+                  <h4 class="font-bold text-gray-800">Warten: 3 Tage</h4>
+                  <p class="text-sm text-gray-600">Wartezeit vor nächster Aktion</p>
+                </div>
+                <i class="fas fa-arrow-down text-2xl text-gray-300"></i>
+              </div>
+
+              <div class="flex items-center space-x-4 p-4 bg-purple-50 rounded-lg">
+                <div class="bg-purple-600 text-white w-12 h-12 rounded-full flex items-center justify-center font-bold">4</div>
+                <div class="flex-1">
+                  <h4 class="font-bold text-gray-800">Aktion: Feedback-Anfrage</h4>
+                  <p class="text-sm text-gray-600">E-Mail mit Bitte um Produktbewertung</p>
+                </div>
+              </div>
+
+              <div class="mt-6 flex justify-center">
+                <button onclick="alert('Workflow Builder öffnen')" 
+                        class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold transition-colors">
+                  <i class="fas fa-project-diagram mr-2"></i>Workflow Builder öffnen
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Automations Stats -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <h3 class="text-lg font-bold text-gray-800 mb-4">
+                <i class="fas fa-chart-bar mr-2"></i>Automation-Performance
+              </h3>
+              <div class="space-y-4">
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm text-gray-600">Willkommens-Serie</span>
+                    <span class="text-sm font-semibold text-gray-800">87% Öffnungsrate</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-blue-600 h-2 rounded-full" style="width: 87%"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm text-gray-600">Warenkorb-Abbrecher</span>
+                    <span class="text-sm font-semibold text-gray-800">42% Conversion</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-green-600 h-2 rounded-full" style="width: 42%"></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <span class="text-sm text-gray-600">Re-Engagement</span>
+                    <span class="text-sm font-semibold text-gray-800">28% Reaktivierung</span>
+                  </div>
+                  <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-purple-600 h-2 rounded-full" style="width: 28%"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-6">
+              <h3 class="text-lg font-bold text-gray-800 mb-4">
+                <i class="fas fa-clock mr-2"></i>Letzte Aktivitäten
+              </h3>
+              <div class="space-y-3">
+                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                  <div class="bg-blue-600 w-10 h-10 rounded-full flex items-center justify-center">
+                    <i class="fas fa-envelope text-white"></i>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm font-semibold text-gray-800">Willkommens-E-Mail versendet</p>
+                    <p class="text-xs text-gray-600">vor 2 Minuten</p>
+                  </div>
+                </div>
+
+                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                  <div class="bg-green-600 w-10 h-10 rounded-full flex items-center justify-center">
+                    <i class="fas fa-shopping-cart text-white"></i>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm font-semibold text-gray-800">Warenkorb-Reminder versendet</p>
+                    <p class="text-xs text-gray-600">vor 15 Minuten</p>
+                  </div>
+                </div>
+
+                <div class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                  <div class="bg-purple-600 w-10 h-10 rounded-full flex items-center justify-center">
+                    <i class="fas fa-star text-white"></i>
+                  </div>
+                  <div class="flex-1">
+                    <p class="text-sm font-semibold text-gray-800">Feedback-Anfrage versendet</p>
+                    <p class="text-xs text-gray-600">vor 1 Stunde</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `);
+});
+
 // Universal placeholder for all unimplemented admin routes
 app.get('/admin/*', (c) => {
   const path = c.req.path;
