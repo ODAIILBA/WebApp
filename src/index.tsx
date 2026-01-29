@@ -183,8 +183,17 @@ app.use('*', async (c, next) => {
 app.use('*', async (c, next) => {
   const url = new URL(c.req.url)
   const pathParts = url.pathname.split('/').filter(Boolean)
-  const language = pathParts[0] === 'de' ? 'de' : 'en'
-  c.set('language', language)
+  
+  // Check if URL starts with /de/ or /en/
+  if (pathParts[0] === 'de') {
+    c.set('language', 'de')
+  } else if (pathParts[0] === 'en') {
+    c.set('language', 'en')
+  } else {
+    // Default to German for API routes and other paths
+    c.set('language', 'de')
+  }
+  
   await next()
 })
 
