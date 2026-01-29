@@ -2884,6 +2884,419 @@ async function autogenerateCertificate(db: any, orderId: number, orderStatus: st
 }
 
 // ============================================
+// COUPON & PROMOTION ENGINE API
+// ============================================
+
+// Get all coupons with filters
+app.get('/api/admin/coupons', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const { status, search, discount_type } = c.req.query()
+    
+    let sql = `
+      SELECT c.*, 
+        (SELECT COUNT(*) FROM coupon_usage WHERE coupon_id = c.id) as total_uses
+      FROM coupons c
+      WHERE 1=1
+    `
+    const params: any[] = []
+    
+    if (status === 'active') {
+      sql += ` AND c.is_active = 1 AND (c.expires_at IS NULL OR c.expires_at > datetime('now'))`
+    } else if (status === 'expired') {
+      sql += ` AND c.expires_at < datetime('now')`
+    } else if (status === 'inactive') {
+      sql += ` AND c.is_active = 0`
+    }
+    
+    if (search) {
+      sql += ` AND (c.code LIKE ? OR c.description LIKE ?)`
+      const searchPattern = `%${search}%`
+      params.push(searchPattern, searchPattern)
+    }
+    
+    if (discount_type && discount_type !== 'all') {
+      sql += ` AND c.discount_type = ?`
+      params.push(discount_type)
+    }
+    
+    sql += ` ORDER BY c.created_at DESC LIMIT 100`
+    
+    const coupons = await db.db.prepare(sql).bind(...params).all()
+    return c.json({ success: true, data: coupons.results || [] })
+  } catch (error) {
+    console.error('Error loading coupons:', error)
+    return c.json({ success: false, error: 'Failed to load coupons' }, 500)
+  }
+})
+
+// Get coupon stats
+app.get('/api/admin/coupons/stats', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    
+    const stats = await db.db.prepare(`
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN is_active = 1 AND (expires_at IS NULL OR expires_at > datetime('now')) THEN 1 ELSE 0 END) as active,
+        SUM(CASE WHEN expires_at < datetime('now') THEN 1 ELSE 0 END) as expired,
+        SUM(CASE WHEN is_active = 0 THEN 1 ELSE 0 END) as inactive,
+        (SELECT COUNT(*) FROM coupon_usage) as total_uses,
+        (SELECT SUM(discount_amount) FROM coupon_usage) as total_discount_given
+      FROM coupons
+    `).first()
+    
+    return c.json({ success: true, data: stats })
+  } catch (error) {
+    console.error('Error loading coupon stats:', error)
+    return c.json({ success: false, error: 'Failed to load stats' }, 500)
+  }
+})
+
+// Get single coupon
+app.get('/api/admin/coupons/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+    
+    const coupon = await db.db.prepare(`
+      SELECT c.*,
+        (SELECT COUNT(*) FROM coupon_usage WHERE coupon_id = c.id) as total_uses,
+        (SELECT SUM(discount_amount) FROM coupon_usage WHERE coupon_id = c.id) as total_discount_given
+      FROM coupons c
+      WHERE c.id = ?
+    `).bind(id).first()
+    
+    if (!coupon) {
+      return c.json({ success: false, error: 'Coupon not found' }, 404)
+    }
+    
+    // Get usage history
+    const usage = await db.db.prepare(`
+      SELECT cu.*, o.order_number
+      FROM coupon_usage cu
+      LEFT JOIN orders o ON cu.order_id = o.id
+      WHERE cu.coupon_id = ?
+      ORDER BY cu.used_at DESC
+      LIMIT 50
+    `).bind(id).all()
+    
+    return c.json({ 
+      success: true, 
+      data: { 
+        ...coupon, 
+        usage_history: usage.results || [] 
+      } 
+    })
+  } catch (error) {
+    console.error('Error loading coupon:', error)
+    return c.json({ success: false, error: 'Failed to load coupon' }, 500)
+  }
+})
+
+// Create new coupon
+app.post('/api/admin/coupons', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const body = await c.req.json()
+    
+    // Validate required fields
+    if (!body.code || !body.discount_type || body.discount_value === undefined) {
+      return c.json({ success: false, error: 'Missing required fields' }, 400)
+    }
+    
+    // Check if code already exists
+    const existing = await db.db.prepare(`
+      SELECT id FROM coupons WHERE code = ?
+    `).bind(body.code.toUpperCase()).first()
+    
+    if (existing) {
+      return c.json({ success: false, error: 'Coupon code already exists' }, 400)
+    }
+    
+    // Validate discount value
+    if (body.discount_type === 'percentage' && (body.discount_value < 0 || body.discount_value > 100)) {
+      return c.json({ success: false, error: 'Percentage must be between 0 and 100' }, 400)
+    }
+    
+    if (body.discount_type === 'fixed' && body.discount_value < 0) {
+      return c.json({ success: false, error: 'Fixed discount must be positive' }, 400)
+    }
+    
+    // Insert coupon
+    const result = await db.db.prepare(`
+      INSERT INTO coupons (
+        code, description, discount_type, discount_value,
+        starts_at, expires_at, max_uses, max_uses_per_customer,
+        minimum_order_value, applicable_products, excluded_products,
+        applicable_categories, excluded_categories, applicable_customers,
+        first_order_only, is_stackable, is_active, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+    `).bind(
+      body.code.toUpperCase(),
+      body.description || null,
+      body.discount_type,
+      body.discount_value,
+      body.starts_at || null,
+      body.expires_at || null,
+      body.max_uses || null,
+      body.max_uses_per_customer || 1,
+      body.minimum_order_value || null,
+      body.applicable_products ? JSON.stringify(body.applicable_products) : null,
+      body.excluded_products ? JSON.stringify(body.excluded_products) : null,
+      body.applicable_categories ? JSON.stringify(body.applicable_categories) : null,
+      body.excluded_categories ? JSON.stringify(body.excluded_categories) : null,
+      body.applicable_customers ? JSON.stringify(body.applicable_customers) : null,
+      body.first_order_only ? 1 : 0,
+      body.is_stackable ? 1 : 0,
+      body.is_active !== false ? 1 : 0
+    ).run()
+    
+    return c.json({ 
+      success: true, 
+      message: 'Coupon created successfully',
+      id: result.meta?.last_row_id
+    })
+  } catch (error) {
+    console.error('Error creating coupon:', error)
+    return c.json({ success: false, error: 'Failed to create coupon' }, 500)
+  }
+})
+
+// Update coupon
+app.put('/api/admin/coupons/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+    const body = await c.req.json()
+    
+    // Check if coupon exists
+    const existing = await db.db.prepare(`SELECT id FROM coupons WHERE id = ?`).bind(id).first()
+    if (!existing) {
+      return c.json({ success: false, error: 'Coupon not found' }, 404)
+    }
+    
+    // Build update query dynamically
+    const updates: string[] = []
+    const params: any[] = []
+    
+    if (body.description !== undefined) {
+      updates.push('description = ?')
+      params.push(body.description)
+    }
+    
+    if (body.discount_value !== undefined) {
+      updates.push('discount_value = ?')
+      params.push(body.discount_value)
+    }
+    
+    if (body.starts_at !== undefined) {
+      updates.push('starts_at = ?')
+      params.push(body.starts_at)
+    }
+    
+    if (body.expires_at !== undefined) {
+      updates.push('expires_at = ?')
+      params.push(body.expires_at)
+    }
+    
+    if (body.max_uses !== undefined) {
+      updates.push('max_uses = ?')
+      params.push(body.max_uses)
+    }
+    
+    if (body.max_uses_per_customer !== undefined) {
+      updates.push('max_uses_per_customer = ?')
+      params.push(body.max_uses_per_customer)
+    }
+    
+    if (body.minimum_order_value !== undefined) {
+      updates.push('minimum_order_value = ?')
+      params.push(body.minimum_order_value)
+    }
+    
+    if (body.is_active !== undefined) {
+      updates.push('is_active = ?')
+      params.push(body.is_active ? 1 : 0)
+    }
+    
+    if (body.is_stackable !== undefined) {
+      updates.push('is_stackable = ?')
+      params.push(body.is_stackable ? 1 : 0)
+    }
+    
+    updates.push('updated_at = CURRENT_TIMESTAMP')
+    params.push(id)
+    
+    await db.db.prepare(`
+      UPDATE coupons 
+      SET ${updates.join(', ')}
+      WHERE id = ?
+    `).bind(...params).run()
+    
+    return c.json({ success: true, message: 'Coupon updated successfully' })
+  } catch (error) {
+    console.error('Error updating coupon:', error)
+    return c.json({ success: false, error: 'Failed to update coupon' }, 500)
+  }
+})
+
+// Delete coupon
+app.delete('/api/admin/coupons/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+    
+    // Check if coupon has been used
+    const usage = await db.db.prepare(`
+      SELECT COUNT(*) as count FROM coupon_usage WHERE coupon_id = ?
+    `).bind(id).first()
+    
+    if (usage && usage.count > 0) {
+      return c.json({ 
+        success: false, 
+        error: `Cannot delete coupon with ${usage.count} uses. Deactivate it instead.` 
+      }, 400)
+    }
+    
+    await db.db.prepare(`DELETE FROM coupons WHERE id = ?`).bind(id).run()
+    
+    return c.json({ success: true, message: 'Coupon deleted successfully' })
+  } catch (error) {
+    console.error('Error deleting coupon:', error)
+    return c.json({ success: false, error: 'Failed to delete coupon' }, 500)
+  }
+})
+
+// Validate coupon code (public API for checkout)
+app.post('/api/coupons/validate', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const { code, cart_total, customer_email, product_ids } = await c.req.json()
+    
+    if (!code) {
+      return c.json({ success: false, error: 'Coupon code is required' }, 400)
+    }
+    
+    // Get coupon
+    const coupon = await db.db.prepare(`
+      SELECT * FROM coupons WHERE code = ? AND is_active = 1
+    `).bind(code.toUpperCase()).first()
+    
+    if (!coupon) {
+      return c.json({ success: false, error: 'Invalid coupon code' }, 400)
+    }
+    
+    // Check if started
+    if (coupon.starts_at && new Date(coupon.starts_at) > new Date()) {
+      return c.json({ success: false, error: 'Coupon is not yet active' }, 400)
+    }
+    
+    // Check if expired
+    if (coupon.expires_at && new Date(coupon.expires_at) < new Date()) {
+      return c.json({ success: false, error: 'Coupon has expired' }, 400)
+    }
+    
+    // Check max uses
+    if (coupon.max_uses) {
+      const uses = await db.db.prepare(`
+        SELECT COUNT(*) as count FROM coupon_usage WHERE coupon_id = ?
+      `).bind(coupon.id).first()
+      
+      if (uses && uses.count >= coupon.max_uses) {
+        return c.json({ success: false, error: 'Coupon usage limit reached' }, 400)
+      }
+    }
+    
+    // Check customer usage limit
+    if (customer_email && coupon.max_uses_per_customer) {
+      const customerUses = await db.db.prepare(`
+        SELECT COUNT(*) as count FROM coupon_usage 
+        WHERE coupon_id = ? AND customer_email = ?
+      `).bind(coupon.id, customer_email).first()
+      
+      if (customerUses && customerUses.count >= coupon.max_uses_per_customer) {
+        return c.json({ 
+          success: false, 
+          error: 'You have already used this coupon the maximum number of times' 
+        }, 400)
+      }
+    }
+    
+    // Check minimum order value
+    if (coupon.minimum_order_value && cart_total < coupon.minimum_order_value) {
+      return c.json({ 
+        success: false, 
+        error: `Minimum order value of €${coupon.minimum_order_value} required` 
+      }, 400)
+    }
+    
+    // Calculate discount
+    let discount_amount = 0
+    if (coupon.discount_type === 'percentage') {
+      discount_amount = (cart_total * coupon.discount_value) / 100
+    } else if (coupon.discount_type === 'fixed') {
+      discount_amount = Math.min(coupon.discount_value, cart_total)
+    }
+    
+    return c.json({ 
+      success: true, 
+      data: {
+        coupon_id: coupon.id,
+        code: coupon.code,
+        discount_type: coupon.discount_type,
+        discount_value: coupon.discount_value,
+        discount_amount: parseFloat(discount_amount.toFixed(2)),
+        description: coupon.description
+      }
+    })
+  } catch (error) {
+    console.error('Error validating coupon:', error)
+    return c.json({ success: false, error: 'Failed to validate coupon' }, 500)
+  }
+})
+
+// Apply coupon to order (called during order creation)
+async function applyCouponToOrder(
+  db: any, 
+  couponCode: string, 
+  orderId: number, 
+  customerId: number | null,
+  customerEmail: string,
+  discountAmount: number
+): Promise<void> {
+  try {
+    const coupon = await db.prepare(`
+      SELECT id FROM coupons WHERE code = ?
+    `).bind(couponCode.toUpperCase()).first()
+    
+    if (!coupon) return
+    
+    // Record usage
+    await db.prepare(`
+      INSERT INTO coupon_usage (
+        coupon_id, order_id, customer_id, customer_email, discount_amount, used_at
+      ) VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    `).bind(
+      coupon.id,
+      orderId,
+      customerId,
+      customerEmail,
+      discountAmount
+    ).run()
+    
+    // Increment usage count
+    await db.prepare(`
+      UPDATE coupons SET current_uses = current_uses + 1 WHERE id = ?
+    `).bind(coupon.id).run()
+    
+    console.log(`[Coupon] Applied ${couponCode} to order ${orderId}, discount: €${discountAmount}`)
+  } catch (error) {
+    console.error('[Coupon] Error applying to order:', error)
+  }
+}
+
+// ============================================
 // CERTIFICATE MANAGEMENT API
 // ============================================
 
@@ -3234,6 +3647,7 @@ import { AdminCustomers } from './components/admin-customers'
 import { AdminInvoices } from './components/admin-invoices'
 import { AdminCertificates } from './components/admin-certificates'
 import { AdminCertificateSettings } from './components/admin-certificate-settings'
+import { AdminCoupons } from './components/admin-coupons'
 import { AdminSettingsAdvanced } from './components/admin-settings-advanced'
 import { AdminEmailTemplates } from './components/admin-email-templates'
 import { AdminCookies } from './components/admin-cookies'
@@ -3663,6 +4077,15 @@ app.get('/admin/certificate-settings', (c) => {
   return c.html(
     <AdminLayout title="Certificate Settings" currentUser={{ first_name: 'Admin' }}>
       <AdminCertificateSettings />
+    </AdminLayout>
+  )
+})
+
+// Coupon Management
+app.get('/admin/coupons', (c) => {
+  return c.html(
+    <AdminLayout title="Coupon Management" currentUser={{ first_name: 'Admin' }}>
+      <AdminCoupons />
     </AdminLayout>
   )
 })
