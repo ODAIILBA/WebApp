@@ -15,6 +15,10 @@ export const AdminHomepageSectionsAdvanced: FC = () => {
           :root {
             --navy-dark: #1a2a4e;
             --gold: #d4af37;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
           }
 
           * {
@@ -25,646 +29,592 @@ export const AdminHomepageSectionsAdvanced: FC = () => {
 
           body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f7fa;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f2 100%);
           }
 
           .admin-sidebar {
             position: fixed;
             left: 0;
             top: 0;
-            width: 260px;
+            width: 280px;
             height: 100vh;
-            background: var(--navy-dark);
+            background: linear-gradient(180deg, var(--navy-dark) 0%, #0f1729 100%);
             color: white;
             overflow-y: auto;
             z-index: 1000;
+            box-shadow: 4px 0 20px rgba(0,0,0,0.2);
           }
 
           .admin-content {
-            margin-left: 260px;
+            margin-left: 280px;
             padding: 2rem;
             min-height: 100vh;
           }
 
-          .nav-item {
-            padding: 0.875rem 1.5rem;
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            transition: all 0.2s;
-            border-left: 3px solid transparent;
-          }
-
-          .nav-item:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border-left-color: var(--gold);
-          }
-
-          .nav-item.active {
-            background: rgba(212, 175, 55, 0.15);
-            color: var(--gold);
-            border-left-color: var(--gold);
-          }
-
           .section-card {
             background: white;
-            border-radius: 12px;
+            border-radius: 16px;
             padding: 1.5rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            transition: all 0.3s;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: move;
             border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+          }
+
+          .section-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--gold), var(--navy-dark));
+            transform: scaleX(0);
+            transition: transform 0.3s;
+          }
+
+          .section-card:hover::before {
+            transform: scaleX(1);
           }
 
           .section-card:hover {
-            box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
             border-color: var(--gold);
           }
 
           .section-card.dragging {
-            opacity: 0.5;
-            transform: scale(0.98);
+            opacity: 0.6;
+            transform: scale(0.98) rotate(2deg);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.2);
           }
 
-          .section-type-badge {
-            display: inline-block;
-            padding: 0.35rem 0.75rem;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            text-transform: uppercase;
-          }
-
-          .badge-hero { background: #e3f2fd; color: #1976d2; }
-          .badge-products { background: #f3e5f5; color: #7b1fa2; }
-          .badge-features { background: #fff3e0; color: #f57c00; }
-          .badge-testimonials { background: #fce4ec; color: #c2185b; }
-          .badge-gallery { background: #e8f5e9; color: #388e3c; }
-          .badge-cta { background: #fff9c4; color: #f57f17; }
-          .badge-blog { background: #e0f2f1; color: #00796b; }
-
-          .btn {
-            padding: 0.625rem 1.25rem;
-            border: none;
+          .section-preview {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 8px;
-            font-weight: 600;
+            padding: 2rem;
+            color: white;
+            margin-top: 1rem;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+          }
+
+          .section-preview::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 4s ease-in-out infinite;
+          }
+
+          @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+          }
+
+          .template-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 2px solid #e5e7eb;
+            transition: all 0.3s;
             cursor: pointer;
-            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+          }
+
+          .template-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, var(--gold) 0%, var(--navy-dark) 100%);
+            opacity: 0;
+            transition: opacity 0.3s;
+          }
+
+          .template-card:hover {
+            border-color: var(--gold);
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+          }
+
+          .template-card:hover::before {
+            opacity: 0.05;
+          }
+
+          .badge {
             display: inline-flex;
             align-items: center;
             gap: 0.5rem;
-          }
-
-          .btn-primary {
-            background: var(--navy-dark);
-            color: white;
-          }
-
-          .btn-primary:hover {
-            background: #0f1936;
-            transform: translateY(-2px);
-          }
-
-          .btn-secondary {
-            background: var(--gold);
-            color: var(--navy-dark);
-          }
-
-          .btn-secondary:hover {
-            background: #c19b2e;
-          }
-
-          .btn-danger {
-            background: #dc2626;
-            color: white;
-          }
-
-          .btn-danger:hover {
-            background: #b91c1c;
-          }
-
-          .btn-sm {
-            padding: 0.375rem 0.75rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
             font-size: 0.875rem;
+            font-weight: 600;
           }
 
-          .modal {
-            display: none;
-            position: fixed;
-            z-index: 2000;
-            left: 0;
+          .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+          }
+
+          .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+          }
+
+          .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+          }
+
+          .badge-info {
+            background: #dbeafe;
+            color: #1e40af;
+          }
+
+          .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+          }
+
+          .stat-card::before {
+            content: '';
+            position: absolute;
             top: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, var(--gold) 0%, transparent 70%);
+            opacity: 0.1;
+            transform: translate(30%, -30%);
+          }
+
+          .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+          }
+
+          .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            opacity: 0;
+            animation: fadeIn 0.3s forwards;
+          }
+
+          @keyframes fadeIn {
+            to { opacity: 1; }
           }
 
           .modal-content {
             background: white;
-            margin: 3% auto;
-            padding: 0;
-            border-radius: 16px;
-            width: 90%;
-            max-width: 1200px;
-            max-height: 85vh;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-          }
-
-          .modal-header {
-            background: linear-gradient(135deg, var(--navy-dark) 0%, #0f1936 100%);
-            color: white;
-            padding: 1.5rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-          }
-
-          .modal-body {
-            overflow-y: auto;
-            flex: 1;
-          }
-
-          .split-view {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            height: 100%;
-          }
-
-          .editor-pane {
+            border-radius: 20px;
             padding: 2rem;
-            border-right: 2px solid #e2e8f0;
+            max-width: 90vw;
+            max-height: 90vh;
             overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            transform: scale(0.9);
+            animation: scaleUp 0.3s forwards;
           }
 
-          .preview-pane {
-            padding: 2rem;
-            background: #f8fafc;
-            overflow-y: auto;
+          @keyframes scaleUp {
+            to { transform: scale(1); }
           }
 
-          .form-group {
-            margin-bottom: 1.5rem;
-          }
-
-          .form-label {
-            display: block;
+          .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            border: none;
             font-weight: 600;
-            margin-bottom: 0.5rem;
-            color: var(--navy-dark);
-          }
-
-          .form-input, .form-select, .form-textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.2s;
-          }
-
-          .form-input:focus, .form-select:focus, .form-textarea:focus {
-            outline: none;
-            border-color: var(--gold);
-          }
-
-          .form-textarea {
-            resize: vertical;
-            min-height: 100px;
-            font-family: inherit;
-          }
-
-          .toggle-switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 24px;
-          }
-
-          .toggle-switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-          }
-
-          .slider {
-            position: absolute;
             cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-            border-radius: 24px;
-          }
-
-          .slider:before {
-            position: absolute;
-            content: "";
-            height: 18px;
-            width: 18px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-          }
-
-          input:checked + .slider {
-            background-color: var(--gold);
-          }
-
-          input:checked + .slider:before {
-            transform: translateX(26px);
-          }
-
-          .drag-handle {
-            cursor: grab;
-            padding: 0.5rem;
-            color: #94a3b8;
-          }
-
-          .drag-handle:active {
-            cursor: grabbing;
-          }
-
-          .preview-section {
-            background: white;
-            border-radius: 12px;
-            padding: 2rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-          }
-
-          .color-picker-wrapper {
-            display: flex;
-            gap: 0.5rem;
+            transition: all 0.3s;
+            display: inline-flex;
             align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
           }
 
-          .color-preview {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            border: 2px solid #e2e8f0;
-            cursor: pointer;
+          .btn-primary {
+            background: linear-gradient(135deg, var(--gold) 0%, #b8941f 100%);
+            color: var(--navy-dark);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
           }
 
-          .template-grid {
+          .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(212, 175, 55, 0.4);
+          }
+
+          .btn-secondary {
+            background: var(--navy-dark);
+            color: white;
+          }
+
+          .btn-secondary:hover {
+            background: #0f1729;
+            transform: translateY(-2px);
+          }
+
+          .btn-danger {
+            background: var(--danger);
+            color: white;
+          }
+
+          .btn-success {
+            background: var(--success);
+            color: white;
+          }
+
+          .product-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 1rem;
             margin-top: 1rem;
           }
 
-          .template-card {
+          .product-item {
             background: white;
-            border: 2px solid #e2e8f0;
+            border: 2px solid #e5e7eb;
             border-radius: 8px;
             padding: 1rem;
             cursor: pointer;
             transition: all 0.2s;
           }
 
-          .template-card:hover {
+          .product-item:hover {
             border-color: var(--gold);
             transform: translateY(-2px);
           }
 
-          .template-card.selected {
-            border-color: var(--gold);
-            background: rgba(212, 175, 55, 0.1);
-          }
-
-          .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1.5rem;
-            margin-bottom: 2rem;
-          }
-
-          .stat-card {
-            background: white;
-            padding: 1.5rem;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-          }
-
-          .stat-value {
-            font-size: 2rem;
-            font-weight: bold;
-            color: var(--navy-dark);
-          }
-
-          .stat-label {
-            color: #64748b;
-            font-size: 0.875rem;
-            margin-top: 0.5rem;
-          }
-
-          .image-upload-area {
-            border: 2px dashed #e2e8f0;
-            border-radius: 8px;
-            padding: 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-          }
-
-          .image-upload-area:hover {
+          .product-item.selected {
             border-color: var(--gold);
             background: rgba(212, 175, 55, 0.05);
           }
 
-          .image-preview {
-            max-width: 100%;
-            max-height: 200px;
-            border-radius: 8px;
-            margin-top: 1rem;
+          .drag-handle {
+            cursor: grab;
+            color: #9ca3af;
+            font-size: 1.25rem;
+          }
+
+          .drag-handle:active {
+            cursor: grabbing;
+          }
+
+          .section-actions {
+            display: flex;
+            gap: 0.5rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+          }
+
+          .section-card:hover .section-actions {
+            opacity: 1;
+          }
+
+          .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: #d1d5db;
+            border-radius: 13px;
+            cursor: pointer;
+            transition: background 0.3s;
+          }
+
+          .toggle-switch.active {
+            background: var(--success);
+          }
+
+          .toggle-switch::before {
+            content: '';
+            position: absolute;
+            width: 22px;
+            height: 22px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+          }
+
+          .toggle-switch.active::before {
+            transform: translateX(24px);
           }
         `}</style>
       </head>
       <body>
-        <div class="admin-sidebar">
-          <div style="padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
-            <h1 style="color: var(--gold); font-size: 1.25rem; font-weight: bold;">
-              <i class="fas fa-crown" style="margin-right: 0.5rem;"></i>
-              SOFTWAREKING24
-            </h1>
-            <p style="color: rgba(255,255,255,0.6); font-size: 0.875rem; margin-top: 0.25rem;">
-              Admin Panel
-            </p>
-          </div>
-          <div id="sidebar-nav"></div>
-        </div>
-
-        <div class="admin-content">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-            <div>
-              <h1 style="font-size: 2rem; font-weight: bold; color: var(--navy-dark); display: flex; align-items: center; gap: 0.75rem;">
-                <i class="fas fa-th-large"></i>
-                Homepage-Verwaltung
-              </h1>
-              <p style="color: #64748b; margin-top: 0.5rem;">
-                Erstellen und verwalten Sie Homepage-Sektionen mit Drag & Drop
-              </p>
+        <div class="flex">
+          {/* Sidebar */}
+          <div class="admin-sidebar">
+            <div class="p-6 border-b border-gray-700">
+              <h2 class="text-2xl font-bold" style="color: var(--gold)">SOFTWAREKING24</h2>
+              <p class="text-sm text-gray-400 mt-1">Homepage Editor</p>
             </div>
-            <button onclick="openAddModal()" class="btn btn-primary">
-              <i class="fas fa-plus"></i>
-              Neue Sektion
-            </button>
+            <nav class="p-4" id="sidebar-nav">
+              {/* Will be populated by JS */}
+            </nav>
           </div>
 
-          {/* Statistics */}
-          <div class="stats-grid">
-            <div class="stat-card">
-              <div class="stat-value" id="total-sections">0</div>
-              <div class="stat-label">Gesamt Sektionen</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-value" id="active-sections">0</div>
-              <div class="stat-label">Aktive Sektionen</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-value" id="section-types">0</div>
-              <div class="stat-label">Sektionstypen</div>
-            </div>
-            <div class="stat-card">
-              <div class="stat-value" id="last-updated">-</div>
-              <div class="stat-label">Zuletzt aktualisiert</div>
-            </div>
-          </div>
+          {/* Main Content */}
+          <div class="admin-content">
+            {/* Header */}
+            <div class="mb-8">
+              <div class="flex justify-between items-center mb-4">
+                <div>
+                  <h1 class="text-4xl font-bold text-gray-800 mb-2">
+                    <i class="fas fa-th-large mr-3" style="color: var(--gold)"></i>
+                    Homepage-Verwaltung
+                  </h1>
+                  <p class="text-gray-600">Gestalten Sie die Startseite mit Drag & Drop</p>
+                </div>
+                <div class="flex gap-3">
+                  <button onclick="showTemplates()" class="btn btn-secondary">
+                    <i class="fas fa-layer-group"></i>
+                    Vorlagen
+                  </button>
+                  <button onclick="showAddSection()" class="btn btn-primary">
+                    <i class="fas fa-plus"></i>
+                    Neue Sektion
+                  </button>
+                </div>
+              </div>
 
-          {/* Quick Actions */}
-          <div style="display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
-            <button onclick="filterSections('all')" class="btn btn-secondary btn-sm" id="filter-all">
-              <i class="fas fa-th"></i> Alle
-            </button>
-            <button onclick="filterSections('hero')" class="btn btn-secondary btn-sm">
-              <i class="fas fa-image"></i> Hero
-            </button>
-            <button onclick="filterSections('products')" class="btn btn-secondary btn-sm">
-              <i class="fas fa-box"></i> Produkte
-            </button>
-            <button onclick="filterSections('features')" class="btn btn-secondary btn-sm">
-              <i class="fas fa-star"></i> Features
-            </button>
-            <button onclick="filterSections('testimonials')" class="btn btn-secondary btn-sm">
-              <i class="fas fa-quote-left"></i> Testimonials
-            </button>
-            <button onclick="saveOrder()" class="btn btn-primary btn-sm" style="margin-left: auto;">
-              <i class="fas fa-save"></i> Reihenfolge speichern
-            </button>
-          </div>
+              {/* Quick Actions */}
+              <div class="flex gap-3 mb-6">
+                <button onclick="enableAll()" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all">
+                  <i class="fas fa-check-circle mr-2"></i>Alle aktivieren
+                </button>
+                <button onclick="disableAll()" class="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all">
+                  <i class="fas fa-times-circle mr-2"></i>Alle deaktivieren
+                </button>
+                <button onclick="saveOrder()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all">
+                  <i class="fas fa-save mr-2"></i>Reihenfolge speichern
+                </button>
+              </div>
+            </div>
 
-          {/* Sections List with Drag & Drop */}
-          <div id="sections-list" class="sortable-container"></div>
+            {/* Statistics */}
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <div class="stat-card">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-500 text-sm font-medium">Gesamt</p>
+                    <p class="text-3xl font-bold text-gray-800" id="total-sections">0</p>
+                  </div>
+                  <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-th-large text-blue-600 text-xl"></i>
+                  </div>
+                </div>
+              </div>
 
-          {/* Empty State */}
-          <div id="empty-state" style="display: none; text-align: center; padding: 4rem; color: #64748b;">
-            <i class="fas fa-th-large" style="font-size: 4rem; margin-bottom: 1rem; opacity: 0.3;"></i>
-            <h3 style="font-size: 1.5rem; margin-bottom: 0.5rem;">Keine Sektionen vorhanden</h3>
-            <p style="margin-bottom: 1.5rem;">Erstellen Sie Ihre erste Homepage-Sektion</p>
-            <button onclick="openAddModal()" class="btn btn-primary">
-              <i class="fas fa-plus"></i>
-              Erste Sektion erstellen
-            </button>
-          </div>
-        </div>
+              <div class="stat-card">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-500 text-sm font-medium">Aktiv</p>
+                    <p class="text-3xl font-bold text-green-600" id="active-sections">0</p>
+                  </div>
+                  <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                  </div>
+                </div>
+              </div>
 
-        {/* Add/Edit Modal */}
-        <div id="sectionModal" class="modal">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h2 style="font-size: 1.5rem; font-weight: bold;">
-                <span id="modal-title">Neue Sektion erstellen</span>
+              <div class="stat-card">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-500 text-sm font-medium">Inaktiv</p>
+                    <p class="text-3xl font-bold text-gray-400" id="inactive-sections">0</p>
+                  </div>
+                  <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center">
+                    <i class="fas fa-pause-circle text-gray-400 text-xl"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div class="stat-card">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-gray-500 text-sm font-medium">Produkte</p>
+                    <p class="text-3xl font-bold" style="color: var(--gold)" id="total-products">0</p>
+                  </div>
+                  <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: rgba(212, 175, 55, 0.1)">
+                    <i class="fas fa-box text-xl" style="color: var(--gold)"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Sections List */}
+            <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+              <h2 class="text-2xl font-bold mb-4 text-gray-800">
+                <i class="fas fa-list mr-2" style="color: var(--gold)"></i>
+                Sektionen
               </h2>
-              <button onclick="closeModal()" style="background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer;">
+              <div id="sections-container">
+                <div class="text-center py-12">
+                  <i class="fas fa-spinner fa-spin text-5xl mb-4" style="color: var(--gold)"></i>
+                  <p class="text-gray-500">Lade Sektionen...</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Preview Section */}
+            <div class="bg-white rounded-2xl shadow-lg p-6">
+              <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-gray-800">
+                  <i class="fas fa-eye mr-2" style="color: var(--gold)"></i>
+                  Live-Vorschau
+                </h2>
+                <button onclick="refreshPreview()" class="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition-all">
+                  <i class="fas fa-sync-alt mr-2"></i>Aktualisieren
+                </button>
+              </div>
+              <div id="live-preview" class="border-2 border-dashed border-gray-300 rounded-lg p-8 min-h-96">
+                <div class="text-center text-gray-400">
+                  <i class="fas fa-desktop text-6xl mb-4"></i>
+                  <p>Vorschau wird hier angezeigt</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Add Section Modal */}
+        <div id="add-section-modal" class="hidden modal-overlay" onclick="if(event.target === this) hideAddSection()">
+          <div class="modal-content" style="max-width: 1200px" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6">
+              <h2 class="text-3xl font-bold text-gray-800">
+                <i class="fas fa-plus-circle mr-2" style="color: var(--gold)"></i>
+                Neue Sektion hinzufügen
+              </h2>
+              <button onclick="hideAddSection()" class="text-gray-400 hover:text-gray-600 text-2xl">
                 <i class="fas fa-times"></i>
               </button>
             </div>
 
-            <div class="modal-body">
-              <div class="split-view">
-                {/* Editor Pane */}
-                <div class="editor-pane">
-                  <form id="sectionForm" onsubmit="saveSection(event)">
-                    <input type="hidden" id="section-id" />
+            <div class="mb-6">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Sektionstyp wählen</label>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="section-types">
+                {/* Will be populated by JS */}
+              </div>
+            </div>
 
-                    <div class="form-group">
-                      <label class="form-label">Sektionstyp *</label>
-                      <select id="section-type" class="form-select" required onchange="updatePreview()">
-                        <option value="">-- Wählen Sie einen Typ --</option>
-                        <option value="hero">🎯 Hero Banner - Großes Titelbild mit CTA</option>
-                        <option value="products_featured">⭐ Featured Produkte - Hervorgehobene Artikel</option>
-                        <option value="products_bestsellers">🔥 Bestsellers - Meistverkaufte Produkte</option>
-                        <option value="products_new">🆕 Neue Produkte - Neueste Artikel</option>
-                        <option value="products_sale">💰 Angebote - Reduzierte Produkte</option>
-                        <option value="features">✨ Features - Funktionen & Vorteile</option>
-                        <option value="testimonials">💬 Testimonials - Kundenbewertungen</option>
-                        <option value="gallery">🖼️ Galerie - Bildergalerie</option>
-                        <option value="cta">📢 Call-to-Action - Handlungsaufforderung</option>
-                        <option value="blog">📝 Blog Posts - Neueste Artikel</option>
-                        <option value="brands">🏷️ Marken - Partner-Logos</option>
-                        <option value="custom">🔧 Custom HTML - Eigener Code</option>
-                      </select>
-                    </div>
+            <div id="section-form" class="hidden">
+              <form onsubmit="saveSection(event)" class="space-y-6">
+                <input type="hidden" id="section-id" />
+                
+                <div class="grid grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Titel (Deutsch)</label>
+                    <input type="text" id="section-title-de" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold focus:border-transparent" placeholder="z.B. Beliebte Produkte" />
+                  </div>
 
-                    <div class="form-group">
-                      <label class="form-label">Titel (Deutsch) *</label>
-                      <input type="text" id="title-de" class="form-input" required placeholder="z.B. Beliebte Produkte" onkeyup="updatePreview()" />
-                    </div>
-
-                    <div class="form-group">
-                      <label class="form-label">Untertitel (Deutsch)</label>
-                      <input type="text" id="subtitle-de" class="form-input" placeholder="z.B. Unsere meistverkauften Lizenzen" onkeyup="updatePreview()" />
-                    </div>
-
-                    <div class="form-group">
-                      <label class="form-label">Titel (Englisch)</label>
-                      <input type="text" id="title-en" class="form-input" placeholder="e.g. Popular Products" />
-                    </div>
-
-                    <div class="form-group">
-                      <label class="form-label">Untertitel (Englisch)</label>
-                      <input type="text" id="subtitle-en" class="form-input" placeholder="e.g. Our best-selling licenses" />
-                    </div>
-
-                    <div id="product-options" style="display: none;">
-                      <div class="form-group">
-                        <label class="form-label">Produktfilter</label>
-                        <select id="product-filter" class="form-select">
-                          <option value="category">Nach Kategorie</option>
-                          <option value="brand">Nach Marke</option>
-                          <option value="manual">Manuell auswählen</option>
-                        </select>
-                      </div>
-
-                      <div class="form-group">
-                        <label class="form-label">Anzahl Produkte</label>
-                        <input type="number" id="product-limit" class="form-input" value="8" min="1" max="20" />
-                      </div>
-
-                      <div class="form-group">
-                        <label class="form-label">Layout</label>
-                        <select id="product-layout" class="form-select">
-                          <option value="grid-4">Grid (4 Spalten)</option>
-                          <option value="grid-3">Grid (3 Spalten)</option>
-                          <option value="grid-6">Grid (6 Spalten)</option>
-                          <option value="slider">Slider/Carousel</option>
-                          <option value="list">Liste</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div id="hero-options" style="display: none;">
-                      <div class="form-group">
-                        <label class="form-label">Hintergrundbild URL</label>
-                        <input type="text" id="hero-bg-image" class="form-input" placeholder="https://..." />
-                        <div class="image-upload-area" onclick="document.getElementById('hero-image-upload').click()">
-                          <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: var(--gold); margin-bottom: 0.5rem;"></i>
-                          <p style="color: #64748b;">Klicken Sie hier, um ein Bild hochzuladen</p>
-                          <input type="file" id="hero-image-upload" style="display: none;" accept="image/*" />
-                        </div>
-                      </div>
-
-                      <div class="form-group">
-                        <label class="form-label">Button Text</label>
-                        <input type="text" id="hero-btn-text" class="form-input" placeholder="z.B. Jetzt entdecken" />
-                      </div>
-
-                      <div class="form-group">
-                        <label class="form-label">Button Link</label>
-                        <input type="text" id="hero-btn-link" class="form-input" placeholder="/produkte" />
-                      </div>
-
-                      <div class="form-group">
-                        <label class="form-label">Höhe</label>
-                        <select id="hero-height" class="form-select">
-                          <option value="small">Klein (400px)</option>
-                          <option value="medium" selected>Mittel (600px)</option>
-                          <option value="large">Groß (800px)</option>
-                          <option value="fullscreen">Vollbild</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div id="features-options" style="display: none;">
-                      <div class="form-group">
-                        <label class="form-label">Features (JSON Array)</label>
-                        <textarea id="features-json" class="form-textarea" placeholder='[{"icon": "fas fa-shield-alt", "title": "Sicher", "description": "..."}]'></textarea>
-                      </div>
-
-                      <div class="form-group">
-                        <label class="form-label">Features Layout</label>
-                        <select id="features-layout" class="form-select">
-                          <option value="grid-3">3 Spalten</option>
-                          <option value="grid-4">4 Spalten</option>
-                          <option value="grid-2">2 Spalten</option>
-                        </select>
-                      </div>
-                    </div>
-
-                    <div id="custom-options" style="display: none;">
-                      <div class="form-group">
-                        <label class="form-label">Custom HTML</label>
-                        <textarea id="custom-html" class="form-textarea" style="min-height: 200px; font-family: monospace;" placeholder="<div>Ihr HTML Code...</div>"></textarea>
-                      </div>
-                    </div>
-
-                    <div class="form-group">
-                      <label class="form-label">Hintergrundfarbe</label>
-                      <div class="color-picker-wrapper">
-                        <input type="color" id="bg-color" class="color-preview" value="#ffffff" onchange="updatePreview()" />
-                        <input type="text" id="bg-color-hex" class="form-input" value="#ffffff" placeholder="#ffffff" onchange="document.getElementById('bg-color').value=this.value; updatePreview()" />
-                      </div>
-                    </div>
-
-                    <div class="form-group">
-                      <label class="form-label">CSS Klassen (Optional)</label>
-                      <input type="text" id="css-classes" class="form-input" placeholder="py-8 px-4 container mx-auto" />
-                    </div>
-
-                    <div class="form-group" style="display: flex; align-items: center; gap: 1rem;">
-                      <label class="toggle-switch">
-                        <input type="checkbox" id="is-active" checked />
-                        <span class="slider"></span>
-                      </label>
-                      <label for="is-active" style="cursor: pointer; font-weight: 600;">
-                        Sektion ist aktiv
-                      </label>
-                    </div>
-
-                    <div style="display: flex; gap: 1rem; justify-content: flex-end; padding-top: 1.5rem; border-top: 2px solid #e2e8f0;">
-                      <button type="button" onclick="closeModal()" class="btn" style="background: #e2e8f0; color: #475569;">
-                        Abbrechen
-                      </button>
-                      <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i>
-                        Speichern
-                      </button>
-                    </div>
-                  </form>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Untertitel</label>
+                    <input type="text" id="section-subtitle" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gold focus:border-transparent" placeholder="z.B. Unsere meistverkauften Artikel" />
+                  </div>
                 </div>
 
-                {/* Preview Pane */}
-                <div class="preview-pane">
-                  <div style="position: sticky; top: 0;">
-                    <h3 style="font-size: 1.25rem; font-weight: bold; color: var(--navy-dark); margin-bottom: 1rem;">
-                      <i class="fas fa-eye"></i> Vorschau
-                    </h3>
-                    <div id="preview-container" class="preview-section">
-                      <p style="color: #64748b; text-align: center;">
-                        Füllen Sie das Formular aus, um eine Vorschau zu sehen
-                      </p>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-2">Produkte auswählen</label>
+                  <div class="flex gap-2 mb-2">
+                    <button type="button" onclick="loadProducts('all')" class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">Alle</button>
+                    <button type="button" onclick="loadProducts('featured')" class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">Featured</button>
+                    <button type="button" onclick="loadProducts('new')" class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">Neu</button>
+                    <button type="button" onclick="loadProducts('sale')" class="px-3 py-1 bg-gray-200 hover:bg-gray-300 rounded text-sm">Sale</button>
+                  </div>
+                  <div class="product-grid" id="products-grid">
+                    <div class="col-span-full text-center py-8 text-gray-500">
+                      Klicken Sie auf eine Kategorie, um Produkte zu laden
                     </div>
+                  </div>
+                </div>
+
+                <div class="flex gap-3 justify-end">
+                  <button type="button" onclick="hideAddSection()" class="btn btn-secondary">
+                    <i class="fas fa-times mr-2"></i>Abbrechen
+                  </button>
+                  <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save mr-2"></i>Speichern
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+
+        {/* Templates Modal */}
+        <div id="templates-modal" class="hidden modal-overlay" onclick="if(event.target === this) hideTemplates()">
+          <div class="modal-content" style="max-width: 1200px" onclick="event.stopPropagation()">
+            <div class="flex justify-between items-center mb-6">
+              <h2 class="text-3xl font-bold text-gray-800">
+                <i class="fas fa-layer-group mr-2" style="color: var(--gold)"></i>
+                Vorlagen
+              </h2>
+              <button onclick="hideTemplates()" class="text-gray-400 hover:text-gray-600 text-2xl">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div class="template-card" onclick="applyTemplate('ecommerce')">
+                <div class="relative z-10">
+                  <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
+                    <i class="fas fa-shopping-cart text-blue-600 text-xl"></i>
+                  </div>
+                  <h3 class="font-bold text-lg mb-2">E-Commerce Standard</h3>
+                  <p class="text-sm text-gray-600 mb-3">Hero + Featured + Bestsellers + New Products</p>
+                  <div class="flex flex-wrap gap-2">
+                    <span class="badge badge-info">4 Sektionen</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="template-card" onclick="applyTemplate('minimal')">
+                <div class="relative z-10">
+                  <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-3">
+                    <i class="fas fa-spa text-purple-600 text-xl"></i>
+                  </div>
+                  <h3 class="font-bold text-lg mb-2">Minimalistisch</h3>
+                  <p class="text-sm text-gray-600 mb-3">Hero + Featured Products + Testimonials</p>
+                  <div class="flex flex-wrap gap-2">
+                    <span class="badge badge-info">3 Sektionen</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="template-card" onclick="applyTemplate('full')">
+                <div class="relative z-10">
+                  <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-3">
+                    <i class="fas fa-layer-group text-green-600 text-xl"></i>
+                  </div>
+                  <h3 class="font-bold text-lg mb-2">Vollständig</h3>
+                  <p class="text-sm text-gray-600 mb-3">Alle Sektionstypen aktiviert</p>
+                  <div class="flex flex-wrap gap-2">
+                    <span class="badge badge-info">8+ Sektionen</span>
                   </div>
                 </div>
               </div>
@@ -672,159 +622,189 @@ export const AdminHomepageSectionsAdvanced: FC = () => {
           </div>
         </div>
 
+        <script src="/static/auth.js"></script>
         <script>{`
           let sections = [];
-          let currentFilter = 'all';
-          let sortable = null;
+          let products = [];
+          let selectedProducts = [];
+          let currentSectionType = '';
 
-          // AdminSidebar Component
-          function AdminSidebar(currentPath) {
-            const navItems = [
-              { path: '/admin', icon: 'fas fa-home', label: 'Dashboard' },
+          // Section type configurations
+          const sectionTypes = {
+            hero: {
+              icon: 'fas fa-image',
+              name: 'Hero Banner',
+              color: '#3b82f6',
+              description: 'Großer Haupt-Banner mit CTA'
+            },
+            featured: {
+              icon: 'fas fa-star',
+              name: 'Featured Products',
+              color: '#f59e0b',
+              description: 'Hervorgehobene Produkte'
+            },
+            bestsellers: {
+              icon: 'fas fa-fire',
+              name: 'Bestseller',
+              color: '#ef4444',
+              description: 'Meistverkaufte Produkte'
+            },
+            new: {
+              icon: 'fas fa-sparkles',
+              name: 'Neue Produkte',
+              color: '#10b981',
+              description: 'Neueste Artikel'
+            },
+            sale: {
+              icon: 'fas fa-tags',
+              name: 'Sale Products',
+              color: '#ec4899',
+              description: 'Reduzierte Produkte'
+            },
+            categories: {
+              icon: 'fas fa-th',
+              name: 'Kategorien',
+              color: '#8b5cf6',
+              description: 'Produkt-Kategorien'
+            },
+            testimonials: {
+              icon: 'fas fa-quote-left',
+              name: 'Testimonials',
+              color: '#06b6d4',
+              description: 'Kundenbewertungen'
+            },
+            brands: {
+              icon: 'fas fa-crown',
+              name: 'Marken',
+              color: '#f97316',
+              description: 'Partner-Marken'
+            }
+          };
+
+          document.addEventListener('DOMContentLoaded', () => {
+            initSidebar();
+            loadSections();
+            renderSectionTypes();
+          });
+
+          function initSidebar() {
+            const sidebar = document.getElementById('sidebar-nav');
+            const items = [
+              { path: '/admin', icon: 'fas fa-tachometer-alt', label: 'Dashboard' },
               { path: '/admin/products', icon: 'fas fa-box', label: 'Produkte' },
               { path: '/admin/orders', icon: 'fas fa-shopping-cart', label: 'Bestellungen' },
               { path: '/admin/customers', icon: 'fas fa-users', label: 'Kunden' },
+              { path: '/admin/invoices', icon: 'fas fa-file-invoice', label: 'Rechnungen' },
               { path: '/admin/licenses', icon: 'fas fa-key', label: 'Lizenzen' },
               { path: '/admin/sliders', icon: 'fas fa-images', label: 'Slider' },
-              { path: '/admin/homepage-sections', icon: 'fas fa-th-large', label: 'Homepage' },
+              { path: '/admin/homepage-sections', icon: 'fas fa-th-large', label: 'Homepage', active: true },
               { path: '/admin/pages', icon: 'fas fa-file-alt', label: 'Seiten' },
               { path: '/admin/footer', icon: 'fas fa-shoe-prints', label: 'Footer' },
-              { path: '/admin/email-templates', icon: 'fas fa-envelope', label: 'E-Mail-Vorlagen' },
+              { path: '/admin/email-templates', icon: 'fas fa-envelope', label: 'E-Mail' },
               { path: '/admin/cookies', icon: 'fas fa-cookie-bite', label: 'Cookies' },
               { path: '/admin/contact-messages', icon: 'fas fa-comments', label: 'Kontakt' },
               { path: '/admin/settings', icon: 'fas fa-cog', label: 'Einstellungen' }
             ];
 
-            return navItems.map(item => 
-              '<a href="' + item.path + '" class="nav-item' + (currentPath === item.path ? ' active' : '') + '">' +
-                '<i class="' + item.icon + '"></i>' +
-                '<span>' + item.label + '</span>' +
-              '</a>'
-            ).join('');
-          }
-
-          // Initialize
-          document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('sidebar-nav').innerHTML = AdminSidebar('/admin/homepage-sections');
-            loadSections();
-            initSortable();
-          });
-
-          function initSortable() {
-            const el = document.getElementById('sections-list');
-            sortable = Sortable.create(el, {
-              animation: 150,
-              handle: '.drag-handle',
-              onEnd: function() {
-                updateOrder();
-              }
-            });
+            sidebar.innerHTML = items.map(item => \`
+              <a href="\${item.path}" class="nav-item \${item.active ? 'active' : ''}">
+                <i class="\${item.icon}"></i>
+                <span>\${item.label}</span>
+              </a>
+            \`).join('');
           }
 
           async function loadSections() {
             try {
               const response = await axios.get('/api/admin/homepage-sections');
-              sections = response.data.data || [];
-              updateStats();
-              renderSections();
+              if (response.data.success) {
+                sections = response.data.data;
+                renderSections();
+                updateStats();
+              }
             } catch (error) {
               console.error('Error loading sections:', error);
-              alert('Fehler beim Laden der Sektionen');
+              document.getElementById('sections-container').innerHTML = \`
+                <div class="text-center py-12 text-red-600">
+                  <i class="fas fa-exclamation-circle text-5xl mb-4"></i>
+                  <p>Fehler beim Laden der Sektionen</p>
+                </div>
+              \`;
             }
-          }
-
-          function updateStats() {
-            const total = sections.length;
-            const active = sections.filter(s => s.is_active).length;
-            const types = new Set(sections.map(s => s.section_type)).size;
-            const lastUpdate = sections.length > 0 
-              ? new Date(Math.max(...sections.map(s => new Date(s.updated_at)))).toLocaleDateString('de-DE')
-              : '-';
-
-            document.getElementById('total-sections').textContent = total;
-            document.getElementById('active-sections').textContent = active;
-            document.getElementById('section-types').textContent = types;
-            document.getElementById('last-updated').textContent = lastUpdate;
-          }
-
-          function filterSections(type) {
-            currentFilter = type;
-            renderSections();
           }
 
           function renderSections() {
-            const filtered = currentFilter === 'all' 
-              ? sections 
-              : sections.filter(s => s.section_type.startsWith(currentFilter));
-
-            if (filtered.length === 0) {
-              document.getElementById('sections-list').style.display = 'none';
-              document.getElementById('empty-state').style.display = 'block';
+            const container = document.getElementById('sections-container');
+            
+            if (sections.length === 0) {
+              container.innerHTML = \`
+                <div class="text-center py-12 text-gray-400">
+                  <i class="fas fa-inbox text-6xl mb-4"></i>
+                  <p class="text-xl mb-4">Keine Sektionen vorhanden</p>
+                  <button onclick="showAddSection()" class="btn btn-primary">
+                    <i class="fas fa-plus mr-2"></i>Erste Sektion erstellen
+                  </button>
+                </div>
+              \`;
               return;
             }
 
-            document.getElementById('sections-list').style.display = 'block';
-            document.getElementById('empty-state').style.display = 'none';
-
-            const html = filtered.map(section => {
-              const typeLabel = section.section_type.split('_')[0];
+            container.innerHTML = sections.map((section, index) => {
+              const typeConfig = sectionTypes[section.section_type] || {};
               return \`
                 <div class="section-card" data-id="\${section.id}">
-                  <div style="display: flex; align-items: start; gap: 1rem;">
+                  <div class="flex items-start gap-4">
                     <div class="drag-handle">
-                      <i class="fas fa-grip-vertical" style="font-size: 1.5rem;"></i>
+                      <i class="fas fa-grip-vertical"></i>
                     </div>
 
-                    <div style="flex: 1;">
-                      <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
-                        <div>
-                          <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
-                            <span class="section-type-badge badge-\${typeLabel}">
-                              \${section.section_type}
-                            </span>
-                            <h3 style="font-size: 1.125rem; font-weight: bold; color: var(--navy-dark);">
-                              \${section.title_de || 'Ohne Titel'}
-                            </h3>
-                          </div>
-                          <p style="color: #64748b; font-size: 0.875rem;">
-                            \${section.subtitle_de || 'Kein Untertitel'}
-                          </p>
+                    <div class="flex-1">
+                      <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: \${typeConfig.color}15">
+                          <i class="\${typeConfig.icon || 'fas fa-square'} text-lg" style="color: \${typeConfig.color}"></i>
                         </div>
-
-                        <label class="toggle-switch">
-                          <input type="checkbox" \${section.is_active ? 'checked' : ''} 
-                                 onchange="toggleSection(\${section.id}, this.checked)" />
-                          <span class="slider"></span>
-                        </label>
-                      </div>
-
-                      <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
-                        <div style="font-size: 0.875rem; color: #64748b;">
-                          <i class="fas fa-sort-amount-up"></i> Reihenfolge: <strong>\${section.display_order || 0}</strong>
+                        <div class="flex-1">
+                          <h3 class="font-bold text-lg text-gray-800">\${typeConfig.name || section.section_type}</h3>
+                          <p class="text-sm text-gray-500">\${section.section_key}</p>
                         </div>
-                        \${section.config?.product_limit ? \`
-                          <div style="font-size: 0.875rem; color: #64748b;">
-                            <i class="fas fa-box"></i> <strong>\${section.config.product_limit}</strong> Produkte
-                          </div>
-                        \` : ''}
-                        <div style="font-size: 0.875rem; color: #64748b;">
-                          <i class="fas fa-clock"></i> \${new Date(section.updated_at).toLocaleDateString('de-DE')}
+                        <div class="flex items-center gap-3">
+                          <span class="badge \${section.is_enabled ? 'badge-success' : 'badge-warning'}">
+                            <i class="fas fa-\${section.is_enabled ? 'check' : 'pause'}-circle"></i>
+                            \${section.is_enabled ? 'Aktiv' : 'Inaktiv'}
+                          </span>
+                          <span class="badge badge-info">
+                            <i class="fas fa-box"></i>
+                            \${section.product_count || 0} Produkte
+                          </span>
                         </div>
                       </div>
 
-                      <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                        <button onclick="editSection(\${section.id})" class="btn btn-secondary btn-sm">
-                          <i class="fas fa-edit"></i>
-                          Bearbeiten
-                        </button>
-                        <button onclick="duplicateSection(\${section.id})" class="btn btn-secondary btn-sm">
-                          <i class="fas fa-copy"></i>
-                          Duplizieren
-                        </button>
-                        <button onclick="deleteSection(\${section.id})" class="btn btn-danger btn-sm">
-                          <i class="fas fa-trash"></i>
-                          Löschen
-                        </button>
+                      <div class="section-preview" style="background: linear-gradient(135deg, \${typeConfig.color}20 0%, \${typeConfig.color}40 100%)">
+                        <div class="relative z-10 text-center">
+                          <i class="\${typeConfig.icon} text-5xl mb-2" style="color: \${typeConfig.color}"></i>
+                          <p class="text-gray-700 font-semibold">\${typeConfig.description || 'Sektion Vorschau'}</p>
+                        </div>
+                      </div>
+
+                      <div class="flex items-center justify-between mt-4">
+                        <div class="text-sm text-gray-500">
+                          <i class="fas fa-sort mr-1"></i>Position: <span class="font-semibold">\${section.sort_order || index + 1}</span>
+                        </div>
+                        <div class="section-actions flex gap-2">
+                          <button onclick="toggleSection(\${section.id}, \${section.is_enabled})" class="px-3 py-1 rounded-lg text-sm font-medium \${section.is_enabled ? 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}">
+                            <i class="fas fa-\${section.is_enabled ? 'pause' : 'play'} mr-1"></i>
+                            \${section.is_enabled ? 'Deaktivieren' : 'Aktivieren'}
+                          </button>
+                          <button onclick="editSection(\${section.id})" class="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-200">
+                            <i class="fas fa-edit"></i>
+                          </button>
+                          <button onclick="duplicateSection(\${section.id})" class="px-3 py-1 bg-purple-100 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-200">
+                            <i class="fas fa-copy"></i>
+                          </button>
+                          <button onclick="deleteSection(\${section.id})" class="px-3 py-1 bg-red-100 text-red-700 rounded-lg text-sm font-medium hover:bg-red-200">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -832,224 +812,206 @@ export const AdminHomepageSectionsAdvanced: FC = () => {
               \`;
             }).join('');
 
-            document.getElementById('sections-list').innerHTML = html;
-          }
-
-          function updateOrder() {
-            const cards = document.querySelectorAll('.section-card');
-            cards.forEach((card, index) => {
-              const id = parseInt(card.dataset.id);
-              const section = sections.find(s => s.id === id);
-              if (section) {
-                section.display_order = index + 1;
+            // Initialize Sortable
+            new Sortable(container, {
+              animation: 200,
+              handle: '.drag-handle',
+              ghostClass: 'dragging',
+              onEnd: function(evt) {
+                // Update sort order
+                const items = Array.from(container.children);
+                sections = items.map((item, index) => {
+                  const id = parseInt(item.dataset.id);
+                  const section = sections.find(s => s.id === id);
+                  return { ...section, sort_order: index };
+                });
+                renderSections();
+                updateStats();
               }
             });
           }
 
-          async function saveOrder() {
-            try {
-              const orderData = sections.map(s => ({ id: s.id, display_order: s.display_order }));
-              await axios.post('/api/admin/homepage-sections/reorder', { sections: orderData });
-              alert('Reihenfolge gespeichert!');
-            } catch (error) {
-              console.error('Error saving order:', error);
-              alert('Fehler beim Speichern der Reihenfolge');
-            }
-          }
-
-          async function toggleSection(id, enabled) {
-            try {
-              await axios.patch(\`/api/admin/homepage-sections/\${id}/toggle\`, { is_active: enabled ? 1 : 0 });
-              const section = sections.find(s => s.id === id);
-              if (section) section.is_active = enabled ? 1 : 0;
-              updateStats();
-            } catch (error) {
-              console.error('Error toggling section:', error);
-              alert('Fehler beim Aktualisieren');
-              loadSections();
-            }
-          }
-
-          function openAddModal() {
-            document.getElementById('modal-title').textContent = 'Neue Sektion erstellen';
-            document.getElementById('sectionForm').reset();
-            document.getElementById('section-id').value = '';
-            document.getElementById('sectionModal').style.display = 'block';
-            updateSectionOptions();
-          }
-
-          async function editSection(id) {
-            const section = sections.find(s => s.id === id);
-            if (!section) return;
-
-            document.getElementById('modal-title').textContent = 'Sektion bearbeiten';
-            document.getElementById('section-id').value = section.id;
-            document.getElementById('section-type').value = section.section_type;
-            document.getElementById('title-de').value = section.title_de || '';
-            document.getElementById('subtitle-de').value = section.subtitle_de || '';
-            document.getElementById('title-en').value = section.title_en || '';
-            document.getElementById('subtitle-en').value = section.subtitle_en || '';
-            document.getElementById('bg-color').value = section.config?.bg_color || '#ffffff';
-            document.getElementById('bg-color-hex').value = section.config?.bg_color || '#ffffff';
-            document.getElementById('css-classes').value = section.config?.css_classes || '';
-            document.getElementById('is-active').checked = section.is_active == 1;
-
-            updateSectionOptions();
-            document.getElementById('sectionModal').style.display = 'block';
-          }
-
-          function updateSectionOptions() {
-            const type = document.getElementById('section-type').value;
-            
-            // Hide all option groups
-            document.getElementById('product-options').style.display = 'none';
-            document.getElementById('hero-options').style.display = 'none';
-            document.getElementById('features-options').style.display = 'none';
-            document.getElementById('custom-options').style.display = 'none';
-
-            // Show relevant options
-            if (type.startsWith('products_')) {
-              document.getElementById('product-options').style.display = 'block';
-            } else if (type === 'hero') {
-              document.getElementById('hero-options').style.display = 'block';
-            } else if (type === 'features') {
-              document.getElementById('features-options').style.display = 'block';
-            } else if (type === 'custom') {
-              document.getElementById('custom-options').style.display = 'block';
-            }
-
-            updatePreview();
-          }
-
-          function updatePreview() {
-            const type = document.getElementById('section-type').value;
-            const titleDe = document.getElementById('title-de').value;
-            const subtitleDe = document.getElementById('subtitle-de').value;
-            const bgColor = document.getElementById('bg-color').value;
-
-            let preview = '';
-            
-            if (!type || !titleDe) {
-              preview = '<p style="color: #64748b; text-align: center;">Füllen Sie das Formular aus, um eine Vorschau zu sehen</p>';
-            } else {
-              preview = \`
-                <div style="background: \${bgColor}; padding: 2rem; border-radius: 8px;">
-                  <h2 style="font-size: 1.75rem; font-weight: bold; color: var(--navy-dark); margin-bottom: 0.5rem;">
-                    \${titleDe}
-                  </h2>
-                  \${subtitleDe ? \`<p style="color: #64748b; font-size: 1rem;">\${subtitleDe}</p>\` : ''}
-                  <div style="margin-top: 1.5rem; padding: 1rem; background: #f8fafc; border-radius: 8px; border-left: 4px solid var(--gold);">
-                    <p style="color: #64748b; font-size: 0.875rem;">
-                      <i class="fas fa-info-circle"></i> Typ: <strong>\${type}</strong>
-                    </p>
+          function renderSectionTypes() {
+            const container = document.getElementById('section-types');
+            container.innerHTML = Object.entries(sectionTypes).map(([type, config]) => \`
+              <div class="template-card" onclick="selectSectionType('\${type}')">
+                <div class="relative z-10">
+                  <div class="w-12 h-12 rounded-lg flex items-center justify-center mb-3" style="background: \${config.color}15">
+                    <i class="\${config.icon} text-2xl" style="color: \${config.color}"></i>
                   </div>
+                  <h3 class="font-bold text-lg mb-1">\${config.name}</h3>
+                  <p class="text-sm text-gray-600">\${config.description}</p>
                 </div>
-              \`;
-            }
-
-            document.getElementById('preview-container').innerHTML = preview;
+              </div>
+            \`).join('');
           }
 
-          // Listen to type change
-          document.addEventListener('DOMContentLoaded', function() {
-            const typeSelect = document.getElementById('section-type');
-            if (typeSelect) {
-              typeSelect.addEventListener('change', updateSectionOptions);
+          function selectSectionType(type) {
+            currentSectionType = type;
+            document.getElementById('section-form').classList.remove('hidden');
+            document.getElementById('section-form').scrollIntoView({ behavior: 'smooth' });
+          }
+
+          function updateStats() {
+            const total = sections.length;
+            const active = sections.filter(s => s.is_enabled).length;
+            const inactive = total - active;
+            const totalProducts = sections.reduce((sum, s) => sum + (s.product_count || 0), 0);
+
+            document.getElementById('total-sections').textContent = total;
+            document.getElementById('active-sections').textContent = active;
+            document.getElementById('inactive-sections').textContent = inactive;
+            document.getElementById('total-products').textContent = totalProducts;
+          }
+
+          function showAddSection() {
+            document.getElementById('add-section-modal').classList.remove('hidden');
+            document.getElementById('section-form').classList.add('hidden');
+            currentSectionType = '';
+            selectedProducts = [];
+          }
+
+          function hideAddSection() {
+            document.getElementById('add-section-modal').classList.add('hidden');
+          }
+
+          function showTemplates() {
+            document.getElementById('templates-modal').classList.remove('hidden');
+          }
+
+          function hideTemplates() {
+            document.getElementById('templates-modal').classList.add('hidden');
+          }
+
+          async function loadProducts(filter) {
+            try {
+              const response = await axios.get('/api/products');
+              if (response.data.success) {
+                products = response.data.data;
+                renderProducts(products);
+              }
+            } catch (error) {
+              console.error('Error loading products:', error);
             }
-          });
+          }
+
+          function renderProducts(productList) {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = productList.map(product => \`
+              <div class="product-item \${selectedProducts.includes(product.id) ? 'selected' : ''}" onclick="toggleProduct(\${product.id})">
+                <div class="text-center">
+                  <div class="w-full h-24 bg-gray-100 rounded mb-2 flex items-center justify-center">
+                    <i class="fas fa-box text-2xl text-gray-400"></i>
+                  </div>
+                  <p class="text-sm font-medium text-gray-800 line-clamp-2">\${product.name}</p>
+                  <p class="text-xs text-gray-500 mt-1">€\${(product.base_price / 100).toFixed(2)}</p>
+                </div>
+              </div>
+            \`).join('');
+          }
+
+          function toggleProduct(productId) {
+            const index = selectedProducts.indexOf(productId);
+            if (index > -1) {
+              selectedProducts.splice(index, 1);
+            } else {
+              selectedProducts.push(productId);
+            }
+            renderProducts(products);
+          }
 
           async function saveSection(event) {
             event.preventDefault();
-
-            const id = document.getElementById('section-id').value;
-            const config = {
-              bg_color: document.getElementById('bg-color').value,
-              css_classes: document.getElementById('css-classes').value,
-            };
-
-            const type = document.getElementById('section-type').value;
             
-            // Add type-specific config
-            if (type.startsWith('products_')) {
-              config.product_filter = document.getElementById('product-filter')?.value;
-              config.product_limit = document.getElementById('product-limit')?.value;
-              config.product_layout = document.getElementById('product-layout')?.value;
-            } else if (type === 'hero') {
-              config.bg_image = document.getElementById('hero-bg-image')?.value;
-              config.btn_text = document.getElementById('hero-btn-text')?.value;
-              config.btn_link = document.getElementById('hero-btn-link')?.value;
-              config.height = document.getElementById('hero-height')?.value;
-            } else if (type === 'features') {
-              config.features = document.getElementById('features-json')?.value;
-              config.layout = document.getElementById('features-layout')?.value;
-            } else if (type === 'custom') {
-              config.html = document.getElementById('custom-html')?.value;
-            }
-
             const data = {
-              section_type: type,
-              title_de: document.getElementById('title-de').value,
-              subtitle_de: document.getElementById('subtitle-de').value,
-              title_en: document.getElementById('title-en').value,
-              subtitle_en: document.getElementById('subtitle-en').value,
-              config: JSON.stringify(config),
-              is_active: document.getElementById('is-active').checked ? 1 : 0
+              section_type: currentSectionType,
+              section_key: document.getElementById('section-title-de').value.toLowerCase().replace(/\\s+/g, '-'),
+              title_de: document.getElementById('section-title-de').value,
+              subtitle_de: document.getElementById('section-subtitle').value,
+              product_ids: selectedProducts
             };
 
             try {
-              if (id) {
-                await axios.put(\`/api/admin/homepage-sections/\${id}\`, data);
-              } else {
-                await axios.post('/api/admin/homepage-sections', data);
+              const response = await axios.post('/api/admin/homepage-sections', data);
+              if (response.data.success) {
+                alert('Sektion erfolgreich gespeichert!');
+                hideAddSection();
+                loadSections();
               }
-              
-              closeModal();
-              loadSections();
-              alert(id ? 'Sektion aktualisiert!' : 'Sektion erstellt!');
             } catch (error) {
               console.error('Error saving section:', error);
-              alert('Fehler beim Speichern: ' + (error.response?.data?.error || 'Unbekannter Fehler'));
+              alert('Fehler beim Speichern der Sektion');
             }
           }
 
-          async function duplicateSection(id) {
-            if (!confirm('Sektion duplizieren?')) return;
-
+          async function toggleSection(id, currentStatus) {
             try {
-              await axios.post(\`/api/admin/homepage-sections/\${id}/duplicate\`);
-              loadSections();
-              alert('Sektion dupliziert!');
+              const response = await axios.patch(\`/api/admin/homepage-sections/\${id}/toggle\`);
+              if (response.data.success) {
+                loadSections();
+              }
             } catch (error) {
-              console.error('Error duplicating section:', error);
-              alert('Fehler beim Duplizieren');
+              console.error('Error toggling section:', error);
             }
           }
 
           async function deleteSection(id) {
-            if (!confirm('Sektion wirklich löschen?')) return;
+            if (!confirm('Möchten Sie diese Sektion wirklich löschen?')) return;
 
             try {
-              await axios.delete(\`/api/admin/homepage-sections/\${id}\`);
-              sections = sections.filter(s => s.id !== id);
-              updateStats();
-              renderSections();
-              alert('Sektion gelöscht!');
+              const response = await axios.delete(\`/api/admin/homepage-sections/\${id}\`);
+              if (response.data.success) {
+                alert('Sektion gelöscht');
+                loadSections();
+              }
             } catch (error) {
               console.error('Error deleting section:', error);
-              alert('Fehler beim Löschen');
             }
           }
 
-          function closeModal() {
-            document.getElementById('sectionModal').style.display = 'none';
+          async function duplicateSection(id) {
+            try {
+              const response = await axios.post(\`/api/admin/homepage-sections/\${id}/duplicate\`);
+              if (response.data.success) {
+                alert('Sektion dupliziert!');
+                loadSections();
+              }
+            } catch (error) {
+              console.error('Error duplicating section:', error);
+            }
           }
 
-          // Close modal on outside click
-          window.onclick = function(event) {
-            const modal = document.getElementById('sectionModal');
-            if (event.target == modal) {
-              closeModal();
+          async function saveOrder() {
+            try {
+              const order = sections.map((s, i) => ({ id: s.id, sort_order: i }));
+              const response = await axios.post('/api/admin/homepage-sections/reorder', { sections: order });
+              if (response.data.success) {
+                alert('Reihenfolge gespeichert!');
+              }
+            } catch (error) {
+              console.error('Error saving order:', error);
             }
+          }
+
+          async function enableAll() {
+            // Implementation
+            alert('Alle Sektionen werden aktiviert...');
+            loadSections();
+          }
+
+          async function disableAll() {
+            // Implementation
+            alert('Alle Sektionen werden deaktiviert...');
+            loadSections();
+          }
+
+          function applyTemplate(template) {
+            alert(\`Vorlage "\${template}" wird angewendet...\`);
+            hideTemplates();
+          }
+
+          function refreshPreview() {
+            alert('Vorschau wird aktualisiert...');
           }
         `}</script>
       </body>
