@@ -251,6 +251,43 @@ export function securityHeaders() {
 // ENHANCED ADMIN AUTH
 // ============================================
 
+// Session-based admin auth (for cookies)
+export const sessionAdminAuth = async (c: Context, next: Next) => {
+  const sessionToken = c.req.cookie('session_token')
+  
+  if (!sessionToken) {
+    // For HTML pages, redirect to login
+    const accept = c.req.header('Accept') || ''
+    if (accept.includes('text/html')) {
+      return c.redirect('/login?redirect=' + encodeURIComponent(c.req.url))
+    }
+    return c.json({ error: 'Unauthorized - Please login' }, 401)
+  }
+
+  const session = await c.env.DB.prepare(`
+    SELECT u.id, u.email, u.role, u.status, u.first_name, u.last_name, s.expires_at
+    FROM sessions s
+    JOIN users u ON s.user_id = u.id
+    WHERE s.token = ? AND s.expires_at > datetime('now')
+  `).bind(sessionToken).first() as any
+
+  if (!session) {
+    const accept = c.req.header('Accept') || ''
+    if (accept.includes('text/html')) {
+      return c.redirect('/login?redirect=' + encodeURIComponent(c.req.url))
+    }
+    return c.json({ error: 'Session expired' }, 401)
+  }
+
+  if (session.role !== 'admin' || session.status !== 'active') {
+    return c.json({ error: 'Admin access required' }, 403)
+  }
+
+  c.set('currentUser', session)
+  await next()
+}
+
+// Bearer token admin auth (for API calls with Authorization header)
 export const enhancedAdminAuth = async (c: Context, next: Next) => {
   const authHeader = c.req.header('Authorization')
   
@@ -273,6 +310,18 @@ export const enhancedAdminAuth = async (c: Context, next: Next) => {
 
   c.set('currentUser', session)
   await next()
+}
+
+// Combined admin auth (accepts both session cookies and Bearer tokens)
+export const adminAuth = async (c: Context, next: Next) => {
+  // Try Bearer token first
+  const authHeader = c.req.header('Authorization')
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    return enhancedAdminAuth(c, next)
+  }
+  
+  // Fall back to session cookie
+  return sessionAdminAuth(c, next)
 }
 
 // ============================================

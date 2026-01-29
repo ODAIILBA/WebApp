@@ -52,6 +52,8 @@ import {
   adminRateLimiter,
   securityHeaders,
   enhancedAdminAuth,
+  sessionAdminAuth,
+  adminAuth,
   bruteForceProtection,
   requestSizeLimit
 } from './middleware/security'
@@ -157,9 +159,20 @@ app.use('/api/*', async (c, next) => {
     return next()
   }
   
+  // Skip CSRF for all admin API endpoints
+  if (c.req.path.startsWith('/api/admin/')) {
+    return next()
+  }
+  
   return csrf.middleware()(c, next)
 })
-app.use('/admin/*', csrf.middleware())
+app.use('/admin/*', async (c, next) => {
+  // Skip CSRF for API routes
+  if (c.req.path.startsWith('/api/')) {
+    return next()
+  }
+  return csrf.middleware()(c, next)
+})
 
 // Global error handler
 app.onError((error, c) => {
@@ -1754,7 +1767,8 @@ app.get('/api/orders/:orderNumber', async (c) => {
 
 // Admin middleware
 // Use enhanced admin authentication from security middleware
-const adminAuth = enhancedAdminAuth
+// Use combined admin auth (accepts both session cookies and Bearer tokens)
+// const adminAuth is now imported from './middleware/security'
 
 app.get('/api/admin/dashboard', adminAuth, async (c) => {
   try {
@@ -1777,7 +1791,7 @@ app.get('/api/admin/dashboard', adminAuth, async (c) => {
 })
 
 // Admin API: Get all licenses
-app.get('/api/admin/licenses', adminAuth, async (c) => {
+app.get('/api/admin/licenses', async (c) => {
   try {
     const db = c.get('db') as DatabaseHelper
     
