@@ -797,13 +797,47 @@ export const ProductsPageModern = () => {
                 </label>
               \` + categories.map(cat => \`
                 <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition">
-                  <input type="radio" name="category" value="\${cat.category}" class="mr-2 accent-gold" onchange="filterByCategory('\${cat.category}')" />
-                  <span class="text-sm">\${cat.category} <span class="text-gray-400">(\${cat.count})</span></span>
+                  <input type="radio" name="category" value="\${cat.slug}" class="mr-2 accent-gold" onchange="filterByCategory('\${cat.slug}')" />
+                  <span class="text-sm">\${cat.name || cat.category}</span>
                 </label>
               \`).join('');
             } catch (error) {
               console.error('Error loading categories:', error);
             }
+          }
+
+          // Load brands
+          async function loadBrands() {
+            try {
+              const response = await axios.get('/api/brands');
+              const brands = response.data.data;
+
+              const container = document.getElementById('brand-filters');
+              if (!container) return;
+
+              container.innerHTML = brands.map(brand => \`
+                <label class="flex items-center cursor-pointer hover:bg-gray-50 p-2 rounded transition">
+                  <input type="checkbox" name="brand" value="\${brand.id}" class="mr-2 accent-gold" onchange="toggleBrand(\${brand.id})" />
+                  <span class="text-sm">\${brand.name} <span class="text-gray-400">(\${brand.product_count || 0})</span></span>
+                </label>
+              \`).join('');
+            } catch (error) {
+              console.error('Error loading brands:', error);
+            }
+          }
+
+          // Toggle brand filter
+          function toggleBrand(brandId) {
+            const checkbox = document.querySelector(\`input[name="brand"][value="\${brandId}"]\`);
+            if (checkbox && checkbox.checked) {
+              if (!state.brands.includes(brandId)) {
+                state.brands.push(brandId);
+              }
+            } else {
+              state.brands = state.brands.filter(id => id !== brandId);
+            }
+            state.page = 1;
+            loadProducts();
           }
 
           // Filter by category
@@ -973,6 +1007,7 @@ export const ProductsPageModern = () => {
           // Initial load
           loadProducts();
           loadCategories();
+          loadBrands();
         `}} />
       </body>
     </html>
