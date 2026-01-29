@@ -1821,6 +1821,586 @@ app.delete('/api/admin/brands/:id', async (c) => {
 // END CATEGORIES & BRANDS CRUD API
 // ============================================
 
+// ============================================
+// SLIDERS CRUD API
+// ============================================
+
+// GET: List all sliders
+app.get('/api/admin/sliders', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const sliders = await db.db.prepare(`
+      SELECT * FROM sliders ORDER BY position ASC, created_at DESC
+    `).all()
+    return c.json({ success: true, data: sliders.results })
+  } catch (error: any) {
+    console.error('Error fetching sliders:', error)
+    return c.json({ success: false, error: 'Failed to fetch sliders' }, 500)
+  }
+})
+
+// GET: Single slider
+app.get('/api/admin/sliders/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+    const slider = await db.db.prepare('SELECT * FROM sliders WHERE id = ?').bind(id).first()
+    
+    if (!slider) {
+      return c.json({ success: false, error: 'Slider not found' }, 404)
+    }
+    
+    return c.json({ success: true, data: slider })
+  } catch (error: any) {
+    console.error('Error fetching slider:', error)
+    return c.json({ success: false, error: 'Failed to fetch slider' }, 500)
+  }
+})
+
+// POST: Create slider
+app.post('/api/admin/sliders', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const body = await c.req.json()
+    
+    if (!body.title || !body.image_url) {
+      return c.json({ success: false, error: 'Missing required fields: title, image_url' }, 400)
+    }
+    
+    const result = await db.db.prepare(`
+      INSERT INTO sliders (title, subtitle, image_url, mobile_image_url, link_url, link_text, position, is_active, start_date, end_date, background_color, text_color)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      body.title,
+      body.subtitle || null,
+      body.image_url,
+      body.mobile_image_url || null,
+      body.link_url || null,
+      body.link_text || null,
+      body.position || 0,
+      body.is_active !== undefined ? body.is_active : 1,
+      body.start_date || null,
+      body.end_date || null,
+      body.background_color || '#1a2a4e',
+      body.text_color || '#ffffff'
+    ).run()
+    
+    return c.json({ success: true, data: { id: result.meta.last_row_id }, message: 'Slider created successfully' })
+  } catch (error: any) {
+    console.error('Error creating slider:', error)
+    return c.json({ success: false, error: error.message || 'Failed to create slider' }, 500)
+  }
+})
+
+// PUT: Update slider
+app.put('/api/admin/sliders/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+    const body = await c.req.json()
+    
+    const existing = await db.db.prepare('SELECT id FROM sliders WHERE id = ?').bind(id).first()
+    if (!existing) {
+      return c.json({ success: false, error: 'Slider not found' }, 404)
+    }
+    
+    await db.db.prepare(`
+      UPDATE sliders SET
+        title = ?,
+        subtitle = ?,
+        image_url = ?,
+        mobile_image_url = ?,
+        link_url = ?,
+        link_text = ?,
+        position = ?,
+        is_active = ?,
+        start_date = ?,
+        end_date = ?,
+        background_color = ?,
+        text_color = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(
+      body.title,
+      body.subtitle || null,
+      body.image_url,
+      body.mobile_image_url || null,
+      body.link_url || null,
+      body.link_text || null,
+      body.position || 0,
+      body.is_active !== undefined ? body.is_active : 1,
+      body.start_date || null,
+      body.end_date || null,
+      body.background_color || '#1a2a4e',
+      body.text_color || '#ffffff',
+      id
+    ).run()
+    
+    return c.json({ success: true, message: 'Slider updated successfully' })
+  } catch (error: any) {
+    console.error('Error updating slider:', error)
+    return c.json({ success: false, error: error.message || 'Failed to update slider' }, 500)
+  }
+})
+
+// DELETE: Delete slider
+app.delete('/api/admin/sliders/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+    
+    const existing = await db.db.prepare('SELECT id FROM sliders WHERE id = ?').bind(id).first()
+    if (!existing) {
+      return c.json({ success: false, error: 'Slider not found' }, 404)
+    }
+    
+    await db.db.prepare('DELETE FROM sliders WHERE id = ?').bind(id).run()
+    
+    return c.json({ success: true, message: 'Slider deleted successfully' })
+  } catch (error: any) {
+    console.error('Error deleting slider:', error)
+    return c.json({ success: false, error: error.message || 'Failed to delete slider' }, 500)
+  }
+})
+
+// GET: Stats
+app.get('/api/admin/sliders/stats', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const stats = await db.db.prepare(`
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active,
+        SUM(CASE WHEN is_active = 0 THEN 1 ELSE 0 END) as inactive
+      FROM sliders
+    `).first()
+    
+    return c.json({ success: true, data: stats })
+  } catch (error: any) {
+    console.error('Error fetching slider stats:', error)
+    return c.json({ success: false, error: 'Failed to fetch stats' }, 500)
+  }
+})
+
+// END SLIDERS CRUD API
+// ============================================
+
+// ============================================
+// CMS PAGES CRUD API
+// ============================================
+
+// GET: List all CMS pages
+app.get('/api/admin/pages', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const page = parseInt(c.req.query('page') || '1')
+    const limit = parseInt(c.req.query('limit') || '20')
+    const offset = (page - 1) * limit
+    
+    const pages = await db.db.prepare(`
+      SELECT p.*, COUNT(pt.id) as translation_count
+      FROM cms_pages p
+      LEFT JOIN cms_page_translations pt ON p.id = pt.page_id
+      GROUP BY p.id
+      ORDER BY p.updated_at DESC
+      LIMIT ? OFFSET ?
+    `).bind(limit, offset).all()
+    
+    const total = await db.db.prepare('SELECT COUNT(*) as count FROM cms_pages').first()
+    
+    return c.json({ 
+      success: true, 
+      data: pages.results,
+      pagination: { page, limit, total: (total as any)?.count || 0 }
+    })
+  } catch (error: any) {
+    console.error('Error fetching pages:', error)
+    return c.json({ success: false, error: 'Failed to fetch pages' }, 500)
+  }
+})
+
+// GET: Single page
+app.get('/api/admin/pages/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+    
+    const page = await db.db.prepare('SELECT * FROM cms_pages WHERE id = ?').bind(id).first()
+    if (!page) {
+      return c.json({ success: false, error: 'Page not found' }, 404)
+    }
+    
+    const translations = await db.db.prepare('SELECT * FROM cms_page_translations WHERE page_id = ?').bind(id).all()
+    
+    return c.json({ success: true, data: { ...page, translations: translations.results } })
+  } catch (error: any) {
+    console.error('Error fetching page:', error)
+    return c.json({ success: false, error: 'Failed to fetch page' }, 500)
+  }
+})
+
+// POST: Create page
+app.post('/api/admin/pages', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const body = await c.req.json()
+    
+    if (!body.slug) {
+      return c.json({ success: false, error: 'Missing required field: slug' }, 400)
+    }
+    
+    const result = await db.db.prepare(`
+      INSERT INTO cms_pages (slug, page_type, is_active, show_in_footer, show_in_menu, menu_order)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).bind(
+      body.slug,
+      body.page_type || 'page',
+      body.is_active !== undefined ? body.is_active : 1,
+      body.show_in_footer !== undefined ? body.show_in_footer : 0,
+      body.show_in_menu !== undefined ? body.show_in_menu : 0,
+      body.menu_order || 0
+    ).run()
+    
+    const pageId = result.meta.last_row_id
+    
+    // Add translation
+    if (body.title && body.content) {
+      const language = body.language || 'de'
+      await db.db.prepare(`
+        INSERT INTO cms_page_translations (page_id, language, title, content, meta_title, meta_description)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).bind(pageId, language, body.title, body.content, body.meta_title || body.title, body.meta_description || '').run()
+    }
+    
+    return c.json({ success: true, data: { id: pageId }, message: 'Page created successfully' })
+  } catch (error: any) {
+    console.error('Error creating page:', error)
+    return c.json({ success: false, error: error.message || 'Failed to create page' }, 500)
+  }
+})
+
+// PUT: Update page
+app.put('/api/admin/pages/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+    const body = await c.req.json()
+    
+    const existing = await db.db.prepare('SELECT id FROM cms_pages WHERE id = ?').bind(id).first()
+    if (!existing) {
+      return c.json({ success: false, error: 'Page not found' }, 404)
+    }
+    
+    await db.db.prepare(`
+      UPDATE cms_pages SET
+        slug = ?,
+        page_type = ?,
+        is_active = ?,
+        show_in_footer = ?,
+        show_in_menu = ?,
+        menu_order = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(
+      body.slug,
+      body.page_type || 'page',
+      body.is_active !== undefined ? body.is_active : 1,
+      body.show_in_footer !== undefined ? body.show_in_footer : 0,
+      body.show_in_menu !== undefined ? body.show_in_menu : 0,
+      body.menu_order || 0,
+      id
+    ).run()
+    
+    // Update translation if provided
+    if (body.title && body.content) {
+      const language = body.language || 'de'
+      const existingTranslation = await db.db.prepare('SELECT id FROM cms_page_translations WHERE page_id = ? AND language = ?').bind(id, language).first()
+      
+      if (existingTranslation) {
+        await db.db.prepare(`
+          UPDATE cms_page_translations SET
+            title = ?,
+            content = ?,
+            meta_title = ?,
+            meta_description = ?
+          WHERE page_id = ? AND language = ?
+        `).bind(body.title, body.content, body.meta_title || body.title, body.meta_description || '', id, language).run()
+      } else {
+        await db.db.prepare(`
+          INSERT INTO cms_page_translations (page_id, language, title, content, meta_title, meta_description)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `).bind(id, language, body.title, body.content, body.meta_title || body.title, body.meta_description || '').run()
+      }
+    }
+    
+    return c.json({ success: true, message: 'Page updated successfully' })
+  } catch (error: any) {
+    console.error('Error updating page:', error)
+    return c.json({ success: false, error: error.message || 'Failed to update page' }, 500)
+  }
+})
+
+// DELETE: Delete page
+app.delete('/api/admin/pages/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+    
+    const existing = await db.db.prepare('SELECT id FROM cms_pages WHERE id = ?').bind(id).first()
+    if (!existing) {
+      return c.json({ success: false, error: 'Page not found' }, 404)
+    }
+    
+    // Delete translations first (foreign key cascade should handle this, but being explicit)
+    await db.db.prepare('DELETE FROM cms_page_translations WHERE page_id = ?').bind(id).run()
+    await db.db.prepare('DELETE FROM cms_pages WHERE id = ?').bind(id).run()
+    
+    return c.json({ success: true, message: 'Page deleted successfully' })
+  } catch (error: any) {
+    console.error('Error deleting page:', error)
+    return c.json({ success: false, error: error.message || 'Failed to delete page' }, 500)
+  }
+})
+
+// END CMS PAGES CRUD API
+// ============================================
+
+// ============================================
+// NOTIFICATIONS CRUD API
+// ============================================
+
+// GET: List notifications
+app.get('/api/admin/notifications', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const page = parseInt(c.req.query('page') || '1')
+    const limit = parseInt(c.req.query('limit') || '20')
+    const offset = (page - 1) * limit
+    
+    const notifications = await db.db.prepare(`
+      SELECT * FROM notifications
+      ORDER BY created_at DESC
+      LIMIT ? OFFSET ?
+    `).bind(limit, offset).all()
+    
+    const total = await db.db.prepare('SELECT COUNT(*) as count FROM notifications').first()
+    
+    return c.json({ 
+      success: true, 
+      data: notifications.results,
+      pagination: { page, limit, total: (total as any)?.count || 0 }
+    })
+  } catch (error: any) {
+    console.error('Error fetching notifications:', error)
+    return c.json({ success: false, error: 'Failed to fetch notifications' }, 500)
+  }
+})
+
+// POST: Create notification
+app.post('/api/admin/notifications', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const body = await c.req.json()
+    
+    if (!body.notification_type || !body.title) {
+      return c.json({ success: false, error: 'Missing required fields: notification_type, title' }, 400)
+    }
+    
+    const result = await db.db.prepare(`
+      INSERT INTO notifications (notification_type, user_id, title, message, link, is_read, is_global)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      body.notification_type,
+      body.user_id || null,
+      body.title,
+      body.message || '',
+      body.link || null,
+      0,
+      body.is_global !== undefined ? body.is_global : 0
+    ).run()
+    
+    return c.json({ success: true, data: { id: result.meta.last_row_id }, message: 'Notification created successfully' })
+  } catch (error: any) {
+    console.error('Error creating notification:', error)
+    return c.json({ success: false, error: error.message || 'Failed to create notification' }, 500)
+  }
+})
+
+// PATCH: Mark as read
+app.patch('/api/admin/notifications/:id/read', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+    
+    await db.db.prepare('UPDATE notifications SET is_read = 1 WHERE id = ?').bind(id).run()
+    
+    return c.json({ success: true, message: 'Notification marked as read' })
+  } catch (error: any) {
+    console.error('Error updating notification:', error)
+    return c.json({ success: false, error: 'Failed to update notification' }, 500)
+  }
+})
+
+// DELETE: Delete notification
+app.delete('/api/admin/notifications/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+    
+    await db.db.prepare('DELETE FROM notifications WHERE id = ?').bind(id).run()
+    
+    return c.json({ success: true, message: 'Notification deleted successfully' })
+  } catch (error: any) {
+    console.error('Error deleting notification:', error)
+    return c.json({ success: false, error: 'Failed to delete notification' }, 500)
+  }
+})
+
+// GET: Stats
+app.get('/api/admin/notifications/stats', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const stats = await db.db.prepare(`
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN is_read = 0 THEN 1 ELSE 0 END) as unread,
+        SUM(CASE WHEN is_global = 1 THEN 1 ELSE 0 END) as global_notifications
+      FROM notifications
+    `).first()
+    
+    return c.json({ success: true, data: stats })
+  } catch (error: any) {
+    console.error('Error fetching notification stats:', error)
+    return c.json({ success: false, error: 'Failed to fetch stats' }, 500)
+  }
+})
+
+// END NOTIFICATIONS CRUD API
+// ============================================
+
+// ============================================
+// CONTACT MESSAGES CRUD API
+// ============================================
+
+// GET: List contact messages
+app.get('/api/admin/contact-messages', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const page = parseInt(c.req.query('page') || '1')
+    const limit = parseInt(c.req.query('limit') || '20')
+    const offset = (page - 1) * limit
+    const status = c.req.query('status')
+    
+    let query = 'SELECT * FROM contact_messages'
+    const params: any[] = []
+    
+    if (status) {
+      query += ' WHERE status = ?'
+      params.push(status)
+    }
+    
+    query += ' ORDER BY created_at DESC LIMIT ? OFFSET ?'
+    params.push(limit, offset)
+    
+    const messages = await db.db.prepare(query).bind(...params).all()
+    
+    const countQuery = status ? 'SELECT COUNT(*) as count FROM contact_messages WHERE status = ?' : 'SELECT COUNT(*) as count FROM contact_messages'
+    const countParams = status ? [status] : []
+    const total = await db.db.prepare(countQuery).bind(...countParams).first()
+    
+    return c.json({ 
+      success: true, 
+      data: messages.results,
+      pagination: { page, limit, total: (total as any)?.count || 0 }
+    })
+  } catch (error: any) {
+    console.error('Error fetching contact messages:', error)
+    return c.json({ success: false, error: 'Failed to fetch messages' }, 500)
+  }
+})
+
+// GET: Single message
+app.get('/api/admin/contact-messages/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+    
+    const message = await db.db.prepare('SELECT * FROM contact_messages WHERE id = ?').bind(id).first()
+    if (!message) {
+      return c.json({ success: false, error: 'Message not found' }, 404)
+    }
+    
+    return c.json({ success: true, data: message })
+  } catch (error: any) {
+    console.error('Error fetching message:', error)
+    return c.json({ success: false, error: 'Failed to fetch message' }, 500)
+  }
+})
+
+// PATCH: Update status
+app.patch('/api/admin/contact-messages/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+    const body = await c.req.json()
+    
+    if (!body.status) {
+      return c.json({ success: false, error: 'Missing required field: status' }, 400)
+    }
+    
+    await db.db.prepare(`
+      UPDATE contact_messages SET
+        status = ?,
+        admin_notes = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(body.status, body.admin_notes || null, id).run()
+    
+    return c.json({ success: true, message: 'Message updated successfully' })
+  } catch (error: any) {
+    console.error('Error updating message:', error)
+    return c.json({ success: false, error: 'Failed to update message' }, 500)
+  }
+})
+
+// DELETE: Delete message
+app.delete('/api/admin/contact-messages/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+    
+    await db.db.prepare('DELETE FROM contact_messages WHERE id = ?').bind(id).run()
+    
+    return c.json({ success: true, message: 'Message deleted successfully' })
+  } catch (error: any) {
+    console.error('Error deleting message:', error)
+    return c.json({ success: false, error: 'Failed to delete message' }, 500)
+  }
+})
+
+// GET: Stats
+app.get('/api/admin/contact-messages/stats', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const stats = await db.db.prepare(`
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'new' THEN 1 ELSE 0 END) as new,
+        SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress,
+        SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END) as resolved
+      FROM contact_messages
+    `).first()
+    
+    return c.json({ success: true, data: stats })
+  } catch (error: any) {
+    console.error('Error fetching message stats:', error)
+    return c.json({ success: false, error: 'Failed to fetch stats' }, 500)
+  }
+})
+
+// END CONTACT MESSAGES CRUD API
+// ============================================
+
 app.get('/api/products/featured', async (c) => {
   try {
     const db = c.get('db') as DatabaseHelper
