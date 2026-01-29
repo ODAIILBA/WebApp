@@ -1404,6 +1404,89 @@ app.delete('/api/admin/homepage-sections/:id', async (c) => {
   }
 })
 
+// Toggle section status
+app.patch('/api/admin/homepage-sections/:id/toggle', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+    const body = await c.req.json()
+
+    await db.db.prepare(`
+      UPDATE homepage_sections 
+      SET is_active = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(body.is_active ? 1 : 0, id).run()
+
+    return c.json({ success: true, message: 'Section status updated' })
+  } catch (error) {
+    console.error('Error toggling section:', error)
+    return c.json({ success: false, error: 'Failed to toggle section' }, 500)
+  }
+})
+
+// Duplicate section
+app.post('/api/admin/homepage-sections/:id/duplicate', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+
+    // Get the original section
+    const original = await db.db.prepare(`
+      SELECT * FROM homepage_sections WHERE id = ?
+    `).bind(id).first()
+
+    if (!original) {
+      return c.json({ success: false, error: 'Section not found' }, 404)
+    }
+
+    // Create duplicate with modified title
+    await db.db.prepare(`
+      INSERT INTO homepage_sections (
+        section_key, section_type, title_de, subtitle_de, title_en, subtitle_en,
+        config, display_order, is_active
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      original.section_key + '_copy',
+      original.section_type,
+      original.title_de + ' (Kopie)',
+      original.subtitle_de,
+      original.title_en + ' (Copy)',
+      original.subtitle_en,
+      original.config,
+      (original.display_order || 0) + 1,
+      0 // Inactive by default
+    ).run()
+
+    return c.json({ success: true, message: 'Section duplicated' })
+  } catch (error) {
+    console.error('Error duplicating section:', error)
+    return c.json({ success: false, error: 'Failed to duplicate section' }, 500)
+  }
+})
+
+// Reorder sections
+app.post('/api/admin/homepage-sections/reorder', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const body = await c.req.json()
+    const sections = body.sections || []
+
+    // Update display_order for each section
+    for (const section of sections) {
+      await db.db.prepare(`
+        UPDATE homepage_sections 
+        SET display_order = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `).bind(section.display_order, section.id).run()
+    }
+
+    return c.json({ success: true, message: 'Order updated' })
+  } catch (error) {
+    console.error('Error reordering sections:', error)
+    return c.json({ success: false, error: 'Failed to reorder sections' }, 500)
+  }
+})
+
 // Get section products
 app.get('/api/admin/homepage-sections/:id/products', async (c) => {
   try {
@@ -2176,7 +2259,7 @@ import { AdminLayout, AdminDashboard } from './components/admin'
 import { AdminProducts, AdminProductForm } from './components/admin-products'
 import { AdminProductImport } from './components/admin-product-import'
 import { AdminSliders } from './components/admin-sliders'
-import { AdminHomepageSections } from './components/admin-homepage-sections'
+import { AdminHomepageSectionsAdvanced } from './components/admin-homepage-sections-advanced'
 import { AdminLicenses, AdminLicenseImport } from './components/admin-licenses'
 import { AdminOrders } from './components/admin-orders'
 import { AdminCustomers } from './components/admin-customers'
@@ -2370,7 +2453,7 @@ app.get('/admin/homepage-sections', (c) => {
       <body>
         <div dangerouslySetInnerHTML={{__html: AdminSidebar('/admin/homepage-sections')}} />
         <div class="admin-content">
-          <AdminHomepageSections />
+          <AdminHomepageSectionsAdvanced />
         </div>
       </body>
     </html>
