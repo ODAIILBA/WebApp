@@ -3790,6 +3790,7 @@ app.post('/api/admin/certificates/bulk-generate', async (c) => {
 import { AdminLayout, AdminDashboard } from './components/admin'
 import { AdminSidebarAdvanced } from './components/admin-sidebar-advanced'
 import { AdminPlaceholder } from './components/admin-placeholder'
+import { FrontendPlaceholder } from './components/frontend-placeholder'
 import { AdminProducts, AdminProductForm } from './components/admin-products'
 import { AdminProductImport } from './components/admin-product-import'
 import { AdminSliders } from './components/admin-sliders'
@@ -6589,6 +6590,79 @@ app.patch('/api/admin/settings/:key', async (c) => {
 })
 
 // ============================================
+// FRONTEND ADDITIONAL ROUTES
+// ============================================
+
+// English legal page aliases
+app.get('/privacy-policy', (c) => c.redirect('/datenschutz'))
+app.get('/terms', (c) => c.redirect('/agb'))
+app.get('/imprint', (c) => c.redirect('/impressum'))
+
+// Category routes
+app.get('/categories', (c) => c.html(FrontendPlaceholder('/categories', 'Kategorien')))
+app.get('/kategorien', (c) => c.html(FrontendPlaceholder('/kategorien', 'Kategorien')))
+app.get('/category/:slug', (c) => {
+  const slug = c.req.param('slug')
+  const title = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+  return c.html(FrontendPlaceholder(`/category/${slug}`, title))
+})
+app.get('/kategorie/:slug', (c) => {
+  const slug = c.req.param('slug')
+  const title = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+  return c.html(FrontendPlaceholder(`/kategorie/${slug}`, title))
+})
+
+// Brand routes
+app.get('/brands', (c) => c.html(FrontendPlaceholder('/brands', 'Marken')))
+app.get('/marken', (c) => c.html(FrontendPlaceholder('/marken', 'Marken')))
+app.get('/brand/:slug', (c) => {
+  const slug = c.req.param('slug')
+  const title = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+  return c.html(FrontendPlaceholder(`/brand/${slug}`, title))
+})
+app.get('/marke/:slug', (c) => {
+  const slug = c.req.param('slug')
+  const title = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+  return c.html(FrontendPlaceholder(`/marke/${slug}`, title))
+})
+
+// Support and help routes
+app.get('/help', (c) => c.redirect('/hilfe'))
+app.get('/hilfe', (c) => c.html(FrontendPlaceholder('/hilfe', 'Hilfe & Support')))
+
+// Blog and newsletter
+app.get('/blog', (c) => c.html(FrontendPlaceholder('/blog', 'Blog')))
+app.get('/newsletter', (c) => c.html(FrontendPlaceholder('/newsletter', 'Newsletter')))
+
+// ============================================
+// USER PANEL ADDITIONAL ROUTES
+// ============================================
+
+// Downloads
+app.get('/account/downloads', (c) => c.html(FrontendPlaceholder('/account/downloads', 'Meine Downloads')))
+app.get('/konto/downloads', (c) => c.html(FrontendPlaceholder('/konto/downloads', 'Meine Downloads')))
+
+// Wishlist
+app.get('/account/wishlist', (c) => c.html(FrontendPlaceholder('/account/wishlist', 'Meine Wunschliste')))
+app.get('/konto/wunschliste', (c) => c.html(FrontendPlaceholder('/konto/wunschliste', 'Meine Wunschliste')))
+
+// Support
+app.get('/account/support', (c) => c.html(FrontendPlaceholder('/account/support', 'Mein Support')))
+app.get('/konto/support', (c) => c.html(FrontendPlaceholder('/konto/support', 'Mein Support')))
+
+// Settings
+app.get('/account/settings', (c) => c.html(FrontendPlaceholder('/account/settings', 'Einstellungen')))
+app.get('/konto/einstellungen', (c) => c.html(FrontendPlaceholder('/konto/einstellungen', 'Einstellungen')))
+
+// Invoices
+app.get('/account/invoices', (c) => c.html(FrontendPlaceholder('/account/invoices', 'Meine Rechnungen')))
+app.get('/konto/rechnungen', (c) => c.html(FrontendPlaceholder('/konto/rechnungen', 'Meine Rechnungen')))
+
+// Addresses
+app.get('/account/addresses', (c) => c.html(FrontendPlaceholder('/account/addresses', 'Meine Adressen')))
+app.get('/konto/adressen', (c) => c.html(FrontendPlaceholder('/konto/adressen', 'Meine Adressen')))
+
+// ============================================
 // CATCH-ALL ROUTE HANDLER FOR MISSING ADMIN PAGES
 // ============================================
 
@@ -6603,6 +6677,75 @@ app.get('/admin/*', (c) => {
     .join(' - ') || 'Admin Panel';
   
   return c.html(AdminPlaceholder(path, pageTitle));
+});
+
+// ============================================
+// CATCH-ALL ROUTE HANDLER FOR USER PANEL
+// ============================================
+
+// User account routes
+app.get('/account', (c) => c.html(FrontendPlaceholder('/account', 'Mein Konto')));
+app.get('/account/*', (c) => {
+  const path = c.req.path;
+  const pathParts = path.split('/').filter(Boolean).slice(1);
+  const pageTitle = pathParts
+    .map(part => part.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '))
+    .join(' - ') || 'Mein Konto';
+  return c.html(FrontendPlaceholder(path, pageTitle));
+});
+
+// My-* routes (alternative user panel paths)
+app.get('/my-*', (c) => {
+  const path = c.req.path;
+  const feature = path.replace('/my-', '').split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+  return c.html(FrontendPlaceholder(path, `Meine ${feature}`));
+});
+
+// ============================================
+// CATCH-ALL ROUTE HANDLER FOR FRONTEND PAGES
+// ============================================
+
+// Essential frontend routes
+const frontendRoutes = [
+  { path: '/products', title: 'Alle Produkte' },
+  { path: '/categories', title: 'Kategorien' },
+  { path: '/cart', title: 'Warenkorb' },
+  { path: '/checkout', title: 'Kasse' },
+  { path: '/search', title: 'Suche' },
+  { path: '/about', title: 'Über uns' },
+  { path: '/contact', title: 'Kontakt' },
+  { path: '/faq', title: 'Häufige Fragen' },
+  { path: '/support', title: 'Support' },
+  { path: '/legal', title: 'Rechtliches' },
+  { path: '/impressum', title: 'Impressum' },
+  { path: '/datenschutz', title: 'Datenschutz' },
+  { path: '/agb', title: 'AGB' },
+  { path: '/widerruf', title: 'Widerrufsrecht' }
+];
+
+frontendRoutes.forEach(route => {
+  app.get(route.path, (c) => c.html(FrontendPlaceholder(route.path, route.title)));
+});
+
+// Product category routes
+app.get('/category/*', (c) => {
+  const path = c.req.path;
+  const category = path.split('/').pop()?.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || 'Kategorie';
+  return c.html(FrontendPlaceholder(path, category));
+});
+
+// Product detail routes
+app.get('/product/*', (c) => {
+  const path = c.req.path;
+  const product = path.split('/').pop()?.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || 'Produkt';
+  return c.html(FrontendPlaceholder(path, product));
+});
+
+// Brand routes
+app.get('/brand/*', (c) => {
+  const path = c.req.path;
+  const brand = path.split('/').pop()?.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || 'Marke';
+  return c.html(FrontendPlaceholder(path, brand));
 });
 
 // ============================================
