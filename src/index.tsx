@@ -7216,7 +7216,6 @@ app.post('/api/admin/certificates/bulk-generate', async (c) => {
 
 // Import admin components
 import { AdminLayout, AdminDashboard } from './components/admin'
-import { AdminSidebarWorking } from './components/admin-sidebar-advanced'
 import { AdminSidebarWorking } from './components/admin-sidebar-working'
 import { AdminPlaceholder } from './components/admin-placeholder'
 import { FrontendPlaceholder } from './components/frontend-placeholder'
