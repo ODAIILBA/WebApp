@@ -338,7 +338,7 @@ function showNotification(title, message, type) {
     position: fixed;
     top: 20px;
     right: 20px;
-    background: ${type === 'success' ? '#28a745' : '#dc3545'};
+    background: ${type === 'success' ? '#001f3f' : '#003366'};
     color: white;
     padding: 15px 25px;
     border-radius: 10px;
@@ -429,7 +429,7 @@ function renderCountdownDeals(section, config) {
   const endTime = new Date().getTime() + (24 * 60 * 60 * 1000); // 24 hours from now
   
   return `
-    <section class="countdown-deals" data-section-id="${section.id}" style="background:linear-gradient(135deg, #FF6B6B 0%, #FF5252 100%); color:white; padding:60px 20px;">
+    <section class="countdown-deals" data-section-id="${section.id}" style="background:linear-gradient(135deg, #001f3f 0%, #003366 100%); color:white; padding:60px 20px;">
       <div style="max-width:1200px; margin:0 auto; text-align:center;">
         <h2 style="font-size:2.5rem; margin-bottom:10px;">⚡ ${section.title || 'Flash Deals'}</h2>
         <p style="font-size:1.2rem; margin-bottom:30px; opacity:0.9;">${section.subtitle || 'Zeitlich begrenzte Angebote - Nur heute!'}</p>
@@ -449,7 +449,7 @@ function renderCountdownDeals(section, config) {
           </div>
         </div>
         
-        <a href="/produkte?sale=true" style="display:inline-block; background:white; color:#FF5252; padding:15px 40px; border-radius:25px; text-decoration:none; font-weight:bold; font-size:1.1rem;">
+        <a href="/produkte?sale=true" style="display:inline-block; background:#FFC107; color:#001f3f; padding:15px 40px; border-radius:25px; text-decoration:none; font-weight:bold; font-size:1.1rem;">
           <i class="fas fa-bolt"></i> Jetzt zugreifen
         </a>
       </div>
