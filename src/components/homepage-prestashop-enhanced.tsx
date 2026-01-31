@@ -508,10 +508,10 @@ export const HomepagePrestaShopEnhanced = () => {
             }
         </style>
     </head>
-    <body class="bg-gray-50">
+    <body class="bg-navy-ultra-dark">
         
         <!-- Top Announcement Bar -->
-        <div class="bg-gold text-navy-dark py-2 text-center font-bold text-sm">
+        <div class="bg-gold text-white py-2 text-center font-bold text-sm">
             <i class="fas fa-bolt mr-2"></i>
             FLASH SALE: Bis zu 70% Rabatt auf ausgewählte Produkte!
             <i class="fas fa-bolt ml-2"></i>
@@ -540,7 +540,7 @@ export const HomepagePrestaShopEnhanced = () => {
         </div>
 
         <!-- Main Header -->
-        <header class="bg-white shadow-lg sticky top-0 z-50">
+        <header class="bg-navy-dark shadow-2xl sticky top-0 z-50 border-b border-gold/20 backdrop-blur-lg">
             <div class="w-full px-8 py-3">
                 <div class="flex items-center justify-between">
                     <!-- Logo -->
@@ -572,37 +572,37 @@ export const HomepagePrestaShopEnhanced = () => {
                     <!-- Header Actions -->
                     <div class="flex items-center space-x-4">
                         <!-- Login Button (shown when not logged in) -->
-                        <button onclick="authManager.showLoginModal()" data-auth-button="login" class="flex items-center text-navy-dark hover:text-gold transition-colors">
+                        <button onclick="authManager.showLoginModal()" data-auth-button="login" class="flex items-center text-white hover:text-gold transition-colors">
                             <i class="fas fa-user text-2xl"></i>
                             <div class="ml-2">
-                                <div class="text-xs text-gray-600">Anmelden</div>
+                                <div class="text-xs text-gray-400">Anmelden</div>
                                 <div class="font-semibold">Mein Konto</div>
                             </div>
                         </button>
                         
                         <!-- User Menu (shown when logged in) -->
                         <div data-user-menu class="relative" style="display: none;">
-                            <button onclick="toggleUserMenu()" class="flex items-center text-navy-dark hover:text-gold transition-colors">
+                            <button onclick="toggleUserMenu()" class="flex items-center text-white hover:text-gold transition-colors">
                                 <i class="fas fa-user-circle text-2xl"></i>
                                 <div class="ml-2">
-                                    <div class="text-xs text-gray-600">Willkommen</div>
+                                    <div class="text-xs text-gray-400">Willkommen</div>
                                     <div class="font-semibold" data-user-name>Benutzer</div>
                                 </div>
                                 <i class="fas fa-chevron-down ml-2 text-sm"></i>
                             </button>
                             
                             <!-- Dropdown Menu -->
-                            <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 z-50">
-                                <a href="/dashboard" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">
+                            <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-navy-dark rounded-lg shadow-lg py-2 z-50">
+                                <a href="/dashboard" class="block px-4 py-2 text-white hover:bg-navy-medium">
                                     <i class="fas fa-tachometer-alt mr-2"></i> Dashboard
                                 </a>
-                                <a href="/konto/bestellungen" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">
+                                <a href="/konto/bestellungen" class="block px-4 py-2 text-white hover:bg-navy-medium">
                                     <i class="fas fa-shopping-bag mr-2"></i> Bestellungen
                                 </a>
-                                <a href="/konto/lizenzen" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">
+                                <a href="/konto/lizenzen" class="block px-4 py-2 text-white hover:bg-navy-medium">
                                     <i class="fas fa-key mr-2"></i> Lizenzen
                                 </a>
-                                <a href="/konto/profil" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">
+                                <a href="/konto/profil" class="block px-4 py-2 text-white hover:bg-navy-medium">
                                     <i class="fas fa-user-edit mr-2"></i> Profil
                                 </a>
                                 <hr class="my-2">
@@ -615,7 +615,7 @@ export const HomepagePrestaShopEnhanced = () => {
                         <a href="/warenkorb" class="relative flex items-center bg-navy-dark hover:bg-navy-medium text-white px-4 py-3 rounded-lg transition-all hover-lift">
                             <i class="fas fa-shopping-cart text-xl"></i>
                             <span class="ml-2 font-semibold">Warenkorb</span>
-                            <span class="absolute -top-2 -right-2 bg-gold text-navy-dark w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" id="cart-badge" data-cart-count="0">0</span>
+                            <span class="absolute -top-2 -right-2 bg-gold text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold" id="cart-badge" data-cart-count="0">0</span>
                         </a>
                         
                         <div class="flex items-center space-x-2">
@@ -643,44 +643,44 @@ export const HomepagePrestaShopEnhanced = () => {
                                 <div class="w-full px-6 py-6">
                                     <div class="grid grid-cols-4 gap-6">
                                         <div>
-                                            <h3 class="text-navy-dark font-bold mb-3 border-b-2 border-gold pb-2">
+                                            <h3 class="text-white font-bold mb-3 border-b-2 border-gold pb-2">
                                                 <i class="fab fa-windows mr-2 text-gold"></i>Windows 11
                                             </h3>
                                             <ul class="space-y-2">
-                                                <li><a href="/produkte?search=Windows 11 Professional" class="text-gray-700 hover:text-gold transition-colors">Windows 11 Professional</a></li>
-                                                <li><a href="/produkte?search=Windows 11 Home" class="text-gray-700 hover:text-gold transition-colors">Windows 11 Home</a></li>
-                                                <li><a href="/produkte?search=Windows 11 Enterprise" class="text-gray-700 hover:text-gold transition-colors">Windows 11 Enterprise</a></li>
-                                                <li><a href="/produkte?search=Windows 11 Education" class="text-gray-700 hover:text-gold transition-colors">Windows 11 Education</a></li>
+                                                <li><a href="/produkte?search=Windows 11 Professional" class="text-gray-300 hover:text-gold transition-colors">Windows 11 Professional</a></li>
+                                                <li><a href="/produkte?search=Windows 11 Home" class="text-gray-300 hover:text-gold transition-colors">Windows 11 Home</a></li>
+                                                <li><a href="/produkte?search=Windows 11 Enterprise" class="text-gray-300 hover:text-gold transition-colors">Windows 11 Enterprise</a></li>
+                                                <li><a href="/produkte?search=Windows 11 Education" class="text-gray-300 hover:text-gold transition-colors">Windows 11 Education</a></li>
                                             </ul>
                                         </div>
                                         <div>
-                                            <h3 class="text-navy-dark font-bold mb-3 border-b-2 border-gold pb-2">
+                                            <h3 class="text-white font-bold mb-3 border-b-2 border-gold pb-2">
                                                 <i class="fab fa-windows mr-2 text-gold"></i>Windows 10
                                             </h3>
                                             <ul class="space-y-2">
-                                                <li><a href="/produkte?search=Windows 10 Professional" class="text-gray-700 hover:text-gold transition-colors">Windows 10 Professional</a></li>
-                                                <li><a href="/produkte?search=Windows 10 Home" class="text-gray-700 hover:text-gold transition-colors">Windows 10 Home</a></li>
-                                                <li><a href="/produkte?search=Windows 10 Enterprise" class="text-gray-700 hover:text-gold transition-colors">Windows 10 Enterprise</a></li>
+                                                <li><a href="/produkte?search=Windows 10 Professional" class="text-gray-300 hover:text-gold transition-colors">Windows 10 Professional</a></li>
+                                                <li><a href="/produkte?search=Windows 10 Home" class="text-gray-300 hover:text-gold transition-colors">Windows 10 Home</a></li>
+                                                <li><a href="/produkte?search=Windows 10 Enterprise" class="text-gray-300 hover:text-gold transition-colors">Windows 10 Enterprise</a></li>
                                             </ul>
                                         </div>
                                         <div>
-                                            <h3 class="text-navy-dark font-bold mb-3 border-b-2 border-gold pb-2">
+                                            <h3 class="text-white font-bold mb-3 border-b-2 border-gold pb-2">
                                                 <i class="fas fa-server mr-2 text-gold"></i>Windows Server
                                             </h3>
                                             <ul class="space-y-2">
-                                                <li><a href="/produkte?search=Windows Server 2025" class="text-gray-700 hover:text-gold transition-colors">Windows Server 2025</a></li>
-                                                <li><a href="/produkte?search=Windows Server 2022" class="text-gray-700 hover:text-gold transition-colors">Windows Server 2022</a></li>
-                                                <li><a href="/produkte?search=Windows Server 2019" class="text-gray-700 hover:text-gold transition-colors">Windows Server 2019</a></li>
+                                                <li><a href="/produkte?search=Windows Server 2025" class="text-gray-300 hover:text-gold transition-colors">Windows Server 2025</a></li>
+                                                <li><a href="/produkte?search=Windows Server 2022" class="text-gray-300 hover:text-gold transition-colors">Windows Server 2022</a></li>
+                                                <li><a href="/produkte?search=Windows Server 2019" class="text-gray-300 hover:text-gold transition-colors">Windows Server 2019</a></li>
                                             </ul>
                                         </div>
                                         <div>
-                                            <h3 class="text-navy-dark font-bold mb-3 border-b-2 border-gold pb-2">
+                                            <h3 class="text-white font-bold mb-3 border-b-2 border-gold pb-2">
                                                 <i class="fas fa-history mr-2 text-gold"></i>Retro Windows
                                             </h3>
                                             <ul class="space-y-2">
-                                                <li><a href="/produkte?search=Windows 8.1" class="text-gray-700 hover:text-gold transition-colors">Windows 8.1</a></li>
-                                                <li><a href="/produkte?search=Windows 7" class="text-gray-700 hover:text-gold transition-colors">Windows 7</a></li>
-                                                <li><a href="/produkte?search=Windows Vista" class="text-gray-700 hover:text-gold transition-colors">Windows Vista</a></li>
+                                                <li><a href="/produkte?search=Windows 8.1" class="text-gray-300 hover:text-gold transition-colors">Windows 8.1</a></li>
+                                                <li><a href="/produkte?search=Windows 7" class="text-gray-300 hover:text-gold transition-colors">Windows 7</a></li>
+                                                <li><a href="/produkte?search=Windows Vista" class="text-gray-300 hover:text-gold transition-colors">Windows Vista</a></li>
                                             </ul>
                                         </div>
                                     </div>
@@ -698,44 +698,44 @@ export const HomepagePrestaShopEnhanced = () => {
                                 <div class="w-full px-6 py-6">
                                     <div class="grid grid-cols-4 gap-6">
                                         <div>
-                                            <h3 class="text-navy-dark font-bold mb-3 border-b-2 border-gold pb-2">
+                                            <h3 class="text-white font-bold mb-3 border-b-2 border-gold pb-2">
                                                 <i class="fas fa-star mr-2 text-gold"></i>Office 2024
                                             </h3>
                                             <ul class="space-y-2">
-                                                <li><a href="/produkte?search=Office 2024 Professional Plus" class="text-gray-700 hover:text-gold transition-colors">Professional Plus 2024</a></li>
-                                                <li><a href="/produkte?search=Office 2024 Home" class="text-gray-700 hover:text-gold transition-colors">Home & Business 2024</a></li>
-                                                <li><a href="/produkte?search=Office 2024 Standard" class="text-gray-700 hover:text-gold transition-colors">Standard 2024</a></li>
+                                                <li><a href="/produkte?search=Office 2024 Professional Plus" class="text-gray-300 hover:text-gold transition-colors">Professional Plus 2024</a></li>
+                                                <li><a href="/produkte?search=Office 2024 Home" class="text-gray-300 hover:text-gold transition-colors">Home & Business 2024</a></li>
+                                                <li><a href="/produkte?search=Office 2024 Standard" class="text-gray-300 hover:text-gold transition-colors">Standard 2024</a></li>
                                             </ul>
                                         </div>
                                         <div>
-                                            <h3 class="text-navy-dark font-bold mb-3 border-b-2 border-gold pb-2">
+                                            <h3 class="text-white font-bold mb-3 border-b-2 border-gold pb-2">
                                                 <i class="fas fa-box mr-2 text-gold"></i>Office 2021
                                             </h3>
                                             <ul class="space-y-2">
-                                                <li><a href="/produkte?search=Office 2021 Professional Plus" class="text-gray-700 hover:text-gold transition-colors">Professional Plus 2021</a></li>
-                                                <li><a href="/produkte?search=Office 2021 Home" class="text-gray-700 hover:text-gold transition-colors">Home & Business 2021</a></li>
-                                                <li><a href="/produkte?search=Office 2021 Standard" class="text-gray-700 hover:text-gold transition-colors">Standard 2021</a></li>
+                                                <li><a href="/produkte?search=Office 2021 Professional Plus" class="text-gray-300 hover:text-gold transition-colors">Professional Plus 2021</a></li>
+                                                <li><a href="/produkte?search=Office 2021 Home" class="text-gray-300 hover:text-gold transition-colors">Home & Business 2021</a></li>
+                                                <li><a href="/produkte?search=Office 2021 Standard" class="text-gray-300 hover:text-gold transition-colors">Standard 2021</a></li>
                                             </ul>
                                         </div>
                                         <div>
-                                            <h3 class="text-navy-dark font-bold mb-3 border-b-2 border-gold pb-2">
+                                            <h3 class="text-white font-bold mb-3 border-b-2 border-gold pb-2">
                                                 <i class="fas fa-cloud mr-2 text-gold"></i>Microsoft 365
                                             </h3>
                                             <ul class="space-y-2">
-                                                <li><a href="/produkte?search=Microsoft 365 Business" class="text-gray-700 hover:text-gold transition-colors">Microsoft 365 Business</a></li>
-                                                <li><a href="/produkte?search=Microsoft 365 Family" class="text-gray-700 hover:text-gold transition-colors">Microsoft 365 Family</a></li>
-                                                <li><a href="/produkte?search=Microsoft 365 Personal" class="text-gray-700 hover:text-gold transition-colors">Microsoft 365 Personal</a></li>
+                                                <li><a href="/produkte?search=Microsoft 365 Business" class="text-gray-300 hover:text-gold transition-colors">Microsoft 365 Business</a></li>
+                                                <li><a href="/produkte?search=Microsoft 365 Family" class="text-gray-300 hover:text-gold transition-colors">Microsoft 365 Family</a></li>
+                                                <li><a href="/produkte?search=Microsoft 365 Personal" class="text-gray-300 hover:text-gold transition-colors">Microsoft 365 Personal</a></li>
                                             </ul>
                                         </div>
                                         <div>
-                                            <h3 class="text-navy-dark font-bold mb-3 border-b-2 border-gold pb-2">
+                                            <h3 class="text-white font-bold mb-3 border-b-2 border-gold pb-2">
                                                 <i class="fas fa-puzzle-piece mr-2 text-gold"></i>Einzelanwendungen
                                             </h3>
                                             <ul class="space-y-2">
-                                                <li><a href="/produkte?search=Word 2024" class="text-gray-700 hover:text-gold transition-colors">Word 2024</a></li>
-                                                <li><a href="/produkte?search=Excel 2024" class="text-gray-700 hover:text-gold transition-colors">Excel 2024</a></li>
-                                                <li><a href="/produkte?search=PowerPoint 2024" class="text-gray-700 hover:text-gold transition-colors">PowerPoint 2024</a></li>
-                                                <li><a href="/produkte?search=Outlook 2024" class="text-gray-700 hover:text-gold transition-colors">Outlook 2024</a></li>
+                                                <li><a href="/produkte?search=Word 2024" class="text-gray-300 hover:text-gold transition-colors">Word 2024</a></li>
+                                                <li><a href="/produkte?search=Excel 2024" class="text-gray-300 hover:text-gold transition-colors">Excel 2024</a></li>
+                                                <li><a href="/produkte?search=PowerPoint 2024" class="text-gray-300 hover:text-gold transition-colors">PowerPoint 2024</a></li>
+                                                <li><a href="/produkte?search=Outlook 2024" class="text-gray-300 hover:text-gold transition-colors">Outlook 2024</a></li>
                                             </ul>
                                         </div>
                                     </div>
@@ -753,34 +753,34 @@ export const HomepagePrestaShopEnhanced = () => {
                                 <div class="w-full px-6 py-6">
                                     <div class="grid grid-cols-3 gap-6">
                                         <div>
-                                            <h3 class="text-navy-dark font-bold mb-3 border-b-2 border-gold pb-2">
+                                            <h3 class="text-white font-bold mb-3 border-b-2 border-gold pb-2">
                                                 <i class="fas fa-server mr-2 text-gold"></i>Windows Server
                                             </h3>
                                             <ul class="space-y-2">
-                                                <li><a href="/produkte?search=Windows Server 2025 Standard" class="text-gray-700 hover:text-gold transition-colors">Server 2025 Standard</a></li>
-                                                <li><a href="/produkte?search=Windows Server 2025 Datacenter" class="text-gray-700 hover:text-gold transition-colors">Server 2025 Datacenter</a></li>
-                                                <li><a href="/produkte?search=Windows Server 2022" class="text-gray-700 hover:text-gold transition-colors">Server 2022</a></li>
-                                                <li><a href="/produkte?search=Windows Server 2019" class="text-gray-700 hover:text-gold transition-colors">Server 2019</a></li>
+                                                <li><a href="/produkte?search=Windows Server 2025 Standard" class="text-gray-300 hover:text-gold transition-colors">Server 2025 Standard</a></li>
+                                                <li><a href="/produkte?search=Windows Server 2025 Datacenter" class="text-gray-300 hover:text-gold transition-colors">Server 2025 Datacenter</a></li>
+                                                <li><a href="/produkte?search=Windows Server 2022" class="text-gray-300 hover:text-gold transition-colors">Server 2022</a></li>
+                                                <li><a href="/produkte?search=Windows Server 2019" class="text-gray-300 hover:text-gold transition-colors">Server 2019</a></li>
                                             </ul>
                                         </div>
                                         <div>
-                                            <h3 class="text-navy-dark font-bold mb-3 border-b-2 border-gold pb-2">
+                                            <h3 class="text-white font-bold mb-3 border-b-2 border-gold pb-2">
                                                 <i class="fas fa-database mr-2 text-gold"></i>SQL Server
                                             </h3>
                                             <ul class="space-y-2">
-                                                <li><a href="/produkte?search=SQL Server 2022 Standard" class="text-gray-700 hover:text-gold transition-colors">SQL Server 2022 Standard</a></li>
-                                                <li><a href="/produkte?search=SQL Server 2022 Enterprise" class="text-gray-700 hover:text-gold transition-colors">SQL Server 2022 Enterprise</a></li>
-                                                <li><a href="/produkte?search=SQL Server 2019" class="text-gray-700 hover:text-gold transition-colors">SQL Server 2019</a></li>
+                                                <li><a href="/produkte?search=SQL Server 2022 Standard" class="text-gray-300 hover:text-gold transition-colors">SQL Server 2022 Standard</a></li>
+                                                <li><a href="/produkte?search=SQL Server 2022 Enterprise" class="text-gray-300 hover:text-gold transition-colors">SQL Server 2022 Enterprise</a></li>
+                                                <li><a href="/produkte?search=SQL Server 2019" class="text-gray-300 hover:text-gold transition-colors">SQL Server 2019</a></li>
                                             </ul>
                                         </div>
                                         <div>
-                                            <h3 class="text-navy-dark font-bold mb-3 border-b-2 border-gold pb-2">
+                                            <h3 class="text-white font-bold mb-3 border-b-2 border-gold pb-2">
                                                 <i class="fas fa-users mr-2 text-gold"></i>CAL Lizenzen
                                             </h3>
                                             <ul class="space-y-2">
-                                                <li><a href="/produkte?search=Windows Server CAL 2025" class="text-gray-700 hover:text-gold transition-colors">Server CAL 2025</a></li>
-                                                <li><a href="/produkte?search=RDS CAL 2025" class="text-gray-700 hover:text-gold transition-colors">RDS CAL 2025</a></li>
-                                                <li><a href="/produkte?search=Exchange Server CAL" class="text-gray-700 hover:text-gold transition-colors">Exchange Server CAL</a></li>
+                                                <li><a href="/produkte?search=Windows Server CAL 2025" class="text-gray-300 hover:text-gold transition-colors">Server CAL 2025</a></li>
+                                                <li><a href="/produkte?search=RDS CAL 2025" class="text-gray-300 hover:text-gold transition-colors">RDS CAL 2025</a></li>
+                                                <li><a href="/produkte?search=Exchange Server CAL" class="text-gray-300 hover:text-gold transition-colors">Exchange Server CAL</a></li>
                                             </ul>
                                         </div>
                                     </div>
@@ -798,34 +798,34 @@ export const HomepagePrestaShopEnhanced = () => {
                                 <div class="w-full px-6 py-6">
                                     <div class="grid grid-cols-3 gap-6">
                                         <div>
-                                            <h3 class="text-navy-dark font-bold mb-3 border-b-2 border-gold pb-2">
+                                            <h3 class="text-white font-bold mb-3 border-b-2 border-gold pb-2">
                                                 <i class="fas fa-shield-virus mr-2 text-gold"></i>Antivirus Premium
                                             </h3>
                                             <ul class="space-y-2">
-                                                <li><a href="/produkte?search=Kaspersky Total Security" class="text-gray-700 hover:text-gold transition-colors">Kaspersky Total Security</a></li>
-                                                <li><a href="/produkte?search=Norton 360 Premium" class="text-gray-700 hover:text-gold transition-colors">Norton 360 Premium</a></li>
-                                                <li><a href="/produkte?search=Bitdefender Total Security" class="text-gray-700 hover:text-gold transition-colors">Bitdefender Total Security</a></li>
-                                                <li><a href="/produkte?search=ESET Internet Security" class="text-gray-700 hover:text-gold transition-colors">ESET Internet Security</a></li>
+                                                <li><a href="/produkte?search=Kaspersky Total Security" class="text-gray-300 hover:text-gold transition-colors">Kaspersky Total Security</a></li>
+                                                <li><a href="/produkte?search=Norton 360 Premium" class="text-gray-300 hover:text-gold transition-colors">Norton 360 Premium</a></li>
+                                                <li><a href="/produkte?search=Bitdefender Total Security" class="text-gray-300 hover:text-gold transition-colors">Bitdefender Total Security</a></li>
+                                                <li><a href="/produkte?search=ESET Internet Security" class="text-gray-300 hover:text-gold transition-colors">ESET Internet Security</a></li>
                                             </ul>
                                         </div>
                                         <div>
-                                            <h3 class="text-navy-dark font-bold mb-3 border-b-2 border-gold pb-2">
+                                            <h3 class="text-white font-bold mb-3 border-b-2 border-gold pb-2">
                                                 <i class="fas fa-building mr-2 text-gold"></i>Business Security
                                             </h3>
                                             <ul class="space-y-2">
-                                                <li><a href="/produkte?search=Kaspersky Endpoint Security" class="text-gray-700 hover:text-gold transition-colors">Kaspersky Endpoint Security</a></li>
-                                                <li><a href="/produkte?search=Bitdefender GravityZone" class="text-gray-700 hover:text-gold transition-colors">Bitdefender GravityZone</a></li>
-                                                <li><a href="/produkte?search=ESET Endpoint Protection" class="text-gray-700 hover:text-gold transition-colors">ESET Endpoint Protection</a></li>
+                                                <li><a href="/produkte?search=Kaspersky Endpoint Security" class="text-gray-300 hover:text-gold transition-colors">Kaspersky Endpoint Security</a></li>
+                                                <li><a href="/produkte?search=Bitdefender GravityZone" class="text-gray-300 hover:text-gold transition-colors">Bitdefender GravityZone</a></li>
+                                                <li><a href="/produkte?search=ESET Endpoint Protection" class="text-gray-300 hover:text-gold transition-colors">ESET Endpoint Protection</a></li>
                                             </ul>
                                         </div>
                                         <div>
-                                            <h3 class="text-navy-dark font-bold mb-3 border-b-2 border-gold pb-2">
+                                            <h3 class="text-white font-bold mb-3 border-b-2 border-gold pb-2">
                                                 <i class="fas fa-home mr-2 text-gold"></i>Home Security
                                             </h3>
                                             <ul class="space-y-2">
-                                                <li><a href="/produkte?search=Avast Premium Security" class="text-gray-700 hover:text-gold transition-colors">Avast Premium Security</a></li>
-                                                <li><a href="/produkte?search=AVG Internet Security" class="text-gray-700 hover:text-gold transition-colors">AVG Internet Security</a></li>
-                                                <li><a href="/produkte?search=McAfee Total Protection" class="text-gray-700 hover:text-gold transition-colors">McAfee Total Protection</a></li>
+                                                <li><a href="/produkte?search=Avast Premium Security" class="text-gray-300 hover:text-gold transition-colors">Avast Premium Security</a></li>
+                                                <li><a href="/produkte?search=AVG Internet Security" class="text-gray-300 hover:text-gold transition-colors">AVG Internet Security</a></li>
+                                                <li><a href="/produkte?search=McAfee Total Protection" class="text-gray-300 hover:text-gold transition-colors">McAfee Total Protection</a></li>
                                             </ul>
                                         </div>
                                     </div>
@@ -843,34 +843,34 @@ export const HomepagePrestaShopEnhanced = () => {
                                 <div class="w-full px-6 py-6">
                                     <div class="grid grid-cols-3 gap-6">
                                         <div>
-                                            <h3 class="text-navy-dark font-bold mb-3 border-b-2 border-gold pb-2">
+                                            <h3 class="text-white font-bold mb-3 border-b-2 border-gold pb-2">
                                                 <i class="fas fa-paint-brush mr-2 text-gold"></i>Adobe Creative Cloud
                                             </h3>
                                             <ul class="space-y-2">
-                                                <li><a href="/produkte?search=Adobe Creative Cloud All Apps" class="text-gray-700 hover:text-gold transition-colors">CC All Apps</a></li>
-                                                <li><a href="/produkte?search=Adobe Photoshop" class="text-gray-700 hover:text-gold transition-colors">Photoshop</a></li>
-                                                <li><a href="/produkte?search=Adobe Illustrator" class="text-gray-700 hover:text-gold transition-colors">Illustrator</a></li>
-                                                <li><a href="/produkte?search=Adobe Premiere Pro" class="text-gray-700 hover:text-gold transition-colors">Premiere Pro</a></li>
+                                                <li><a href="/produkte?search=Adobe Creative Cloud All Apps" class="text-gray-300 hover:text-gold transition-colors">CC All Apps</a></li>
+                                                <li><a href="/produkte?search=Adobe Photoshop" class="text-gray-300 hover:text-gold transition-colors">Photoshop</a></li>
+                                                <li><a href="/produkte?search=Adobe Illustrator" class="text-gray-300 hover:text-gold transition-colors">Illustrator</a></li>
+                                                <li><a href="/produkte?search=Adobe Premiere Pro" class="text-gray-300 hover:text-gold transition-colors">Premiere Pro</a></li>
                                             </ul>
                                         </div>
                                         <div>
-                                            <h3 class="text-navy-dark font-bold mb-3 border-b-2 border-gold pb-2">
+                                            <h3 class="text-white font-bold mb-3 border-b-2 border-gold pb-2">
                                                 <i class="fas fa-drafting-compass mr-2 text-gold"></i>Autodesk CAD
                                             </h3>
                                             <ul class="space-y-2">
-                                                <li><a href="/produkte?search=AutoCAD 2024" class="text-gray-700 hover:text-gold transition-colors">AutoCAD 2024</a></li>
-                                                <li><a href="/produkte?search=AutoCAD LT 2024" class="text-gray-700 hover:text-gold transition-colors">AutoCAD LT 2024</a></li>
-                                                <li><a href="/produkte?search=Revit 2024" class="text-gray-700 hover:text-gold transition-colors">Revit 2024</a></li>
+                                                <li><a href="/produkte?search=AutoCAD 2024" class="text-gray-300 hover:text-gold transition-colors">AutoCAD 2024</a></li>
+                                                <li><a href="/produkte?search=AutoCAD LT 2024" class="text-gray-300 hover:text-gold transition-colors">AutoCAD LT 2024</a></li>
+                                                <li><a href="/produkte?search=Revit 2024" class="text-gray-300 hover:text-gold transition-colors">Revit 2024</a></li>
                                             </ul>
                                         </div>
                                         <div>
-                                            <h3 class="text-navy-dark font-bold mb-3 border-b-2 border-gold pb-2">
+                                            <h3 class="text-white font-bold mb-3 border-b-2 border-gold pb-2">
                                                 <i class="fas fa-cube mr-2 text-gold"></i>3D & Design
                                             </h3>
                                             <ul class="space-y-2">
-                                                <li><a href="/produkte?search=3ds Max" class="text-gray-700 hover:text-gold transition-colors">3ds Max</a></li>
-                                                <li><a href="/produkte?search=Maya" class="text-gray-700 hover:text-gold transition-colors">Maya</a></li>
-                                                <li><a href="/produkte?search=SketchUp Pro" class="text-gray-700 hover:text-gold transition-colors">SketchUp Pro</a></li>
+                                                <li><a href="/produkte?search=3ds Max" class="text-gray-300 hover:text-gold transition-colors">3ds Max</a></li>
+                                                <li><a href="/produkte?search=Maya" class="text-gray-300 hover:text-gold transition-colors">Maya</a></li>
+                                                <li><a href="/produkte?search=SketchUp Pro" class="text-gray-300 hover:text-gold transition-colors">SketchUp Pro</a></li>
                                             </ul>
                                         </div>
                                     </div>
@@ -878,7 +878,7 @@ export const HomepagePrestaShopEnhanced = () => {
                             </div>
                         </li>
                         
-                        <li><a href="/produkte?tag=angebote" class="px-4 py-4 hover:bg-navy-medium transition-colors block flex items-center"><i class="fas fa-fire mr-2 text-gold"></i>Angebote <span class="bg-gold text-navy-dark px-2 py-1 rounded-full text-xs ml-2 pulse-gold">-70%</span></a></li>
+                        <li><a href="/produkte?tag=angebote" class="px-4 py-4 hover:bg-navy-medium transition-colors block flex items-center"><i class="fas fa-fire mr-2 text-gold"></i>Angebote <span class="bg-gold text-white px-2 py-1 rounded-full text-xs ml-2 pulse-gold">-70%</span></a></li>
                         <li><a href="/kontakt" class="px-4 py-4 hover:bg-navy-medium transition-colors block"><i class="fas fa-envelope mr-2"></i>Kontakt</a></li>
                     </ul>
                 </div>
@@ -898,7 +898,7 @@ export const HomepagePrestaShopEnhanced = () => {
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
                     <div class="space-y-8">
                         <div class="inline-block animate-slideDown">
-                            <span class="bg-gold text-navy-dark px-4 py-2 rounded-full text-sm font-bold inline-flex items-center">
+                            <span class="bg-gold text-white px-4 py-2 rounded-full text-sm font-bold inline-flex items-center">
                                 <i class="fas fa-star mr-2"></i>
                                 Über 50.000 zufriedene Kunden
                             </span>
@@ -936,7 +936,7 @@ export const HomepagePrestaShopEnhanced = () => {
                         </div>
                         
                         <div class="flex flex-wrap gap-4 animate-slideUp" style="animation-delay: 0.6s;">
-                            <a href="/produkte" class="bg-gold hover:bg-gold-light text-navy-dark px-10 py-4 rounded-xl font-bold text-lg transition-all hover-lift inline-flex items-center shadow-2xl">
+                            <a href="/produkte" class="bg-gold hover:bg-gold-light text-white px-10 py-4 rounded-xl font-bold text-lg transition-all hover-lift inline-flex items-center shadow-2xl">
                                 <i class="fas fa-shopping-bag mr-3 text-xl"></i>
                                 Jetzt einkaufen
                             </a>
@@ -952,7 +952,7 @@ export const HomepagePrestaShopEnhanced = () => {
                                     <img src="https://i.pravatar.cc/40?img=1" alt="Customer" class="w-10 h-10 rounded-full border-2 border-white" />
                                     <img src="https://i.pravatar.cc/40?img=2" alt="Customer" class="w-10 h-10 rounded-full border-2 border-white" />
                                     <img src="https://i.pravatar.cc/40?img=3" alt="Customer" class="w-10 h-10 rounded-full border-2 border-white" />
-                                    <div class="w-10 h-10 rounded-full border-2 border-white bg-gold text-navy-dark flex items-center justify-center font-bold text-xs">50k+</div>
+                                    <div class="w-10 h-10 rounded-full border-2 border-white bg-gold text-white flex items-center justify-center font-bold text-xs">50k+</div>
                                 </div>
                                 <div>
                                     <div class="font-bold">Zufriedene Kunden</div>
@@ -965,14 +965,14 @@ export const HomepagePrestaShopEnhanced = () => {
                     <div class="relative animate-scaleIn" style="animation-delay: 0.4s;">
                         <div class="relative">
                             <img src="/static/banners/hero_home.jpg" alt="Original Software Lizenzen" class="w-full rounded-2xl shadow-2xl" onerror="this.src='https://via.placeholder.com/600x400/1a2a4e/d4af37?text=Software+Lizenzen'" />
-                            <div class="absolute -bottom-6 -right-6 bg-gradient-to-br from-gold to-gold-dark text-navy-dark px-8 py-6 rounded-2xl shadow-2xl font-bold pulse-gold">
+                            <div class="absolute -bottom-6 -right-6 bg-gradient-to-br from-gold to-gold-dark text-white px-8 py-6 rounded-2xl shadow-2xl font-bold pulse-gold">
                                 <div class="text-4xl">Bis zu 70%</div>
                                 <div class="text-lg">Günstiger</div>
                             </div>
                         </div>
                         
                         <!-- Floating Stats -->
-                        <div class="absolute top-10 -left-6 bg-white text-navy-dark px-6 py-4 rounded-xl shadow-xl animate-float">
+                        <div class="absolute top-10 -left-6 bg-white text-white px-6 py-4 rounded-xl shadow-xl animate-float">
                             <div class="text-2xl font-bold text-gold">2.347+</div>
                             <div class="text-sm">Verkäufe heute</div>
                         </div>
@@ -987,68 +987,68 @@ export const HomepagePrestaShopEnhanced = () => {
         </section>
 
         <!-- Trust Badges -->
-        <section class="bg-white py-6 shadow-md">
+        <section class="bg-navy-dark py-6 shadow-md">
             <div class="w-full px-6">
                 <div class="grid grid-cols-5 gap-6 text-center">
                     <div class="flex flex-col items-center">
                         <div class="w-16 h-16 bg-gold bg-opacity-10 rounded-full flex items-center justify-center mb-3">
                             <i class="fas fa-certificate text-gold text-2xl"></i>
                         </div>
-                        <div class="font-bold text-navy-dark">100% Original</div>
-                        <div class="text-sm text-gray-600">Echte Lizenzen</div>
+                        <div class="font-bold text-white">100% Original</div>
+                        <div class="text-sm text-gray-400">Echte Lizenzen</div>
                     </div>
                     <div class="flex flex-col items-center">
                         <div class="w-16 h-16 bg-gold bg-opacity-10 rounded-full flex items-center justify-center mb-3">
                             <i class="fas fa-bolt text-gold text-2xl"></i>
                         </div>
-                        <div class="font-bold text-navy-dark">Sofortversand</div>
-                        <div class="text-sm text-gray-600">Per E-Mail</div>
+                        <div class="font-bold text-white">Sofortversand</div>
+                        <div class="text-sm text-gray-400">Per E-Mail</div>
                     </div>
                     <div class="flex flex-col items-center">
                         <div class="w-16 h-16 bg-gold bg-opacity-10 rounded-full flex items-center justify-center mb-3">
                             <i class="fas fa-lock text-gold text-2xl"></i>
                         </div>
-                        <div class="font-bold text-navy-dark">SSL-Verschlüsselung</div>
-                        <div class="text-sm text-gray-600">Sichere Zahlung</div>
+                        <div class="font-bold text-white">SSL-Verschlüsselung</div>
+                        <div class="text-sm text-gray-400">Sichere Zahlung</div>
                     </div>
                     <div class="flex flex-col items-center">
                         <div class="w-16 h-16 bg-gold bg-opacity-10 rounded-full flex items-center justify-center mb-3">
                             <i class="fas fa-headset text-gold text-2xl"></i>
                         </div>
-                        <div class="font-bold text-navy-dark">24/7 Support</div>
-                        <div class="text-sm text-gray-600">Kundenservice</div>
+                        <div class="font-bold text-white">24/7 Support</div>
+                        <div class="text-sm text-gray-400">Kundenservice</div>
                     </div>
                     <div class="flex flex-col items-center">
                         <div class="w-16 h-16 bg-gold bg-opacity-10 rounded-full flex items-center justify-center mb-3">
                             <i class="fas fa-star text-gold text-2xl"></i>
                         </div>
-                        <div class="font-bold text-navy-dark">Über 50.000</div>
-                        <div class="text-sm text-gray-600">Zufriedene Kunden</div>
+                        <div class="font-bold text-white">Über 50.000</div>
+                        <div class="text-sm text-gray-400">Zufriedene Kunden</div>
                     </div>
                 </div>
             </div>
         </section>
 
         <!-- Google & Trustpilot Reviews Section -->
-        <section class="py-12 bg-gray-50">
+        <section class="py-12 bg-navy-ultra-dark">
             <div class="w-full px-8">
                 <div class="text-center mb-10">
-                    <h2 class="text-3xl font-bold text-navy-dark mb-4">
+                    <h2 class="text-3xl font-bold text-white mb-4">
                         <i class="fas fa-star text-gold mr-3"></i>
                         Vertraut von Tausenden zufriedenen Kunden
                     </h2>
-                    <p class="text-gray-600 text-lg">Sehen Sie, was unsere Kunden über uns sagen</p>
+                    <p class="text-gray-400 text-lg">Sehen Sie, was unsere Kunden über uns sagen</p>
                 </div>
                 
                 <div class="grid grid-cols-2 gap-8 mb-8">
                     <!-- Google Reviews -->
-                    <div class="bg-white rounded-xl shadow-lg p-8 border-2 border-gold">
+                    <div class="bg-navy-medium rounded-xl shadow-lg p-8 border-2 border-gold">
                         <div class="flex items-center justify-between mb-6">
                             <div class="flex items-center">
                                 <img src="https://www.google.com/favicon.ico" alt="Google" class="w-12 h-12 mr-4" />
                                 <div>
-                                    <h3 class="text-2xl font-bold text-navy-dark">Google Bewertungen</h3>
-                                    <p class="text-gray-600">Verifizierte Kundenbewertungen</p>
+                                    <h3 class="text-2xl font-bold text-white">Google Bewertungen</h3>
+                                    <p class="text-gray-400">Verifizierte Kundenbewertungen</p>
                                 </div>
                             </div>
                             <div class="text-right">
@@ -1060,58 +1060,58 @@ export const HomepagePrestaShopEnhanced = () => {
                                     <i class="fas fa-star"></i>
                                     <i class="fas fa-star-half-alt"></i>
                                 </div>
-                                <p class="text-sm text-gray-600 mt-1">4.523 Bewertungen</p>
+                                <p class="text-sm text-gray-400 mt-1">4.523 Bewertungen</p>
                             </div>
                         </div>
                         <div class="grid grid-cols-5 gap-2">
                             <div class="text-center">
                                 <div class="text-2xl font-bold text-gold">5★</div>
-                                <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
+                                <div class="w-full bg-navy-light rounded-full h-2 mt-1">
                                     <div class="bg-gold h-2 rounded-full" style="width: 92%"></div>
                                 </div>
-                                <div class="text-xs text-gray-600 mt-1">92%</div>
+                                <div class="text-xs text-gray-400 mt-1">92%</div>
                             </div>
                             <div class="text-center">
                                 <div class="text-2xl font-bold text-gold">4★</div>
-                                <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
+                                <div class="w-full bg-navy-light rounded-full h-2 mt-1">
                                     <div class="bg-gold h-2 rounded-full" style="width: 6%"></div>
                                 </div>
-                                <div class="text-xs text-gray-600 mt-1">6%</div>
+                                <div class="text-xs text-gray-400 mt-1">6%</div>
                             </div>
                             <div class="text-center">
                                 <div class="text-2xl font-bold text-gray-400">3★</div>
-                                <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
-                                    <div class="bg-gray-400 h-2 rounded-full" style="width: 1%"></div>
+                                <div class="w-full bg-navy-light rounded-full h-2 mt-1">
+                                    <div class="bg-gold h-2 rounded-full" style="width: 1%"></div>
                                 </div>
-                                <div class="text-xs text-gray-600 mt-1">1%</div>
+                                <div class="text-xs text-gray-400 mt-1">1%</div>
                             </div>
                             <div class="text-center">
                                 <div class="text-2xl font-bold text-gray-400">2★</div>
-                                <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
-                                    <div class="bg-gray-400 h-2 rounded-full" style="width: 0.5%"></div>
+                                <div class="w-full bg-navy-light rounded-full h-2 mt-1">
+                                    <div class="bg-gold h-2 rounded-full" style="width: 0.5%"></div>
                                 </div>
-                                <div class="text-xs text-gray-600 mt-1">0.5%</div>
+                                <div class="text-xs text-gray-400 mt-1">0.5%</div>
                             </div>
                             <div class="text-center">
                                 <div class="text-2xl font-bold text-gray-400">1★</div>
-                                <div class="w-full bg-gray-200 rounded-full h-2 mt-1">
-                                    <div class="bg-gray-400 h-2 rounded-full" style="width: 0.5%"></div>
+                                <div class="w-full bg-navy-light rounded-full h-2 mt-1">
+                                    <div class="bg-gold h-2 rounded-full" style="width: 0.5%"></div>
                                 </div>
-                                <div class="text-xs text-gray-600 mt-1">0.5%</div>
+                                <div class="text-xs text-gray-400 mt-1">0.5%</div>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Trustpilot Reviews -->
-                    <div class="bg-white rounded-xl shadow-lg p-8 border-2 border-gold">
+                    <div class="bg-navy-medium rounded-xl shadow-lg p-8 border-2 border-gold">
                         <div class="flex items-center justify-between mb-6">
                             <div class="flex items-center">
                                 <div class="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center mr-4">
                                     <i class="fas fa-star text-white text-2xl"></i>
                                 </div>
                                 <div>
-                                    <h3 class="text-2xl font-bold text-navy-dark">Trustpilot</h3>
-                                    <p class="text-gray-600">Hervorragend bewertet</p>
+                                    <h3 class="text-2xl font-bold text-white">Trustpilot</h3>
+                                    <p class="text-gray-400">Hervorragend bewertet</p>
                                 </div>
                             </div>
                             <div class="text-right">
@@ -1123,34 +1123,34 @@ export const HomepagePrestaShopEnhanced = () => {
                                     <i class="fas fa-star"></i>
                                     <i class="fas fa-star-half-alt"></i>
                                 </div>
-                                <p class="text-sm text-gray-600 mt-1">3.892 Bewertungen</p>
+                                <p class="text-sm text-gray-400 mt-1">3.892 Bewertungen</p>
                             </div>
                         </div>
                         <div class="space-y-2">
                             <div class="flex items-center justify-between">
                                 <span class="text-sm font-semibold">Hervorragend</span>
-                                <div class="flex-1 mx-4 bg-gray-200 rounded-full h-3">
+                                <div class="flex-1 mx-4 bg-navy-light rounded-full h-3">
                                     <div class="bg-green-600 h-3 rounded-full" style="width: 89%"></div>
                                 </div>
                                 <span class="text-sm font-bold text-green-600">89%</span>
                             </div>
                             <div class="flex items-center justify-between">
                                 <span class="text-sm font-semibold">Gut</span>
-                                <div class="flex-1 mx-4 bg-gray-200 rounded-full h-3">
+                                <div class="flex-1 mx-4 bg-navy-light rounded-full h-3">
                                     <div class="bg-green-500 h-3 rounded-full" style="width: 8%"></div>
                                 </div>
                                 <span class="text-sm font-bold">8%</span>
                             </div>
                             <div class="flex items-center justify-between">
                                 <span class="text-sm font-semibold">Durchschnittlich</span>
-                                <div class="flex-1 mx-4 bg-gray-200 rounded-full h-3">
+                                <div class="flex-1 mx-4 bg-navy-light rounded-full h-3">
                                     <div class="bg-yellow-500 h-3 rounded-full" style="width: 2%"></div>
                                 </div>
                                 <span class="text-sm font-bold">2%</span>
                             </div>
                             <div class="flex items-center justify-between">
                                 <span class="text-sm font-semibold">Schlecht</span>
-                                <div class="flex-1 mx-4 bg-gray-200 rounded-full h-3">
+                                <div class="flex-1 mx-4 bg-navy-light rounded-full h-3">
                                     <div class="bg-red-500 h-3 rounded-full" style="width: 1%"></div>
                                 </div>
                                 <span class="text-sm font-bold">1%</span>
@@ -1162,17 +1162,17 @@ export const HomepagePrestaShopEnhanced = () => {
         </section>
 
         <!-- Bestseller Slider -->
-        <section class="py-16 bg-white">
+        <section class="py-16 bg-navy-dark">
             <div class="w-full px-8">
                 <div class="flex items-center justify-between mb-10">
                     <div>
-                        <h2 class="text-3xl font-bold text-navy-dark mb-2">
+                        <h2 class="text-3xl font-bold text-white mb-2">
                             <i class="fas fa-fire text-gold mr-3"></i>
                             Bestseller – Top-Produkte
                         </h2>
-                        <p class="text-gray-600">Die meistverkauften Produkte unserer Kunden</p>
+                        <p class="text-gray-400">Die meistverkauften Produkte unserer Kunden</p>
                     </div>
-                    <a href="/produkte?sort=bestsellers" class="bg-gold hover:bg-gold-light text-navy-dark px-6 py-3 rounded-lg font-bold transition-all hover-lift">
+                    <a href="/produkte?sort=bestsellers" class="bg-gold hover:bg-gold-light text-white px-6 py-3 rounded-lg font-bold transition-all hover-lift">
                         Alle Bestseller <i class="fas fa-arrow-right ml-2"></i>
                     </a>
                 </div>
@@ -1191,15 +1191,15 @@ export const HomepagePrestaShopEnhanced = () => {
         </section>
 
         <!-- Favoriten Slider -->
-        <section class="py-16 bg-gray-50">
+        <section class="py-16 bg-navy-ultra-dark">
             <div class="w-full px-8">
                 <div class="flex items-center justify-between mb-10">
                     <div>
-                        <h2 class="text-3xl font-bold text-navy-dark mb-2">
+                        <h2 class="text-3xl font-bold text-white mb-2">
                             <i class="fas fa-heart text-gold mr-3"></i>
                             Favoriten – Meist gewünscht
                         </h2>
-                        <p class="text-gray-600">Die beliebtesten Produkte auf der Wunschliste</p>
+                        <p class="text-gray-400">Die beliebtesten Produkte auf der Wunschliste</p>
                     </div>
                     <a href="/produkte?tag=favoriten" class="bg-navy-dark hover:bg-navy-medium text-white px-6 py-3 rounded-lg font-bold transition-all hover-lift">
                         Alle Favoriten <i class="fas fa-arrow-right ml-2"></i>
@@ -1220,17 +1220,17 @@ export const HomepagePrestaShopEnhanced = () => {
         </section>
 
         <!-- Games Slider -->
-        <section class="py-16 bg-white">
+        <section class="py-16 bg-navy-dark">
             <div class="w-full px-8">
                 <div class="flex items-center justify-between mb-10">
                     <div>
-                        <h2 class="text-3xl font-bold text-navy-dark mb-2">
+                        <h2 class="text-3xl font-bold text-white mb-2">
                             <i class="fas fa-gamepad text-gold mr-3"></i>
                             Gaming & Spiele
                         </h2>
-                        <p class="text-gray-600">Game Keys, Gaming-Software und mehr</p>
+                        <p class="text-gray-400">Game Keys, Gaming-Software und mehr</p>
                     </div>
-                    <a href="/produkte?category=Games" class="bg-gold hover:bg-gold-light text-navy-dark px-6 py-3 rounded-lg font-bold transition-all hover-lift">
+                    <a href="/produkte?category=Games" class="bg-gold hover:bg-gold-light text-white px-6 py-3 rounded-lg font-bold transition-all hover-lift">
                         Alle Games <i class="fas fa-arrow-right ml-2"></i>
                     </a>
                 </div>
@@ -1262,7 +1262,7 @@ export const HomepagePrestaShopEnhanced = () => {
                 <div class="grid grid-cols-3 gap-8 mb-10">
                     <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-8 hover-lift border-2 border-gold">
                         <div class="w-16 h-16 bg-gold rounded-full flex items-center justify-center mb-4">
-                            <i class="fas fa-users text-navy-dark text-2xl"></i>
+                            <i class="fas fa-users text-white text-2xl"></i>
                         </div>
                         <h3 class="text-2xl font-bold mb-3">Volumenlizenzen</h3>
                         <p class="text-gray-200 mb-4">
@@ -1278,7 +1278,7 @@ export const HomepagePrestaShopEnhanced = () => {
                     
                     <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-8 hover-lift border-2 border-gold">
                         <div class="w-16 h-16 bg-gold rounded-full flex items-center justify-center mb-4">
-                            <i class="fas fa-handshake text-navy-dark text-2xl"></i>
+                            <i class="fas fa-handshake text-white text-2xl"></i>
                         </div>
                         <h3 class="text-2xl font-bold mb-3">Persönlicher Ansprechpartner</h3>
                         <p class="text-gray-200 mb-4">
@@ -1294,7 +1294,7 @@ export const HomepagePrestaShopEnhanced = () => {
                     
                     <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-8 hover-lift border-2 border-gold">
                         <div class="w-16 h-16 bg-gold rounded-full flex items-center justify-center mb-4">
-                            <i class="fas fa-file-invoice text-navy-dark text-2xl"></i>
+                            <i class="fas fa-file-invoice text-white text-2xl"></i>
                         </div>
                         <h3 class="text-2xl font-bold mb-3">Kauf auf Rechnung</h3>
                         <p class="text-gray-200 mb-4">
@@ -1310,7 +1310,7 @@ export const HomepagePrestaShopEnhanced = () => {
                 </div>
                 
                 <div class="text-center">
-                    <a href="/kontakt?type=business" class="inline-block bg-gold hover:bg-gold-light text-navy-dark px-10 py-4 rounded-lg font-bold text-lg transition-all hover-lift">
+                    <a href="/kontakt?type=business" class="inline-block bg-gold hover:bg-gold-light text-white px-10 py-4 rounded-lg font-bold text-lg transition-all hover-lift">
                         <i class="fas fa-envelope mr-2"></i>
                         Jetzt Unternehmensangebot anfragen
                     </a>
@@ -1322,17 +1322,17 @@ export const HomepagePrestaShopEnhanced = () => {
         </section>
 
         <!-- Featured Products -->
-        <section class="py-16 bg-gray-50">
+        <section class="py-16 bg-navy-ultra-dark">
             <div class="w-full px-6">
                 <div class="flex items-center justify-between mb-10">
                     <div>
-                        <h2 class="text-3xl font-bold text-navy-dark mb-2">
+                        <h2 class="text-3xl font-bold text-white mb-2">
                             <i class="fas fa-fire text-gold mr-3"></i>
                             Flash Sale – Heute bis zu 70% sparen!
                         </h2>
-                        <p class="text-gray-600">Unsere besten Angebote – nur für kurze Zeit!</p>
+                        <p class="text-gray-400">Unsere besten Angebote – nur für kurze Zeit!</p>
                     </div>
-                    <a href="/produkte?tag=angebote" class="bg-gold hover:bg-gold-light text-navy-dark px-6 py-3 rounded-lg font-bold transition-all hover-lift">
+                    <a href="/produkte?tag=angebote" class="bg-gold hover:bg-gold-light text-white px-6 py-3 rounded-lg font-bold transition-all hover-lift">
                         Alle Angebote <i class="fas fa-arrow-right ml-2"></i>
                     </a>
                 </div>
@@ -1341,74 +1341,74 @@ export const HomepagePrestaShopEnhanced = () => {
         </section>
 
         <!-- Product Categories Grid -->
-        <section class="py-16 bg-white">
+        <section class="py-16 bg-navy-dark">
             <div class="w-full px-6">
                 <div class="text-center mb-12">
-                    <h2 class="text-3xl font-bold text-navy-dark mb-4">
+                    <h2 class="text-3xl font-bold text-white mb-4">
                         <i class="fas fa-th-large text-gold mr-3"></i>
                         Unsere Produktkategorien
                     </h2>
-                    <p class="text-gray-600 text-lg">Finden Sie die perfekte Software für Ihre Bedürfnisse</p>
+                    <p class="text-gray-400 text-lg">Finden Sie die perfekte Software für Ihre Bedürfnisse</p>
                 </div>
                 
                 <div class="grid grid-cols-3 gap-6 mb-12">
                     <!-- Windows Category -->
                     <a href="/produkte?category=Windows" class="product-card p-6 text-center group">
                         <div class="w-24 h-24 bg-navy-dark bg-opacity-5 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-gold group-hover:bg-opacity-10 transition-all">
-                            <i class="fab fa-windows text-navy-dark text-5xl group-hover:text-gold transition-colors"></i>
+                            <i class="fab fa-windows text-white text-5xl group-hover:text-gold transition-colors"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-navy-dark mb-2">Windows</h3>
-                        <p class="text-gray-600 mb-4">Windows 11, 10, Server & mehr</p>
+                        <h3 class="text-xl font-bold text-white mb-2">Windows</h3>
+                        <p class="text-gray-400 mb-4">Windows 11, 10, Server & mehr</p>
                         <span class="text-gold font-semibold group-hover:underline">Alle Windows Produkte →</span>
                     </a>
                     
                     <!-- Office Category -->
                     <a href="/produkte?category=Microsoft Office" class="product-card p-6 text-center group">
                         <div class="w-24 h-24 bg-navy-dark bg-opacity-5 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-gold group-hover:bg-opacity-10 transition-all">
-                            <i class="fas fa-file-word text-navy-dark text-5xl group-hover:text-gold transition-colors"></i>
+                            <i class="fas fa-file-word text-white text-5xl group-hover:text-gold transition-colors"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-navy-dark mb-2">Microsoft Office</h3>
-                        <p class="text-gray-600 mb-4">Office 2024, 2021, Microsoft 365</p>
+                        <h3 class="text-xl font-bold text-white mb-2">Microsoft Office</h3>
+                        <p class="text-gray-400 mb-4">Office 2024, 2021, Microsoft 365</p>
                         <span class="text-gold font-semibold group-hover:underline">Alle Office Produkte →</span>
                     </a>
                     
                     <!-- Server Category -->
                     <a href="/produkte?category=Server" class="product-card p-6 text-center group">
                         <div class="w-24 h-24 bg-navy-dark bg-opacity-5 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-gold group-hover:bg-opacity-10 transition-all">
-                            <i class="fas fa-server text-navy-dark text-5xl group-hover:text-gold transition-colors"></i>
+                            <i class="fas fa-server text-white text-5xl group-hover:text-gold transition-colors"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-navy-dark mb-2">Server & CAL</h3>
-                        <p class="text-gray-600 mb-4">Windows Server, SQL Server, CAL</p>
+                        <h3 class="text-xl font-bold text-white mb-2">Server & CAL</h3>
+                        <p class="text-gray-400 mb-4">Windows Server, SQL Server, CAL</p>
                         <span class="text-gold font-semibold group-hover:underline">Alle Server Produkte →</span>
                     </a>
                     
                     <!-- Antivirus Category -->
                     <a href="/produkte?category=Antivirus" class="product-card p-6 text-center group">
                         <div class="w-24 h-24 bg-navy-dark bg-opacity-5 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-gold group-hover:bg-opacity-10 transition-all">
-                            <i class="fas fa-shield-virus text-navy-dark text-5xl group-hover:text-gold transition-colors"></i>
+                            <i class="fas fa-shield-virus text-white text-5xl group-hover:text-gold transition-colors"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-navy-dark mb-2">Antivirus</h3>
-                        <p class="text-gray-600 mb-4">Kaspersky, Norton, Bitdefender</p>
+                        <h3 class="text-xl font-bold text-white mb-2">Antivirus</h3>
+                        <p class="text-gray-400 mb-4">Kaspersky, Norton, Bitdefender</p>
                         <span class="text-gold font-semibold group-hover:underline">Alle Antivirus Produkte →</span>
                     </a>
                     
                     <!-- Adobe Category -->
                     <a href="/produkte?category=Adobe" class="product-card p-6 text-center group">
                         <div class="w-24 h-24 bg-navy-dark bg-opacity-5 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-gold group-hover:bg-opacity-10 transition-all">
-                            <i class="fas fa-paint-brush text-navy-dark text-5xl group-hover:text-gold transition-colors"></i>
+                            <i class="fas fa-paint-brush text-white text-5xl group-hover:text-gold transition-colors"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-navy-dark mb-2">Adobe & Design</h3>
-                        <p class="text-gray-600 mb-4">Photoshop, Illustrator, Creative Cloud</p>
+                        <h3 class="text-xl font-bold text-white mb-2">Adobe & Design</h3>
+                        <p class="text-gray-400 mb-4">Photoshop, Illustrator, Creative Cloud</p>
                         <span class="text-gold font-semibold group-hover:underline">Alle Adobe Produkte →</span>
                     </a>
                     
                     <!-- CAD Category -->
                     <a href="/produkte?category=CAD" class="product-card p-6 text-center group">
                         <div class="w-24 h-24 bg-navy-dark bg-opacity-5 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-gold group-hover:bg-opacity-10 transition-all">
-                            <i class="fas fa-drafting-compass text-navy-dark text-5xl group-hover:text-gold transition-colors"></i>
+                            <i class="fas fa-drafting-compass text-white text-5xl group-hover:text-gold transition-colors"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-navy-dark mb-2">CAD Software</h3>
-                        <p class="text-gray-600 mb-4">AutoCAD, Revit, 3ds Max</p>
+                        <h3 class="text-xl font-bold text-white mb-2">CAD Software</h3>
+                        <p class="text-gray-400 mb-4">AutoCAD, Revit, 3ds Max</p>
                         <span class="text-gold font-semibold group-hover:underline">Alle CAD Produkte →</span>
                     </a>
                 </div>
@@ -1416,15 +1416,15 @@ export const HomepagePrestaShopEnhanced = () => {
         </section>
 
         <!-- Bestsellers -->
-        <section class="py-16 bg-gray-50">
+        <section class="py-16 bg-navy-ultra-dark">
             <div class="w-full px-6">
                 <div class="flex items-center justify-between mb-10">
                     <div>
-                        <h2 class="text-3xl font-bold text-navy-dark mb-2">
+                        <h2 class="text-3xl font-bold text-white mb-2">
                             <i class="fas fa-star text-gold mr-3"></i>
                             Bestseller – Die beliebtesten Produkte
                         </h2>
-                        <p class="text-gray-600">Von unseren Kunden am häufigsten gekauft</p>
+                        <p class="text-gray-400">Von unseren Kunden am häufigsten gekauft</p>
                     </div>
                     <a href="/produkte" class="bg-navy-dark hover:bg-navy-medium text-white px-6 py-3 rounded-lg font-bold transition-all hover-lift">
                         Alle Produkte <i class="fas fa-arrow-right ml-2"></i>
@@ -1435,15 +1435,15 @@ export const HomepagePrestaShopEnhanced = () => {
         </section>
 
         <!-- SEO Content Section: Wer wir sind -->
-        <section class="py-16 bg-white">
+        <section class="py-16 bg-navy-dark">
             <div class="w-full px-6">
                 <div class="grid grid-cols-2 gap-12">
                     <div>
-                        <h2 class="text-3xl font-bold text-navy-dark mb-6">
+                        <h2 class="text-3xl font-bold text-white mb-6">
                             <i class="fas fa-info-circle text-gold mr-3"></i>
                             Wer wir sind und was wir machen
                         </h2>
-                        <div class="prose prose-lg text-gray-700">
+                        <div class="prose prose-lg text-gray-300">
                             <p class="mb-4">
                                 <strong>SOFTWAREKING24.de</strong> ist Ihr vertrauenswürdiger Online-Shop für <strong>Original-Softwarelizenzen</strong> 
                                 zu unschlagbaren Preisen. Wir spezialisieren uns auf den Verkauf von <strong>ESD-Lizenzen</strong> (Electronic Software Distribution) – 
@@ -1461,7 +1461,7 @@ export const HomepagePrestaShopEnhanced = () => {
                                 <li><strong>CAD & Design</strong>: AutoCAD, Adobe Creative Cloud, Photoshop</li>
                                 <li><strong>Retro-Software</strong>: Windows 7, Windows 8.1, ältere Office-Versionen</li>
                             </ul>
-                            <p class="font-semibold text-navy-dark">
+                            <p class="font-semibold text-white">
                                 Alle unsere Lizenzen sind <strong>100% legal</strong>, <strong>sofort einsetzbar</strong> 
                                 und werden mit vollständiger <strong>Dokumentation und Rechnung</strong> geliefert.
                             </p>
@@ -1469,17 +1469,17 @@ export const HomepagePrestaShopEnhanced = () => {
                     </div>
                     
                     <div>
-                        <h2 class="text-3xl font-bold text-navy-dark mb-6">
+                        <h2 class="text-3xl font-bold text-white mb-6">
                             <i class="fas fa-question-circle text-gold mr-3"></i>
                             Warum Software online kaufen?
                         </h2>
-                        <div class="prose prose-lg text-gray-700">
+                        <div class="prose prose-lg text-gray-300">
                             <p class="mb-4">
                                 Der Kauf von Software über das Internet bietet zahlreiche Vorteile gegenüber dem stationären Handel:
                             </p>
                             
                             <div class="bg-navy-dark bg-opacity-5 rounded-lg p-6 mb-4 border-l-4 border-gold">
-                                <h3 class="text-xl font-bold text-navy-dark mb-3">
+                                <h3 class="text-xl font-bold text-white mb-3">
                                     <i class="fas fa-euro-sign text-gold mr-2"></i>
                                     Günstigere Preise
                                 </h3>
@@ -1490,7 +1490,7 @@ export const HomepagePrestaShopEnhanced = () => {
                             </div>
                             
                             <div class="bg-navy-dark bg-opacity-5 rounded-lg p-6 mb-4 border-l-4 border-gold">
-                                <h3 class="text-xl font-bold text-navy-dark mb-3">
+                                <h3 class="text-xl font-bold text-white mb-3">
                                     <i class="fas fa-bolt text-gold mr-2"></i>
                                     Sofortige Verfügbarkeit
                                 </h3>
@@ -1501,7 +1501,7 @@ export const HomepagePrestaShopEnhanced = () => {
                             </div>
                             
                             <div class="bg-navy-dark bg-opacity-5 rounded-lg p-6 mb-4 border-l-4 border-gold">
-                                <h3 class="text-xl font-bold text-navy-dark mb-3">
+                                <h3 class="text-xl font-bold text-white mb-3">
                                     <i class="fas fa-shield-check text-gold mr-2"></i>
                                     Rechtssicherheit
                                 </h3>
@@ -1530,7 +1530,7 @@ export const HomepagePrestaShopEnhanced = () => {
                 <div class="grid grid-cols-3 gap-8">
                     <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 hover-lift">
                         <div class="w-16 h-16 bg-gold rounded-full flex items-center justify-center mb-4">
-                            <i class="fas fa-key text-navy-dark text-2xl"></i>
+                            <i class="fas fa-key text-white text-2xl"></i>
                         </div>
                         <h3 class="text-xl font-bold mb-3">Digitaler Produktschlüssel</h3>
                         <p class="text-gray-300">
@@ -1541,7 +1541,7 @@ export const HomepagePrestaShopEnhanced = () => {
                     
                     <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 hover-lift">
                         <div class="w-16 h-16 bg-gold rounded-full flex items-center justify-center mb-4">
-                            <i class="fas fa-download text-navy-dark text-2xl"></i>
+                            <i class="fas fa-download text-white text-2xl"></i>
                         </div>
                         <h3 class="text-xl font-bold mb-3">Download vom Hersteller</h3>
                         <p class="text-gray-300">
@@ -1552,7 +1552,7 @@ export const HomepagePrestaShopEnhanced = () => {
                     
                     <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-lg p-6 hover-lift">
                         <div class="w-16 h-16 bg-gold rounded-full flex items-center justify-center mb-4">
-                            <i class="fas fa-infinity text-navy-dark text-2xl"></i>
+                            <i class="fas fa-infinity text-white text-2xl"></i>
                         </div>
                         <h3 class="text-xl font-bold mb-3">Lebenslange Gültigkeit</h3>
                         <p class="text-gray-300">
@@ -1565,14 +1565,14 @@ export const HomepagePrestaShopEnhanced = () => {
         </section>
 
         <!-- FAQ Section -->
-        <section class="py-16 bg-gray-50">
+        <section class="py-16 bg-navy-ultra-dark">
             <div class="max-w-4xl mx-auto px-4">
                 <div class="text-center mb-12">
-                    <h2 class="text-3xl font-bold text-navy-dark mb-4">
+                    <h2 class="text-3xl font-bold text-white mb-4">
                         <i class="fas fa-question-circle text-gold mr-3"></i>
                         Häufig gestellte Fragen
                     </h2>
-                    <p class="text-gray-600">Alles, was Sie über den Kauf von Software bei SOFTWAREKING24 wissen müssen</p>
+                    <p class="text-gray-400">Alles, was Sie über den Kauf von Software bei SOFTWAREKING24 wissen müssen</p>
                 </div>
                 
                 <div class="space-y-4">
@@ -1585,17 +1585,17 @@ export const HomepagePrestaShopEnhanced = () => {
                             <i class="fas fa-chevron-down transition-transform" id="faq-icon-1"></i>
                         </div>
                         <div class="px-6 py-4 hidden" id="faq-content-1">
-                            <p class="text-gray-700">
+                            <p class="text-gray-300">
                                 Wir akzeptieren alle gängigen Zahlungsmethoden für Ihre Bequemlichkeit:
                             </p>
-                            <ul class="list-disc list-inside mt-3 space-y-2 text-gray-700">
+                            <ul class="list-disc list-inside mt-3 space-y-2 text-gray-300">
                                 <li><strong>PayPal</strong> – Schnell, sicher und mit Käuferschutz</li>
                                 <li><strong>Kreditkarte</strong> (Visa, Mastercard, American Express)</li>
                                 <li><strong>Sofortüberweisung</strong> – Direkte Banküberweisung</li>
                                 <li><strong>Klarna</strong> – Kauf auf Rechnung oder Ratenzahlung</li>
                                 <li><strong>Giropay</strong> – Sicheres Bezahlverfahren deutscher Banken</li>
                             </ul>
-                            <p class="mt-3 text-gray-700">
+                            <p class="mt-3 text-gray-300">
                                 Alle Zahlungen sind <strong>SSL-verschlüsselt</strong> und werden über sichere Payment-Gateways abgewickelt.
                             </p>
                         </div>
@@ -1610,16 +1610,16 @@ export const HomepagePrestaShopEnhanced = () => {
                             <i class="fas fa-chevron-down transition-transform" id="faq-icon-2"></i>
                         </div>
                         <div class="px-6 py-4 hidden" id="faq-content-2">
-                            <p class="text-gray-700">
+                            <p class="text-gray-300">
                                 Unser <strong>deutschsprachiger Support</strong> hilft Ihnen gerne weiter:
                             </p>
-                            <ul class="list-disc list-inside mt-3 space-y-2 text-gray-700">
+                            <ul class="list-disc list-inside mt-3 space-y-2 text-gray-300">
                                 <li><strong>E-Mail-Support</strong>: [email protected] (Antwort innerhalb von 24 Stunden)</li>
                                 <li><strong>Telefon-Hotline</strong>: +49 (0) 123 456789 (Mo-Fr: 9-18 Uhr)</li>
                                 <li><strong>Live-Chat</strong>: Direkte Hilfe über unsere Website</li>
                                 <li><strong>Installationsanleitungen</strong>: Ausführliche PDF-Guides für jedes Produkt</li>
                             </ul>
-                            <p class="mt-3 text-gray-700">
+                            <p class="mt-3 text-gray-300">
                                 Sollte Ihre Lizenz aus technischen Gründen nicht funktionieren, erhalten Sie selbstverständlich einen 
                                 <strong>kostenlosen Ersatzkey</strong> oder Ihr <strong>Geld zurück</strong>.
                             </p>
@@ -1635,36 +1635,36 @@ export const HomepagePrestaShopEnhanced = () => {
                             <i class="fas fa-chevron-down transition-transform" id="faq-icon-3"></i>
                         </div>
                         <div class="px-6 py-4 hidden" id="faq-content-3">
-                            <p class="text-gray-700 mb-3">
+                            <p class="text-gray-300 mb-3">
                                 Als <strong>Unternehmen, Behörde oder Bildungseinrichtung</strong> profitieren Sie von zusätzlichen Vorteilen:
                             </p>
                             <div class="grid grid-cols-2 gap-4">
                                 <div class="bg-gold bg-opacity-10 rounded-lg p-4 border-l-4 border-gold">
-                                    <h4 class="font-bold text-navy-dark mb-2">Mengenrabatte</h4>
-                                    <p class="text-gray-700 text-sm">
+                                    <h4 class="font-bold text-white mb-2">Mengenrabatte</h4>
+                                    <p class="text-gray-300 text-sm">
                                         Sparen Sie zusätzlich bei Sammelbestellungen – ab 10 Lizenzen bis zu 15% Extra-Rabatt
                                     </p>
                                 </div>
                                 <div class="bg-gold bg-opacity-10 rounded-lg p-4 border-l-4 border-gold">
-                                    <h4 class="font-bold text-navy-dark mb-2">Kauf auf Rechnung</h4>
-                                    <p class="text-gray-700 text-sm">
+                                    <h4 class="font-bold text-white mb-2">Kauf auf Rechnung</h4>
+                                    <p class="text-gray-300 text-sm">
                                         Zahlungsziel 30 Tage nach Erhalt der Rechnung für verifizierte Geschäftskunden
                                     </p>
                                 </div>
                                 <div class="bg-gold bg-opacity-10 rounded-lg p-4 border-l-4 border-gold">
-                                    <h4 class="font-bold text-navy-dark mb-2">Volumen-Lizenzierung</h4>
-                                    <p class="text-gray-700 text-sm">
+                                    <h4 class="font-bold text-white mb-2">Volumen-Lizenzierung</h4>
+                                    <p class="text-gray-300 text-sm">
                                         Microsoft-Volumenlizenzprogramme (Open, Select, Enterprise Agreement)
                                     </p>
                                 </div>
                                 <div class="bg-gold bg-opacity-10 rounded-lg p-4 border-l-4 border-gold">
-                                    <h4 class="font-bold text-navy-dark mb-2">Persönlicher Ansprechpartner</h4>
-                                    <p class="text-gray-700 text-sm">
+                                    <h4 class="font-bold text-white mb-2">Persönlicher Ansprechpartner</h4>
+                                    <p class="text-gray-300 text-sm">
                                         Ihr fester Ansprechpartner für alle Fragen rund um Ihre Softwarelizenzierung
                                     </p>
                                 </div>
                             </div>
-                            <p class="mt-4 text-gray-700">
+                            <p class="mt-4 text-gray-300">
                                 <strong>Kontaktieren Sie uns</strong> für ein individuelles Angebot: 
                                 <a href="mailto:[email protected]" class="text-gold font-semibold hover:underline">[email protected]</a>
                             </p>
@@ -1680,40 +1680,40 @@ export const HomepagePrestaShopEnhanced = () => {
                             <i class="fas fa-chevron-down transition-transform" id="faq-icon-4"></i>
                         </div>
                         <div class="px-6 py-4 hidden" id="faq-content-4">
-                            <p class="text-gray-700 mb-3">
+                            <p class="text-gray-300 mb-3">
                                 <strong>Windows 11</strong> bietet zahlreiche Verbesserungen gegenüber Windows 10:
                             </p>
                             <div class="grid grid-cols-2 gap-4 mb-4">
                                 <div class="flex items-start">
                                     <i class="fas fa-check-circle text-gold text-xl mr-3 mt-1"></i>
                                     <div>
-                                        <h4 class="font-bold text-navy-dark">Moderne Benutzeroberfläche</h4>
-                                        <p class="text-gray-700 text-sm">Aufgeräumtes Design mit abgerundeten Ecken und zentrierter Taskleiste</p>
+                                        <h4 class="font-bold text-white">Moderne Benutzeroberfläche</h4>
+                                        <p class="text-gray-300 text-sm">Aufgeräumtes Design mit abgerundeten Ecken und zentrierter Taskleiste</p>
                                     </div>
                                 </div>
                                 <div class="flex items-start">
                                     <i class="fas fa-check-circle text-gold text-xl mr-3 mt-1"></i>
                                     <div>
-                                        <h4 class="font-bold text-navy-dark">Bessere Performance</h4>
-                                        <p class="text-gray-700 text-sm">Schnellerer Start, optimierte Speicherverwaltung, verbesserte Gaming-Leistung</p>
+                                        <h4 class="font-bold text-white">Bessere Performance</h4>
+                                        <p class="text-gray-300 text-sm">Schnellerer Start, optimierte Speicherverwaltung, verbesserte Gaming-Leistung</p>
                                     </div>
                                 </div>
                                 <div class="flex items-start">
                                     <i class="fas fa-check-circle text-gold text-xl mr-3 mt-1"></i>
                                     <div>
-                                        <h4 class="font-bold text-navy-dark">DirectStorage & Auto HDR</h4>
-                                        <p class="text-gray-700 text-sm">Deutlich schnellere Ladezeiten und verbesserte Grafik in Spielen</p>
+                                        <h4 class="font-bold text-white">DirectStorage & Auto HDR</h4>
+                                        <p class="text-gray-300 text-sm">Deutlich schnellere Ladezeiten und verbesserte Grafik in Spielen</p>
                                     </div>
                                 </div>
                                 <div class="flex items-start">
                                     <i class="fas fa-check-circle text-gold text-xl mr-3 mt-1"></i>
                                     <div>
-                                        <h4 class="font-bold text-navy-dark">Sicherheitsfeatures</h4>
-                                        <p class="text-gray-700 text-sm">TPM 2.0, Secure Boot, Windows Hello, verbesserte Verschlüsselung</p>
+                                        <h4 class="font-bold text-white">Sicherheitsfeatures</h4>
+                                        <p class="text-gray-300 text-sm">TPM 2.0, Secure Boot, Windows Hello, verbesserte Verschlüsselung</p>
                                     </div>
                                 </div>
                             </div>
-                            <p class="text-gray-700">
+                            <p class="text-gray-300">
                                 <strong>Wichtig:</strong> Prüfen Sie vor dem Upgrade die 
                                 <a href="https://www.microsoft.com/de-de/windows/windows-11-specifications" target="_blank" class="text-gold hover:underline">
                                     Systemanforderungen für Windows 11
@@ -1731,17 +1731,17 @@ export const HomepagePrestaShopEnhanced = () => {
                             <i class="fas fa-chevron-down transition-transform" id="faq-icon-5"></i>
                         </div>
                         <div class="px-6 py-4 hidden" id="faq-content-5">
-                            <p class="text-gray-700 mb-4">
+                            <p class="text-gray-300 mb-4">
                                 Die Installation Ihrer gekauften Software ist denkbar einfach:
                             </p>
                             <div class="space-y-4">
                                 <div class="flex items-start">
                                     <div class="w-10 h-10 bg-gold rounded-full flex items-center justify-center flex-shrink-0 mr-4">
-                                        <span class="text-navy-dark font-bold">1</span>
+                                        <span class="text-white font-bold">1</span>
                                     </div>
                                     <div>
-                                        <h4 class="font-bold text-navy-dark mb-1">Download der Software</h4>
-                                        <p class="text-gray-700">
+                                        <h4 class="font-bold text-white mb-1">Download der Software</h4>
+                                        <p class="text-gray-300">
                                             Klicken Sie auf den Download-Link in Ihrer Bestätigungs-E-Mail und laden Sie die Installationsdatei 
                                             direkt vom Hersteller herunter (z.B. Microsoft, Adobe).
                                         </p>
@@ -1749,11 +1749,11 @@ export const HomepagePrestaShopEnhanced = () => {
                                 </div>
                                 <div class="flex items-start">
                                     <div class="w-10 h-10 bg-gold rounded-full flex items-center justify-center flex-shrink-0 mr-4">
-                                        <span class="text-navy-dark font-bold">2</span>
+                                        <span class="text-white font-bold">2</span>
                                     </div>
                                     <div>
-                                        <h4 class="font-bold text-navy-dark mb-1">Installation starten</h4>
-                                        <p class="text-gray-700">
+                                        <h4 class="font-bold text-white mb-1">Installation starten</h4>
+                                        <p class="text-gray-300">
                                             Doppelklicken Sie auf die heruntergeladene Datei und folgen Sie dem Installationsassistenten. 
                                             Dieser führt Sie Schritt für Schritt durch den Prozess.
                                         </p>
@@ -1761,11 +1761,11 @@ export const HomepagePrestaShopEnhanced = () => {
                                 </div>
                                 <div class="flex items-start">
                                     <div class="w-10 h-10 bg-gold rounded-full flex items-center justify-center flex-shrink-0 mr-4">
-                                        <span class="text-navy-dark font-bold">3</span>
+                                        <span class="text-white font-bold">3</span>
                                     </div>
                                     <div>
-                                        <h4 class="font-bold text-navy-dark mb-1">Lizenzkey eingeben</h4>
-                                        <p class="text-gray-700">
+                                        <h4 class="font-bold text-white mb-1">Lizenzkey eingeben</h4>
+                                        <p class="text-gray-300">
                                             Geben Sie bei der Aktivierung den 25-stelligen Produktkey ein, den Sie per E-Mail erhalten haben. 
                                             Die Software wird dadurch dauerhaft freigeschaltet.
                                         </p>
@@ -1773,11 +1773,11 @@ export const HomepagePrestaShopEnhanced = () => {
                                 </div>
                                 <div class="flex items-start">
                                     <div class="w-10 h-10 bg-gold rounded-full flex items-center justify-center flex-shrink-0 mr-4">
-                                        <span class="text-navy-dark font-bold">4</span>
+                                        <span class="text-white font-bold">4</span>
                                     </div>
                                     <div>
-                                        <h4 class="font-bold text-navy-dark mb-1">Sofort loslegen</h4>
-                                        <p class="text-gray-700">
+                                        <h4 class="font-bold text-white mb-1">Sofort loslegen</h4>
+                                        <p class="text-gray-300">
                                             Nach erfolgreicher Aktivierung können Sie die Software ohne Einschränkungen nutzen. 
                                             Die gesamte Installation dauert in der Regel <strong>nur 15-30 Minuten</strong>.
                                         </p>
@@ -1791,25 +1791,25 @@ export const HomepagePrestaShopEnhanced = () => {
         </section>
 
         <!-- Customer Testimonials -->
-        <section class="py-16 bg-white">
+        <section class="py-16 bg-navy-dark">
             <div class="w-full px-6">
                 <div class="text-center mb-12">
-                    <h2 class="text-3xl font-bold text-navy-dark mb-4">
+                    <h2 class="text-3xl font-bold text-white mb-4">
                         <i class="fas fa-comments text-gold mr-3"></i>
                         Das sagen unsere Kunden
                     </h2>
-                    <p class="text-gray-600">Über 50.000 zufriedene Kunden vertrauen auf SOFTWAREKING24</p>
+                    <p class="text-gray-400">Über 50.000 zufriedene Kunden vertrauen auf SOFTWAREKING24</p>
                 </div>
                 
                 <div class="grid grid-cols-3 gap-6">
                     <div class="testimonial-card">
                         <div class="flex items-center mb-4">
-                            <div class="w-12 h-12 bg-gold rounded-full flex items-center justify-center text-navy-dark font-bold text-xl mr-3">
+                            <div class="w-12 h-12 bg-gold rounded-full flex items-center justify-center text-white font-bold text-xl mr-3">
                                 MK
                             </div>
                             <div>
-                                <div class="font-bold text-navy-dark">Michael K.</div>
-                                <div class="text-sm text-gray-600">Verified Purchase</div>
+                                <div class="font-bold text-white">Michael K.</div>
+                                <div class="text-sm text-gray-400">Verified Purchase</div>
                             </div>
                         </div>
                         <div class="flex mb-3">
@@ -1819,7 +1819,7 @@ export const HomepagePrestaShopEnhanced = () => {
                             <i class="fas fa-star text-gold"></i>
                             <i class="fas fa-star text-gold"></i>
                         </div>
-                        <p class="text-gray-700 italic">
+                        <p class="text-gray-300 italic">
                             "Sehr schnelle Lieferung des Lizenzkeys! Installation von Windows 11 hat einwandfrei geklappt. 
                             Preis-Leistung ist unschlagbar. Gerne wieder!"
                         </p>
@@ -1830,12 +1830,12 @@ export const HomepagePrestaShopEnhanced = () => {
                     
                     <div class="testimonial-card">
                         <div class="flex items-center mb-4">
-                            <div class="w-12 h-12 bg-gold rounded-full flex items-center justify-center text-navy-dark font-bold text-xl mr-3">
+                            <div class="w-12 h-12 bg-gold rounded-full flex items-center justify-center text-white font-bold text-xl mr-3">
                                 SB
                             </div>
                             <div>
-                                <div class="font-bold text-navy-dark">Sandra B.</div>
-                                <div class="text-sm text-gray-600">Verified Purchase</div>
+                                <div class="font-bold text-white">Sandra B.</div>
+                                <div class="text-sm text-gray-400">Verified Purchase</div>
                             </div>
                         </div>
                         <div class="flex mb-3">
@@ -1845,7 +1845,7 @@ export const HomepagePrestaShopEnhanced = () => {
                             <i class="fas fa-star text-gold"></i>
                             <i class="fas fa-star text-gold"></i>
                         </div>
-                        <p class="text-gray-700 italic">
+                        <p class="text-gray-300 italic">
                             "Als Geschäftskunde mehrere Office-Lizenzen bestellt. Alles top! Rechnung kam sofort, Keys funktionierten 
                             alle auf Anhieb. Support war auch sehr hilfsbereit."
                         </p>
@@ -1856,12 +1856,12 @@ export const HomepagePrestaShopEnhanced = () => {
                     
                     <div class="testimonial-card">
                         <div class="flex items-center mb-4">
-                            <div class="w-12 h-12 bg-gold rounded-full flex items-center justify-center text-navy-dark font-bold text-xl mr-3">
+                            <div class="w-12 h-12 bg-gold rounded-full flex items-center justify-center text-white font-bold text-xl mr-3">
                                 TR
                             </div>
                             <div>
-                                <div class="font-bold text-navy-dark">Thomas R.</div>
-                                <div class="text-sm text-gray-600">Verified Purchase</div>
+                                <div class="font-bold text-white">Thomas R.</div>
+                                <div class="text-sm text-gray-400">Verified Purchase</div>
                             </div>
                         </div>
                         <div class="flex mb-3">
@@ -1871,7 +1871,7 @@ export const HomepagePrestaShopEnhanced = () => {
                             <i class="fas fa-star text-gold"></i>
                             <i class="fas fa-star text-gold"></i>
                         </div>
-                        <p class="text-gray-700 italic">
+                        <p class="text-gray-300 italic">
                             "Hatte Bedenken wegen günstiger Preise, aber alles ist 100% legal. Microsoft-Aktivierung hat sofort 
                             geklappt. Spare mir hunderte Euro!"
                         </p>
@@ -1892,8 +1892,8 @@ export const HomepagePrestaShopEnhanced = () => {
                                 <i class="fas fa-star text-gold text-xl"></i>
                                 <i class="fas fa-star text-gold text-xl"></i>
                             </div>
-                            <div class="text-navy-dark font-semibold">Basierend auf 8.247 Bewertungen</div>
-                            <div class="text-sm text-gray-600">Trustpilot & Google Reviews</div>
+                            <div class="text-white font-semibold">Basierend auf 8.247 Bewertungen</div>
+                            <div class="text-sm text-gray-400">Trustpilot & Google Reviews</div>
                         </div>
                     </div>
                 </div>
@@ -1901,15 +1901,15 @@ export const HomepagePrestaShopEnhanced = () => {
         </section>
 
         <!-- New Arrivals -->
-        <section class="py-16 bg-gray-50">
+        <section class="py-16 bg-navy-ultra-dark">
             <div class="w-full px-6">
                 <div class="flex items-center justify-between mb-10">
                     <div>
-                        <h2 class="text-3xl font-bold text-navy-dark mb-2">
+                        <h2 class="text-3xl font-bold text-white mb-2">
                             <i class="fas fa-sparkles text-gold mr-3"></i>
                             Neu eingetroffen
                         </h2>
-                        <p class="text-gray-600">Die neuesten Produkte in unserem Sortiment</p>
+                        <p class="text-gray-400">Die neuesten Produkte in unserem Sortiment</p>
                     </div>
                 </div>
                 <div id="new-arrivals" class="grid-products"></div>
@@ -1938,12 +1938,12 @@ export const HomepagePrestaShopEnhanced = () => {
                                     id="newsletter-email"
                                     placeholder="Ihre E-Mail-Adresse" 
                                     required
-                                    class="w-full px-6 py-4 rounded-lg text-navy-dark font-medium focus:outline-none focus:ring-4 focus:ring-gold transition-all"
+                                    class="w-full px-6 py-4 rounded-lg text-white font-medium focus:outline-none focus:ring-4 focus:ring-gold transition-all"
                                 />
                             </div>
                             <button 
                                 type="submit"
-                                class="bg-gold hover:bg-gold-light text-navy-dark px-8 py-4 rounded-lg font-bold transition-all hover-lift flex items-center justify-center whitespace-nowrap"
+                                class="bg-gold hover:bg-gold-light text-white px-8 py-4 rounded-lg font-bold transition-all hover-lift flex items-center justify-center whitespace-nowrap"
                             >
                                 <i class="fas fa-paper-plane mr-2"></i>
                                 Jetzt abonnieren
@@ -1987,16 +1987,16 @@ export const HomepagePrestaShopEnhanced = () => {
                             Seit über 10 Jahren am Markt.
                         </p>
                         <div class="flex space-x-3">
-                            <a href="#" class="w-10 h-10 bg-gold bg-opacity-20 rounded-full flex items-center justify-center hover:bg-gold hover:text-navy-dark transition-all">
+                            <a href="#" class="w-10 h-10 bg-gold bg-opacity-20 rounded-full flex items-center justify-center hover:bg-gold hover:text-white transition-all">
                                 <i class="fab fa-facebook-f"></i>
                             </a>
-                            <a href="#" class="w-10 h-10 bg-gold bg-opacity-20 rounded-full flex items-center justify-center hover:bg-gold hover:text-navy-dark transition-all">
+                            <a href="#" class="w-10 h-10 bg-gold bg-opacity-20 rounded-full flex items-center justify-center hover:bg-gold hover:text-white transition-all">
                                 <i class="fab fa-twitter"></i>
                             </a>
-                            <a href="#" class="w-10 h-10 bg-gold bg-opacity-20 rounded-full flex items-center justify-center hover:bg-gold hover:text-navy-dark transition-all">
+                            <a href="#" class="w-10 h-10 bg-gold bg-opacity-20 rounded-full flex items-center justify-center hover:bg-gold hover:text-white transition-all">
                                 <i class="fab fa-instagram"></i>
                             </a>
-                            <a href="#" class="w-10 h-10 bg-gold bg-opacity-20 rounded-full flex items-center justify-center hover:bg-gold hover:text-navy-dark transition-all">
+                            <a href="#" class="w-10 h-10 bg-gold bg-opacity-20 rounded-full flex items-center justify-center hover:bg-gold hover:text-white transition-all">
                                 <i class="fab fa-youtube"></i>
                             </a>
                         </div>
@@ -2148,7 +2148,7 @@ export const HomepagePrestaShopEnhanced = () => {
                         <div class="product-card">
                             \${hasDiscount ? \`
                                 <div class="absolute top-2 right-2 z-10">
-                                    <span class="bg-gold text-navy-dark px-3 py-1 rounded-full text-sm font-bold pulse-gold">
+                                    <span class="bg-gold text-white px-3 py-1 rounded-full text-sm font-bold pulse-gold">
                                         -\${discount}%
                                     </span>
                                 </div>
@@ -2163,10 +2163,10 @@ export const HomepagePrestaShopEnhanced = () => {
                             </div>
                             <div class="p-4">
                                 <span class="category-badge mb-2">\${product.category || 'Software'}</span>
-                                <h3 class="font-bold text-navy-dark text-lg mb-2 hover:text-gold transition-colors cursor-pointer" onclick="window.location.href='/produkt/\${product.slug}'">
+                                <h3 class="font-bold text-white text-lg mb-2 hover:text-gold transition-colors cursor-pointer" onclick="window.location.href='/produkt/\${product.slug}'">
                                     \${product.name}
                                 </h3>
-                                <p class="text-gray-600 text-sm mb-4 line-clamp-2">
+                                <p class="text-gray-400 text-sm mb-4 line-clamp-2">
                                     \${product.description || product.short_description || 'Original Lizenz – Sofort verfügbar'}
                                 </p>
                                 <div class="flex items-center justify-between mb-4">
@@ -2175,7 +2175,7 @@ export const HomepagePrestaShopEnhanced = () => {
                                             <div class="text-sm text-gray-500 line-through">€\${originalPriceEur}</div>
                                             <div class="text-2xl font-bold text-gold">€\${priceEur}</div>
                                         \` : \`
-                                            <div class="text-2xl font-bold text-navy-dark">€\${priceEur}</div>
+                                            <div class="text-2xl font-bold text-white">€\${priceEur}</div>
                                         \`}
                                     </div>
                                     <div class="text-sm text-gray-500">
@@ -2185,7 +2185,7 @@ export const HomepagePrestaShopEnhanced = () => {
                                 <div class="flex space-x-2">
                                     <button 
                                         onclick="addToCart(\${product.id}, '\${product.name.replace(/'/g, "\\'")}', \${displayPrice})"
-                                        class="flex-1 bg-gold hover:bg-gold-light text-navy-dark px-4 py-2 rounded-lg font-bold transition-all hover-lift"
+                                        class="flex-1 bg-gold hover:bg-gold-light text-white px-4 py-2 rounded-lg font-bold transition-all hover-lift"
                                     >
                                         <i class="fas fa-shopping-cart mr-2"></i>Jetzt kaufen
                                     </button>
@@ -2222,20 +2222,20 @@ export const HomepagePrestaShopEnhanced = () => {
                                     class="w-full h-48 object-cover"
                                     onerror="this.src='/static/placeholder.png'"
                                 />
-                                <span class="absolute top-2 left-2 bg-gold text-navy-dark px-3 py-1 rounded-full text-xs font-bold">
+                                <span class="absolute top-2 left-2 bg-gold text-white px-3 py-1 rounded-full text-xs font-bold">
                                     <i class="fas fa-star mr-1"></i>Bestseller
                                 </span>
                             </div>
                             <div class="p-4">
                                 <span class="category-badge mb-2">\${product.category || 'Software'}</span>
-                                <h3 class="font-bold text-navy-dark text-lg mb-2 hover:text-gold transition-colors cursor-pointer" onclick="window.location.href='/produkt/\${product.slug}'">
+                                <h3 class="font-bold text-white text-lg mb-2 hover:text-gold transition-colors cursor-pointer" onclick="window.location.href='/produkt/\${product.slug}'">
                                     \${product.name}
                                 </h3>
-                                <p class="text-gray-600 text-sm mb-4 line-clamp-2">
+                                <p class="text-gray-400 text-sm mb-4 line-clamp-2">
                                     \${product.description || product.short_description || 'Original Lizenz – Sofort verfügbar'}
                                 </p>
                                 <div class="flex items-center justify-between mb-4">
-                                    <div class="text-2xl font-bold text-navy-dark">€\${priceEur}</div>
+                                    <div class="text-2xl font-bold text-white">€\${priceEur}</div>
                                     <div class="flex">
                                         <i class="fas fa-star text-gold"></i>
                                         <i class="fas fa-star text-gold"></i>
@@ -2247,7 +2247,7 @@ export const HomepagePrestaShopEnhanced = () => {
                                 <div class="flex space-x-2">
                                     <button 
                                         onclick="addToCart(\${product.id}, '\${product.name.replace(/'/g, "\\'")}', \${displayPrice})"
-                                        class="flex-1 bg-gold hover:bg-gold-light text-navy-dark px-4 py-2 rounded-lg font-bold transition-all hover-lift"
+                                        class="flex-1 bg-gold hover:bg-gold-light text-white px-4 py-2 rounded-lg font-bold transition-all hover-lift"
                                     >
                                         <i class="fas fa-shopping-cart mr-2"></i>Jetzt kaufen
                                     </button>
@@ -2290,19 +2290,19 @@ export const HomepagePrestaShopEnhanced = () => {
                             </div>
                             <div class="p-4">
                                 <span class="category-badge mb-2">\${product.category || 'Software'}</span>
-                                <h3 class="font-bold text-navy-dark text-lg mb-2 hover:text-gold transition-colors cursor-pointer" onclick="window.location.href='/produkt/\${product.slug}'">
+                                <h3 class="font-bold text-white text-lg mb-2 hover:text-gold transition-colors cursor-pointer" onclick="window.location.href='/produkt/\${product.slug}'">
                                     \${product.name}
                                 </h3>
-                                <p class="text-gray-600 text-sm mb-4 line-clamp-2">
+                                <p class="text-gray-400 text-sm mb-4 line-clamp-2">
                                     \${product.description || product.short_description || 'Original Lizenz – Sofort verfügbar'}
                                 </p>
                                 <div class="flex items-center justify-between mb-4">
-                                    <div class="text-2xl font-bold text-navy-dark">€\${priceEur}</div>
+                                    <div class="text-2xl font-bold text-white">€\${priceEur}</div>
                                 </div>
                                 <div class="flex space-x-2">
                                     <button 
                                         onclick="addToCart(\${product.id}, '\${product.name.replace(/'/g, "\\'")}', \${displayPrice})"
-                                        class="flex-1 bg-gold hover:bg-gold-light text-navy-dark px-4 py-2 rounded-lg font-bold transition-all hover-lift"
+                                        class="flex-1 bg-gold hover:bg-gold-light text-white px-4 py-2 rounded-lg font-bold transition-all hover-lift"
                                     >
                                         <i class="fas fa-shopping-cart mr-2"></i>Jetzt kaufen
                                     </button>
