@@ -7334,13 +7334,14 @@ app.get('/admin/certificate-settings', (c) => {
 })
 
 // Coupon Management
-app.get('/admin/coupons', (c) => {
-  return c.html(
-    <AdminLayout title="Coupon Management" currentUser={{ first_name: 'Admin' }}>
-      <AdminCoupons />
-    </AdminLayout>
-  )
-})
+// OLD ROUTE - Commented out to use dynamic handler instead
+// app.get('/admin/coupons', (c) => {
+//   return c.html(
+//     <AdminLayout title="Coupon Management" currentUser={{ first_name: 'Admin' }}>
+//       <AdminCoupons />
+//     </AdminLayout>
+//   )
+// })
 
 // License Key Management
 app.get('/admin/licenses', (c) => {
@@ -7392,9 +7393,10 @@ app.get('/admin/footer', (c) => {
 })
 
 // Pages Management
-app.get('/admin/pages', (c) => {
-  return c.html(AdminPagesManagement())
-})
+// OLD ROUTE - Commented out to use dynamic handler instead
+// app.get('/admin/pages', (c) => {
+//   return c.html(AdminPagesManagement())
+// })
 
 // Email Templates
 app.get('/admin/email-templates', (c) => {

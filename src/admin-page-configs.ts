@@ -132,15 +132,15 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
     icon: 'ticket-alt',
     iconColor: 'pink',
     description: 'Gutschein- und Rabattcode-Verwaltung',
-    dbQuery: `SELECT c.*, 
-              (SELECT COUNT(*) FROM orders WHERE coupon_code = c.code) as usage_count
+    dbQuery: `SELECT c.*,
+              0 as usage_count
               FROM coupons c
               ORDER BY c.created_at DESC`,
     statsCards: [
       { label: 'Gesamt Gutscheine', query: 'SELECT COUNT(*) as count FROM coupons', color: 'text-pink-600', icon: 'ticket-alt' },
       { label: 'Aktiv', query: 'SELECT COUNT(*) as count FROM coupons WHERE is_active = 1 AND (valid_until IS NULL OR valid_until >= date("now"))', color: 'text-green-600', icon: 'check' },
       { label: 'Abgelaufen', query: 'SELECT COUNT(*) as count FROM coupons WHERE valid_until < date("now")', color: 'text-red-600', icon: 'times' },
-      { label: 'Verwendungen', query: 'SELECT COUNT(*) as count FROM orders WHERE coupon_code IS NOT NULL', color: 'text-blue-600', icon: 'shopping-cart' }
+      { label: 'Gesamt Rabatt', query: 'SELECT COALESCE(SUM(discount_value), 0) as sum FROM coupons WHERE discount_type = "fixed"', color: 'text-blue-600', icon: 'euro-sign', format: 'currency' }
     ],
     tableColumns: [
       { key: 'code', label: 'Code' },
