@@ -9842,8 +9842,8 @@ app.get('/konto/adressen', (c) => c.html(FrontendPlaceholder('/konto/adressen', 
 // ============================================
 
 // CATEGORIES MANAGEMENT PAGE
-app.get('/admin/categories', async (c) => {
-  const db = c.get('db') as DatabaseHelper
+// DISABLED DUPLICATE: app.get('/admin/categories', async (c) => {
+  /*const db = c.get('db') as DatabaseHelper
   const categories = await db.db.prepare(`
     SELECT c.*, ct.name, ct.description, 
            COUNT(DISTINCT p.id) as product_count
@@ -10077,11 +10077,11 @@ app.get('/admin/categories', async (c) => {
         </script>
     </body>
     </html>
-  `)
-})
+  `)*/
+//})
 
-// BRANDS MANAGEMENT PAGE  
-app.get('/admin/brands', async (c) => {
+// BRANDS MANAGEMENT PAGE (DISABLED DUPLICATE)
+/*app.get('/admin/brands', async (c) => {
   const db = c.get('db') as DatabaseHelper
   const brands = await db.db.prepare(`
     SELECT b.*, COUNT(DISTINCT p.id) as product_count
@@ -10285,8 +10285,8 @@ app.get('/admin/brands', async (c) => {
         </script>
     </body>
     </html>
-  `)
-})
+  `)*/
+//})
 
 // CUSTOMER PROFILES PAGE
 app.get('/admin/customer-profiles', async (c) => {
