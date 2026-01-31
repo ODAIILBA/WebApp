@@ -25,6 +25,10 @@ export function HomepageSimple() {
     <script src="/static/search-autocomplete.js"></script>
     <script src="/static/section-renderers.js?v=3"></script>
     
+    <!-- Modern 3D Styles -->
+    <link href="/static/modern-3d-styles.css" rel="stylesheet">
+    <script src="/static/modern-3d-renderers.js"></script>
+    
     <style>
         :root {
             --navy: #001f3f;
