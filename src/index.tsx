@@ -256,13 +256,13 @@ setupReviewRoutes(app)
 // HOMEPAGE ROUTE
 // ============================================
 
-// Homepage - VIP Luxury (ACTIVE)
+// Homepage - PrestaShop Enhanced with VIP Luxury Styling (ACTIVE)
 app.get('/', (c) => {
-  return c.html(HomepageVIPLuxury())
+  return c.html(HomepagePrestaShopEnhanced())
 })
 
 app.get('/de', (c) => {
-  return c.html(HomepageVIPLuxury())
+  return c.html(HomepagePrestaShopEnhanced())
 })
 
 // ============================================
