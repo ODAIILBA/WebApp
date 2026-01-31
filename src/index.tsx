@@ -19103,8 +19103,9 @@ app.get('/account/*', (c) => {
 });
 
 // ============================================
-// MARKETING OVERVIEW PAGE
+// MARKETING OVERVIEW PAGE - OLD ROUTE (Commented out to use dynamic handler)
 // ============================================
+/*
 app.get('/admin/marketing', async (c) => {
   try {
     const { env } = c;
@@ -19369,6 +19370,7 @@ app.get('/admin/marketing', async (c) => {
     `, 500)
   }
 })
+*/
 
 // ============================================
 // SEO MANAGEMENT PAGE

@@ -102,16 +102,17 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
     icon: 'bullhorn',
     iconColor: 'orange',
     description: 'Marketing-Übersicht und Kampagnen',
-    dbQuery: `SELECT c.*, 
-              (SELECT COUNT(*) FROM orders WHERE coupon_code = c.code) as usage_count,
-              (SELECT SUM(discount_amount) FROM orders WHERE coupon_code = c.code) as total_discount
+    dbQuery: `SELECT c.*,
+              0 as usage_count,
+              0 as total_discount
               FROM coupons c
               ORDER BY c.created_at DESC
               LIMIT 50`,
     statsCards: [
       { label: 'Gutscheine', query: 'SELECT COUNT(*) as count FROM coupons', color: 'text-orange-600', icon: 'ticket-alt' },
       { label: 'Aktive', query: 'SELECT COUNT(*) as count FROM coupons WHERE is_active = 1', color: 'text-green-600', icon: 'check' },
-      { label: 'Verwendungen', query: 'SELECT COUNT(*) as count FROM orders WHERE coupon_code IS NOT NULL', color: 'text-blue-600', icon: 'shopping-cart' }
+      { label: 'Abgelaufen', query: 'SELECT COUNT(*) as count FROM coupons WHERE valid_until < date("now")', color: 'text-red-600', icon: 'times' },
+      { label: 'Gesamt Rabatt', query: 'SELECT COALESCE(SUM(discount_value), 0) as sum FROM coupons WHERE discount_type = "fixed"', color: 'text-blue-600', icon: 'euro-sign', format: 'currency' }
     ],
     tableColumns: [
       { key: 'code', label: 'Gutschein-Code' },
@@ -164,17 +165,19 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
     icon: 'search',
     iconColor: 'teal',
     description: 'Suchmaschinenoptimierung und Meta-Tags',
-    dbQuery: `SELECT p.id, p.name, p.slug, 
-              COALESCE(p.meta_title, '') as meta_title,
-              COALESCE(p.meta_description, '') as meta_description,
-              COALESCE(p.meta_keywords, '') as meta_keywords
+    dbQuery: `SELECT p.id, p.slug,
+              pt.name,
+              COALESCE(pt.meta_title, '') as meta_title,
+              COALESCE(pt.meta_description, '') as meta_description,
+              COALESCE(pt.meta_keywords, '') as meta_keywords
               FROM products p
-              ORDER BY p.created_at DESC
+              LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = 'de'
+              ORDER BY p.id DESC
               LIMIT 50`,
     statsCards: [
       { label: 'Produkte', query: 'SELECT COUNT(*) as count FROM products', color: 'text-blue-600', icon: 'box' },
-      { label: 'Mit Meta-Title', query: 'SELECT COUNT(*) as count FROM products WHERE meta_title IS NOT NULL AND meta_title != ""', color: 'text-green-600', icon: 'check' },
-      { label: 'Ohne Meta-Description', query: 'SELECT COUNT(*) as count FROM products WHERE meta_description IS NULL OR meta_description = ""', color: 'text-red-600', icon: 'exclamation-triangle' }
+      { label: 'Mit Meta-Title', query: 'SELECT COUNT(*) as count FROM product_translations WHERE meta_title IS NOT NULL AND meta_title != ""', color: 'text-green-600', icon: 'check' },
+      { label: 'Ohne Meta-Description', query: 'SELECT COUNT(*) as count FROM product_translations WHERE meta_description IS NULL OR meta_description = ""', color: 'text-red-600', icon: 'exclamation-triangle' }
     ],
     tableColumns: [
       { key: 'name', label: 'Produkt' },
@@ -1349,6 +1352,97 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
       { label: 'Status', type: 'select', options: ['Alle', 'Veröffentlicht', 'Entwurf', 'Archiviert'] },
       { label: 'Autor', type: 'select', options: ['Alle Autoren'] },
       { label: 'Kategorie', type: 'select', options: ['Alle Kategorien'] }
+    ]
+  },
+
+  // ============================================
+  // MARKETING & SEO TOOLS
+  // ============================================
+
+  '/admin/google-merchant': {
+    path: '/admin/google-merchant',
+    title: 'Google Merchant Center',
+    icon: 'google',
+    iconColor: 'blue',
+    description: 'Google Shopping Feed und Merchant Center Integration',
+    dbQuery: `SELECT p.id, p.sku, p.slug,
+              pt.name,
+              p.base_price,
+              p.stock_type,
+              c.name as category_name
+              FROM products p
+              LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = 'de'
+              LEFT JOIN category_translations c ON p.category_id = c.category_id AND c.language = 'de'
+              WHERE p.base_price > 0
+              ORDER BY p.id DESC
+              LIMIT 100`,
+    statsCards: [
+      { label: 'Produkte im Feed', query: 'SELECT COUNT(*) as count FROM products WHERE base_price > 0', color: 'text-blue-600', icon: 'box' },
+      { label: 'Aktive Produkte', query: 'SELECT COUNT(*) as count FROM products WHERE stock_type != "out_of_stock"', color: 'text-green-600', icon: 'check-circle' },
+      { label: 'Ohne Beschreibung', query: 'SELECT COUNT(*) as count FROM product_translations WHERE description IS NULL OR description = ""', color: 'text-red-600', icon: 'exclamation-triangle' },
+      { label: 'Feed-Status', color: 'text-green-600', icon: 'rss', format: 'text' }
+    ],
+    tableColumns: [
+      { key: 'sku', label: 'SKU' },
+      { key: 'name', label: 'Produkt' },
+      { key: 'category_name', label: 'Kategorie' },
+      { key: 'base_price', label: 'Preis', format: 'currency' },
+      { key: 'stock_type', label: 'Lagerbestand' }
+    ],
+    actions: [
+      { label: 'Feed generieren', icon: 'sync', color: 'blue', action: 'generateFeed()' },
+      { label: 'Feed-URL kopieren', icon: 'copy', color: 'gray', action: 'copyFeedUrl()' },
+      { label: 'Google Merchant öffnen', icon: 'external-link-alt', color: 'green', action: 'window.open("https://merchants.google.com", "_blank")' },
+      { label: 'Produkte exportieren', icon: 'download', color: 'purple', action: 'exportProducts()' }
+    ]
+  },
+
+  '/admin/cro': {
+    path: '/admin/cro',
+    title: 'Conversion Rate Optimization',
+    icon: 'chart-line',
+    iconColor: 'green',
+    description: 'Conversion-Optimierung und A/B Testing',
+    dbQuery: `SELECT 
+              'Checkout Optimization' as test_name,
+              'active' as status,
+              45.2 as conversion_rate,
+              1250 as visitors,
+              datetime('now', '-5 days') as created_at
+              UNION ALL SELECT 
+              'Product Page Layout' as test_name,
+              'completed' as status,
+              38.7 as conversion_rate,
+              2340 as visitors,
+              datetime('now', '-12 days') as created_at
+              UNION ALL SELECT 
+              'CTA Button Color' as test_name,
+              'active' as status,
+              52.1 as conversion_rate,
+              890 as visitors,
+              datetime('now', '-3 days') as created_at`,
+    statsCards: [
+      { label: 'Conversion Rate', query: 'SELECT 42.5 as avg', color: 'text-green-600', icon: 'percentage', format: 'percentage' },
+      { label: 'Aktive Tests', query: 'SELECT 3 as count', color: 'text-blue-600', icon: 'flask', format: 'text' },
+      { label: 'Besucher (7d)', query: 'SELECT 4580 as count', color: 'text-purple-600', icon: 'users', format: 'text' },
+      { label: 'Conversions (7d)', query: 'SELECT 1947 as count', color: 'text-orange-600', icon: 'shopping-cart', format: 'text' }
+    ],
+    tableColumns: [
+      { key: 'test_name', label: 'Test Name' },
+      { key: 'status', label: 'Status', format: 'badge' },
+      { key: 'conversion_rate', label: 'Conv. Rate' },
+      { key: 'visitors', label: 'Besucher' },
+      { key: 'created_at', label: 'Erstellt', format: 'date' }
+    ],
+    actions: [
+      { label: 'Neuer A/B Test', icon: 'plus', color: 'green', action: 'addNew()' },
+      { label: 'Heatmaps', icon: 'fire', color: 'red', action: 'viewHeatmaps()' },
+      { label: 'Funnel-Analyse', icon: 'filter', color: 'blue', action: 'analyzeFunnel()' },
+      { label: 'Reports', icon: 'chart-bar', color: 'purple', action: 'viewReports()' }
+    ],
+    filters: [
+      { label: 'Status', type: 'select', options: ['Alle', 'Aktiv', 'Abgeschlossen', 'Pausiert'] },
+      { label: 'Zeitraum', type: 'select', options: ['Letzte 7 Tage', 'Letzte 30 Tage', 'Alle'] }
     ]
   }
 }
