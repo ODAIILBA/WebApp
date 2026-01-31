@@ -393,7 +393,7 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
     icon: 'users',
     iconColor: 'blue',
     description: 'Kundenverwaltung und Kundeninformationen',
-    dbQuery: `SELECT u.*, COUNT(DISTINCT o.id) as order_count, SUM(o.total_amount) as total_spent
+    dbQuery: `SELECT u.*, COUNT(DISTINCT o.id) as order_count, SUM(o.total) as total_spent
               FROM users u
               LEFT JOIN orders o ON o.user_id = u.id
               GROUP BY u.id
