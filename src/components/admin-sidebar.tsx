@@ -1,6 +1,6 @@
-import { AdminSidebarAdvanced } from './admin-sidebar-advanced'
+import { AdminSidebarWorking } from './admin-sidebar-working'
 
-// Legacy wrapper for backward compatibility
+// Now points to the working sidebar (15 functional pages only)
 export function AdminSidebar(currentPath: string = '/admin') {
-  return AdminSidebarAdvanced(currentPath);
+  return AdminSidebarWorking(currentPath);
 }

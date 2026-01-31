@@ -40,7 +40,7 @@ import { AdminOrdersAdvanced } from './components/admin-orders-advanced'
 import { AdminCustomersAdvanced } from './components/admin-customers-advanced'
 import { AdminNotificationsAdvanced } from './components/admin-notifications-advanced'
 import { AdminHomepageManager } from './components/admin-homepage-manager'
-import { AdminSidebar } from './components/admin-sidebar'
+import { AdminSidebarWorking } from './components/admin-sidebar-working'
 import { 
   formatPrice, 
   generateOrderNumber, 
@@ -7699,7 +7699,7 @@ app.get('/admin/sliders', (c) => {
         `}} />
       </head>
       <body>
-        <div dangerouslySetInnerHTML={{__html: AdminSidebar('/admin/sliders')}} />
+        <div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/sliders')}} />
         <div class="admin-content">
           <AdminSliders />
         </div>
@@ -11978,7 +11978,7 @@ app.get('/admin/security', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebar()}
+          ${AdminSidebarWorking(c.req.path)}
           
           <div class="flex-1 ml-64">
             <div class="p-8">
@@ -12257,7 +12257,7 @@ app.get('/admin/security/login-history', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebar()}
+          ${AdminSidebarWorking(c.req.path)}
           
           <div class="flex-1 ml-64">
             <div class="p-8">
@@ -12461,7 +12461,7 @@ app.get('/admin/security/sessions', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebar()}
+          ${AdminSidebarWorking(c.req.path)}
           
           <div class="flex-1 ml-64">
             <div class="p-8">
@@ -12656,7 +12656,7 @@ app.get('/admin/security/audit-log', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebar()}
+          ${AdminSidebarWorking(c.req.path)}
           
           <div class="flex-1 ml-64">
             <div class="p-8">
@@ -12853,7 +12853,7 @@ app.get('/admin/security/settings', async (c) => {
     </head>
     <body class="bg-gray-50">
       <div class="flex">
-        ${AdminSidebar()}
+        ${AdminSidebarWorking(c.req.path)}
         
         <div class="flex-1 ml-64">
           <div class="p-8">
@@ -13160,7 +13160,7 @@ app.get('/admin/security/firewall', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebar()}
+          ${AdminSidebarWorking(c.req.path)}
           
           <div class="flex-1 ml-64">
             <div class="p-8">
@@ -13379,7 +13379,7 @@ app.get('/admin/security/blocked-ips', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebar()}
+          ${AdminSidebarWorking(c.req.path)}
           
           <div class="flex-1 ml-64">
             <div class="p-8">
@@ -13554,7 +13554,7 @@ app.get('/admin/security/login-protection', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebar()}
+          ${AdminSidebarWorking(c.req.path)}
           <div class="flex-1 ml-64">
             <div class="p-8">
               <div class="mb-8">
@@ -13711,7 +13711,7 @@ app.get('/admin/security/users-roles', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebar()}
+          ${AdminSidebarWorking(c.req.path)}
           <div class="flex-1 ml-64">
             <div class="p-8">
               <div class="mb-8">
@@ -14277,7 +14277,7 @@ app.get('/admin/security/2fa', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebar()}
+          ${AdminSidebarWorking(c.req.path)}
           <div class="flex-1 ml-64">
             <div class="p-8">
               <div class="mb-8">
@@ -14442,7 +14442,7 @@ app.get('/admin/security/file-protection', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebar()}
+          ${AdminSidebarWorking(c.req.path)}
           <div class="flex-1 ml-64">
             <div class="p-8">
               <div class="mb-8">
@@ -14599,7 +14599,7 @@ app.get('/admin/security/api-webhooks', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebar()}
+          ${AdminSidebarWorking(c.req.path)}
           <div class="flex-1 ml-64">
             <div class="p-8">
               <div class="mb-8">
@@ -14771,7 +14771,7 @@ app.get('/admin/security/email-security', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebar()}
+          ${AdminSidebarWorking(c.req.path)}
           <div class="flex-1 ml-64">
             <div class="p-8">
               <div class="mb-8">
@@ -14931,7 +14931,7 @@ app.get('/admin/security/scans', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebar()}
+          ${AdminSidebarWorking(c.req.path)}
           <div class="flex-1 ml-64">
             <div class="p-8">
               <div class="mb-8">
