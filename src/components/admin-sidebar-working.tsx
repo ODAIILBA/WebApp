@@ -1,5 +1,5 @@
 export function AdminSidebarWorking(currentPath: string = '/admin') {
-  // ONLY WORKING PAGES - 12 functional admin pages
+  // ONLY WORKING PAGES - 14 functional admin pages
   const menuStructure = [
     {
       id: 'dashboard',
@@ -48,6 +48,14 @@ export function AdminSidebarWorking(currentPath: string = '/admin') {
         { path: '/admin/currencies', label: 'Währungen', icon: 'money-bill-wave' },
         { path: '/admin/subscriptions', label: 'Abonnements', icon: 'sync-alt' },
         { path: '/admin/fraud-prevention', label: 'Betrugsprävention', icon: 'shield-alt' }
+      ]
+    },
+    {
+      id: 'vat',
+      label: 'Steuern & VAT',
+      icon: 'percent',
+      children: [
+        { path: '/admin/vat-id-validation', label: 'VAT-ID Prüfung', icon: 'id-card' }
       ]
     }
   ];

@@ -864,10 +864,36 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
     icon: 'id-card',
     iconColor: 'teal',
     description: 'Automatische VAT-ID Validierung',
+    dbQuery: `
+      SELECT 
+        vat_id,
+        company_name as company,
+        country_code as country,
+        validation_status as status,
+        validated_at,
+        is_valid
+      FROM vat_validations 
+      ORDER BY validated_at DESC NULLS LAST
+    `,
     statsCards: [
-      { label: 'Geprüfte IDs', color: 'text-teal-600', icon: 'id-card' },
-      { label: 'Gültig', color: 'text-green-600', icon: 'check-circle' },
-      { label: 'Ungültig', color: 'text-red-600', icon: 'times-circle' }
+      { 
+        label: 'Geprüfte IDs', 
+        color: 'text-teal-600', 
+        icon: 'id-card',
+        dbQuery: 'SELECT COUNT(*) as count FROM vat_validations WHERE validated_at IS NOT NULL'
+      },
+      { 
+        label: 'Gültig', 
+        color: 'text-green-600', 
+        icon: 'check-circle',
+        dbQuery: 'SELECT COUNT(*) as count FROM vat_validations WHERE is_valid = 1'
+      },
+      { 
+        label: 'Ungültig', 
+        color: 'text-red-600', 
+        icon: 'times-circle',
+        dbQuery: 'SELECT COUNT(*) as count FROM vat_validations WHERE is_valid = 0 AND validation_status = "invalid"'
+      }
     ],
     tableColumns: [
       { key: 'vat_id', label: 'VAT-ID' },
@@ -877,7 +903,8 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
       { key: 'validated_at', label: 'Geprüft am', format: 'date' }
     ],
     actions: [
-      { label: 'ID prüfen', icon: 'search', color: 'blue', action: 'addNew()' }
+      { label: 'ID prüfen', icon: 'search', color: 'blue', action: 'addNew()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'green', action: 'refreshPage()' }
     ]
   },
 
