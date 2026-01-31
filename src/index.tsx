@@ -6623,6 +6623,12 @@ app.get('/admin', (c) => {
 })
 
 // Orders Management
+// ============================================
+// OLD ADMIN ROUTES - COMMENTED OUT
+// Now using smart dynamic handler at line ~18734
+// ============================================
+
+/*
 app.get('/admin/orders', (c) => {
   const html = AdminOrdersAdvanced()
   return c.html(html)
@@ -6681,6 +6687,7 @@ app.get('/admin/delivery', (c) => {
   const html = AdminDelivery()
   return c.html(html)
 })
+*/
 
 // Analytics
 // DUPLICATE ROUTE - Commented out, using route at line 6825 instead
@@ -7116,6 +7123,12 @@ app.post('/api/admin/import/woocommerce', async (c) => {
   }
 })
 
+// ============================================
+// OLD DUPLICATE ROUTES - COMMENTED OUT (Second set)
+// Using smart dynamic handler instead
+// ============================================
+
+/*
 // Orders Management
 app.get('/admin/orders', (c) => {
   const html = AdminOrdersAdvanced()
@@ -7133,6 +7146,7 @@ app.get('/admin/invoices', (c) => {
   const html = AdminInvoices()
   return c.html(html)
 })
+*/
 
 // Invoice Preview with new template
 app.get('/admin/invoices/:id/preview', async (c) => {
@@ -18301,6 +18315,11 @@ app.get('/admin/orders/processing', async (c) => {
 });
 
 // ============================================
+// OLD DYNAMIC HANDLER - COMMENTED OUT
+// Using new smart handler below with imported configs
+// ============================================
+
+/*
 // DYNAMIC ADMIN PAGES HANDLER - ALL REMAINING PAGES
 // ============================================
 
@@ -18728,6 +18747,7 @@ app.get('/admin/*', async (c) => {
     return c.html(`<h1>Fehler</h1><pre>${error.message}</pre>`, 500);
   }
 });
+*/
 
 // ============================================
 // SMART DYNAMIC ROUTE HANDLER FOR ALL 44 ADMIN PAGES

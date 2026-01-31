@@ -35,6 +35,184 @@ export interface AdminPageConfig {
 
 export const adminPageConfigs: Record<string, AdminPageConfig> = {
   // ============================================
+  // OVERVIEW/PARENT PAGES
+  // ============================================
+  '/admin/orders': {
+    path: '/admin/orders',
+    title: 'Bestellungen',
+    icon: 'shopping-cart',
+    iconColor: 'blue',
+    description: 'Übersicht aller Bestellungen',
+    dbQuery: `SELECT o.*, u.email as customer_email, u.first_name || ' ' || u.last_name as customer_name 
+              FROM orders o LEFT JOIN users u ON o.user_id = u.id 
+              ORDER BY o.created_at DESC LIMIT 100`,
+    statsCards: [
+      { label: 'Gesamt', query: 'SELECT COUNT(*) as count FROM orders', color: 'text-blue-600', icon: 'shopping-cart' },
+      { label: 'Ausstehend', query: 'SELECT COUNT(*) as count FROM orders WHERE status = "pending"', color: 'text-yellow-600', icon: 'clock' },
+      { label: 'Abgeschlossen', query: 'SELECT COUNT(*) as count FROM orders WHERE status = "completed"', color: 'text-green-600', icon: 'check-circle' },
+      { label: 'Umsatz', query: 'SELECT SUM(total_amount) as sum FROM orders WHERE status = "completed"', color: 'text-green-600', icon: 'euro-sign', format: 'currency' }
+    ],
+    tableColumns: [
+      { key: 'order_number', label: 'Bestellnummer' },
+      { key: 'customer_name', label: 'Kunde' },
+      { key: 'customer_email', label: 'E-Mail', format: 'email' },
+      { key: 'total_amount', label: 'Betrag', format: 'currency' },
+      { key: 'status', label: 'Status', format: 'badge' },
+      { key: 'created_at', label: 'Datum', format: 'date' }
+    ],
+    actions: [
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' },
+      { label: 'Exportieren', icon: 'download', color: 'green', action: 'exportData()' }
+    ]
+  },
+
+  '/admin/licenses': {
+    path: '/admin/licenses',
+    title: 'Lizenzschlüssel',
+    icon: 'key',
+    iconColor: 'purple',
+    description: 'Verwaltung aller Lizenzschlüssel',
+    dbQuery: `SELECT l.*, p.name as product_name, o.order_number
+              FROM licenses l
+              LEFT JOIN products p ON l.product_id = p.id
+              LEFT JOIN orders o ON l.order_id = o.id
+              ORDER BY l.created_at DESC
+              LIMIT 100`,
+    statsCards: [
+      { label: 'Gesamt Lizenzen', query: 'SELECT COUNT(*) as count FROM licenses', color: 'text-purple-600', icon: 'key' },
+      { label: 'Aktiv', query: 'SELECT COUNT(*) as count FROM licenses WHERE is_active = 1', color: 'text-green-600', icon: 'check-circle' },
+      { label: 'Inaktiv', query: 'SELECT COUNT(*) as count FROM licenses WHERE is_active = 0', color: 'text-gray-600', icon: 'times-circle' }
+    ],
+    tableColumns: [
+      { key: 'license_key', label: 'Lizenzschlüssel' },
+      { key: 'product_name', label: 'Produkt' },
+      { key: 'order_number', label: 'Bestellung' },
+      { key: 'is_active', label: 'Status', format: 'badge' },
+      { key: 'created_at', label: 'Erstellt', format: 'date' }
+    ],
+    actions: [
+      { label: 'Neue Lizenz', icon: 'plus', color: 'green', action: 'addNew()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ]
+  },
+
+  '/admin/marketing': {
+    path: '/admin/marketing',
+    title: 'Marketing',
+    icon: 'bullhorn',
+    iconColor: 'orange',
+    description: 'Marketing-Übersicht und Kampagnen',
+    dbQuery: `SELECT c.*, 
+              (SELECT COUNT(*) FROM orders WHERE coupon_code = c.code) as usage_count,
+              (SELECT SUM(discount_amount) FROM orders WHERE coupon_code = c.code) as total_discount
+              FROM coupons c
+              ORDER BY c.created_at DESC
+              LIMIT 50`,
+    statsCards: [
+      { label: 'Gutscheine', query: 'SELECT COUNT(*) as count FROM coupons', color: 'text-orange-600', icon: 'ticket-alt' },
+      { label: 'Aktive', query: 'SELECT COUNT(*) as count FROM coupons WHERE is_active = 1', color: 'text-green-600', icon: 'check' },
+      { label: 'Verwendungen', query: 'SELECT COUNT(*) as count FROM orders WHERE coupon_code IS NOT NULL', color: 'text-blue-600', icon: 'shopping-cart' }
+    ],
+    tableColumns: [
+      { key: 'code', label: 'Gutschein-Code' },
+      { key: 'discount_type', label: 'Typ' },
+      { key: 'discount_value', label: 'Wert' },
+      { key: 'usage_count', label: 'Verwendungen' },
+      { key: 'is_active', label: 'Status', format: 'badge' }
+    ],
+    actions: [
+      { label: 'Neuer Gutschein', icon: 'plus', color: 'green', action: 'addNew()' },
+      { label: 'Kampagnen', icon: 'bullhorn', color: 'orange', action: 'window.location.href="/admin/campaigns"' }
+    ]
+  },
+
+  '/admin/coupons': {
+    path: '/admin/coupons',
+    title: 'Gutscheine',
+    icon: 'ticket-alt',
+    iconColor: 'pink',
+    description: 'Gutschein- und Rabattcode-Verwaltung',
+    dbQuery: `SELECT c.*, 
+              (SELECT COUNT(*) FROM orders WHERE coupon_code = c.code) as usage_count
+              FROM coupons c
+              ORDER BY c.created_at DESC`,
+    statsCards: [
+      { label: 'Gesamt Gutscheine', query: 'SELECT COUNT(*) as count FROM coupons', color: 'text-pink-600', icon: 'ticket-alt' },
+      { label: 'Aktiv', query: 'SELECT COUNT(*) as count FROM coupons WHERE is_active = 1 AND (valid_until IS NULL OR valid_until >= date("now"))', color: 'text-green-600', icon: 'check' },
+      { label: 'Abgelaufen', query: 'SELECT COUNT(*) as count FROM coupons WHERE valid_until < date("now")', color: 'text-red-600', icon: 'times' },
+      { label: 'Verwendungen', query: 'SELECT COUNT(*) as count FROM orders WHERE coupon_code IS NOT NULL', color: 'text-blue-600', icon: 'shopping-cart' }
+    ],
+    tableColumns: [
+      { key: 'code', label: 'Code' },
+      { key: 'discount_type', label: 'Typ' },
+      { key: 'discount_value', label: 'Wert' },
+      { key: 'usage_count', label: 'Verwendet' },
+      { key: 'max_uses', label: 'Max. Nutzung' },
+      { key: 'valid_until', label: 'Gültig bis', format: 'date' },
+      { key: 'is_active', label: 'Status', format: 'badge' }
+    ],
+    actions: [
+      { label: 'Neuer Gutschein', icon: 'plus', color: 'green', action: 'addNew()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' },
+      { label: 'Exportieren', icon: 'download', color: 'gray', action: 'exportData()' }
+    ]
+  },
+
+  '/admin/seo': {
+    path: '/admin/seo',
+    title: 'SEO Einstellungen',
+    icon: 'search',
+    iconColor: 'teal',
+    description: 'Suchmaschinenoptimierung und Meta-Tags',
+    dbQuery: `SELECT p.id, p.name, p.slug, 
+              COALESCE(p.meta_title, '') as meta_title,
+              COALESCE(p.meta_description, '') as meta_description,
+              COALESCE(p.meta_keywords, '') as meta_keywords
+              FROM products p
+              ORDER BY p.created_at DESC
+              LIMIT 50`,
+    statsCards: [
+      { label: 'Produkte', query: 'SELECT COUNT(*) as count FROM products', color: 'text-blue-600', icon: 'box' },
+      { label: 'Mit Meta-Title', query: 'SELECT COUNT(*) as count FROM products WHERE meta_title IS NOT NULL AND meta_title != ""', color: 'text-green-600', icon: 'check' },
+      { label: 'Ohne Meta-Description', query: 'SELECT COUNT(*) as count FROM products WHERE meta_description IS NULL OR meta_description = ""', color: 'text-red-600', icon: 'exclamation-triangle' }
+    ],
+    tableColumns: [
+      { key: 'name', label: 'Produkt' },
+      { key: 'slug', label: 'Slug' },
+      { key: 'meta_title', label: 'Meta Title' },
+      { key: 'meta_description', label: 'Meta Description' }
+    ],
+    actions: [
+      { label: 'Produkt SEO', icon: 'search', color: 'teal', action: 'window.location.href="/admin/products/seo"' },
+      { label: 'Bulk Edit', icon: 'edit', color: 'blue', action: 'addNew()' }
+    ]
+  },
+
+  '/admin/pages': {
+    path: '/admin/pages',
+    title: 'Seiten',
+    icon: 'file-alt',
+    iconColor: 'indigo',
+    description: 'CMS-Seiten und Inhalte verwalten',
+    dbQuery: `SELECT * FROM pages ORDER BY created_at DESC LIMIT 50`,
+    statsCards: [
+      { label: 'Seiten', query: 'SELECT COUNT(*) as count FROM pages', color: 'text-indigo-600', icon: 'file-alt' },
+      { label: 'Veröffentlicht', query: 'SELECT COUNT(*) as count FROM pages WHERE is_published = 1', color: 'text-green-600', icon: 'check' },
+      { label: 'Entwürfe', query: 'SELECT COUNT(*) as count FROM pages WHERE is_published = 0', color: 'text-yellow-600', icon: 'edit' }
+    ],
+    tableColumns: [
+      { key: 'title', label: 'Titel' },
+      { key: 'slug', label: 'Slug' },
+      { key: 'is_published', label: 'Status', format: 'badge' },
+      { key: 'created_at', label: 'Erstellt', format: 'date' }
+    ],
+    actions: [
+      { label: 'Neue Seite', icon: 'plus', color: 'green', action: 'addNew()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ]
+  },
+
+  // ============================================
   // ORDERS SECTION
   // ============================================
   '/admin/orders/pending': {
