@@ -980,6 +980,7 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
     icon: 'shield-alt',
     iconColor: 'orange',
     description: 'Endpoint-Firewall mit intelligenter Bedrohungserkennung',
+    useEnhancedComponent: true, // Use enhanced firewall page
     dbQuery: `SELECT bi.*, 
               (SELECT COUNT(*) FROM security_events WHERE ip_address = bi.ip_address AND created_at >= datetime('now', '-24 hours')) as recent_attempts
               FROM blocked_ips bi

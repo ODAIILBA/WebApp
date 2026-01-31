@@ -18768,6 +18768,50 @@ app.get('/admin/*', async (c) => {
 
   try {
     const { env } = c;
+    
+    // Use enhanced firewall component if specified
+    if (config.useEnhancedComponent && path === '/admin/firewall') {
+      const [statsResult, blockedIPsResult, rulesResult, threatPatternsResult, settingsResult] = await Promise.all([
+        env.DB.prepare('SELECT COUNT(*) as activeRules FROM firewall_rules WHERE is_active = 1').first(),
+        env.DB.prepare('SELECT COUNT(*) as blockedIPs FROM blocked_ips WHERE is_active = 1').first(),
+        env.DB.prepare('SELECT * FROM firewall_rules ORDER BY is_active DESC, priority DESC LIMIT 100').all(),
+        env.DB.prepare('SELECT * FROM threat_patterns WHERE is_active = 1 ORDER BY severity DESC').all(),
+        env.DB.prepare('SELECT * FROM firewall_settings').all()
+      ]);
+
+      const statsData = {
+        activeRules: statsResult?.activeRules || 0,
+        blockedIPs: blockedIPsResult?.blockedIPs || 0,
+        events24h: 0,
+        threatPatterns: threatPatternsResult.results?.length || 0
+      };
+
+      const blockedIPs = await env.DB.prepare(
+        'SELECT * FROM blocked_ips WHERE is_active = 1 ORDER BY created_at DESC LIMIT 100'
+      ).all();
+
+      const recentEvents = await env.DB.prepare(
+        'SELECT * FROM security_events ORDER BY created_at DESC LIMIT 100'
+      ).all();
+
+      const settingsMap: Record<string, any> = {};
+      (settingsResult.results || []).forEach((s: any) => {
+        settingsMap[s.setting_key] = s.setting_value;
+      });
+
+      const html = FirewallAdminPage({
+        stats: statsData,
+        blockedIPs: blockedIPs.results || [],
+        rules: rulesResult.results || [],
+        threatPatterns: threatPatternsResult.results || [],
+        recentEvents: recentEvents.results || [],
+        settings: settingsMap,
+        sidebar: AdminSidebarAdvanced(path)
+      });
+
+      return c.html(html);
+    }
+    
     let data: any[] = [];
     let stats: any = {};
 
