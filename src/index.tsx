@@ -16,6 +16,7 @@ import { HomepageSoftwareking24 } from './components/homepage-softwareking24'
 import { HomepageSoftwarekingFinal } from './components/homepage-softwareking-final'
 import { HomepageAdvancedFinal } from './components/homepage-advanced-final'
 import { HomepageSimple } from './components/homepage-simple'
+import { ModernPreviewPage } from './components/modern-preview-page'
 import { HomepageCompleteUltimate } from './components/homepage-complete-ultimate'
 import { BundleDealsPage } from './components/bundle-deals-page'
 import { VolumeDiscountPage } from './components/volume-discount-page'
@@ -268,6 +269,15 @@ app.get('/', (c) => {
 
 app.get('/de', (c) => {
   return c.html(HomepageSimple())
+})
+
+// Modern 3D Preview Page
+app.get('/modern-preview', (c) => {
+  return c.html(ModernPreviewPage())
+})
+
+app.get('/modern-preview.html', (c) => {
+  return c.html(ModernPreviewPage())
 })
 
 // Products page
