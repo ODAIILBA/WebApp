@@ -19981,8 +19981,10 @@ app.get('/admin/payment-methods', async (c) => {
 })
 
 // ============================================
-// INVENTORY MANAGEMENT PAGE
+// INVENTORY MANAGEMENT PAGE - DISABLED (DUPLICATE)
 // ============================================
+// This route is commented out because it conflicts with the working route at line 6973
+/*
 app.get('/admin/inventory', async (c) => {
   try {
     const { env } = c;
@@ -20270,6 +20272,7 @@ app.get('/admin/inventory', async (c) => {
     `, 500)
   }
 })
+*/
 
 // ============================================
 // GDPR REQUESTS MANAGEMENT PAGE
