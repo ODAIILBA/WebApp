@@ -407,31 +407,31 @@ export function HomepageSimple() {
                 </div>
             </div>
 
-            <!-- Trust Badges & Certifications -->
-            <div class="footer-badges" style="display: flex; justify-content: center; align-items: center; gap: 30px; margin: 40px 0; flex-wrap: wrap;">
-                <div style="background: white; padding: 15px; border-radius: 10px;">
-                    <i class="fas fa-shield-alt" style="font-size: 40px; color: var(--navy);"></i>
-                    <p style="color: var(--navy); margin-top: 5px; font-size: 0.8rem;">Geprüfte Qualität</p>
+            <!-- Trust Badges & Certifications - Matching Reference -->
+            <div class="footer-badges" style="display: flex; justify-content: center; align-items: center; gap: 20px; margin: 40px 0; flex-wrap: wrap;">
+                <div style="background: white; padding: 20px 25px; border-radius: 10px; text-align: center; min-width: 130px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <i class="fas fa-shield-alt" style="font-size: 2.5rem; color: var(--navy); margin-bottom: 8px;"></i>
+                    <p style="color: var(--navy); margin: 0; font-size: 0.85rem; font-weight: 600;">Geprüfte Qualität</p>
                 </div>
-                <div style="background: white; padding: 15px; border-radius: 10px;">
-                    <i class="fas fa-certificate" style="font-size: 40px; color: var(--navy);"></i>
-                    <p style="color: var(--navy); margin-top: 5px; font-size: 0.8rem;">Zertifiziert</p>
+                <div style="background: white; padding: 20px 25px; border-radius: 10px; text-align: center; min-width: 130px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <i class="fas fa-certificate" style="font-size: 2.5rem; color: var(--navy); margin-bottom: 8px;"></i>
+                    <p style="color: var(--navy); margin: 0; font-size: 0.85rem; font-weight: 600;">Zertifiziert</p>
                 </div>
-                <div style="background: white; padding: 15px; border-radius: 10px;">
-                    <i class="fas fa-lock" style="font-size: 40px; color: var(--navy);"></i>
-                    <p style="color: var(--navy); margin-top: 5px; font-size: 0.8rem;">SSL Sicher</p>
+                <div style="background: white; padding: 20px 25px; border-radius: 10px; text-align: center; min-width: 130px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <i class="fas fa-lock" style="font-size: 2.5rem; color: var(--navy); margin-bottom: 8px;"></i>
+                    <p style="color: var(--navy); margin: 0; font-size: 0.85rem; font-weight: 600;">SSL Sicher</p>
                 </div>
-                <div style="background: white; padding: 15px; border-radius: 10px;">
-                    <i class="fas fa-award" style="font-size: 40px; color: var(--navy);"></i>
-                    <p style="color: var(--navy); margin-top: 5px; font-size: 0.8rem;">Ausgezeichnet</p>
+                <div style="background: white; padding: 20px 25px; border-radius: 10px; text-align: center; min-width: 130px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <i class="fas fa-award" style="font-size: 2.5rem; color: var(--navy); margin-bottom: 8px;"></i>
+                    <p style="color: var(--navy); margin: 0; font-size: 0.85rem; font-weight: 600;">Ausgezeichnet</p>
                 </div>
-                <div style="background: white; padding: 15px; border-radius: 10px;">
-                    <i class="fas fa-star" style="font-size: 40px; color: var(--gold);"></i>
-                    <p style="color: var(--navy); margin-top: 5px; font-size: 0.8rem;">Top bewertet</p>
+                <div style="background: white; padding: 20px 25px; border-radius: 10px; text-align: center; min-width: 130px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <i class="fas fa-star" style="font-size: 2.5rem; color: var(--gold); margin-bottom: 8px;"></i>
+                    <p style="color: var(--navy); margin: 0; font-size: 0.85rem; font-weight: 600;">Top bewertet</p>
                 </div>
-                <div style="background: white; padding: 15px; border-radius: 10px;">
-                    <i class="fas fa-check-circle" style="font-size: 40px; color: #00A859;"></i>
-                    <p style="color: var(--navy); margin-top: 5px; font-size: 0.8rem;">Verifiziert</p>
+                <div style="background: white; padding: 20px 25px; border-radius: 10px; text-align: center; min-width: 130px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <i class="fas fa-check-circle" style="font-size: 2.5rem; color: #00A859; margin-bottom: 8px;"></i>
+                    <p style="color: var(--navy); margin: 0; font-size: 0.85rem; font-weight: 600;">Verifiziert</p>
                 </div>
             </div>
 
@@ -441,31 +441,31 @@ export function HomepageSimple() {
                 <a href="#" onclick="alert('Windows 11 Aktivierung - Kontaktieren Sie den Support'); return false;" style="display: inline-block; background: var(--gold); color: var(--navy); padding: 12px 30px; border-radius: 25px; text-decoration: none; font-weight: bold; margin: 5px;">Windows 11 aktivieren</a>
             </div>
 
-            <!-- Partner Logos -->
-            <div class="footer-partners" style="display: flex; justify-content: center; align-items: center; gap: 40px; margin: 40px 0; flex-wrap: wrap; opacity: 0.9;">
-                <div style="text-align: center;">
-                    <i class="fab fa-microsoft" style="font-size: 3rem; color: white;"></i>
-                    <p style="font-size: 0.8rem; margin-top: 5px;">Microsoft<br/>Solutions Partner</p>
+            <!-- Partner Logos - Matching Reference Style -->
+            <div class="footer-partners" style="display: flex; justify-content: center; align-items: center; gap: 30px; margin: 50px 0; flex-wrap: wrap;">
+                <div style="background: white; padding: 20px 30px; border-radius: 10px; text-align: center; min-width: 140px;">
+                    <i class="fab fa-microsoft" style="font-size: 2.5rem; color: #001f3f; margin-bottom: 10px;"></i>
+                    <p style="font-size: 0.75rem; color: #001f3f; font-weight: 600; line-height: 1.3;">Microsoft<br/>Solutions Partner</p>
                 </div>
-                <div style="text-align: center;">
-                    <i class="fas fa-certificate" style="font-size: 3rem; color: white;"></i>
-                    <p style="font-size: 0.8rem; margin-top: 5px;">Certified<br/>Reseller</p>
+                <div style="background: white; padding: 20px 30px; border-radius: 10px; text-align: center; min-width: 140px;">
+                    <i class="fas fa-award" style="font-size: 2.5rem; color: #001f3f; margin-bottom: 10px;"></i>
+                    <p style="font-size: 0.75rem; color: #001f3f; font-weight: 600; line-height: 1.3;">Autorisierter<br/>Reseller</p>
                 </div>
-                <div style="text-align: center;">
-                    <i class="fas fa-shield-virus" style="font-size: 3rem; color: white;"></i>
-                    <p style="font-size: 0.8rem; margin-top: 5px;">Bitdefender<br/>Reseller</p>
+                <div style="background: white; padding: 20px 30px; border-radius: 10px; text-align: center; min-width: 140px;">
+                    <i class="fas fa-shield-virus" style="font-size: 2.5rem; color: #001f3f; margin-bottom: 10px;"></i>
+                    <p style="font-size: 0.75rem; color: #001f3f; font-weight: 600; line-height: 1.3;">Bitdefender<br/>Reseller</p>
                 </div>
-                <div style="text-align: center;">
-                    <i class="fas fa-cloud" style="font-size: 3rem; color: white;"></i>
-                    <p style="font-size: 0.8rem; margin-top: 5px;">Cloud<br/>Services</p>
+                <div style="background: white; padding: 20px 30px; border-radius: 10px; text-align: center; min-width: 140px;">
+                    <i class="fas fa-cloud" style="font-size: 2.5rem; color: #001f3f; margin-bottom: 10px;"></i>
+                    <p style="font-size: 0.75rem; color: #001f3f; font-weight: 600; line-height: 1.3;">Cloud<br/>Services</p>
                 </div>
-                <div style="text-align: center;">
-                    <i class="fas fa-film" style="font-size: 3rem; color: white;"></i>
-                    <p style="font-size: 0.8rem; margin-top: 5px;">Wondershare<br/>Partner</p>
+                <div style="background: white; padding: 20px 30px; border-radius: 10px; text-align: center; min-width: 140px;">
+                    <i class="fas fa-film" style="font-size: 2.5rem; color: #001f3f; margin-bottom: 10px;"></i>
+                    <p style="font-size: 0.75rem; color: #001f3f; font-weight: 600; line-height: 1.3;">Wondershare<br/>Partner</p>
                 </div>
-                <div style="text-align: center;">
-                    <i class="fas fa-server" style="font-size: 3rem; color: white;"></i>
-                    <p style="font-size: 0.8rem; margin-top: 5px;">Acronis<br/>Authorized Partner</p>
+                <div style="background: white; padding: 20px 30px; border-radius: 10px; text-align: center; min-width: 140px;">
+                    <i class="fas fa-server" style="font-size: 2.5rem; color: #001f3f; margin-bottom: 10px;"></i>
+                    <p style="font-size: 0.75rem; color: #001f3f; font-weight: 600; line-height: 1.3;">Acronis<br/>Authorized Partner</p>
                 </div>
             </div>
 
@@ -533,18 +533,18 @@ export function HomepageSimple() {
             </div>
 
             <!-- Social Media & Copyright -->
-            <div class="footer-bottom" style="text-align: center; padding-top: 30px;">
-                <div style="margin-bottom: 20px;">
-                    <a href="#" style="color: white; font-size: 1.8rem; margin: 0 10px;"><i class="fab fa-facebook"></i></a>
-                    <a href="#" style="color: white; font-size: 1.8rem; margin: 0 10px;"><i class="fab fa-twitter"></i></a>
-                    <a href="#" style="color: white; font-size: 1.8rem; margin: 0 10px;"><i class="fab fa-instagram"></i></a>
-                    <a href="#" style="color: white; font-size: 1.8rem; margin: 0 10px;"><i class="fab fa-youtube"></i></a>
-                    <a href="#" style="color: white; font-size: 1.8rem; margin: 0 10px;"><i class="fab fa-whatsapp"></i></a>
-                    <a href="#" style="color: white; font-size: 1.8rem; margin: 0 10px;"><i class="fab fa-discord"></i></a>
+            <div class="footer-bottom" style="text-align: center; padding-top: 30px; border-top: 1px solid rgba(255,255,255,0.2);">
+                <div style="margin-bottom: 25px;">
+                    <a href="#" style="display: inline-block; width: 45px; height: 45px; line-height: 45px; background: rgba(255,255,255,0.1); border-radius: 50%; color: white; font-size: 1.3rem; margin: 5px; transition: all 0.3s;" onmouseover="this.style.background='var(--gold)'; this.style.color='var(--navy)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.color='white'"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#" style="display: inline-block; width: 45px; height: 45px; line-height: 45px; background: rgba(255,255,255,0.1); border-radius: 50%; color: white; font-size: 1.3rem; margin: 5px; transition: all 0.3s;" onmouseover="this.style.background='var(--gold)'; this.style.color='var(--navy)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.color='white'"><i class="fab fa-twitter"></i></a>
+                    <a href="#" style="display: inline-block; width: 45px; height: 45px; line-height: 45px; background: rgba(255,255,255,0.1); border-radius: 50%; color: white; font-size: 1.3rem; margin: 5px; transition: all 0.3s;" onmouseover="this.style.background='var(--gold)'; this.style.color='var(--navy)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.color='white'"><i class="fab fa-instagram"></i></a>
+                    <a href="#" style="display: inline-block; width: 45px; height: 45px; line-height: 45px; background: rgba(255,255,255,0.1); border-radius: 50%; color: white; font-size: 1.3rem; margin: 5px; transition: all 0.3s;" onmouseover="this.style.background='var(--gold)'; this.style.color='var(--navy)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.color='white'"><i class="fab fa-youtube"></i></a>
+                    <a href="#" style="display: inline-block; width: 45px; height: 45px; line-height: 45px; background: rgba(255,255,255,0.1); border-radius: 50%; color: white; font-size: 1.3rem; margin: 5px; transition: all 0.3s;" onmouseover="this.style.background='var(--gold)'; this.style.color='var(--navy)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.color='white'"><i class="fab fa-whatsapp"></i></a>
+                    <a href="#" style="display: inline-block; width: 45px; height: 45px; line-height: 45px; background: rgba(255,255,255,0.1); border-radius: 50%; color: white; font-size: 1.3rem; margin: 5px; transition: all 0.3s;" onmouseover="this.style.background='var(--gold)'; this.style.color='var(--navy)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'; this.style.color='white'"><i class="fab fa-discord"></i></a>
                 </div>
-                <p style="opacity: 0.7; font-size: 0.9rem;">Alle Preise in Euro inkl. der gesetzlichen Mehrwertsteuer, ggf. zzgl. Versandkosten und ggf. Nachnahmegebühren, wenn nicht anders beschrieben.</p>
-                <p style="opacity: 0.7; font-size: 0.9rem; margin-top: 10px;">Liefergebiet: Deutschland Copyright © 2017 - 2026 SOFTWAREKING24 Support GmbH & Co. KG - Alle Rechte vorbehalten!</p>
-                <p style="margin-top: 20px; font-weight: bold;">&copy; 2024 SOFTWAREKING24. Alle Rechte vorbehalten.</p>
+                <p style="opacity: 0.7; font-size: 0.9rem; line-height: 1.6; max-width: 900px; margin: 0 auto 15px;">Alle Preise in Euro inkl. der gesetzlichen Mehrwertsteuer, ggf. zzgl. Versandkosten und ggf. Nachnahmegebühren, wenn nicht anders beschrieben.</p>
+                <p style="opacity: 0.7; font-size: 0.9rem; margin: 0 0 20px 0;">Liefergebiet: Deutschland Copyright © 2017 - 2026 SOFTWAREKING24 Support GmbH & Co. KG - Alle Rechte vorbehalten!</p>
+                <p style="margin: 0; font-weight: bold; font-size: 0.95rem;">&copy; 2024 SOFTWAREKING24. Alle Rechte vorbehalten.</p>
             </div>
         </div>
     </footer>
