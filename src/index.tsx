@@ -17,6 +17,8 @@ import { HomepageSoftwarekingFinal } from './components/homepage-softwareking-fi
 import { HomepageAdvancedFinal } from './components/homepage-advanced-final'
 import { HomepageSimple } from './components/homepage-simple'
 import { HomepageCompleteUltimate } from './components/homepage-complete-ultimate'
+import { BundleDealsPage } from './components/bundle-deals-page'
+import { VolumeDiscountPage } from './components/volume-discount-page'
 import { ProductDetailPage } from './components/product-detail'
 import { ProductDetailPageModern } from './components/product-detail-modern'
 import { CartPage } from './components/cart-page'
@@ -284,6 +286,24 @@ app.get('/produkt/:slug', (c) => {
 
 app.get('/product/:slug', (c) => {
   return c.html(ProductDetailPageModern())
+})
+
+// Bundle deals page
+app.get('/bundles', (c) => {
+  return c.html(BundleDealsPage())
+})
+
+app.get('/bundle-angebote', (c) => {
+  return c.html(BundleDealsPage())
+})
+
+// Volume discount page
+app.get('/mengenrabatt', (c) => {
+  return c.html(VolumeDiscountPage())
+})
+
+app.get('/volume-discount', (c) => {
+  return c.html(VolumeDiscountPage())
 })
 
 // Shopping cart page
@@ -3351,6 +3371,53 @@ app.get('/api/products/search/autocomplete', async (c) => {
   } catch (error) {
     console.error('Autocomplete search error:', error)
     return c.json({ success: false, error: 'Search failed' }, 500)
+  }
+})
+
+// ============================================
+// API ROUTES: Bundles
+// ============================================
+
+// Get all bundle products
+app.get('/api/bundles', async (c) => {
+  try {
+    const limit = parseInt(c.req.query('limit') || '20')
+    const language = c.get('language') || 'de'
+    
+    const query = `
+      SELECT 
+        p.id,
+        p.sku,
+        p.slug,
+        p.base_price,
+        p.discount_price,
+        p.rating,
+        p.review_count,
+        p.name,
+        p.short_description,
+        p.image_url,
+        b.name as brand_name,
+        ct.name as category_name
+      FROM products p
+      LEFT JOIN brands b ON p.brand_id = b.id
+      LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language = ?
+      WHERE p.is_active = 1 
+        AND (p.name LIKE '%Bundle%' OR p.name LIKE '%&%')
+      ORDER BY p.is_featured DESC, p.sale_count DESC
+      LIMIT ?
+    `
+    
+    const result = await c.env.DB.prepare(query).bind(language, limit).all()
+    
+    return c.json({
+      success: true,
+      data: result.results || [],
+      count: result.results?.length || 0
+    })
+  } catch (error) {
+    console.error('Bundle products error:', error)
+    return c.json({ success: false, error: 'Failed to load bundles' }, 500)
   }
 })
 
