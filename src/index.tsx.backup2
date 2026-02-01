@@ -8829,6 +8829,7 @@ import { AdminSettingsAdvanced } from './components/admin-settings-advanced'
 import { AdminEmailTemplates } from './components/admin-email-templates'
 import { AdminCookies } from './components/admin-cookies'
 import { AdminReports } from './components/admin-reports'
+import { AdminAnalytics } from './components/admin-analytics-enhanced'
 import { AdminDelivery } from './components/admin-delivery'
 import { AdminOrderManagement } from './components/admin-order-management-full'
 import { AdminTracking } from './components/admin-tracking'
@@ -9063,6 +9064,18 @@ app.get('/admin/delivery', (c) => {
 // Analytics
 // DUPLICATE ROUTE - Commented out, using route at line 6825 instead
 /*
+app.get('/admin/analytics', (c) => {
+  return c.html(
+    <AdminLayout title="Analytics Dashboard" currentUser={{ first_name: 'Admin' }}>
+      <div dangerouslySetInnerHTML={{__html: `
+        <style>
+          .admin-content { padding: 0 !important; }
+        </style>
+      `}} />
+      <div dangerouslySetInnerHTML={{__html: AdminAnalyticsEnhanced()}} />
+    </AdminLayout>
+  )
+})
 */
 
 // Admin Advanced Sidebar Demo
@@ -9771,6 +9784,221 @@ app.get('/admin/cookies', (c) => {
 
 // Settings
 // Enhanced Analytics & Reporting
+app.get('/admin/analytics', async (c) => {
+  try {
+    const db = c.env.DB
+    
+    // Get basic stats
+    const productsCount = await db.prepare('SELECT COUNT(*) as count FROM products').first()
+    const ordersCount = await db.prepare('SELECT COUNT(*) as count FROM orders').first()
+    const usersCount = await db.prepare('SELECT COUNT(*) as count FROM users').first()
+    const categoriesCount = await db.prepare('SELECT COUNT(*) as count FROM categories').first()
+    
+    return c.html(
+      <html lang="de">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>Analytics Dashboard - Admin - SOFTWAREKING24</title>
+          <script src="https://cdn.tailwindcss.com"></script>
+          <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet" />
+          <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        </head>
+        <body class="bg-gray-100">
+          <div class="container mx-auto px-4 py-8">
+            <div class="mb-8">
+              <div class="flex items-center justify-between">
+                <h1 class="text-3xl font-bold text-gray-800">
+                  <i class="fas fa-chart-line mr-2 text-blue-600"></i>
+                  Analytics Dashboard
+                </h1>
+                <a href="/admin" class="text-blue-600 hover:text-blue-800">
+                  <i class="fas fa-arrow-left mr-2"></i>Zurück zum Dashboard
+                </a>
+              </div>
+            </div>
+
+            {/* Stats Overview */}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              <div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0 bg-blue-100 rounded-full p-3">
+                    <i class="fas fa-box text-blue-600 text-2xl"></i>
+                  </div>
+                  <div class="ml-4">
+                    <p class="text-gray-500 text-sm">Produkte</p>
+                    <p class="text-2xl font-bold text-gray-800">{productsCount?.count || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0 bg-green-100 rounded-full p-3">
+                    <i class="fas fa-shopping-cart text-green-600 text-2xl"></i>
+                  </div>
+                  <div class="ml-4">
+                    <p class="text-gray-500 text-sm">Bestellungen</p>
+                    <p class="text-2xl font-bold text-gray-800">{ordersCount?.count || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0 bg-purple-100 rounded-full p-3">
+                    <i class="fas fa-users text-purple-600 text-2xl"></i>
+                  </div>
+                  <div class="ml-4">
+                    <p class="text-gray-500 text-sm">Benutzer</p>
+                    <p class="text-2xl font-bold text-gray-800">{usersCount?.count || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bg-white p-6 rounded-lg shadow">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0 bg-yellow-100 rounded-full p-3">
+                    <i class="fas fa-folder text-yellow-600 text-2xl"></i>
+                  </div>
+                  <div class="ml-4">
+                    <p class="text-gray-500 text-sm">Kategorien</p>
+                    <p class="text-2xl font-bold text-gray-800">{categoriesCount?.count || 0}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Charts Section */}
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <div class="bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">
+                  <i class="fas fa-chart-bar mr-2 text-blue-600"></i>
+                  Verkaufsübersicht
+                </h2>
+                <canvas id="salesChart"></canvas>
+              </div>
+
+              <div class="bg-white p-6 rounded-lg shadow">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">
+                  <i class="fas fa-chart-pie mr-2 text-green-600"></i>
+                  Produktkategorien
+                </h2>
+                <canvas id="categoriesChart"></canvas>
+              </div>
+            </div>
+
+            {/* Quick Links */}
+            <div class="bg-white p-6 rounded-lg shadow">
+              <h2 class="text-xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-link mr-2 text-blue-600"></i>
+                Schnellzugriff
+              </h2>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <a href="/admin/products" class="text-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+                  <i class="fas fa-box text-blue-600 text-2xl mb-2"></i>
+                  <p class="text-sm text-gray-700">Produkte</p>
+                </a>
+                <a href="/admin/orders" class="text-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+                  <i class="fas fa-shopping-cart text-green-600 text-2xl mb-2"></i>
+                  <p class="text-sm text-gray-700">Bestellungen</p>
+                </a>
+                <a href="/admin/users" class="text-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+                  <i class="fas fa-users text-purple-600 text-2xl mb-2"></i>
+                  <p class="text-sm text-gray-700">Benutzer</p>
+                </a>
+                <a href="/admin/reports" class="text-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition">
+                  <i class="fas fa-file-alt text-yellow-600 text-2xl mb-2"></i>
+                  <p class="text-sm text-gray-700">Berichte</p>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <script>{`
+            // Sales Chart
+            const salesCtx = document.getElementById('salesChart').getContext('2d');
+            new Chart(salesCtx, {
+              type: 'line',
+              data: {
+                labels: ['Jan', 'Feb', 'Mär', 'Apr', 'Mai', 'Jun'],
+                datasets: [{
+                  label: 'Verkäufe',
+                  data: [12, 19, 3, 5, 2, 3],
+                  borderColor: 'rgb(59, 130, 246)',
+                  backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                  tension: 0.4
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                  legend: {
+                    display: true,
+                    position: 'top'
+                  }
+                }
+              }
+            });
+
+            // Categories Chart
+            const categoriesCtx = document.getElementById('categoriesChart').getContext('2d');
+            new Chart(categoriesCtx, {
+              type: 'doughnut',
+              data: {
+                labels: ['Software', 'Games', 'Office', 'Security', 'Other'],
+                datasets: [{
+                  data: [30, 20, 25, 15, 10],
+                  backgroundColor: [
+                    'rgb(59, 130, 246)',
+                    'rgb(16, 185, 129)',
+                    'rgb(245, 158, 11)',
+                    'rgb(239, 68, 68)',
+                    'rgb(107, 114, 128)'
+                  ]
+                }]
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                  legend: {
+                    display: true,
+                    position: 'bottom'
+                  }
+                }
+              }
+            });
+          `}</script>
+        </body>
+      </html>
+    )
+  } catch (error) {
+    console.error('Error loading analytics:', error)
+    return c.html(
+      <html lang="de">
+        <head>
+          <meta charset="UTF-8" />
+          <title>Error - Analytics</title>
+          <script src="https://cdn.tailwindcss.com"></script>
+        </head>
+        <body class="bg-gray-100 p-8">
+          <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow">
+            <h1 class="text-2xl font-bold text-red-600 mb-4">
+              <i class="fas fa-exclamation-triangle mr-2"></i>
+              Error loading analytics
+            </h1>
+            <p class="text-gray-700">{error.message}</p>
+            <a href="/admin" class="mt-4 inline-block text-blue-600 hover:text-blue-800">
+              ← Zurück zum Dashboard
+            </a>
+          </div>
+        </body>
+      </html>
+    )
+  }
+})
 
 // Delivery Management
 app.get('/admin/delivery', (c) => {
