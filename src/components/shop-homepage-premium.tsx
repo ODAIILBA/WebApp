@@ -249,41 +249,46 @@ export function ShopHomepagePremium() {
           letter-spacing: 1px;
         }
 
-        /* Mega Menu Styles */
+        /* Mega Menu Styles - CRITICAL FIX */
         nav {
-          position: relative; /* Ensure nav is positioned context */
+          position: relative !important;
         }
         
         .mega-menu {
-          position: absolute;
-          top: 100%;
-          left: 0;
-          right: 0;
-          background: white;
-          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-          opacity: 0;
-          visibility: hidden;
-          transform: translateY(-10px);
-          transition: all 0.3s ease;
-          z-index: 1000;
-          display: none; /* Force hidden by default */
-          pointer-events: none;
-          max-height: 600px; /* Prevent mega menu from being too tall */
-          overflow-y: auto;
+          position: absolute !important;
+          top: 100% !important;
+          left: 0 !important;
+          right: 0 !important;
+          background: white !important;
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1) !important;
+          opacity: 0 !important;
+          visibility: hidden !important;
+          transform: translateY(-10px) !important;
+          transition: all 0.3s ease !important;
+          z-index: 1000 !important;
+          display: none !important; /* Force hidden by default */
+          pointer-events: none !important;
+          max-height: 600px !important;
+          overflow-y: auto !important;
         }
 
         .menu-item:hover .mega-menu {
-          opacity: 1;
-          visibility: visible;
-          transform: translateY(0);
-          display: block; /* Show on hover */
-          pointer-events: auto;
+          opacity: 1 !important;
+          visibility: visible !important;
+          transform: translateY(0) !important;
+          display: block !important; /* Show on hover */
+          pointer-events: auto !important;
         }
 
         /* Ensure menu item is positioned relatively */
         .menu-item {
-          position: relative;
-          display: inline-block;
+          position: relative !important;
+          display: inline-block !important;
+        }
+
+        /* Additional fix for Tailwind conflicts */
+        .hidden {
+          display: none !important;
         }
 
         .mega-menu-column {
@@ -1020,6 +1025,16 @@ export function ShopHomepagePremium() {
       </div>
 
       <script>
+        // CRITICAL FIX: Force hide mega menus on page load
+        document.addEventListener('DOMContentLoaded', function() {
+          const megaMenus = document.querySelectorAll('.mega-menu');
+          megaMenus.forEach(menu => {
+            menu.style.display = 'none';
+            menu.style.opacity = '0';
+            menu.style.visibility = 'hidden';
+          });
+        });
+
         // Mobile menu toggle
         document.getElementById('mobileMenuToggle')?.addEventListener('click', function() {
           const menu = document.getElementById('mobileMenu');
