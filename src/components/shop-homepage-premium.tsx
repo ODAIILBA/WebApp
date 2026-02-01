@@ -250,6 +250,10 @@ export function ShopHomepagePremium() {
         }
 
         /* Mega Menu Styles */
+        nav {
+          position: relative; /* Ensure nav is positioned context */
+        }
+        
         .mega-menu {
           position: absolute;
           top: 100%;
@@ -262,12 +266,24 @@ export function ShopHomepagePremium() {
           transform: translateY(-10px);
           transition: all 0.3s ease;
           z-index: 1000;
+          display: none; /* Force hidden by default */
+          pointer-events: none;
+          max-height: 600px; /* Prevent mega menu from being too tall */
+          overflow-y: auto;
         }
 
         .menu-item:hover .mega-menu {
           opacity: 1;
           visibility: visible;
           transform: translateY(0);
+          display: block; /* Show on hover */
+          pointer-events: auto;
+        }
+
+        /* Ensure menu item is positioned relatively */
+        .menu-item {
+          position: relative;
+          display: inline-block;
         }
 
         .mega-menu-column {
