@@ -42,6 +42,7 @@ import { AdminNotificationsAdvanced } from './components/admin-notifications-adv
 import { AdminHomepageManager } from './components/admin-homepage-manager'
 import { AdminHomepageSlider } from './components/admin-homepage-slider'
 import { AdminCustomCSS } from './components/admin-custom-css'
+import { AdminCustomJS } from './components/admin-custom-js'
 import { AdminSidebarWorking } from './components/admin-sidebar-working'
 import { 
   formatPrice, 
@@ -1962,6 +1963,158 @@ app.get('/api/custom-css', async (c) => {
   } catch (error) {
     console.error('Error fetching custom CSS:', error)
     return c.text('', 200, { 'Content-Type': 'text/css' })
+  }
+})
+
+// ============================================
+// PUBLIC API: Custom JavaScript
+// ============================================
+
+// Get active custom JS for frontend
+app.get('/api/custom-js', async (c) => {
+  try {
+    const placement = c.req.query('placement') || 'all'
+    
+    let query = `SELECT js_code, execution_type FROM custom_js WHERE is_active = 1`
+    
+    if (placement !== 'all') {
+      query += ` AND placement = ?`
+      query += ` ORDER BY priority ASC`
+      const result = await c.env.DB.prepare(query).bind(placement).all()
+      return c.json({ success: true, data: result.results })
+    } else {
+      query += ` ORDER BY priority ASC`
+      const result = await c.env.DB.prepare(query).all()
+      return c.json({ success: true, data: result.results })
+    }
+  } catch (error) {
+    console.error('Error fetching custom JS:', error)
+    return c.json({ success: false, data: [] })
+  }
+})
+
+// ============================================
+// ADMIN API: Custom JavaScript Management
+// ============================================
+
+// Get all JS scripts
+app.get('/api/admin/custom-js', async (c) => {
+  try {
+    const query = `SELECT * FROM custom_js ORDER BY priority ASC`
+    const result = await c.env.DB.prepare(query).all()
+    return c.json({ success: true, data: result.results })
+  } catch (error) {
+    return c.json({ success: false, error: 'Failed to fetch JS scripts' }, 500)
+  }
+})
+
+// Get single JS script
+app.get('/api/admin/custom-js/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const query = `SELECT * FROM custom_js WHERE id = ?`
+    const result = await c.env.DB.prepare(query).bind(id).first()
+    if (!result) {
+      return c.json({ success: false, error: 'JS script not found' }, 404)
+    }
+    return c.json({ success: true, data: result })
+  } catch (error) {
+    return c.json({ success: false, error: 'Failed to fetch JS script' }, 500)
+  }
+})
+
+// Create new JS script
+app.post('/api/admin/custom-js', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { 
+      name, description, js_code, placement, execution_type, priority, is_active
+    } = body
+    
+    const query = `
+      INSERT INTO custom_js (
+        name, description, js_code, placement, execution_type, priority, is_active
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `
+    
+    await c.env.DB.prepare(query).bind(
+      name,
+      description || '',
+      js_code,
+      placement || 'footer',
+      execution_type || 'immediate',
+      priority || 50,
+      is_active ? 1 : 0
+    ).run()
+    
+    return c.json({ success: true, message: 'JS script created successfully' })
+  } catch (error) {
+    console.error('Error creating JS script:', error)
+    return c.json({ success: false, error: 'Failed to create JS script' }, 500)
+  }
+})
+
+// Update JS script
+app.put('/api/admin/custom-js/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const body = await c.req.json()
+    const { 
+      name, description, js_code, placement, execution_type, priority, is_active
+    } = body
+    
+    const query = `
+      UPDATE custom_js 
+      SET name = ?, description = ?, js_code = ?, placement = ?, 
+          execution_type = ?, priority = ?, is_active = ?,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `
+    
+    await c.env.DB.prepare(query).bind(
+      name,
+      description || '',
+      js_code,
+      placement || 'footer',
+      execution_type || 'immediate',
+      priority || 50,
+      is_active ? 1 : 0,
+      id
+    ).run()
+    
+    return c.json({ success: true, message: 'JS script updated successfully' })
+  } catch (error) {
+    console.error('Error updating JS script:', error)
+    return c.json({ success: false, error: 'Failed to update JS script' }, 500)
+  }
+})
+
+// Toggle JS script active status
+app.patch('/api/admin/custom-js/:id/toggle', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const query = `
+      UPDATE custom_js 
+      SET is_active = NOT is_active,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `
+    await c.env.DB.prepare(query).bind(id).run()
+    return c.json({ success: true, message: 'JS script toggled successfully' })
+  } catch (error) {
+    return c.json({ success: false, error: 'Failed to toggle JS script' }, 500)
+  }
+})
+
+// Delete JS script
+app.delete('/api/admin/custom-js/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const query = `DELETE FROM custom_js WHERE id = ?`
+    await c.env.DB.prepare(query).bind(id).run()
+    return c.json({ success: true, message: 'JS script deleted successfully' })
+  } catch (error) {
+    return c.json({ success: false, error: 'Failed to delete JS script' }, 500)
   }
 })
 
@@ -7629,6 +7782,12 @@ app.get('/admin/custom-css', async (c) => {
     const html = AdminCustomCSS([])
     return c.html(html)
   }
+})
+
+// Custom JavaScript Management
+app.get('/admin/custom-js', async (c) => {
+  const html = AdminCustomJS()
+  return c.html(html)
 })
 
 // Orders Management

@@ -2480,6 +2480,41 @@ export const HomepagePrestaShopEnhanced = () => {
                 }
             });
         </script>
+        
+        <!-- Load Custom JS from Admin Panel -->
+        <script>
+            // Load and execute custom JavaScript
+            fetch('/api/custom-js')
+                .then(r => r.json())
+                .then(response => {
+                    if (response.success && response.data) {
+                        response.data.forEach(script => {
+                            const scriptEl = document.createElement('script');
+                            scriptEl.textContent = script.js_code;
+                            
+                            // Execute based on execution_type
+                            if (script.execution_type === 'immediate') {
+                                document.body.appendChild(scriptEl);
+                            } else if (script.execution_type === 'domready') {
+                                if (document.readyState === 'loading') {
+                                    document.addEventListener('DOMContentLoaded', () => {
+                                        document.body.appendChild(scriptEl);
+                                    });
+                                } else {
+                                    document.body.appendChild(scriptEl);
+                                }
+                            } else if (script.execution_type === 'load') {
+                                window.addEventListener('load', () => {
+                                    document.body.appendChild(scriptEl);
+                                });
+                            }
+                        });
+                        console.log('✅ Custom JS loaded:', response.data.length, 'scripts');
+                    }
+                })
+                .catch(err => console.error('Custom JS load error:', err));
+        </script>
+        
         <script src="/static/cookie-consent.js"></script>
         <script src="/static/promo-popup.js"></script>
         <script src="/static/auth.js"></script>
