@@ -42,7 +42,9 @@ import { AdminNotificationsAdvanced } from './components/admin-notifications-adv
 import { AdminHomepageManager } from './components/admin-homepage-manager'
 import { AdminHomepageSlider } from './components/admin-homepage-slider'
 import { AdminCustomCSS } from './components/admin-custom-css'
+import { AdminCustomCSSPreview } from './components/admin-custom-css-preview'
 import { AdminCustomJS } from './components/admin-custom-js'
+import { AdminCustomJSPreview } from './components/admin-custom-js-preview'
 import { AdminSidebarWorking } from './components/admin-sidebar-working'
 import { 
   formatPrice, 
@@ -7784,10 +7786,96 @@ app.get('/admin/custom-css', async (c) => {
   }
 })
 
+// Custom CSS Preview - Full page preview of a specific CSS snippet
+app.get('/admin/custom-css/preview/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const query = `SELECT * FROM custom_css WHERE id = ?`
+    const result = await c.env.DB.prepare(query).bind(id).first()
+    
+    if (!result) {
+      return c.html(`
+        <!DOCTYPE html>
+        <html>
+        <head><title>CSS Not Found</title></head>
+        <body style="font-family: sans-serif; text-align: center; padding: 50px;">
+          <h1>❌ CSS Snippet Not Found</h1>
+          <p>ID: ${id}</p>
+          <button onclick="window.close()" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">
+            Close Window
+          </button>
+        </body>
+        </html>
+      `)
+    }
+    
+    const html = AdminCustomCSSPreview(result)
+    return c.html(html)
+  } catch (error) {
+    console.error('Error loading CSS preview:', error)
+    return c.html(`
+      <!DOCTYPE html>
+      <html>
+      <head><title>Preview Error</title></head>
+      <body style="font-family: sans-serif; text-align: center; padding: 50px;">
+        <h1>⚠️ Preview Error</h1>
+        <p>${error}</p>
+        <button onclick="window.close()" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">
+          Close Window
+        </button>
+      </body>
+      </html>
+    `)
+  }
+})
+
 // Custom JavaScript Management
 app.get('/admin/custom-js', async (c) => {
   const html = AdminCustomJS()
   return c.html(html)
+})
+
+// Custom JavaScript Preview - Full page preview of a specific JS snippet
+app.get('/admin/custom-js/preview/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const query = `SELECT * FROM custom_js WHERE id = ?`
+    const result = await c.env.DB.prepare(query).bind(id).first()
+    
+    if (!result) {
+      return c.html(`
+        <!DOCTYPE html>
+        <html>
+        <head><title>JS Not Found</title></head>
+        <body style="font-family: sans-serif; text-align: center; padding: 50px;">
+          <h1>❌ JavaScript Snippet Not Found</h1>
+          <p>ID: ${id}</p>
+          <button onclick="window.close()" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">
+            Close Window
+          </button>
+        </body>
+        </html>
+      `)
+    }
+    
+    const html = AdminCustomJSPreview(result)
+    return c.html(html)
+  } catch (error) {
+    console.error('Error loading JS preview:', error)
+    return c.html(`
+      <!DOCTYPE html>
+      <html>
+      <head><title>Preview Error</title></head>
+      <body style="font-family: sans-serif; text-align: center; padding: 50px;">
+        <h1>⚠️ Preview Error</h1>
+        <p>${error}</p>
+        <button onclick="window.close()" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">
+          Close Window
+        </button>
+      </body>
+      </html>
+    `)
+  }
 })
 
 // Orders Management

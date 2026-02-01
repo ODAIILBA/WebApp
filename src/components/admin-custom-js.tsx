@@ -542,10 +542,13 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <div class="w-12 h-6 bg-gray-600 rounded-full peer peer-checked:bg-green-500 transition"></div>
                                 <div class="absolute top-0.5 left-0.5 bg-white w-5 h-5 rounded-full transition peer-checked:translate-x-6"></div>
                             </label>
-                            <button onclick="editJS(\${script.id})" class="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition">
+                            <button onclick="editJS(\${script.id})" class="px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded transition" title="Edit">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button onclick="deleteJS(\${script.id})" class="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded transition">
+                            <button onclick="previewJS(\${script.id})" class="px-3 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded transition" title="Preview">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                            <button onclick="deleteJS(\${script.id})" class="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded transition" title="Delete">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -588,6 +591,11 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (error) {
                 alert('Fehler beim Laden des Scripts');
             }
+        }
+
+        // Preview JS in new tab
+        function previewJS(id) {
+            window.open('/admin/custom-js/preview/' + id, '_blank');
         }
 
         // Save JS
