@@ -689,6 +689,573 @@ export function ShopHomepagePremium() {
         </div>
       </section>
 
+      <!-- Hot Deals / Flash Sale Section -->
+      <section class="py-20 px-4">
+        <div class="max-w-7xl mx-auto">
+          <div class="glass-strong rounded-3xl p-12">
+            <div class="text-center mb-12">
+              <div class="inline-block bg-gradient-to-r from-red-500 to-pink-500 text-white px-6 py-2 rounded-full font-bold mb-4 animate-pulse">
+                <i class="fas fa-fire mr-2"></i>
+                FLASH SALE - NUR HEUTE!
+              </div>
+              <h2 class="text-4xl font-bold text-gray-900 mb-4">Heiße Deals</h2>
+              <p class="text-gray-600 text-lg">Unschlagbare Angebote - Nur solange der Vorrat reicht!</p>
+              
+              <!-- Countdown Timer -->
+              <div class="flex justify-center gap-4 mt-8">
+                <div class="bg-white rounded-xl p-4 shadow-lg min-w-[80px]">
+                  <div class="text-3xl font-bold text-purple-600">08</div>
+                  <div class="text-sm text-gray-600">Stunden</div>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow-lg min-w-[80px]">
+                  <div class="text-3xl font-bold text-purple-600">45</div>
+                  <div class="text-sm text-gray-600">Minuten</div>
+                </div>
+                <div class="bg-white rounded-xl p-4 shadow-lg min-w-[80px]">
+                  <div class="text-3xl font-bold text-purple-600">23</div>
+                  <div class="text-sm text-gray-600">Sekunden</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6">
+              <!-- Deal 1 -->
+              <div class="bg-white rounded-2xl p-6 relative overflow-hidden hover:transform hover:scale-105 transition-all">
+                <div class="absolute top-0 right-0 bg-red-500 text-white px-4 py-2 rounded-bl-2xl font-bold">
+                  -85%
+                </div>
+                <div class="text-center mb-4">
+                  <div class="w-24 h-24 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fab fa-windows text-white text-4xl"></i>
+                  </div>
+                  <h3 class="font-bold text-xl text-gray-900 mb-2">Windows 11 Pro</h3>
+                  <p class="text-gray-600 text-sm mb-4">Vollversion • Lifetime</p>
+                  <div class="mb-4">
+                    <div class="text-gray-400 line-through">€259,00</div>
+                    <div class="text-4xl font-bold text-red-600">€38,99</div>
+                  </div>
+                  <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-2 mb-4">
+                    <p class="text-yellow-800 text-sm font-medium">
+                      <i class="fas fa-box mr-1"></i>
+                      Nur noch 7 auf Lager!
+                    </p>
+                  </div>
+                  <button class="w-full bg-gradient-to-r from-red-600 to-pink-600 text-white py-3 rounded-xl font-bold hover:shadow-lg transition-all">
+                    <i class="fas fa-bolt mr-2"></i>
+                    Jetzt sichern!
+                  </button>
+                </div>
+              </div>
+
+              <!-- Deal 2 -->
+              <div class="bg-white rounded-2xl p-6 relative overflow-hidden hover:transform hover:scale-105 transition-all">
+                <div class="absolute top-0 right-0 bg-red-500 text-white px-4 py-2 rounded-bl-2xl font-bold">
+                  -75%
+                </div>
+                <div class="text-center mb-4">
+                  <div class="w-24 h-24 bg-gradient-to-br from-red-500 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fab fa-microsoft text-white text-4xl"></i>
+                  </div>
+                  <h3 class="font-bold text-xl text-gray-900 mb-2">Office 2021 Pro</h3>
+                  <p class="text-gray-600 text-sm mb-4">Word, Excel, PowerPoint</p>
+                  <div class="mb-4">
+                    <div class="text-gray-400 line-through">€449,00</div>
+                    <div class="text-4xl font-bold text-red-600">€112,99</div>
+                  </div>
+                  <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-2 mb-4">
+                    <p class="text-yellow-800 text-sm font-medium">
+                      <i class="fas fa-box mr-1"></i>
+                      Nur noch 12 auf Lager!
+                    </p>
+                  </div>
+                  <button class="w-full bg-gradient-to-r from-red-600 to-pink-600 text-white py-3 rounded-xl font-bold hover:shadow-lg transition-all">
+                    <i class="fas fa-bolt mr-2"></i>
+                    Jetzt sichern!
+                  </button>
+                </div>
+              </div>
+
+              <!-- Deal 3 -->
+              <div class="bg-white rounded-2xl p-6 relative overflow-hidden hover:transform hover:scale-105 transition-all">
+                <div class="absolute top-0 right-0 bg-red-500 text-white px-4 py-2 rounded-bl-2xl font-bold">
+                  -80%
+                </div>
+                <div class="text-center mb-4">
+                  <div class="w-24 h-24 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-layer-group text-white text-4xl"></i>
+                  </div>
+                  <h3 class="font-bold text-xl text-gray-900 mb-2">Software Bundle</h3>
+                  <p class="text-gray-600 text-sm mb-4">Windows + Office + Antivirus</p>
+                  <div class="mb-4">
+                    <div class="text-gray-400 line-through">€899,00</div>
+                    <div class="text-4xl font-bold text-red-600">€179,99</div>
+                  </div>
+                  <div class="bg-green-50 border border-green-200 rounded-lg p-2 mb-4">
+                    <p class="text-green-800 text-sm font-medium">
+                      <i class="fas fa-gift mr-1"></i>
+                      Spare €719!
+                    </p>
+                  </div>
+                  <button class="w-full bg-gradient-to-r from-red-600 to-pink-600 text-white py-3 rounded-xl font-bold hover:shadow-lg transition-all">
+                    <i class="fas fa-bolt mr-2"></i>
+                    Jetzt sichern!
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Testimonials Section -->
+      <section class="py-20 px-4">
+        <div class="max-w-7xl mx-auto">
+          <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-white mb-4">Was unsere Kunden sagen</h2>
+            <p class="text-white/80 text-lg">Über 50.000 zufriedene Kunden vertrauen uns</p>
+            <div class="flex items-center justify-center gap-2 mt-6">
+              <div class="flex text-yellow-400 text-2xl">
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+                <i class="fas fa-star"></i>
+              </div>
+              <span class="text-white font-bold text-xl">4.9/5.0</span>
+              <span class="text-white/80">(12,847 Bewertungen)</span>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-3 gap-8">
+            <!-- Testimonial 1 -->
+            <div class="glass-strong rounded-2xl p-8">
+              <div class="flex items-center mb-4">
+                <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-full flex items-center justify-center text-white font-bold text-xl mr-4">
+                  MK
+                </div>
+                <div>
+                  <h4 class="font-bold text-gray-900">Michael Klein</h4>
+                  <div class="flex text-yellow-400 text-sm">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                  </div>
+                </div>
+              </div>
+              <p class="text-gray-600 mb-4">
+                "Absolut top! Lizenz kam innerhalb von 5 Minuten, Installation problemlos. Der beste Preis, den ich online finden konnte. Werde definitiv wieder hier kaufen!"
+              </p>
+              <div class="text-sm text-gray-500">
+                <i class="fas fa-check-circle text-green-500 mr-1"></i>
+                Verifizierter Kauf • Windows 11 Pro
+              </div>
+            </div>
+
+            <!-- Testimonial 2 -->
+            <div class="glass-strong rounded-2xl p-8">
+              <div class="flex items-center mb-4">
+                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-xl mr-4">
+                  SW
+                </div>
+                <div>
+                  <h4 class="font-bold text-gray-900">Sarah Weber</h4>
+                  <div class="flex text-yellow-400 text-sm">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                  </div>
+                </div>
+              </div>
+              <p class="text-gray-600 mb-4">
+                "Ich war anfangs skeptisch wegen des günstigen Preises, aber alles ist 100% original. Aktivierung hat sofort funktioniert. Support war auch super freundlich!"
+              </p>
+              <div class="text-sm text-gray-500">
+                <i class="fas fa-check-circle text-green-500 mr-1"></i>
+                Verifizierter Kauf • Office 2021 Pro
+              </div>
+            </div>
+
+            <!-- Testimonial 3 -->
+            <div class="glass-strong rounded-2xl p-8">
+              <div class="flex items-center mb-4">
+                <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-full flex items-center justify-center text-white font-bold text-xl mr-4">
+                  TM
+                </div>
+                <div>
+                  <h4 class="font-bold text-gray-900">Thomas Müller</h4>
+                  <div class="flex text-yellow-400 text-sm">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                  </div>
+                </div>
+              </div>
+              <p class="text-gray-600 mb-4">
+                "Habe für meine Firma 10 Lizenzen gekauft. Alles reibungslos, alle Keys funktionieren einwandfrei. Sehr professioneller Service. Klare Empfehlung!"
+              </p>
+              <div class="text-sm text-gray-500">
+                <i class="fas fa-check-circle text-green-500 mr-1"></i>
+                Verifizierter Kauf • Windows 11 Bundle
+              </div>
+            </div>
+
+            <!-- Testimonial 4 -->
+            <div class="glass-strong rounded-2xl p-8">
+              <div class="flex items-center mb-4">
+                <div class="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center text-white font-bold text-xl mr-4">
+                  LB
+                </div>
+                <div>
+                  <h4 class="font-bold text-gray-900">Laura Bauer</h4>
+                  <div class="flex text-yellow-400 text-sm">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                  </div>
+                </div>
+              </div>
+              <p class="text-gray-600 mb-4">
+                "Wow, über 200€ gespart! Anfangs dachte ich, das kann nicht seriös sein, aber es ist alles echt. Schnelle Lieferung, echter Key. Danke!"
+              </p>
+              <div class="text-sm text-gray-500">
+                <i class="fas fa-check-circle text-green-500 mr-1"></i>
+                Verifizierter Kauf • Adobe Creative Cloud
+              </div>
+            </div>
+
+            <!-- Testimonial 5 -->
+            <div class="glass-strong rounded-2xl p-8">
+              <div class="flex items-center mb-4">
+                <div class="w-16 h-16 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-full flex items-center justify-center text-white font-bold text-xl mr-4">
+                  DS
+                </div>
+                <div>
+                  <h4 class="font-bold text-gray-900">David Schmidt</h4>
+                  <div class="flex text-yellow-400 text-sm">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                  </div>
+                </div>
+              </div>
+              <p class="text-gray-600 mb-4">
+                "Perfekt für Studenten! Günstige Preise, originale Lizenzen. Habe schon mehrmals hier bestellt und immer zufrieden gewesen. Top Shop!"
+              </p>
+              <div class="text-sm text-gray-500">
+                <i class="fas fa-check-circle text-green-500 mr-1"></i>
+                Verifizierter Kauf • Microsoft 365
+              </div>
+            </div>
+
+            <!-- Testimonial 6 -->
+            <div class="glass-strong rounded-2xl p-8">
+              <div class="flex items-center mb-4">
+                <div class="w-16 h-16 bg-gradient-to-br from-pink-500 to-red-500 rounded-full flex items-center justify-center text-white font-bold text-xl mr-4">
+                  AH
+                </div>
+                <div>
+                  <h4 class="font-bold text-gray-900">Anna Hoffmann</h4>
+                  <div class="flex text-yellow-400 text-sm">
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                    <i class="fas fa-star"></i>
+                  </div>
+                </div>
+              </div>
+              <p class="text-gray-600 mb-4">
+                "Hatte ein kleines Problem bei der Aktivierung, aber der Support hat mir sofort geholfen. Sehr kompetent und freundlich. 5 Sterne!"
+              </p>
+              <div class="text-sm text-gray-500">
+                <i class="fas fa-check-circle text-green-500 mr-1"></i>
+                Verifizierter Kauf • Kaspersky Total Security
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- How It Works Section -->
+      <section class="py-20 px-4">
+        <div class="max-w-7xl mx-auto">
+          <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-white mb-4">So einfach geht's</h2>
+            <p class="text-white/80 text-lg">In 3 einfachen Schritten zur Lizenz</p>
+          </div>
+
+          <div class="grid md:grid-cols-3 gap-8 relative">
+            <!-- Arrow between steps (desktop only) -->
+            <div class="hidden md:block absolute top-1/4 left-1/3 w-1/3 h-0.5 bg-white/30"></div>
+            <div class="hidden md:block absolute top-1/4 right-1/3 w-1/3 h-0.5 bg-white/30"></div>
+
+            <!-- Step 1 -->
+            <div class="glass-strong rounded-2xl p-8 text-center relative">
+              <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                1
+              </div>
+              <div class="w-24 h-24 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6 mt-4">
+                <i class="fas fa-mouse-pointer text-white text-4xl"></i>
+              </div>
+              <h3 class="text-2xl font-bold text-gray-900 mb-4">Produkt auswählen</h3>
+              <p class="text-gray-600">
+                Durchsuche unsere große Auswahl an Software-Lizenzen und wähle das gewünschte Produkt aus.
+              </p>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="glass-strong rounded-2xl p-8 text-center relative">
+              <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                2
+              </div>
+              <div class="w-24 h-24 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-6 mt-4">
+                <i class="fas fa-credit-card text-white text-4xl"></i>
+              </div>
+              <h3 class="text-2xl font-bold text-gray-900 mb-4">Sicher bezahlen</h3>
+              <p class="text-gray-600">
+                Wähle deine bevorzugte Zahlungsmethode und schließe deine Bestellung sicher ab.
+              </p>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="glass-strong rounded-2xl p-8 text-center relative">
+              <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-gradient-to-br from-green-600 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-xl">
+                3
+              </div>
+              <div class="w-24 h-24 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-6 mt-4">
+                <i class="fas fa-envelope-open-text text-white text-4xl"></i>
+              </div>
+              <h3 class="text-2xl font-bold text-gray-900 mb-4">Sofort erhalten</h3>
+              <p class="text-gray-600">
+                Erhalte deinen Lizenzschlüssel innerhalb von Minuten direkt per E-Mail zugestellt.
+              </p>
+            </div>
+          </div>
+
+          <!-- Additional Benefits -->
+          <div class="mt-16 grid md:grid-cols-4 gap-6">
+            <div class="glass rounded-xl p-6 text-center">
+              <i class="fas fa-shield-check text-white text-3xl mb-3"></i>
+              <h4 class="text-white font-bold mb-2">100% Sicher</h4>
+              <p class="text-white/80 text-sm">SSL-verschlüsselte Zahlung</p>
+            </div>
+            <div class="glass rounded-xl p-6 text-center">
+              <i class="fas fa-undo text-white text-3xl mb-3"></i>
+              <h4 class="text-white font-bold mb-2">Geld-zurück-Garantie</h4>
+              <p class="text-white/80 text-sm">30 Tage Rückgaberecht</p>
+            </div>
+            <div class="glass rounded-xl p-6 text-center">
+              <i class="fas fa-certificate text-white text-3xl mb-3"></i>
+              <h4 class="text-white font-bold mb-2">Zertifiziert</h4>
+              <p class="text-white/80 text-sm">Autorisierter Händler</p>
+            </div>
+            <div class="glass rounded-xl p-6 text-center">
+              <i class="fas fa-users text-white text-3xl mb-3"></i>
+              <h4 class="text-white font-bold mb-2">50.000+ Kunden</h4>
+              <p class="text-white/80 text-sm">Vertrauen uns bereits</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Partner Logos Section -->
+      <section class="py-16 px-4">
+        <div class="max-w-7xl mx-auto">
+          <div class="glass-strong rounded-3xl p-12">
+            <h2 class="text-3xl font-bold text-gray-900 text-center mb-4">Offizielle Partnerschaften</h2>
+            <p class="text-gray-600 text-center mb-12">Wir arbeiten mit den größten Namen der Branche zusammen</p>
+            
+            <div class="grid grid-cols-2 md:grid-cols-6 gap-8 items-center">
+              <!-- Microsoft -->
+              <div class="flex items-center justify-center p-6 bg-white rounded-xl shadow hover:shadow-lg transition-all">
+                <i class="fab fa-microsoft text-5xl text-gray-700"></i>
+              </div>
+              <!-- Windows -->
+              <div class="flex items-center justify-center p-6 bg-white rounded-xl shadow hover:shadow-lg transition-all">
+                <i class="fab fa-windows text-5xl text-blue-600"></i>
+              </div>
+              <!-- Adobe -->
+              <div class="flex items-center justify-center p-6 bg-white rounded-xl shadow hover:shadow-lg transition-all">
+                <i class="fab fa-adobe text-5xl text-red-600"></i>
+              </div>
+              <!-- Apple -->
+              <div class="flex items-center justify-center p-6 bg-white rounded-xl shadow hover:shadow-lg transition-all">
+                <i class="fab fa-apple text-5xl text-gray-700"></i>
+              </div>
+              <!-- Google -->
+              <div class="flex items-center justify-center p-6 bg-white rounded-xl shadow hover:shadow-lg transition-all">
+                <i class="fab fa-google text-5xl text-blue-500"></i>
+              </div>
+              <!-- Amazon -->
+              <div class="flex items-center justify-center p-6 bg-white rounded-xl shadow hover:shadow-lg transition-all">
+                <i class="fab fa-amazon text-5xl text-orange-600"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- FAQ Section -->
+      <section class="py-20 px-4">
+        <div class="max-w-4xl mx-auto">
+          <div class="text-center mb-16">
+            <h2 class="text-4xl font-bold text-white mb-4">Häufig gestellte Fragen</h2>
+            <p class="text-white/80 text-lg">Alle Antworten auf deine Fragen</p>
+          </div>
+
+          <div class="space-y-4">
+            <!-- FAQ 1 -->
+            <div class="glass-strong rounded-2xl p-6">
+              <button class="w-full flex items-center justify-between text-left">
+                <h3 class="font-bold text-gray-900 text-lg">Sind die Lizenzen original?</h3>
+                <i class="fas fa-chevron-down text-purple-600"></i>
+              </button>
+              <div class="mt-4 text-gray-600">
+                Ja! Alle unsere Lizenzen sind 100% original und legal. Wir sind autorisierter Händler und alle Keys sind direkt vom Hersteller.
+              </div>
+            </div>
+
+            <!-- FAQ 2 -->
+            <div class="glass-strong rounded-2xl p-6">
+              <button class="w-full flex items-center justify-between text-left">
+                <h3 class="font-bold text-gray-900 text-lg">Wie schnell erhalte ich meinen Key?</h3>
+                <i class="fas fa-chevron-down text-purple-600"></i>
+              </button>
+              <div class="mt-4 text-gray-600">
+                Sofort! Nach erfolgreicher Zahlung erhältst du deinen Lizenzschlüssel innerhalb von 5-10 Minuten per E-Mail.
+              </div>
+            </div>
+
+            <!-- FAQ 3 -->
+            <div class="glass-strong rounded-2xl p-6">
+              <button class="w-full flex items-center justify-between text-left">
+                <h3 class="font-bold text-gray-900 text-lg">Welche Zahlungsmethoden akzeptiert ihr?</h3>
+                <i class="fas fa-chevron-down text-purple-600"></i>
+              </button>
+              <div class="mt-4 text-gray-600">
+                Wir akzeptieren PayPal, Kreditkarte (Visa, Mastercard), SOFORT Überweisung, Klarna und viele mehr.
+              </div>
+            </div>
+
+            <!-- FAQ 4 -->
+            <div class="glass-strong rounded-2xl p-6">
+              <button class="w-full flex items-center justify-between text-left">
+                <h3 class="font-bold text-gray-900 text-lg">Kann ich eine Rechnung erhalten?</h3>
+                <i class="fas fa-chevron-down text-purple-600"></i>
+              </button>
+              <div class="mt-4 text-gray-600">
+                Selbstverständlich! Du erhältst automatisch eine ordnungsgemäße Rechnung per E-Mail, die du für deine Unterlagen nutzen kannst.
+              </div>
+            </div>
+
+            <!-- FAQ 5 -->
+            <div class="glass-strong rounded-2xl p-6">
+              <button class="w-full flex items-center justify-between text-left">
+                <h3 class="font-bold text-gray-900 text-lg">Was ist, wenn der Key nicht funktioniert?</h3>
+                <i class="fas fa-chevron-down text-purple-600"></i>
+              </button>
+              <div class="mt-4 text-gray-600">
+                Das kommt sehr selten vor, aber falls doch: Unser Support hilft dir sofort weiter und ersetzt den Key kostenlos.
+              </div>
+            </div>
+
+            <!-- FAQ 6 -->
+            <div class="glass-strong rounded-2xl p-6">
+              <button class="w-full flex items-center justify-between text-left">
+                <h3 class="font-bold text-gray-900 text-lg">Bietet ihr auch Mengenrabatte an?</h3>
+                <i class="fas fa-chevron-down text-purple-600"></i>
+              </button>
+              <div class="mt-4 text-gray-600">
+                Ja! Für Unternehmen und größere Bestellungen bieten wir attraktive Mengenrabatte. Kontaktiere uns für ein individuelles Angebot.
+              </div>
+            </div>
+          </div>
+
+          <div class="text-center mt-12">
+            <a href="/admin/faq" class="btn-primary text-lg">
+              <i class="fas fa-question-circle mr-2"></i>
+              Alle FAQs ansehen
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stats & Achievements Section -->
+      <section class="py-20 px-4">
+        <div class="max-w-7xl mx-auto">
+          <div class="glass-strong rounded-3xl p-12">
+            <div class="text-center mb-12">
+              <h2 class="text-4xl font-bold text-gray-900 mb-4">Unsere Erfolgsgeschichte</h2>
+              <p class="text-gray-600 text-lg">Zahlen, die für sich sprechen</p>
+            </div>
+
+            <div class="grid md:grid-cols-4 gap-8">
+              <div class="text-center">
+                <div class="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <i class="fas fa-users text-white text-3xl"></i>
+                </div>
+                <div class="text-4xl font-bold text-purple-600 mb-2">50,000+</div>
+                <div class="text-gray-600 font-medium">Zufriedene Kunden</div>
+              </div>
+
+              <div class="text-center">
+                <div class="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <i class="fas fa-key text-white text-3xl"></i>
+                </div>
+                <div class="text-4xl font-bold text-blue-600 mb-2">200,000+</div>
+                <div class="text-gray-600 font-medium">Verkaufte Lizenzen</div>
+              </div>
+
+              <div class="text-center">
+                <div class="w-20 h-20 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <i class="fas fa-star text-white text-3xl"></i>
+                </div>
+                <div class="text-4xl font-bold text-green-600 mb-2">4.9/5.0</div>
+                <div class="text-gray-600 font-medium">Kundenbewertung</div>
+              </div>
+
+              <div class="text-center">
+                <div class="w-20 h-20 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                  <i class="fas fa-clock text-white text-3xl"></i>
+                </div>
+                <div class="text-4xl font-bold text-orange-600 mb-2">&lt;5 Min</div>
+                <div class="text-gray-600 font-medium">Lieferzeit</div>
+              </div>
+            </div>
+
+            <div class="mt-12 pt-12 border-t border-gray-200">
+              <div class="grid md:grid-cols-3 gap-8 text-center">
+                <div>
+                  <i class="fas fa-trophy text-purple-600 text-3xl mb-3"></i>
+                  <h4 class="font-bold text-gray-900 mb-2">Top-Händler 2025</h4>
+                  <p class="text-gray-600">Ausgezeichnet für exzellenten Service</p>
+                </div>
+                <div>
+                  <i class="fas fa-award text-blue-600 text-3xl mb-3"></i>
+                  <h4 class="font-bold text-gray-900 mb-2">TrustedShops</h4>
+                  <p class="text-gray-600">Zertifizierter Trusted Shop</p>
+                </div>
+                <div>
+                  <i class="fas fa-medal text-green-600 text-3xl mb-3"></i>
+                  <h4 class="font-bold text-gray-900 mb-2">Kundenwahl 2026</h4>
+                  <p class="text-gray-600">Bester Software-Händler</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <!-- Newsletter Section -->
       <section class="py-16 px-4">
         <div class="max-w-4xl mx-auto">
