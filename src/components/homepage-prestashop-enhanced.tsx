@@ -15,6 +15,7 @@ export const HomepagePrestaShopEnhanced = () => {
         <link href="/static/search-autocomplete.css" rel="stylesheet" />
         <link href="/static/auth_colors.css" rel="stylesheet" />
         <link href="/static/quick-wins-bundle.css" rel="stylesheet" />
+        <link href="/api/custom-css?page=homepage" rel="stylesheet" />
         <script src="/static/search-autocomplete.js" defer></script>
         <script src="/static/quick-wins-bundle.js" defer></script>
         <script src="/static/homepage-products-loader.js" defer></script>

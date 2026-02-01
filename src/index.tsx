@@ -41,6 +41,7 @@ import { AdminCustomersAdvanced } from './components/admin-customers-advanced'
 import { AdminNotificationsAdvanced } from './components/admin-notifications-advanced'
 import { AdminHomepageManager } from './components/admin-homepage-manager'
 import { AdminHomepageSlider } from './components/admin-homepage-slider'
+import { AdminCustomCSS } from './components/admin-custom-css'
 import { AdminSidebarWorking } from './components/admin-sidebar-working'
 import { 
   formatPrice, 
@@ -1937,6 +1938,33 @@ app.get('/api/homepage/products', async (c) => {
   }
 })
 
+// Get active custom CSS for frontend
+app.get('/api/custom-css', async (c) => {
+  try {
+    const page = c.req.query('page') || 'all'
+    
+    let query = `SELECT css_code FROM custom_css WHERE is_active = 1`
+    
+    if (page !== 'all') {
+      query += ` AND (apply_to = ? OR apply_to = 'all')`
+      query += ` ORDER BY priority ASC`
+      const result = await c.env.DB.prepare(query).bind(page).all()
+      
+      const combinedCSS = (result.results || []).map(r => r.css_code).join('\n\n')
+      return c.text(combinedCSS, 200, { 'Content-Type': 'text/css' })
+    } else {
+      query += ` ORDER BY priority ASC`
+      const result = await c.env.DB.prepare(query).all()
+      
+      const combinedCSS = (result.results || []).map(r => r.css_code).join('\n\n')
+      return c.text(combinedCSS, 200, { 'Content-Type': 'text/css' })
+    }
+  } catch (error) {
+    console.error('Error fetching custom CSS:', error)
+    return c.text('', 200, { 'Content-Type': 'text/css' })
+  }
+})
+
 // ============================================
 // ADMIN API: Homepage Slider Management
 // ============================================
@@ -2058,6 +2086,143 @@ app.delete('/api/admin/homepage/slider/:id', async (c) => {
     return c.json({ success: true, message: 'Slider deleted successfully' })
   } catch (error) {
     return c.json({ success: false, error: 'Failed to delete slider' }, 500)
+  }
+})
+
+// ============================================
+// ADMIN API: Custom CSS Management
+// ============================================
+
+// Get all custom CSS
+app.get('/api/admin/custom-css', async (c) => {
+  try {
+    const query = `SELECT * FROM custom_css ORDER BY priority ASC`
+    const result = await c.env.DB.prepare(query).all()
+    return c.json({ success: true, data: result.results || [] })
+  } catch (error) {
+    return c.json({ success: false, error: 'Failed to fetch custom CSS' }, 500)
+  }
+})
+
+// Get single custom CSS
+app.get('/api/admin/custom-css/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const query = `SELECT * FROM custom_css WHERE id = ?`
+    const result = await c.env.DB.prepare(query).bind(id).first()
+    if (!result) {
+      return c.json({ success: false, error: 'CSS not found' }, 404)
+    }
+    return c.json(result)
+  } catch (error) {
+    return c.json({ success: false, error: 'Failed to fetch CSS' }, 500)
+  }
+})
+
+// Create new custom CSS
+app.post('/api/admin/custom-css', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { name, css_code, apply_to, priority, is_active } = body
+    
+    const query = `
+      INSERT INTO custom_css (name, css_code, apply_to, priority, is_active)
+      VALUES (?, ?, ?, ?, ?)
+    `
+    
+    await c.env.DB.prepare(query).bind(
+      name, css_code, apply_to || 'all', priority || 50, is_active ? 1 : 0
+    ).run()
+    
+    return c.json({ success: true, message: 'Custom CSS created successfully' })
+  } catch (error) {
+    console.error('Error creating custom CSS:', error)
+    return c.json({ success: false, error: 'Failed to create custom CSS' }, 500)
+  }
+})
+
+// Update custom CSS
+app.put('/api/admin/custom-css/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const body = await c.req.json()
+    const { name, css_code, apply_to, priority, is_active } = body
+    
+    const query = `
+      UPDATE custom_css SET
+        name = ?, css_code = ?, apply_to = ?, priority = ?, is_active = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `
+    
+    await c.env.DB.prepare(query).bind(
+      name, css_code, apply_to || 'all', priority || 50, is_active ? 1 : 0, id
+    ).run()
+    
+    return c.json({ success: true, message: 'Custom CSS updated successfully' })
+  } catch (error) {
+    console.error('Error updating custom CSS:', error)
+    return c.json({ success: false, error: 'Failed to update custom CSS' }, 500)
+  }
+})
+
+// Toggle custom CSS status
+app.patch('/api/admin/custom-css/:id/toggle', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const body = await c.req.json()
+    const { is_active } = body
+    
+    const query = `UPDATE custom_css SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+    await c.env.DB.prepare(query).bind(is_active ? 1 : 0, id).run()
+    
+    return c.json({ success: true, message: 'CSS status updated' })
+  } catch (error) {
+    return c.json({ success: false, error: 'Failed to toggle CSS' }, 500)
+  }
+})
+
+// Delete custom CSS
+app.delete('/api/admin/custom-css/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const query = `DELETE FROM custom_css WHERE id = ?`
+    await c.env.DB.prepare(query).bind(id).run()
+    
+    return c.json({ success: true, message: 'Custom CSS deleted successfully' })
+  } catch (error) {
+    return c.json({ success: false, error: 'Failed to delete CSS' }, 500)
+  }
+})
+
+// Export all CSS
+app.get('/api/admin/custom-css/export', async (c) => {
+  try {
+    const query = `SELECT name, css_code FROM custom_css WHERE is_active = 1 ORDER BY priority ASC`
+    const result = await c.env.DB.prepare(query).all()
+    
+    let exportCSS = '/* Custom CSS Export - Generated on ' + new Date().toISOString() + ' */\n\n'
+    
+    for (const style of result.results || []) {
+      exportCSS += `/* ${style.name} */\n${style.css_code}\n\n`
+    }
+    
+    return c.text(exportCSS, 200, {
+      'Content-Type': 'text/css',
+      'Content-Disposition': 'attachment; filename="custom-styles.css"'
+    })
+  } catch (error) {
+    return c.json({ success: false, error: 'Failed to export CSS' }, 500)
+  }
+})
+
+// Clear cache (placeholder)
+app.post('/api/admin/custom-css/clear-cache', async (c) => {
+  try {
+    // In a real implementation, this would clear any caching layer
+    return c.json({ success: true, message: 'Cache cleared successfully' })
+  } catch (error) {
+    return c.json({ success: false, error: 'Failed to clear cache' }, 500)
   }
 })
 
@@ -7448,6 +7613,20 @@ app.get('/admin/homepage/slider', async (c) => {
   } catch (error) {
     console.error('Error loading sliders:', error)
     const html = AdminHomepageSlider([])
+    return c.html(html)
+  }
+})
+
+// Custom CSS Management
+app.get('/admin/custom-css', async (c) => {
+  try {
+    const query = `SELECT * FROM custom_css ORDER BY priority ASC`
+    const result = await c.env.DB.prepare(query).all()
+    const html = AdminCustomCSS(result.results || [])
+    return c.html(html)
+  } catch (error) {
+    console.error('Error loading custom CSS:', error)
+    const html = AdminCustomCSS([])
     return c.html(html)
   }
 })
