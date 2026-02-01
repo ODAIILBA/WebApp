@@ -1152,7 +1152,15 @@ export function ShopHomepagePremium() {
                         <div class="text-gray-400 line-through text-sm">€259,00</div>
                         <div class="price-display">€89,99</div>
                       </div>
-                      <button class="bg-gradient-to-r from-blue-900 to-yellow-500 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg transition-all">
+                      <button 
+                        class="bg-gradient-to-r from-blue-900 to-yellow-500 text-white px-6 py-3 rounded-xl font-bold hover:shadow-lg transition-all btn-add-to-cart"
+                        data-add-to-cart="windows-11-pro"
+                        data-product-id="windows-11-pro"
+                        data-product-name="Windows 11 Pro"
+                        data-product-price="89.99"
+                        data-product-original-price="259.00"
+                        data-product-discount="-65%"
+                      >
                         <i class="fas fa-cart-plus mr-2"></i>
                         Kaufen
                       </button>
