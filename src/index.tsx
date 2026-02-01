@@ -48,6 +48,7 @@ import { AdminCustomJSPreview } from './components/admin-custom-js-preview'
 import { AdminLiveChat } from './components/admin-live-chat'
 import { AdminPageTemplates } from './components/admin-page-templates'
 import { AdminAnalytics } from './components/admin-analytics'
+import { AdminFAQ } from './components/admin-faq'
 import { AdminSidebarWorking } from './components/admin-sidebar-working'
 import { 
   formatPrice, 
@@ -2626,6 +2627,259 @@ app.post('/api/admin/cms-pages/:id/publish', async (c) => {
   } catch (error) {
     console.error('Error publishing page:', error)
     return c.json({ success: false, error: 'Failed to publish page' }, 500)
+  }
+})
+
+// ===== FAQ Management APIs =====
+
+// Get all FAQ categories
+app.get('/api/admin/faq/categories', async (c) => {
+  try {
+    const categories = await c.env.DB.prepare(`
+      SELECT * FROM faq_categories ORDER BY display_order ASC
+    `).all()
+    
+    return c.json({ success: true, categories: categories.results })
+  } catch (error) {
+    console.error('Error fetching categories:', error)
+    return c.json({ success: false, error: 'Failed to fetch categories' }, 500)
+  }
+})
+
+// Get single FAQ category
+app.get('/api/admin/faq/categories/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const category = await c.env.DB.prepare(`
+      SELECT * FROM faq_categories WHERE id = ?
+    `).bind(id).first()
+    
+    if (!category) {
+      return c.json({ success: false, error: 'Category not found' }, 404)
+    }
+    
+    return c.json({ success: true, category })
+  } catch (error) {
+    console.error('Error fetching category:', error)
+    return c.json({ success: false, error: 'Failed to fetch category' }, 500)
+  }
+})
+
+// Create FAQ category
+app.post('/api/admin/faq/categories', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { name, slug, description, icon, display_order, is_active } = body
+    
+    const result = await c.env.DB.prepare(`
+      INSERT INTO faq_categories (name, slug, description, icon, display_order, is_active)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).bind(name, slug, description || null, icon || null, display_order || 0, is_active ? 1 : 0).run()
+    
+    return c.json({ success: true, id: result.meta.last_row_id })
+  } catch (error) {
+    console.error('Error creating category:', error)
+    return c.json({ success: false, error: 'Failed to create category' }, 500)
+  }
+})
+
+// Update FAQ category
+app.put('/api/admin/faq/categories/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const body = await c.req.json()
+    const { name, slug, description, icon, display_order, is_active } = body
+    
+    await c.env.DB.prepare(`
+      UPDATE faq_categories 
+      SET name = ?, slug = ?, description = ?, icon = ?, display_order = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(name, slug, description || null, icon || null, display_order || 0, is_active ? 1 : 0, id).run()
+    
+    return c.json({ success: true })
+  } catch (error) {
+    console.error('Error updating category:', error)
+    return c.json({ success: false, error: 'Failed to update category' }, 500)
+  }
+})
+
+// Delete FAQ category
+app.delete('/api/admin/faq/categories/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    
+    // Delete all FAQs in this category first (CASCADE will handle this automatically)
+    await c.env.DB.prepare(`
+      DELETE FROM faq_categories WHERE id = ?
+    `).bind(id).run()
+    
+    return c.json({ success: true })
+  } catch (error) {
+    console.error('Error deleting category:', error)
+    return c.json({ success: false, error: 'Failed to delete category' }, 500)
+  }
+})
+
+// Get all FAQ items
+app.get('/api/admin/faq/items', async (c) => {
+  try {
+    const faqs = await c.env.DB.prepare(`
+      SELECT * FROM faq_items ORDER BY display_order ASC
+    `).all()
+    
+    return c.json({ success: true, faqs: faqs.results })
+  } catch (error) {
+    console.error('Error fetching FAQs:', error)
+    return c.json({ success: false, error: 'Failed to fetch FAQs' }, 500)
+  }
+})
+
+// Get single FAQ item
+app.get('/api/admin/faq/items/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const faq = await c.env.DB.prepare(`
+      SELECT * FROM faq_items WHERE id = ?
+    `).bind(id).first()
+    
+    if (!faq) {
+      return c.json({ success: false, error: 'FAQ not found' }, 404)
+    }
+    
+    return c.json({ success: true, faq })
+  } catch (error) {
+    console.error('Error fetching FAQ:', error)
+    return c.json({ success: false, error: 'Failed to fetch FAQ' }, 500)
+  }
+})
+
+// Create FAQ item
+app.post('/api/admin/faq/items', async (c) => {
+  try {
+    const body = await c.req.json()
+    const { category_id, question, answer, tags, display_order, is_featured, is_active } = body
+    
+    const result = await c.env.DB.prepare(`
+      INSERT INTO faq_items (category_id, question, answer, tags, display_order, is_featured, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      category_id,
+      question,
+      answer,
+      tags || null,
+      display_order || 0,
+      is_featured ? 1 : 0,
+      is_active ? 1 : 0
+    ).run()
+    
+    return c.json({ success: true, id: result.meta.last_row_id })
+  } catch (error) {
+    console.error('Error creating FAQ:', error)
+    return c.json({ success: false, error: 'Failed to create FAQ' }, 500)
+  }
+})
+
+// Update FAQ item
+app.put('/api/admin/faq/items/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const body = await c.req.json()
+    const { category_id, question, answer, tags, display_order, is_featured, is_active } = body
+    
+    await c.env.DB.prepare(`
+      UPDATE faq_items 
+      SET category_id = ?, question = ?, answer = ?, tags = ?, display_order = ?, is_featured = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(
+      category_id,
+      question,
+      answer,
+      tags || null,
+      display_order || 0,
+      is_featured ? 1 : 0,
+      is_active ? 1 : 0,
+      id
+    ).run()
+    
+    return c.json({ success: true })
+  } catch (error) {
+    console.error('Error updating FAQ:', error)
+    return c.json({ success: false, error: 'Failed to update FAQ' }, 500)
+  }
+})
+
+// Delete FAQ item
+app.delete('/api/admin/faq/items/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    
+    await c.env.DB.prepare(`
+      DELETE FROM faq_items WHERE id = ?
+    `).bind(id).run()
+    
+    return c.json({ success: true })
+  } catch (error) {
+    console.error('Error deleting FAQ:', error)
+    return c.json({ success: false, error: 'Failed to delete FAQ' }, 500)
+  }
+})
+
+// Get FAQ stats
+app.get('/api/admin/faq/stats', async (c) => {
+  try {
+    const categoriesCount = await c.env.DB.prepare(`
+      SELECT COUNT(*) as count FROM faq_categories WHERE is_active = 1
+    `).first()
+    
+    const faqsCount = await c.env.DB.prepare(`
+      SELECT COUNT(*) as count FROM faq_items WHERE is_active = 1
+    `).first()
+    
+    const viewsSum = await c.env.DB.prepare(`
+      SELECT SUM(views) as total FROM faq_items
+    `).first()
+    
+    const helpfulSum = await c.env.DB.prepare(`
+      SELECT SUM(helpful_count) as total FROM faq_items
+    `).first()
+    
+    return c.json({
+      success: true,
+      categories: categoriesCount?.count || 0,
+      faqs: faqsCount?.count || 0,
+      views: viewsSum?.total || 0,
+      helpful: helpfulSum?.total || 0
+    })
+  } catch (error) {
+    console.error('Error fetching stats:', error)
+    return c.json({ success: false, error: 'Failed to fetch stats' }, 500)
+  }
+})
+
+// Get FAQ analytics
+app.get('/api/admin/faq/analytics', async (c) => {
+  try {
+    const mostViewed = await c.env.DB.prepare(`
+      SELECT * FROM faq_items ORDER BY views DESC LIMIT 1
+    `).first()
+    
+    const mostHelpful = await c.env.DB.prepare(`
+      SELECT * FROM faq_items ORDER BY helpful_count DESC LIMIT 1
+    `).first()
+    
+    const topFAQs = await c.env.DB.prepare(`
+      SELECT * FROM faq_items ORDER BY views DESC LIMIT 10
+    `).all()
+    
+    return c.json({
+      success: true,
+      mostViewed,
+      mostHelpful,
+      topFAQs: topFAQs.results
+    })
+  } catch (error) {
+    console.error('Error fetching analytics:', error)
+    return c.json({ success: false, error: 'Failed to fetch analytics' }, 500)
   }
 })
 
@@ -8974,6 +9228,12 @@ app.get('/admin/live-chat', async (c) => {
 // Admin: Analytics Dashboard
 app.get('/admin/analytics', async (c) => {
   const html = AdminAnalytics()
+  return c.html(html)
+})
+
+// Admin: FAQ Management
+app.get('/admin/faq', async (c) => {
+  const html = AdminFAQ()
   return c.html(html)
 })
 
