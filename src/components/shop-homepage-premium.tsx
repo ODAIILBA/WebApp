@@ -248,6 +248,122 @@ export function ShopHomepagePremium() {
           text-transform: uppercase;
           letter-spacing: 1px;
         }
+
+        /* Mega Menu Styles */
+        .mega-menu {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          background: white;
+          box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+          opacity: 0;
+          visibility: hidden;
+          transform: translateY(-10px);
+          transition: all 0.3s ease;
+          z-index: 1000;
+        }
+
+        .menu-item:hover .mega-menu {
+          opacity: 1;
+          visibility: visible;
+          transform: translateY(0);
+        }
+
+        .mega-menu-column {
+          padding: 2rem;
+        }
+
+        .mega-menu-title {
+          font-size: 0.875rem;
+          font-weight: 700;
+          color: #0a1628;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          margin-bottom: 1rem;
+          padding-bottom: 0.5rem;
+          border-bottom: 2px solid #f5a623;
+        }
+
+        .mega-menu-item {
+          display: flex;
+          align-items: center;
+          padding: 0.75rem 1rem;
+          color: #4b5563;
+          text-decoration: none;
+          border-radius: 8px;
+          transition: all 0.2s ease;
+          margin-bottom: 0.25rem;
+        }
+
+        .mega-menu-item:hover {
+          background: #f3f4f6;
+          color: #0a1628;
+          padding-left: 1.5rem;
+        }
+
+        .mega-menu-item i {
+          width: 32px;
+          height: 32px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: linear-gradient(135deg, #0a1628 0%, #1a2332 100%);
+          border-radius: 8px;
+          color: white;
+          margin-right: 0.75rem;
+          font-size: 0.875rem;
+        }
+
+        .mega-menu-featured {
+          background: linear-gradient(135deg, #0a1628 0%, #1a2332 100%);
+          border-radius: 12px;
+          padding: 1.5rem;
+          color: white;
+        }
+
+        .mega-menu-badge {
+          display: inline-block;
+          background: #f5a623;
+          color: white;
+          font-size: 0.625rem;
+          padding: 0.25rem 0.5rem;
+          border-radius: 4px;
+          font-weight: 700;
+          text-transform: uppercase;
+          margin-left: 0.5rem;
+        }
+
+        /* Mobile Menu */
+        .mobile-menu {
+          display: none;
+          position: fixed;
+          top: 80px;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: white;
+          overflow-y: auto;
+          z-index: 999;
+        }
+
+        .mobile-menu.active {
+          display: block;
+        }
+
+        .mobile-menu-item {
+          border-bottom: 1px solid #e5e7eb;
+        }
+
+        .mobile-submenu {
+          display: none;
+          background: #f9fafb;
+          padding-left: 1rem;
+        }
+
+        .mobile-submenu.active {
+          display: block;
+        }
       </style>
     </head>
     <body>
@@ -262,46 +378,648 @@ export function ShopHomepagePremium() {
               <img src="/static/logo.png" alt="SOFTWAREKING24 - Premium Software Lizenzen" class="h-12" />
             </a>
 
-            <!-- Search Bar -->
-            <div class="hidden md:flex flex-1 max-w-2xl mx-8">
-              <div class="relative w-full">
-                <input 
-                  type="text" 
-                  placeholder="Suche nach Software, Lizenzen..." 
-                  class="w-full px-6 py-3 pl-12 rounded-full border-2 border-gray-200 focus:border-blue-800 focus:outline-none transition-all"
-                />
-                <i class="fas fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-                <button class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gradient-to-r from-blue-900 to-yellow-500 text-white px-6 py-2 rounded-full hover:shadow-lg transition-all">
-                  Suchen
+            <!-- Desktop Menu -->
+            <div class="hidden lg:flex items-center space-x-1">
+              
+              <!-- Office Menu -->
+              <div class="menu-item relative">
+                <button class="px-4 py-2 text-gray-700 hover:text-brand-navy font-medium transition-colors flex items-center">
+                  <i class="fab fa-microsoft mr-2"></i>
+                  Office
+                  <i class="fas fa-chevron-down ml-2 text-xs"></i>
                 </button>
+                <div class="mega-menu">
+                  <div class="max-w-7xl mx-auto">
+                    <div class="grid grid-cols-4 gap-0">
+                      <div class="mega-menu-column border-r">
+                        <h3 class="mega-menu-title">Microsoft Office</h3>
+                        <a href="/products/office-2021" class="mega-menu-item">
+                          <i class="fab fa-microsoft"></i>
+                          <span>Office 2021 Professional</span>
+                        </a>
+                        <a href="/products/office-2019" class="mega-menu-item">
+                          <i class="fab fa-microsoft"></i>
+                          <span>Office 2019 Professional</span>
+                        </a>
+                        <a href="/products/office-365" class="mega-menu-item">
+                          <i class="fas fa-cloud"></i>
+                          <span>Microsoft 365<span class="mega-menu-badge">Neu</span></span>
+                        </a>
+                        <a href="/products/office-mac" class="mega-menu-item">
+                          <i class="fab fa-apple"></i>
+                          <span>Office für Mac</span>
+                        </a>
+                      </div>
+                      <div class="mega-menu-column border-r">
+                        <h3 class="mega-menu-title">Einzelanwendungen</h3>
+                        <a href="/products/word" class="mega-menu-item">
+                          <i class="fas fa-file-word"></i>
+                          <span>Microsoft Word</span>
+                        </a>
+                        <a href="/products/excel" class="mega-menu-item">
+                          <i class="fas fa-file-excel"></i>
+                          <span>Microsoft Excel</span>
+                        </a>
+                        <a href="/products/powerpoint" class="mega-menu-item">
+                          <i class="fas fa-file-powerpoint"></i>
+                          <span>Microsoft PowerPoint</span>
+                        </a>
+                        <a href="/products/outlook" class="mega-menu-item">
+                          <i class="fas fa-envelope"></i>
+                          <span>Microsoft Outlook</span>
+                        </a>
+                      </div>
+                      <div class="mega-menu-column border-r">
+                        <h3 class="mega-menu-title">Alternativen</h3>
+                        <a href="/products/libreoffice" class="mega-menu-item">
+                          <i class="fas fa-file-alt"></i>
+                          <span>LibreOffice</span>
+                        </a>
+                        <a href="/products/openoffice" class="mega-menu-item">
+                          <i class="fas fa-file"></i>
+                          <span>OpenOffice</span>
+                        </a>
+                        <a href="/products/google-workspace" class="mega-menu-item">
+                          <i class="fab fa-google"></i>
+                          <span>Google Workspace</span>
+                        </a>
+                      </div>
+                      <div class="mega-menu-column">
+                        <div class="mega-menu-featured">
+                          <span class="text-yellow-500 text-xs font-bold uppercase tracking-wide">⚡ Top Angebot</span>
+                          <h4 class="text-xl font-bold mt-2 mb-3">Office 2021 Pro</h4>
+                          <p class="text-white/80 text-sm mb-4">Vollversion mit Word, Excel, PowerPoint, Outlook & mehr</p>
+                          <div class="flex items-center justify-between mb-4">
+                            <div>
+                              <div class="text-white/60 line-through text-sm">€449,00</div>
+                              <div class="text-3xl font-bold text-yellow-500">€149,99</div>
+                            </div>
+                            <span class="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">-67%</span>
+                          </div>
+                          <a href="/products/office-2021" class="block w-full bg-yellow-500 text-brand-navy text-center py-3 rounded-lg font-bold hover:bg-yellow-400 transition-all">
+                            Jetzt kaufen
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
+
+              <!-- Antivirus Menu -->
+              <div class="menu-item relative">
+                <button class="px-4 py-2 text-gray-700 hover:text-brand-navy font-medium transition-colors flex items-center">
+                  <i class="fas fa-shield-virus mr-2"></i>
+                  Antivirus
+                  <i class="fas fa-chevron-down ml-2 text-xs"></i>
+                </button>
+                <div class="mega-menu">
+                  <div class="max-w-7xl mx-auto">
+                    <div class="grid grid-cols-4 gap-0">
+                      <div class="mega-menu-column border-r">
+                        <h3 class="mega-menu-title">Kaspersky</h3>
+                        <a href="/products/kaspersky-total" class="mega-menu-item">
+                          <i class="fas fa-shield-check"></i>
+                          <span>Kaspersky Total Security</span>
+                        </a>
+                        <a href="/products/kaspersky-internet" class="mega-menu-item">
+                          <i class="fas fa-globe"></i>
+                          <span>Kaspersky Internet Security</span>
+                        </a>
+                        <a href="/products/kaspersky-antivirus" class="mega-menu-item">
+                          <i class="fas fa-shield-alt"></i>
+                          <span>Kaspersky Anti-Virus</span>
+                        </a>
+                      </div>
+                      <div class="mega-menu-column border-r">
+                        <h3 class="mega-menu-title">Norton</h3>
+                        <a href="/products/norton-360" class="mega-menu-item">
+                          <i class="fas fa-shield"></i>
+                          <span>Norton 360 Deluxe</span>
+                        </a>
+                        <a href="/products/norton-security" class="mega-menu-item">
+                          <i class="fas fa-lock"></i>
+                          <span>Norton Security Premium</span>
+                        </a>
+                        <a href="/products/norton-antivirus" class="mega-menu-item">
+                          <i class="fas fa-bug"></i>
+                          <span>Norton AntiVirus Plus</span>
+                        </a>
+                      </div>
+                      <div class="mega-menu-column border-r">
+                        <h3 class="mega-menu-title">Weitere Hersteller</h3>
+                        <a href="/products/bitdefender" class="mega-menu-item">
+                          <i class="fas fa-user-shield"></i>
+                          <span>Bitdefender Total Security</span>
+                        </a>
+                        <a href="/products/avast" class="mega-menu-item">
+                          <i class="fas fa-shield-virus"></i>
+                          <span>Avast Premium Security</span>
+                        </a>
+                        <a href="/products/mcafee" class="mega-menu-item">
+                          <i class="fas fa-fire"></i>
+                          <span>McAfee Total Protection</span>
+                        </a>
+                        <a href="/products/eset" class="mega-menu-item">
+                          <i class="fas fa-robot"></i>
+                          <span>ESET Smart Security</span>
+                        </a>
+                      </div>
+                      <div class="mega-menu-column">
+                        <div class="mega-menu-featured">
+                          <span class="text-yellow-500 text-xs font-bold uppercase tracking-wide">🔥 Bestseller</span>
+                          <h4 class="text-xl font-bold mt-2 mb-3">Kaspersky Total Security</h4>
+                          <p class="text-white/80 text-sm mb-4">Premium Schutz für 5 Geräte • 1 Jahr</p>
+                          <div class="flex items-center justify-between mb-4">
+                            <div>
+                              <div class="text-white/60 line-through text-sm">€89,00</div>
+                              <div class="text-3xl font-bold text-yellow-500">€39,99</div>
+                            </div>
+                            <span class="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">-55%</span>
+                          </div>
+                          <a href="/products/kaspersky-total" class="block w-full bg-yellow-500 text-brand-navy text-center py-3 rounded-lg font-bold hover:bg-yellow-400 transition-all">
+                            Jetzt kaufen
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Games Menu -->
+              <div class="menu-item relative">
+                <button class="px-4 py-2 text-gray-700 hover:text-brand-navy font-medium transition-colors flex items-center">
+                  <i class="fas fa-gamepad mr-2"></i>
+                  Games
+                  <i class="fas fa-chevron-down ml-2 text-xs"></i>
+                </button>
+                <div class="mega-menu">
+                  <div class="max-w-7xl mx-auto">
+                    <div class="grid grid-cols-4 gap-0">
+                      <div class="mega-menu-column border-r">
+                        <h3 class="mega-menu-title">PC Games</h3>
+                        <a href="/products/steam-keys" class="mega-menu-item">
+                          <i class="fab fa-steam"></i>
+                          <span>Steam Keys</span>
+                        </a>
+                        <a href="/products/origin-keys" class="mega-menu-item">
+                          <i class="fas fa-gamepad"></i>
+                          <span>Origin Keys</span>
+                        </a>
+                        <a href="/products/uplay-keys" class="mega-menu-item">
+                          <i class="fas fa-trophy"></i>
+                          <span>Uplay Keys</span>
+                        </a>
+                        <a href="/products/gog-keys" class="mega-menu-item">
+                          <i class="fas fa-dragon"></i>
+                          <span>GOG Keys</span>
+                        </a>
+                      </div>
+                      <div class="mega-menu-column border-r">
+                        <h3 class="mega-menu-title">Konsolen</h3>
+                        <a href="/products/playstation" class="mega-menu-item">
+                          <i class="fab fa-playstation"></i>
+                          <span>PlayStation Network</span>
+                        </a>
+                        <a href="/products/xbox" class="mega-menu-item">
+                          <i class="fab fa-xbox"></i>
+                          <span>Xbox Live Gold</span>
+                        </a>
+                        <a href="/products/nintendo" class="mega-menu-item">
+                          <i class="fas fa-gamepad"></i>
+                          <span>Nintendo eShop</span>
+                        </a>
+                      </div>
+                      <div class="mega-menu-column border-r">
+                        <h3 class="mega-menu-title">Top Games</h3>
+                        <a href="/products/gta-v" class="mega-menu-item">
+                          <i class="fas fa-car"></i>
+                          <span>GTA V<span class="mega-menu-badge">Top</span></span>
+                        </a>
+                        <a href="/products/minecraft" class="mega-menu-item">
+                          <i class="fas fa-cube"></i>
+                          <span>Minecraft</span>
+                        </a>
+                        <a href="/products/fifa" class="mega-menu-item">
+                          <i class="fas fa-futbol"></i>
+                          <span>EA Sports FC 24</span>
+                        </a>
+                        <a href="/products/cod" class="mega-menu-item">
+                          <i class="fas fa-crosshairs"></i>
+                          <span>Call of Duty</span>
+                        </a>
+                      </div>
+                      <div class="mega-menu-column">
+                        <div class="mega-menu-featured">
+                          <span class="text-yellow-500 text-xs font-bold uppercase tracking-wide">🎮 Gaming Deal</span>
+                          <h4 class="text-xl font-bold mt-2 mb-3">Steam Gift Card</h4>
+                          <p class="text-white/80 text-sm mb-4">€50 Guthaben für Tausende Games</p>
+                          <div class="flex items-center justify-between mb-4">
+                            <div>
+                              <div class="text-white/60 line-through text-sm">€50,00</div>
+                              <div class="text-3xl font-bold text-yellow-500">€44,99</div>
+                            </div>
+                            <span class="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">-10%</span>
+                          </div>
+                          <a href="/products/steam-50" class="block w-full bg-yellow-500 text-brand-navy text-center py-3 rounded-lg font-bold hover:bg-yellow-400 transition-all">
+                            Jetzt kaufen
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Development Menu -->
+              <div class="menu-item relative">
+                <button class="px-4 py-2 text-gray-700 hover:text-brand-navy font-medium transition-colors flex items-center">
+                  <i class="fas fa-code mr-2"></i>
+                  Development
+                  <i class="fas fa-chevron-down ml-2 text-xs"></i>
+                </button>
+                <div class="mega-menu">
+                  <div class="max-w-7xl mx-auto">
+                    <div class="grid grid-cols-4 gap-0">
+                      <div class="mega-menu-column border-r">
+                        <h3 class="mega-menu-title">IDEs & Editoren</h3>
+                        <a href="/products/visual-studio" class="mega-menu-item">
+                          <i class="fas fa-code"></i>
+                          <span>Visual Studio Professional</span>
+                        </a>
+                        <a href="/products/intellij" class="mega-menu-item">
+                          <i class="fas fa-brain"></i>
+                          <span>IntelliJ IDEA</span>
+                        </a>
+                        <a href="/products/pycharm" class="mega-menu-item">
+                          <i class="fab fa-python"></i>
+                          <span>PyCharm Professional</span>
+                        </a>
+                        <a href="/products/webstorm" class="mega-menu-item">
+                          <i class="fab fa-js"></i>
+                          <span>WebStorm</span>
+                        </a>
+                      </div>
+                      <div class="mega-menu-column border-r">
+                        <h3 class="mega-menu-title">Design & Prototyping</h3>
+                        <a href="/products/adobe-xd" class="mega-menu-item">
+                          <i class="fab fa-adobe"></i>
+                          <span>Adobe XD</span>
+                        </a>
+                        <a href="/products/sketch" class="mega-menu-item">
+                          <i class="fas fa-pen-nib"></i>
+                          <span>Sketch</span>
+                        </a>
+                        <a href="/products/figma" class="mega-menu-item">
+                          <i class="fas fa-layer-group"></i>
+                          <span>Figma Professional</span>
+                        </a>
+                      </div>
+                      <div class="mega-menu-column border-r">
+                        <h3 class="mega-menu-title">Tools & Frameworks</h3>
+                        <a href="/products/github" class="mega-menu-item">
+                          <i class="fab fa-github"></i>
+                          <span>GitHub Pro</span>
+                        </a>
+                        <a href="/products/docker" class="mega-menu-item">
+                          <i class="fab fa-docker"></i>
+                          <span>Docker Desktop</span>
+                        </a>
+                        <a href="/products/postman" class="mega-menu-item">
+                          <i class="fas fa-paper-plane"></i>
+                          <span>Postman Team</span>
+                        </a>
+                      </div>
+                      <div class="mega-menu-column">
+                        <div class="mega-menu-featured">
+                          <span class="text-yellow-500 text-xs font-bold uppercase tracking-wide">💻 Developer</span>
+                          <h4 class="text-xl font-bold mt-2 mb-3">Visual Studio Pro</h4>
+                          <p class="text-white/80 text-sm mb-4">Professional IDE für Windows & Mac</p>
+                          <div class="flex items-center justify-between mb-4">
+                            <div>
+                              <div class="text-white/60 line-through text-sm">€499,00</div>
+                              <div class="text-3xl font-bold text-yellow-500">€199,99</div>
+                            </div>
+                            <span class="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">-60%</span>
+                          </div>
+                          <a href="/products/visual-studio" class="block w-full bg-yellow-500 text-brand-navy text-center py-3 rounded-lg font-bold hover:bg-yellow-400 transition-all">
+                            Jetzt kaufen
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Server Menu -->
+              <div class="menu-item relative">
+                <button class="px-4 py-2 text-gray-700 hover:text-brand-navy font-medium transition-colors flex items-center">
+                  <i class="fas fa-server mr-2"></i>
+                  Server
+                  <i class="fas fa-chevron-down ml-2 text-xs"></i>
+                </button>
+                <div class="mega-menu">
+                  <div class="max-w-7xl mx-auto">
+                    <div class="grid grid-cols-4 gap-0">
+                      <div class="mega-menu-column border-r">
+                        <h3 class="mega-menu-title">Windows Server</h3>
+                        <a href="/products/windows-server-2022" class="mega-menu-item">
+                          <i class="fab fa-windows"></i>
+                          <span>Windows Server 2022</span>
+                        </a>
+                        <a href="/products/windows-server-2019" class="mega-menu-item">
+                          <i class="fab fa-windows"></i>
+                          <span>Windows Server 2019</span>
+                        </a>
+                        <a href="/products/windows-server-cal" class="mega-menu-item">
+                          <i class="fas fa-users"></i>
+                          <span>Server CALs</span>
+                        </a>
+                      </div>
+                      <div class="mega-menu-column border-r">
+                        <h3 class="mega-menu-title">Datenbank</h3>
+                        <a href="/products/sql-server" class="mega-menu-item">
+                          <i class="fas fa-database"></i>
+                          <span>SQL Server 2022</span>
+                        </a>
+                        <a href="/products/oracle" class="mega-menu-item">
+                          <i class="fas fa-table"></i>
+                          <span>Oracle Database</span>
+                        </a>
+                        <a href="/products/mysql" class="mega-menu-item">
+                          <i class="fas fa-server"></i>
+                          <span>MySQL Enterprise</span>
+                        </a>
+                      </div>
+                      <div class="mega-menu-column border-r">
+                        <h3 class="mega-menu-title">Virtualisierung</h3>
+                        <a href="/products/vmware" class="mega-menu-item">
+                          <i class="fas fa-layer-group"></i>
+                          <span>VMware vSphere</span>
+                        </a>
+                        <a href="/products/hyper-v" class="mega-menu-item">
+                          <i class="fas fa-cube"></i>
+                          <span>Hyper-V Server</span>
+                        </a>
+                      </div>
+                      <div class="mega-menu-column">
+                        <div class="mega-menu-featured">
+                          <span class="text-yellow-500 text-xs font-bold uppercase tracking-wide">🖥️ Enterprise</span>
+                          <h4 class="text-xl font-bold mt-2 mb-3">Windows Server 2022</h4>
+                          <p class="text-white/80 text-sm mb-4">Standard Edition + 50 CALs</p>
+                          <div class="flex items-center justify-between mb-4">
+                            <div>
+                              <div class="text-white/60 line-through text-sm">€999,00</div>
+                              <div class="text-3xl font-bold text-yellow-500">€499,99</div>
+                            </div>
+                            <span class="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">-50%</span>
+                          </div>
+                          <a href="/products/windows-server-2022" class="block w-full bg-yellow-500 text-brand-navy text-center py-3 rounded-lg font-bold hover:bg-yellow-400 transition-all">
+                            Jetzt kaufen
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- PC Menu -->
+              <div class="menu-item relative">
+                <button class="px-4 py-2 text-gray-700 hover:text-brand-navy font-medium transition-colors flex items-center">
+                  <i class="fas fa-desktop mr-2"></i>
+                  PC & Windows
+                  <i class="fas fa-chevron-down ml-2 text-xs"></i>
+                </button>
+                <div class="mega-menu">
+                  <div class="max-w-7xl mx-auto">
+                    <div class="grid grid-cols-4 gap-0">
+                      <div class="mega-menu-column border-r">
+                        <h3 class="mega-menu-title">Windows</h3>
+                        <a href="/products/windows-11-pro" class="mega-menu-item">
+                          <i class="fab fa-windows"></i>
+                          <span>Windows 11 Pro<span class="mega-menu-badge">Neu</span></span>
+                        </a>
+                        <a href="/products/windows-11-home" class="mega-menu-item">
+                          <i class="fab fa-windows"></i>
+                          <span>Windows 11 Home</span>
+                        </a>
+                        <a href="/products/windows-10-pro" class="mega-menu-item">
+                          <i class="fab fa-windows"></i>
+                          <span>Windows 10 Pro</span>
+                        </a>
+                        <a href="/products/windows-10-home" class="mega-menu-item">
+                          <i class="fab fa-windows"></i>
+                          <span>Windows 10 Home</span>
+                        </a>
+                      </div>
+                      <div class="mega-menu-column border-r">
+                        <h3 class="mega-menu-title">System Tools</h3>
+                        <a href="/products/ccleaner" class="mega-menu-item">
+                          <i class="fas fa-broom"></i>
+                          <span>CCleaner Professional</span>
+                        </a>
+                        <a href="/products/acronis" class="mega-menu-item">
+                          <i class="fas fa-hdd"></i>
+                          <span>Acronis True Image</span>
+                        </a>
+                        <a href="/products/partition-magic" class="mega-menu-item">
+                          <i class="fas fa-sliders-h"></i>
+                          <span>Partition Manager</span>
+                        </a>
+                      </div>
+                      <div class="mega-menu-column border-r">
+                        <h3 class="mega-menu-title">Utilities</h3>
+                        <a href="/products/winrar" class="mega-menu-item">
+                          <i class="fas fa-file-archive"></i>
+                          <span>WinRAR</span>
+                        </a>
+                        <a href="/products/winzip" class="mega-menu-item">
+                          <i class="fas fa-file-zipper"></i>
+                          <span>WinZip</span>
+                        </a>
+                        <a href="/products/pdf-creator" class="mega-menu-item">
+                          <i class="fas fa-file-pdf"></i>
+                          <span>PDF Creator Pro</span>
+                        </a>
+                      </div>
+                      <div class="mega-menu-column">
+                        <div class="mega-menu-featured">
+                          <span class="text-yellow-500 text-xs font-bold uppercase tracking-wide">⭐ Bestseller</span>
+                          <h4 class="text-xl font-bold mt-2 mb-3">Windows 11 Pro</h4>
+                          <p class="text-white/80 text-sm mb-4">Vollversion • Lebenslang gültig</p>
+                          <div class="flex items-center justify-between mb-4">
+                            <div>
+                              <div class="text-white/60 line-through text-sm">€259,00</div>
+                              <div class="text-3xl font-bold text-yellow-500">€89,99</div>
+                            </div>
+                            <span class="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">-65%</span>
+                          </div>
+                          <a href="/products/windows-11-pro" class="block w-full bg-yellow-500 text-brand-navy text-center py-3 rounded-lg font-bold hover:bg-yellow-400 transition-all">
+                            Jetzt kaufen
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
 
-            <!-- Nav Links -->
-            <div class="flex items-center space-x-6">
-              <a href="/products" class="text-gray-700 hover:text-blue-900 font-medium transition-colors">Produkte</a>
-              <a href="/categories" class="text-gray-700 hover:text-blue-900 font-medium transition-colors">Kategorien</a>
+            <!-- Right Side Icons -->
+            <div class="flex items-center space-x-4">
               
+              <!-- Search Icon (Mobile) -->
+              <button class="lg:hidden p-2 hover:bg-gray-100 rounded-full transition-all">
+                <i class="fas fa-search text-gray-700 text-xl"></i>
+              </button>
+
               <!-- Cart -->
-              <div class="relative">
-                <button class="relative p-3 hover:bg-gray-100 rounded-full transition-all">
-                  <i class="fas fa-shopping-cart text-gray-700 text-xl"></i>
-                  <span class="absolute -top-1 -right-1 bg-gradient-to-r from-#f5a623 to-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
-                    3
-                  </span>
-                </button>
-              </div>
+              <button class="relative p-2 hover:bg-gray-100 rounded-full transition-all">
+                <i class="fas fa-shopping-cart text-gray-700 text-xl"></i>
+                <span class="absolute -top-1 -right-1 bg-brand-gold text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold">
+                  3
+                </span>
+              </button>
 
               <!-- User -->
-              <button class="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-full transition-all">
-                <div class="w-10 h-10 bg-gradient-to-br from-blue-900 to-yellow-500 rounded-full flex items-center justify-center">
+              <button class="hidden lg:flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-full transition-all">
+                <div class="w-10 h-10 bg-gradient-to-br from-brand-navy to-brand-gold rounded-full flex items-center justify-center">
                   <i class="fas fa-user text-white"></i>
                 </div>
+              </button>
+
+              <!-- Mobile Menu Toggle -->
+              <button id="mobileMenuToggle" class="lg:hidden p-2 hover:bg-gray-100 rounded-full transition-all">
+                <i class="fas fa-bars text-gray-700 text-xl"></i>
               </button>
             </div>
           </div>
         </div>
       </nav>
+
+      <!-- Mobile Menu -->
+      <div id="mobileMenu" class="mobile-menu">
+        <div class="p-4">
+          <!-- Mobile Search -->
+          <div class="mb-4">
+            <div class="relative">
+              <input 
+                type="text" 
+                placeholder="Suche nach Software..." 
+                class="w-full px-4 py-3 pl-10 rounded-lg border-2 border-gray-200 focus:border-brand-navy focus:outline-none"
+              />
+              <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+            </div>
+          </div>
+
+          <!-- Mobile Menu Items -->
+          <div class="space-y-2">
+            <div class="mobile-menu-item">
+              <button class="mobile-menu-toggle w-full flex items-center justify-between p-4 text-left text-gray-900 font-medium">
+                <span><i class="fab fa-microsoft mr-3"></i>Office</span>
+                <i class="fas fa-chevron-down"></i>
+              </button>
+              <div class="mobile-submenu">
+                <a href="/products/office-2021" class="block p-3 pl-12 text-gray-700 hover:bg-gray-100">Office 2021 Professional</a>
+                <a href="/products/office-365" class="block p-3 pl-12 text-gray-700 hover:bg-gray-100">Microsoft 365</a>
+                <a href="/products/word" class="block p-3 pl-12 text-gray-700 hover:bg-gray-100">Microsoft Word</a>
+              </div>
+            </div>
+
+            <div class="mobile-menu-item">
+              <button class="mobile-menu-toggle w-full flex items-center justify-between p-4 text-left text-gray-900 font-medium">
+                <span><i class="fas fa-shield-virus mr-3"></i>Antivirus</span>
+                <i class="fas fa-chevron-down"></i>
+              </button>
+              <div class="mobile-submenu">
+                <a href="/products/kaspersky-total" class="block p-3 pl-12 text-gray-700 hover:bg-gray-100">Kaspersky Total Security</a>
+                <a href="/products/norton-360" class="block p-3 pl-12 text-gray-700 hover:bg-gray-100">Norton 360</a>
+                <a href="/products/bitdefender" class="block p-3 pl-12 text-gray-700 hover:bg-gray-100">Bitdefender</a>
+              </div>
+            </div>
+
+            <div class="mobile-menu-item">
+              <button class="mobile-menu-toggle w-full flex items-center justify-between p-4 text-left text-gray-900 font-medium">
+                <span><i class="fas fa-gamepad mr-3"></i>Games</span>
+                <i class="fas fa-chevron-down"></i>
+              </button>
+              <div class="mobile-submenu">
+                <a href="/products/steam-keys" class="block p-3 pl-12 text-gray-700 hover:bg-gray-100">Steam Keys</a>
+                <a href="/products/playstation" class="block p-3 pl-12 text-gray-700 hover:bg-gray-100">PlayStation Network</a>
+                <a href="/products/xbox" class="block p-3 pl-12 text-gray-700 hover:bg-gray-100">Xbox Live</a>
+              </div>
+            </div>
+
+            <div class="mobile-menu-item">
+              <button class="mobile-menu-toggle w-full flex items-center justify-between p-4 text-left text-gray-900 font-medium">
+                <span><i class="fas fa-code mr-3"></i>Development</span>
+                <i class="fas fa-chevron-down"></i>
+              </button>
+              <div class="mobile-submenu">
+                <a href="/products/visual-studio" class="block p-3 pl-12 text-gray-700 hover:bg-gray-100">Visual Studio</a>
+                <a href="/products/intellij" class="block p-3 pl-12 text-gray-700 hover:bg-gray-100">IntelliJ IDEA</a>
+                <a href="/products/github" class="block p-3 pl-12 text-gray-700 hover:bg-gray-100">GitHub Pro</a>
+              </div>
+            </div>
+
+            <div class="mobile-menu-item">
+              <button class="mobile-menu-toggle w-full flex items-center justify-between p-4 text-left text-gray-900 font-medium">
+                <span><i class="fas fa-server mr-3"></i>Server</span>
+                <i class="fas fa-chevron-down"></i>
+              </button>
+              <div class="mobile-submenu">
+                <a href="/products/windows-server-2022" class="block p-3 pl-12 text-gray-700 hover:bg-gray-100">Windows Server 2022</a>
+                <a href="/products/sql-server" class="block p-3 pl-12 text-gray-700 hover:bg-gray-100">SQL Server</a>
+                <a href="/products/vmware" class="block p-3 pl-12 text-gray-700 hover:bg-gray-100">VMware</a>
+              </div>
+            </div>
+
+            <div class="mobile-menu-item">
+              <button class="mobile-menu-toggle w-full flex items-center justify-between p-4 text-left text-gray-900 font-medium">
+                <span><i class="fas fa-desktop mr-3"></i>PC & Windows</span>
+                <i class="fas fa-chevron-down"></i>
+              </button>
+              <div class="mobile-submenu">
+                <a href="/products/windows-11-pro" class="block p-3 pl-12 text-gray-700 hover:bg-gray-100">Windows 11 Pro</a>
+                <a href="/products/windows-10-pro" class="block p-3 pl-12 text-gray-700 hover:bg-gray-100">Windows 10 Pro</a>
+                <a href="/products/ccleaner" class="block p-3 pl-12 text-gray-700 hover:bg-gray-100">CCleaner Pro</a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mobile User Actions -->
+          <div class="mt-6 space-y-3">
+            <a href="/login" class="block w-full bg-brand-navy text-white text-center py-3 rounded-lg font-bold">
+              Anmelden
+            </a>
+            <a href="/register" class="block w-full border-2 border-brand-navy text-brand-navy text-center py-3 rounded-lg font-bold">
+              Registrieren
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <script>
+        // Mobile menu toggle
+        document.getElementById('mobileMenuToggle')?.addEventListener('click', function() {
+          const menu = document.getElementById('mobileMenu');
+          menu?.classList.toggle('active');
+        });
+
+        // Mobile submenu toggles
+        document.querySelectorAll('.mobile-menu-toggle').forEach(toggle => {
+          toggle.addEventListener('click', function() {
+            const submenu = this.nextElementSibling;
+            const icon = this.querySelector('.fa-chevron-down');
+            submenu?.classList.toggle('active');
+            icon?.classList.toggle('rotate-180');
+          });
+        });
+      </script>
 
       <!-- Hero Section -->
       <section class="hero-pattern pt-32 pb-20 px-4">
