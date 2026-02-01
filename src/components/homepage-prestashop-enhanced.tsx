@@ -2481,6 +2481,9 @@ export const HomepagePrestaShopEnhanced = () => {
             });
         </script>
         
+        <!-- Live Chat Widget -->
+        <script src="/static/live-chat-widget.js"></script>
+        
         <!-- Load Custom JS from Admin Panel -->
         <script>
             // Load and execute custom JavaScript

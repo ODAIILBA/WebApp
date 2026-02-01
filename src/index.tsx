@@ -45,6 +45,7 @@ import { AdminCustomCSS } from './components/admin-custom-css'
 import { AdminCustomCSSPreview } from './components/admin-custom-css-preview'
 import { AdminCustomJS } from './components/admin-custom-js'
 import { AdminCustomJSPreview } from './components/admin-custom-js-preview'
+import { AdminLiveChat } from './components/admin-live-chat'
 import { AdminSidebarWorking } from './components/admin-sidebar-working'
 import { 
   formatPrice, 
@@ -1965,6 +1966,114 @@ app.get('/api/custom-css', async (c) => {
   } catch (error) {
     console.error('Error fetching custom CSS:', error)
     return c.text('', 200, { 'Content-Type': 'text/css' })
+  }
+})
+
+// ============================================
+// LIVE CHAT API
+// ============================================
+
+// Start new chat session
+app.post('/api/chat/start', async (c) => {
+  try {
+    const { name, email } = await c.req.json()
+    const sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9)
+    
+    await c.env.DB.prepare(`
+      INSERT INTO chat_sessions (session_id, user_name, user_email, status)
+      VALUES (?, ?, ?, 'waiting')
+    `).bind(sessionId, name, email).run()
+    
+    return c.json({ success: true, session_id: sessionId })
+  } catch (error) {
+    console.error('Chat start error:', error)
+    return c.json({ success: false, error: 'Failed to start chat' }, 500)
+  }
+})
+
+// Send message
+app.post('/api/chat/message', async (c) => {
+  try {
+    const { session_id, message, sender_name } = await c.req.json()
+    
+    await c.env.DB.prepare(`
+      INSERT INTO chat_messages (session_id, sender_type, sender_name, message)
+      VALUES (?, 'user', ?, ?)
+    `).bind(session_id, sender_name || 'User', message).run()
+    
+    return c.json({ success: true })
+  } catch (error) {
+    return c.json({ success: false, error: 'Failed to send message' }, 500)
+  }
+})
+
+// Get messages
+app.get('/api/chat/messages', async (c) => {
+  try {
+    const sessionId = c.req.query('session_id')
+    const result = await c.env.DB.prepare(`
+      SELECT * FROM chat_messages 
+      WHERE session_id = ? 
+      ORDER BY created_at ASC
+    `).bind(sessionId).all()
+    
+    return c.json({ success: true, messages: result.results })
+  } catch (error) {
+    return c.json({ success: false, messages: [] }, 500)
+  }
+})
+
+// Admin: Get all chat sessions
+app.get('/api/admin/chat/sessions', async (c) => {
+  try {
+    const result = await c.env.DB.prepare(`
+      SELECT s.*, 
+             (SELECT COUNT(*) FROM chat_messages WHERE session_id = s.session_id AND sender_type = 'user' AND is_read = 0) as unread_count,
+             (SELECT message FROM chat_messages WHERE session_id = s.session_id ORDER BY created_at DESC LIMIT 1) as last_message
+      FROM chat_sessions s
+      ORDER BY s.updated_at DESC
+    `).all()
+    
+    return c.json({ success: true, sessions: result.results })
+  } catch (error) {
+    return c.json({ success: false, sessions: [] }, 500)
+  }
+})
+
+// Admin: Send message
+app.post('/api/admin/chat/send', async (c) => {
+  try {
+    const { session_id, message, admin_name } = await c.req.json()
+    
+    await c.env.DB.prepare(`
+      INSERT INTO chat_messages (session_id, sender_type, sender_name, message)
+      VALUES (?, 'admin', ?, ?)
+    `).bind(session_id, admin_name || 'Admin', message).run()
+    
+    await c.env.DB.prepare(`
+      UPDATE chat_sessions SET status = 'active', updated_at = CURRENT_TIMESTAMP WHERE session_id = ?
+    `).bind(session_id).run()
+    
+    return c.json({ success: true })
+  } catch (error) {
+    return c.json({ success: false }, 500)
+  }
+})
+
+// Admin: Close chat
+app.post('/api/admin/chat/close', async (c) => {
+  try {
+    const { session_id } = await c.req.json()
+    
+    await c.env.DB.prepare(`
+      UPDATE chat_sessions 
+      SET status = 'closed', closed_at = CURRENT_TIMESTAMP 
+      WHERE session_id = ?
+    `).bind(session_id).run()
+    
+    return c.json({ success: true })
+  } catch (error) {
+    return c.json({ success: false }, 500)
   }
 })
 
@@ -7876,6 +7985,12 @@ app.get('/admin/custom-js/preview/:id', async (c) => {
       </html>
     `)
   }
+})
+
+// Live Chat Management
+app.get('/admin/live-chat', async (c) => {
+  const html = AdminLiveChat()
+  return c.html(html)
 })
 
 // Orders Management
