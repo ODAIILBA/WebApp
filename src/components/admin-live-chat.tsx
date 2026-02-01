@@ -52,9 +52,14 @@ export function AdminLiveChat() {
                         <p id="chat-user-email" class="text-sm text-gray-500"></p>
                     </div>
                 </div>
-                <button onclick="closeChat()" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
-                    <i class="fas fa-times mr-2"></i>Chat schließen
-                </button>
+                <div class="flex gap-2">
+                    <button onclick="showCreateTicketModal()" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                        <i class="fas fa-ticket-alt mr-2"></i>Ticket erstellen
+                    </button>
+                    <button onclick="closeChat()" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                        <i class="fas fa-times mr-2"></i>Chat schließen
+                    </button>
+                </div>
             </div>
             
             <div id="chat-messages" class="flex-1 overflow-y-auto p-6 bg-gray-50">
@@ -230,6 +235,56 @@ export function AdminLiveChat() {
             if (pollingInterval) {
                 clearInterval(pollingInterval);
                 pollingInterval = null;
+            }
+        }
+
+        // Show create ticket modal
+        function showCreateTicketModal() {
+            const session = sessionsData.find(s => s.session_id === currentSessionId);
+            if (!session) return;
+
+            const subject = prompt('Ticket-Betreff:', \`Chat mit \${session.user_name}\`);
+            if (!subject) return;
+
+            const category = prompt('Kategorie (general/technical/billing/product):', 'general');
+            const priority = prompt('Priorität (low/medium/high/urgent):', 'medium');
+
+            if (confirm(\`Ticket erstellen mit:\nBetreff: \${subject}\nKategorie: \${category}\nPriorität: \${priority}\n\nDer Chat wird geschlossen.\`)) {
+                convertToTicket(subject, category, priority);
+            }
+        }
+
+        // Convert chat to ticket
+        async function convertToTicket(subject, category, priority) {
+            try {
+                const response = await axios.post('/api/admin/chat/convert-to-ticket', {
+                    session_id: currentSessionId,
+                    subject: subject,
+                    category: category,
+                    priority: priority
+                });
+
+                if (response.data.success) {
+                    alert(\`✅ Ticket erfolgreich erstellt!\n\nTicket-Nummer: \${response.data.ticket_number}\n\nDer Chat wurde geschlossen.\`);
+                    currentSessionId = null;
+                    document.getElementById('chat-header').classList.add('hidden');
+                    document.getElementById('chat-input-area').classList.add('hidden');
+                    document.getElementById('chat-messages').innerHTML = \`
+                        <div class="flex items-center justify-center h-full text-gray-400">
+                            <div class="text-center">
+                                <i class="fas fa-comments text-5xl mb-4"></i>
+                                <p class="text-lg">Wählen Sie einen Chat aus der Liste</p>
+                            </div>
+                        </div>
+                    \`;
+                    await loadSessions();
+                    stopPolling();
+                } else {
+                    alert('❌ Fehler beim Erstellen des Tickets: ' + (response.data.error || 'Unbekannter Fehler'));
+                }
+            } catch (error) {
+                console.error('Convert to ticket error:', error);
+                alert('❌ Fehler beim Erstellen des Tickets');
             }
         }
 

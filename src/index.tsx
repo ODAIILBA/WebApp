@@ -2077,6 +2077,71 @@ app.post('/api/admin/chat/close', async (c) => {
   }
 })
 
+// Admin: Convert chat to ticket
+app.post('/api/admin/chat/convert-to-ticket', async (c) => {
+  try {
+    const { session_id, subject, category, priority } = await c.req.json()
+    
+    // Get chat session info
+    const session = await c.env.DB.prepare(`
+      SELECT * FROM chat_sessions WHERE session_id = ?
+    `).bind(session_id).first()
+    
+    if (!session) {
+      return c.json({ success: false, error: 'Session not found' }, 404)
+    }
+    
+    // Get all messages
+    const messages = await c.env.DB.prepare(`
+      SELECT * FROM chat_messages WHERE session_id = ? ORDER BY created_at ASC
+    `).bind(session_id).all()
+    
+    // Build conversation history
+    const conversation = messages.results.map(msg => 
+      `[${msg.created_at}] ${msg.sender_name} (${msg.sender_type}):\n${msg.message}`
+    ).join('\n\n')
+    
+    // Generate ticket number
+    const ticketNumber = 'TKT-' + new Date().getFullYear() + '-' + 
+                         String(Date.now()).slice(-6)
+    
+    // Create ticket
+    const description = `Chat-Konversation vom ${new Date().toLocaleDateString('de-DE')}:\n\n${conversation}`
+    
+    await c.env.DB.prepare(`
+      INSERT INTO support_tickets (
+        ticket_number, chat_session_id, customer_name, customer_email,
+        subject, category, priority, status, description
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'open', ?)
+    `).bind(
+      ticketNumber,
+      session_id,
+      session.user_name,
+      session.user_email,
+      subject || `Chat: ${session.user_name}`,
+      category || 'general',
+      priority || 'medium',
+      description
+    ).run()
+    
+    // Update chat session
+    await c.env.DB.prepare(`
+      UPDATE chat_sessions 
+      SET status = 'closed', closed_at = CURRENT_TIMESTAMP 
+      WHERE session_id = ?
+    `).bind(session_id).run()
+    
+    return c.json({ 
+      success: true, 
+      ticket_number: ticketNumber,
+      message: 'Ticket erfolgreich erstellt' 
+    })
+  } catch (error) {
+    console.error('Convert to ticket error:', error)
+    return c.json({ success: false, error: 'Failed to create ticket' }, 500)
+  }
+})
+
 // ============================================
 // PUBLIC API: Custom JavaScript
 // ============================================
