@@ -36,7 +36,7 @@ import { AdminPagesManagement } from './components/admin-pages-management'
 import { AdminDashboardAdvanced } from './components/admin-dashboard-advanced'
 import { AdminLicensesAdvanced } from './components/admin-licenses-advanced'
 import { AdminProductsAdvanced } from './components/admin-products-advanced'
-import { AdminProductsFunctional } from './components/admin-products-functional'
+// import { AdminProductsFunctional } from './components/admin-products-functional'
 import { AdminOrdersAdvanced } from './components/admin-orders-advanced'
 import { AdminOrdersFunctional } from './components/admin-orders-functional'
 import { AdminCustomersAdvanced } from './components/admin-customers-advanced'
@@ -4177,10 +4177,10 @@ app.post('/api/admin/orders', async (c) => {
 
     const result = await db.db.prepare(`
       INSERT INTO orders (
-        order_number, user_id, email, first_name, last_name, company, vat_number,
-        country, status, payment_status, payment_method, subtotal, tax_amount,
-        discount_amount, total, currency, language
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        order_number, user_id, email, first_name, last_name, company,
+        country, order_status, payment_status, payment_method, subtotal, tax,
+        discount, total
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       orderNumber,
       body.user_id || null,
@@ -4188,17 +4188,14 @@ app.post('/api/admin/orders', async (c) => {
       body.first_name,
       body.last_name,
       body.company || null,
-      body.vat_number || null,
       body.country,
       body.status || 'pending',
       body.payment_status || 'unpaid',
       body.payment_method || null,
       body.subtotal,
-      body.tax_amount || 0,
-      body.discount_amount || 0,
-      body.total,
-      body.currency || 'EUR',
-      body.language || 'de'
+      body.tax || 0,
+      body.discount || 0,
+      body.total
     ).run()
 
     return c.json({ 
@@ -4237,7 +4234,7 @@ app.get('/api/admin/orders', async (c) => {
     }
 
     if (status) {
-      whereConditions.push(`status = ?`)
+      whereConditions.push(`order_status = ?`)
       params.push(status)
     }
 
@@ -4269,16 +4266,16 @@ app.get('/api/admin/orders', async (c) => {
     const totalPages = Math.ceil(total / limit)
 
     // Get orders with pagination
-    const validSortColumns = ['created_at', 'order_number', 'total', 'status', 'email']
+    const validSortColumns = ['created_at', 'order_number', 'total', 'order_status', 'email']
     const sortColumn = validSortColumns.includes(sort_by) ? sort_by : 'created_at'
     const sortDirection = sort_order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC'
 
     const orders = await db.db.prepare(`
       SELECT 
         id, order_number, email, first_name, last_name, company,
-        country, status, payment_status, payment_method,
-        subtotal, tax_amount, discount_amount, total, currency,
-        created_at, updated_at, completed_at
+        country, order_status, payment_status, payment_method,
+        subtotal, tax, discount, total,
+        created_at, updated_at
       FROM orders 
       ${whereClause}
       ORDER BY ${sortColumn} ${sortDirection}
@@ -7617,7 +7614,7 @@ app.post('/api/admin/invoices', async (c) => {
         invoice_number, customer_name, customer_email, customer_company, customer_tax_id,
         billing_address, billing_city, billing_postal_code, billing_country,
         invoice_date, due_date, status, notes, terms,
-        subtotal, tax_rate, tax_amount, total
+        subtotal, tax_rate, tax, total
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).bind(
       body.invoice_number,
@@ -7696,7 +7693,7 @@ app.put('/api/admin/invoices/:id', async (c) => {
         invoice_number = ?, customer_name = ?, customer_email = ?, customer_company = ?, customer_tax_id = ?,
         billing_address = ?, billing_city = ?, billing_postal_code = ?, billing_country = ?,
         invoice_date = ?, due_date = ?, status = ?, notes = ?, terms = ?,
-        subtotal = ?, tax_rate = ?, tax_amount = ?, total = ?,
+        subtotal = ?, tax_rate = ?, tax = ?, total = ?,
         updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).bind(
@@ -9504,7 +9501,7 @@ app.get('/admin/v2', (c) => {
 
 // Products Management
 app.get('/admin/products', (c) => {
-  const html = AdminProductsFunctional()
+  const html = AdminProductsAdvanced()
   return c.html(html)
 })
 
@@ -10317,7 +10314,7 @@ app.post('/api/payments/stripe/create-intent', async (c) => {
     
     // Fetch order from database
     const order = await c.env.DB.prepare(`
-      SELECT id, subtotal, tax_amount, discount_amount, total, currency, country, user_id
+      SELECT id, subtotal, tax, discount, total, country, user_id
       FROM orders 
       WHERE id = ? AND payment_status = 'pending'
     `).bind(order_id).first() as any
@@ -10366,7 +10363,7 @@ app.post('/api/payments/stripe/create-intent', async (c) => {
       // Update order with correct amounts
       await c.env.DB.prepare(`
         UPDATE orders 
-        SET subtotal = ?, tax_amount = ?, total = ?, updated_at = datetime('now')
+        SET subtotal = ?, tax = ?, total = ?, updated_at = datetime('now')
         WHERE id = ?
       `).bind(calculatedSubtotal, calculatedTax, calculatedTotal, order_id).run()
       
@@ -10622,7 +10619,7 @@ app.post('/api/payments/paypal/create-order', async (c) => {
     
     // Fetch order
     const order = await c.env.DB.prepare(`
-      SELECT id, subtotal, tax_amount, discount_amount, total, currency, country, user_id
+      SELECT id, subtotal, tax, discount, total, country, user_id
       FROM orders 
       WHERE id = ? AND payment_status = 'pending'
     `).bind(order_id).first() as any
@@ -10660,7 +10657,7 @@ app.post('/api/payments/paypal/create-order', async (c) => {
     if (amountDiff > 0.01) {
       await c.env.DB.prepare(`
         UPDATE orders 
-        SET subtotal = ?, tax_amount = ?, total = ?, updated_at = datetime('now')
+        SET subtotal = ?, tax = ?, total = ?, updated_at = datetime('now')
         WHERE id = ?
       `).bind(calculatedSubtotal, calculatedTax, calculatedTotal, order_id).run()
       
