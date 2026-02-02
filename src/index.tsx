@@ -54,6 +54,7 @@ import { AdminAnalytics } from './components/admin-analytics'
 import { AdminFAQ } from './components/admin-faq'
 import { AdminSidebarAdvanced } from './components/admin-sidebar-advanced'
 import { ShopHomepagePremium } from './components/shop-homepage-premium'
+import { HomepageModernEcommerce } from './components/homepage-modern-ecommerce'
 import { AdminLicenseAnalytics } from './components/admin-license-analytics'
 import { AdminAutomations } from './components/admin-automations'
 import { 
@@ -272,11 +273,11 @@ setupReviewRoutes(app)
 
 // Homepage - Premium Modern Design (NEW STUNNING UI)
 app.get('/', (c) => {
-  return c.html(ShopHomepagePremium())
+  return c.html(HomepageModernEcommerce())
 })
 
 app.get('/de', (c) => {
-  return c.html(ShopHomepagePremium())
+  return c.html(HomepageModernEcommerce())
 })
 
 // ============================================
