@@ -11222,6 +11222,7 @@ import { AdminTickets } from './components/admin-tickets'
 import { AdminAnalyticsTraffic } from './components/admin-analytics-traffic'
 import { AdminAnalyticsBehavior } from './components/admin-analytics-behavior'
 import { AdminAnalyticsDevices } from './components/admin-analytics-devices'
+import { AdminAnalyticsConversion } from './components/admin-analytics-conversion'
 import { AdminUsers } from './components/admin-users'
 import { AdminMarketing } from './components/admin-marketing'
 import { AdminEmailMarketing } from './components/admin-email-marketing'
@@ -11296,6 +11297,12 @@ app.get('/admin/analytics/behavior', async (c) => {
 // Admin Analytics - Devices
 app.get('/admin/analytics/devices', async (c) => {
   const html = AdminAnalyticsDevices()
+  return c.html(html)
+})
+
+// Admin Analytics Conversion
+app.get('/admin/analytics/conversion', (c) => {
+  const html = AdminAnalyticsConversion()
   return c.html(html)
 })
 
