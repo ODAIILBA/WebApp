@@ -11231,6 +11231,11 @@ import { AdminCategories } from './components/admin-categories'
 import { AdminBrands } from './components/admin-brands'
 import { AdminSupportStaff } from './components/admin-support-staff'
 import { AdminCustomerRoles } from './components/admin-customer-roles'
+import { AdminAuditLog } from './components/admin-audit-log'
+import { AdminBackup } from './components/admin-backup'
+import { AdminIntegrations } from './components/admin-integrations'
+import { AdminTaxSettings } from './components/admin-tax-settings'
+import { AdminShippingMethods } from './components/admin-shipping-methods'
 import { FrontendPlaceholder } from './components/frontend-placeholder'
 import { AdminProducts, AdminProductForm } from './components/admin-products'
 import { AdminProductImport } from './components/admin-product-import'
@@ -11339,6 +11344,36 @@ app.get('/admin/support-staff', async (c) => {
 // Admin Customer Roles Management
 app.get('/admin/customer-roles', async (c) => {
   const html = AdminCustomerRoles()
+  return c.html(html)
+})
+
+// Audit Log Management
+app.get('/admin/audit-log', (c) => {
+  const html = AdminAuditLog()
+  return c.html(html)
+})
+
+// Backup Management
+app.get('/admin/backup', (c) => {
+  const html = AdminBackup()
+  return c.html(html)
+})
+
+// Integrations Management
+app.get('/admin/integrations', (c) => {
+  const html = AdminIntegrations()
+  return c.html(html)
+})
+
+// Tax Settings Management
+app.get('/admin/tax-settings', (c) => {
+  const html = AdminTaxSettings()
+  return c.html(html)
+})
+
+// Shipping Methods Management
+app.get('/admin/shipping-methods', (c) => {
+  const html = AdminShippingMethods()
   return c.html(html)
 })
 
