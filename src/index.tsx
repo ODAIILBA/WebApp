@@ -3150,15 +3150,19 @@ app.post('/api/auth/change-password', requireAuth, async (c) => {
       WHERE id = ?
     `).bind(new_password, user.id).run()
 
-    // Log password change
-    await db.db.prepare(`
-      INSERT INTO audit_logs (user_id, user_email, action, resource, severity, ip_address)
-      VALUES (?, ?, 'UPDATE', 'password', 'warning', ?)
-    `).bind(
-      user.id,
-      user.email,
-      c.req.header('CF-Connecting-IP') || 'unknown'
-    ).run()
+    // Log password change (skip if table doesn't exist)
+    try {
+      await db.db.prepare(`
+        INSERT INTO audit_logs (user_id, user_email, action, resource, severity, ip_address)
+        VALUES (?, ?, 'UPDATE', 'password', 'warning', ?)
+      `).bind(
+        user.id,
+        user.email,
+        c.req.header('CF-Connecting-IP') || 'unknown'
+      ).run()
+    } catch (auditError) {
+      console.log('Audit log skipped (table not created yet)')
+    }
 
     return c.json({
       success: true,
@@ -11221,6 +11225,7 @@ import { AdminUsers } from './components/admin-users'
 import { AdminMarketing } from './components/admin-marketing'
 import { AdminCoupons } from './components/admin-coupons'
 import { AdminCategories } from './components/admin-categories'
+import { AdminBrands } from './components/admin-brands'
 import { AdminSupportStaff } from './components/admin-support-staff'
 import { AdminCustomerRoles } from './components/admin-customer-roles'
 import { FrontendPlaceholder } from './components/frontend-placeholder'
@@ -11792,10 +11797,9 @@ app.get('/admin/categories', async (c) => {
 });
 
 // 2. BRANDS
-app.get('/admin/brands', async (c) => {
-  const { env } = c;
-  const brands = await env.DB.prepare(`SELECT b.*, COUNT(DISTINCT p.id) as product_count FROM brands b LEFT JOIN products p ON p.brand_id = b.id GROUP BY b.id ORDER BY b.name ASC`).all();
-  return c.html(<html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Marken - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/></head><body class="bg-gray-50"><div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/brands')}} /><div style="margin-left: 280px; padding: 2rem;"><div class="mb-6 flex justify-between items-center"><div><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-trademark mr-3 text-purple-600"></i>Marken & Hersteller</h1><p class="text-gray-600">Produktmarken verwalten</p></div><button class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg"><i class="fas fa-plus mr-2"></i>Neue Marke</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Marken</p><p class="text-2xl font-bold">{brands.results?.length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Aktive Marken</p><p class="text-2xl font-bold text-green-600">{brands.results?.filter((b: any) => b.is_active === 1).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Produkte</p><p class="text-2xl font-bold text-blue-600">{brands.results?.reduce((sum: number, b: any) => sum + (b.product_count || 0), 0) || 0}</p></div></div><div class="bg-white rounded-lg shadow p-6"><h2 class="text-xl font-semibold mb-6">Alle Marken</h2>{brands.results && brands.results.length > 0 ? (<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{brands.results.map((brand: any) => (<div class="border rounded-lg p-6 hover:shadow-lg transition"><div class="flex items-start justify-between mb-4"><div class="flex items-center space-x-3"><div class="w-12 h-12 bg-purple-100 rounded flex items-center justify-center"><i class="fas fa-trademark text-purple-600 text-xl"></i></div><div><h3 class="font-semibold">{brand.name}</h3><p class="text-sm text-gray-500">{brand.product_count || 0} Produkte</p></div></div>{brand.is_active === 1 ? <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">Aktiv</span> : <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded">Inaktiv</span>}</div><div class="flex space-x-2"><button class="flex-1 px-4 py-2 bg-purple-600 text-white rounded"><i class="fas fa-edit mr-2"></i>Bearbeiten</button><button class="px-4 py-2 bg-gray-100 rounded"><i class="fas fa-trash"></i></button></div></div>))}</div>) : (<div class="text-center py-12"><i class="fas fa-trademark text-6xl mb-4 text-gray-300"></i><p class="text-lg text-gray-500 mb-4">Keine Marken gefunden</p><button class="bg-purple-600 text-white px-6 py-2 rounded-lg">Erste Marke erstellen</button></div>)}</div></div></body></html>);
+app.get('/admin/brands', (c) => {
+  const html = AdminBrands()
+  return c.html(html)
 });
 
 // 3. ATTRIBUTES
