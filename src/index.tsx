@@ -271,19 +271,23 @@ setupReviewRoutes(app)
 // HOMEPAGE ROUTE
 // ============================================
 
-// Homepage - Premium Modern Design (NEW STUNNING UI)
+// Homepage - Premium Modern Design (LIGHT THEME v3.0)
 app.get('/', (c) => {
-  // Force browser to reload by disabling cache
-  c.header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+  // AGGRESSIVE cache busting
+  c.header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0')
   c.header('Pragma', 'no-cache')
   c.header('Expires', '0')
+  c.header('X-Content-Type-Options', 'nosniff')
+  c.header('Vary', '*')
   return c.html(HomepageModernEcommerce())
 })
 
 app.get('/de', (c) => {
-  c.header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+  c.header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0, proxy-revalidate, s-maxage=0')
   c.header('Pragma', 'no-cache')
   c.header('Expires', '0')
+  c.header('X-Content-Type-Options', 'nosniff')
+  c.header('Vary', '*')
   return c.html(HomepageModernEcommerce())
 })
 
