@@ -119,6 +119,7 @@ export function HomepageModernEcommerce() {
           transition: all 0.3s ease;
           z-index: 100;
           margin-top: 10px;
+          padding: 20px;
         }
         
         .dropdown:hover .dropdown-menu {
@@ -133,11 +134,7 @@ export function HomepageModernEcommerce() {
           color: var(--text-primary);
           text-decoration: none;
           transition: all 0.2s;
-          border-bottom: 1px solid var(--border-light);
-        }
-        
-        .dropdown-menu a:last-child {
-          border-bottom: none;
+          border-radius: 6px;
         }
         
         .dropdown-menu a:hover {
@@ -146,14 +143,65 @@ export function HomepageModernEcommerce() {
           padding-left: 25px;
         }
         
+        /* MEGA MENU - Wide dropdown with columns */
         .mega-dropdown {
-          width: 800px;
+          width: 900px;
           left: 50%;
           transform: translateX(-50%) translateY(-10px);
+          padding: 30px;
         }
         
         .dropdown:hover .mega-dropdown {
           transform: translateX(-50%) translateY(0);
+        }
+        
+        .mega-menu-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 30px;
+        }
+        
+        .mega-menu-column h4 {
+          color: var(--brand-navy);
+          font-size: 14px;
+          font-weight: 700;
+          text-transform: uppercase;
+          margin-bottom: 15px;
+          padding-bottom: 10px;
+          border-bottom: 2px solid var(--brand-gold);
+        }
+        
+        .mega-menu-column a {
+          padding: 8px 12px;
+          font-size: 14px;
+        }
+        
+        .mega-menu-column a:hover {
+          padding-left: 16px;
+        }
+        
+        .mega-menu-featured {
+          background: linear-gradient(135deg, #F3F4F6 0%, #E5E7EB 100%);
+          padding: 20px;
+          border-radius: 8px;
+          text-align: center;
+        }
+        
+        .mega-menu-featured i {
+          font-size: 48px;
+          color: var(--brand-gold);
+          margin-bottom: 10px;
+        }
+        
+        .mega-menu-featured h5 {
+          color: var(--brand-navy);
+          font-weight: 700;
+          margin-bottom: 8px;
+        }
+        
+        .mega-menu-featured p {
+          font-size: 13px;
+          color: var(--text-secondary);
         }
 
         /* Button animations */
@@ -374,32 +422,104 @@ export function HomepageModernEcommerce() {
                 </a>
               </li>
               
-              <!-- Office Dropdown -->
+              <!-- Office Dropdown - MEGA MENU -->
               <li class="dropdown">
                 <a href="/products?category=office" class="block px-5 py-4 hover:bg-brand-navy-light transition font-medium cursor-pointer">
                   <i class="fas fa-file-word mr-2"></i>Office <i class="fas fa-chevron-down ml-1 text-xs"></i>
                 </a>
-                <div class="dropdown-menu">
-                  <a href="/products?category=office&product=office-2024">Microsoft Office 2024</a>
-                  <a href="/products?category=office&product=office-2021">Microsoft Office 2021</a>
-                  <a href="/products?category=office&product=office-2019">Microsoft Office 2019</a>
-                  <a href="/products?category=office&product=office-365">Microsoft 365</a>
-                  <a href="/products?category=office&product=office-mac">Office für Mac</a>
+                <div class="dropdown-menu mega-dropdown">
+                  <div class="mega-menu-grid">
+                    
+                    <!-- Column 1: Office Suites -->
+                    <div class="mega-menu-column">
+                      <h4><i class="fas fa-box-open mr-2"></i>Office Suites</h4>
+                      <a href="/products?product=office-2024-professional">Office 2024 Professional Plus</a>
+                      <a href="/products?product=office-2024-home">Office 2024 Home & Business</a>
+                      <a href="/products?product=office-2021-professional">Office 2021 Professional Plus</a>
+                      <a href="/products?product=office-2021-home">Office 2021 Home & Business</a>
+                      <a href="/products?product=office-2019-professional">Office 2019 Professional Plus</a>
+                      <a href="/products?product=office-2019-home">Office 2019 Home & Business</a>
+                    </div>
+                    
+                    <!-- Column 2: Microsoft 365 & Apps -->
+                    <div class="mega-menu-column">
+                      <h4><i class="fas fa-cloud mr-2"></i>Microsoft 365</h4>
+                      <a href="/products?product=microsoft-365-business">Microsoft 365 Business</a>
+                      <a href="/products?product=microsoft-365-family">Microsoft 365 Family</a>
+                      <a href="/products?product=microsoft-365-personal">Microsoft 365 Personal</a>
+                      <h4 class="mt-6"><i class="fas fa-apple mr-2"></i>Office für Mac</h4>
+                      <a href="/products?product=office-mac-2024">Office 2024 für Mac</a>
+                      <a href="/products?product=office-mac-2021">Office 2021 für Mac</a>
+                      <a href="/products?product=office-mac-2019">Office 2019 für Mac</a>
+                    </div>
+                    
+                    <!-- Column 3: Featured Product -->
+                    <div class="mega-menu-column">
+                      <div class="mega-menu-featured">
+                        <i class="fas fa-star"></i>
+                        <h5>Office 2024</h5>
+                        <p class="mb-3">Neueste Version mit KI-Features</p>
+                        <span class="inline-block bg-brand-gold text-white px-4 py-2 rounded-full text-sm font-semibold">Ab €29,99</span>
+                      </div>
+                      <a href="/products?category=office" class="block mt-4 text-center bg-gray-100 py-3 rounded-lg font-semibold text-brand-navy hover:bg-brand-navy hover:text-white transition">
+                        <i class="fas fa-th mr-2"></i>Alle Office Produkte
+                      </a>
+                    </div>
+                    
+                  </div>
                 </div>
               </li>
               
-              <!-- Antivirus Dropdown -->
+              <!-- Antivirus Dropdown - MEGA MENU -->
               <li class="dropdown">
                 <a href="/products?category=antivirus" class="block px-5 py-4 hover:bg-brand-navy-light transition font-medium cursor-pointer">
                   <i class="fas fa-shield-virus mr-2"></i>Antivirus <i class="fas fa-chevron-down ml-1 text-xs"></i>
                 </a>
-                <div class="dropdown-menu">
-                  <a href="/products?brand=kaspersky">Kaspersky</a>
-                  <a href="/products?brand=norton">Norton</a>
-                  <a href="/products?brand=eset">ESET</a>
-                  <a href="/products?brand=bitdefender">Bitdefender</a>
-                  <a href="/products?brand=mcafee">McAfee</a>
-                  <a href="/products?brand=avast">Avast</a>
+                <div class="dropdown-menu mega-dropdown">
+                  <div class="mega-menu-grid">
+                    
+                    <!-- Column 1: Premium Brands -->
+                    <div class="mega-menu-column">
+                      <h4><i class="fas fa-shield-alt mr-2"></i>Premium Schutz</h4>
+                      <a href="/products?brand=kaspersky">
+                        <i class="fas fa-circle text-brand-gold text-xs mr-2"></i>Kaspersky Total Security
+                      </a>
+                      <a href="/products?brand=norton">
+                        <i class="fas fa-circle text-brand-gold text-xs mr-2"></i>Norton 360 Deluxe
+                      </a>
+                      <a href="/products?brand=bitdefender">
+                        <i class="fas fa-circle text-brand-gold text-xs mr-2"></i>Bitdefender Total Security
+                      </a>
+                      <a href="/products?brand=eset">
+                        <i class="fas fa-circle text-brand-gold text-xs mr-2"></i>ESET Internet Security
+                      </a>
+                    </div>
+                    
+                    <!-- Column 2: Business & More -->
+                    <div class="mega-menu-column">
+                      <h4><i class="fas fa-building mr-2"></i>Business Lösungen</h4>
+                      <a href="/products?brand=kaspersky&type=business">Kaspersky Endpoint Security</a>
+                      <a href="/products?brand=eset&type=business">ESET Endpoint Protection</a>
+                      <a href="/products?brand=mcafee&type=business">McAfee Total Protection</a>
+                      <h4 class="mt-6"><i class="fas fa-laptop mr-2"></i>Weitere Optionen</h4>
+                      <a href="/products?brand=avast">Avast Premium Security</a>
+                      <a href="/products?brand=avg">AVG Internet Security</a>
+                    </div>
+                    
+                    <!-- Column 3: Featured -->
+                    <div class="mega-menu-column">
+                      <div class="mega-menu-featured">
+                        <i class="fas fa-trophy"></i>
+                        <h5>Bestseller 2024</h5>
+                        <p class="mb-3">Top-bewerteter Virenschutz</p>
+                        <span class="inline-block bg-brand-gold text-white px-4 py-2 rounded-full text-sm font-semibold">Ab €19,99</span>
+                      </div>
+                      <a href="/products?category=antivirus" class="block mt-4 text-center bg-gray-100 py-3 rounded-lg font-semibold text-brand-navy hover:bg-brand-navy hover:text-white transition">
+                        <i class="fas fa-th mr-2"></i>Alle Antivirus Produkte
+                      </a>
+                    </div>
+                    
+                  </div>
                 </div>
               </li>
               
@@ -435,15 +555,49 @@ export function HomepageModernEcommerce() {
                 </div>
               </li>
               
-              <!-- PC & Windows Dropdown -->
+              <!-- PC & Windows Dropdown - MEGA MENU -->
               <li class="dropdown">
                 <a href="/products?category=windows" class="block px-5 py-4 hover:bg-brand-navy-light transition font-medium cursor-pointer">
                   <i class="fas fa-windows mr-2"></i>PC & Windows <i class="fas fa-chevron-down ml-1 text-xs"></i>
                 </a>
-                <div class="dropdown-menu">
-                  <a href="/products?category=windows&product=windows-11">Windows 11</a>
-                  <a href="/products?category=windows&product=windows-10">Windows 10</a>
-                  <a href="/products?category=windows&product=windows-7">Windows 7</a>
+                <div class="dropdown-menu mega-dropdown">
+                  <div class="mega-menu-grid">
+                    
+                    <!-- Column 1: Windows Client -->
+                    <div class="mega-menu-column">
+                      <h4><i class="fas fa-desktop mr-2"></i>Windows Client</h4>
+                      <a href="/products?product=windows-11-pro">Windows 11 Professional</a>
+                      <a href="/products?product=windows-11-home">Windows 11 Home</a>
+                      <a href="/products?product=windows-10-pro">Windows 10 Professional</a>
+                      <a href="/products?product=windows-10-home">Windows 10 Home</a>
+                      <a href="/products?product=windows-7-professional">Windows 7 Professional</a>
+                    </div>
+                    
+                    <!-- Column 2: Upgrades & Volume -->
+                    <div class="mega-menu-column">
+                      <h4><i class="fas fa-arrow-circle-up mr-2"></i>Upgrades</h4>
+                      <a href="/products?product=windows-11-upgrade">Windows 11 Upgrade</a>
+                      <a href="/products?product=windows-10-upgrade">Windows 10 Upgrade</a>
+                      <h4 class="mt-6"><i class="fas fa-users mr-2"></i>Volume Lizenzen</h4>
+                      <a href="/products?type=volume">Windows 10/11 Volume (5+)</a>
+                      <a href="/products?type=volume">Windows 10/11 Volume (10+)</a>
+                      <a href="/contact">Individuelle Angebote</a>
+                    </div>
+                    
+                    <!-- Column 3: Featured -->
+                    <div class="mega-menu-column">
+                      <div class="mega-menu-featured">
+                        <i class="fas fa-rocket"></i>
+                        <h5>Windows 11 Pro</h5>
+                        <p class="mb-3">Neueste Version für Business</p>
+                        <span class="inline-block bg-brand-gold text-white px-4 py-2 rounded-full text-sm font-semibold">Ab €39,99</span>
+                      </div>
+                      <a href="/products?category=windows" class="block mt-4 text-center bg-gray-100 py-3 rounded-lg font-semibold text-brand-navy hover:bg-brand-navy hover:text-white transition">
+                        <i class="fas fa-th mr-2"></i>Alle Windows Produkte
+                      </a>
+                    </div>
+                    
+                  </div>
                 </div>
               </li>
               
