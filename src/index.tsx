@@ -6800,6 +6800,32 @@ app.get('/api/admin/users', async (c) => {
 // ============================================
 
 // ============================================
+// NEWSLETTER API
+// ============================================
+
+// Get newsletter subscriber count
+app.get('/api/newsletter/count', async (c) => {
+  try {
+    const { env } = c;
+    
+    const result = await env.DB.prepare(`
+      SELECT COUNT(*) as count
+      FROM newsletter_subscribers
+      WHERE is_active = 1
+    `).first();
+
+    return c.json({ success: true, count: result?.count || 0 });
+  } catch (error: any) {
+    console.error('Error fetching newsletter count:', error);
+    return c.json({ success: true, count: 0 }); // Return 0 instead of error
+  }
+});
+
+// ============================================
+// END NEWSLETTER API
+// ============================================
+
+// ============================================
 // LICENSES CRUD API ENDPOINTS
 // ============================================
 
@@ -11159,6 +11185,7 @@ import { AdminAnalyticsTraffic } from './components/admin-analytics-traffic'
 import { AdminAnalyticsBehavior } from './components/admin-analytics-behavior'
 import { AdminAnalyticsDevices } from './components/admin-analytics-devices'
 import { AdminUsers } from './components/admin-users'
+import { AdminMarketing } from './components/admin-marketing'
 import { FrontendPlaceholder } from './components/frontend-placeholder'
 import { AdminProducts, AdminProductForm } from './components/admin-products'
 import { AdminProductImport } from './components/admin-product-import'
@@ -11231,6 +11258,12 @@ app.get('/admin/analytics/devices', async (c) => {
 // Admin User Management
 app.get('/admin/admins', async (c) => {
   const html = AdminUsers()
+  return c.html(html)
+})
+
+// Admin Marketing Overview
+app.get('/admin/marketing', async (c) => {
+  const html = AdminMarketing()
   return c.html(html)
 })
 
