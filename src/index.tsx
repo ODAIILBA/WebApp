@@ -4262,6 +4262,85 @@ app.get('/api/admin/page-templates/:id/history', async (c) => {
   }
 })
 
+// ===== LANGUAGE MANAGEMENT APIs - Frontend =====
+
+// Get active languages for frontend
+app.get('/api/languages', async (c) => {
+  try {
+    const { env } = c;
+    let languages: any = { results: [] };
+    
+    try {
+      if (env.DB) {
+        languages = await env.DB.prepare(`
+          SELECT * FROM languages 
+          WHERE is_active = 1 
+          ORDER BY sort_order ASC
+        `).all()
+      }
+    } catch (dbError) {
+      // Return sample data if table doesn't exist
+      languages.results = [
+        { id: 1, code: 'de', name: 'German', native_name: 'Deutsch', flag_emoji: '🇩🇪', is_active: 1, is_default: 1 },
+        { id: 2, code: 'en', name: 'English', native_name: 'English', flag_emoji: '🇬🇧', is_active: 1, is_default: 0 },
+        { id: 3, code: 'fr', name: 'French', native_name: 'Français', flag_emoji: '🇫🇷', is_active: 1, is_default: 0 }
+      ];
+    }
+    
+    return c.json({ success: true, languages: languages.results })
+  } catch (error) {
+    console.error('Error fetching languages:', error)
+    return c.json({ success: false, error: 'Failed to fetch languages' }, 500)
+  }
+})
+
+// Get translations for a language
+app.get('/api/translations/:languageCode', async (c) => {
+  try {
+    const { env } = c;
+    const languageCode = c.req.param('languageCode')
+    let translations: any = { results: [] };
+    
+    try {
+      if (env.DB) {
+        translations = await env.DB.prepare(`
+          SELECT * FROM translations 
+          WHERE language_code = ?
+          ORDER BY translation_key ASC
+        `).bind(languageCode).all()
+      }
+    } catch (dbError) {
+      // Return sample translations
+      const sampleTranslations = {
+        'de': [
+          { translation_key: 'nav.home', translated_text: 'Startseite' },
+          { translation_key: 'nav.products', translated_text: 'Produkte' },
+          { translation_key: 'nav.cart', translated_text: 'Warenkorb' },
+          { translation_key: 'nav.account', translated_text: 'Mein Konto' }
+        ],
+        'en': [
+          { translation_key: 'nav.home', translated_text: 'Home' },
+          { translation_key: 'nav.products', translated_text: 'Products' },
+          { translation_key: 'nav.cart', translated_text: 'Cart' },
+          { translation_key: 'nav.account', translated_text: 'My Account' }
+        ],
+        'fr': [
+          { translation_key: 'nav.home', translated_text: 'Accueil' },
+          { translation_key: 'nav.products', translated_text: 'Produits' },
+          { translation_key: 'nav.cart', translated_text: 'Panier' },
+          { translation_key: 'nav.account', translated_text: 'Mon Compte' }
+        ]
+      };
+      translations.results = sampleTranslations[languageCode as keyof typeof sampleTranslations] || [];
+    }
+    
+    return c.json({ success: true, translations: translations.results })
+  } catch (error) {
+    console.error('Error fetching translations:', error)
+    return c.json({ success: false, error: 'Failed to fetch translations' }, 500)
+  }
+})
+
 // ===== CMS PAGES API (Real page management) =====
 
 // Get all CMS pages
