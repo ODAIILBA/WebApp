@@ -36,6 +36,7 @@ import { AdminPagesManagement } from './components/admin-pages-management'
 import { AdminDashboardAdvanced } from './components/admin-dashboard-advanced'
 import { AdminLicensesAdvanced } from './components/admin-licenses-advanced'
 import { AdminProductsAdvanced } from './components/admin-products-advanced'
+import { AdminProductsFunctional } from './components/admin-products-functional'
 import { AdminOrdersAdvanced } from './components/admin-orders-advanced'
 import { AdminOrdersFunctional } from './components/admin-orders-functional'
 import { AdminCustomersAdvanced } from './components/admin-customers-advanced'
@@ -9503,7 +9504,7 @@ app.get('/admin/v2', (c) => {
 
 // Products Management
 app.get('/admin/products', (c) => {
-  const html = AdminProductsAdvanced()
+  const html = AdminProductsFunctional()
   return c.html(html)
 })
 
