@@ -20718,6 +20718,129 @@ app.get('/admin/orders/processing', async (c) => {
 // ============================================
 
 // Page configurations for all admin pages
+
+// Dynamic page handler
+app.get('/admin/*', async (c) => {
+  const path = c.req.path;
+  const config = adminPageConfigs[path];
+  
+  if (!config) {
+    // No specific config, use placeholder
+    const pathParts = path.split('/').filter(Boolean).slice(1);
+    const pageTitle = pathParts
+      .map(part => part.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '))
+      .join(' - ') || 'Admin Panel';
+    return c.html(AdminPlaceholder(path, pageTitle));
+  }
+
+  try {
+    const { env } = c;
+    let data: any[] = [];
+
+    // Fetch data based on query type
+    if (config.queryType) {
+      switch (config.queryType) {
+        case 'orders':
+          const ordersResult = await env.DB.prepare(`
+            SELECT o.*, 
+                   u.email as customer_email,
+                   u.first_name || ' ' || u.last_name as customer_name
+            FROM orders o
+            LEFT JOIN users u ON o.user_id = u.id
+            WHERE o.order_status = ?
+            ORDER BY o.updated_at DESC
+            LIMIT 100
+          `).bind(config.status).all();
+          data = ordersResult.results || [];
+          break;
+
+        case 'shipments':
+          const shipmentsResult = await env.DB.prepare(`
+            SELECT o.id, o.order_number, o.order_status as order_status,
+                   o.created_at, o.updated_at,
+                   u.email as customer_email,
+                   u.first_name || ' ' || u.last_name as customer_name,
+                   COUNT(l.id) as license_count
+            FROM orders o
+            LEFT JOIN users u ON o.user_id = u.id
+            LEFT JOIN license_keys l ON l.assigned_to_order_id = o.id
+            WHERE o.order_status IN ('completed', 'processing')
+            GROUP BY o.id
+            ORDER BY o.updated_at DESC
+            LIMIT 50
+          `).all();
+          data = shipmentsResult.results || [];
+          break;
+
+        case 'license_assignments':
+          const assignmentsResult = await env.DB.prepare(`
+            SELECT l.id, l.license_key, l.status,
+                   l.created_at as assigned_at,
+                   u.email as assigned_to,
+                   p.name as product_name
+            FROM license_keys l
+            LEFT JOIN orders o ON l.assigned_to_order_id = o.id
+            LEFT JOIN users u ON o.user_id = u.id
+            LEFT JOIN products p ON l.product_id = p.id
+            ORDER BY l.created_at DESC
+            LIMIT 50
+          `).all();
+          data = assignmentsResult.results || [];
+          break;
+
+        case 'customers':
+          const customersResult = await env.DB.prepare(`
+            SELECT u.id, u.email, u.first_name, u.last_name, 
+                   u.created_at, u.is_active,
+                   COUNT(DISTINCT o.id) as order_count
+            FROM users u
+            LEFT JOIN orders o ON o.user_id = u.id
+            WHERE u.role != 'admin'
+            GROUP BY u.id
+            ORDER BY u.created_at DESC
+            LIMIT 100
+          `).all();
+          data = customersResult.results || [];
+          break;
+      }
+    }
+
+    // Use specialized component if specified
+    if (config.useComponent) {
+      switch (config.useComponent) {
+        case 'OrdersCompleted':
+          return c.html(OrdersCompletedPage(data));
+        case 'OrdersCancelled':
+          return c.html(OrdersCancelledPage(data));
+        case 'ShippingStatus':
+          return c.html(ShippingStatusPage(data));
+        case 'LicenseAssignments':
+          return c.html(LicenseAssignmentsPage(data));
+        case 'Customers':
+          return c.html(CustomersPage(data));
+      }
+    }
+
+    // Generate page dynamically
+    const pageHtml = generateAdminPage({
+      path: path,
+      title: config.title,
+      icon: config.icon,
+      description: config.description,
+      statsCards: config.statsCards || [],
+      tableColumns: config.tableColumns || [],
+      actions: config.actions || []
+    }, data);
+
+    return c.html(pageHtml);
+
+  } catch (error: any) {
+    console.error('Error generating admin page:', error);
+    return c.html(`<h1>Fehler</h1><pre>${error.message}</pre>`, 500);
+  }
+});
+*/
+
 const adminPageConfigs: Record<string, any> = {
   '/admin/orders/completed': {
     title: 'Abgeschlossene Bestellungen',
@@ -21021,128 +21144,6 @@ const adminPageConfigs: Record<string, any> = {
     actions: [{label: 'API-Key erstellen', icon: 'plus', color: 'blue', action: 'addNew()'}]
   }
 };
-
-// Dynamic page handler
-app.get('/admin/*', async (c) => {
-  const path = c.req.path;
-  const config = adminPageConfigs[path];
-  
-  if (!config) {
-    // No specific config, use placeholder
-    const pathParts = path.split('/').filter(Boolean).slice(1);
-    const pageTitle = pathParts
-      .map(part => part.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '))
-      .join(' - ') || 'Admin Panel';
-    return c.html(AdminPlaceholder(path, pageTitle));
-  }
-
-  try {
-    const { env } = c;
-    let data: any[] = [];
-
-    // Fetch data based on query type
-    if (config.queryType) {
-      switch (config.queryType) {
-        case 'orders':
-          const ordersResult = await env.DB.prepare(`
-            SELECT o.*, 
-                   u.email as customer_email,
-                   u.first_name || ' ' || u.last_name as customer_name
-            FROM orders o
-            LEFT JOIN users u ON o.user_id = u.id
-            WHERE o.order_status = ?
-            ORDER BY o.updated_at DESC
-            LIMIT 100
-          `).bind(config.status).all();
-          data = ordersResult.results || [];
-          break;
-
-        case 'shipments':
-          const shipmentsResult = await env.DB.prepare(`
-            SELECT o.id, o.order_number, o.order_status as order_status,
-                   o.created_at, o.updated_at,
-                   u.email as customer_email,
-                   u.first_name || ' ' || u.last_name as customer_name,
-                   COUNT(l.id) as license_count
-            FROM orders o
-            LEFT JOIN users u ON o.user_id = u.id
-            LEFT JOIN license_keys l ON l.assigned_to_order_id = o.id
-            WHERE o.order_status IN ('completed', 'processing')
-            GROUP BY o.id
-            ORDER BY o.updated_at DESC
-            LIMIT 50
-          `).all();
-          data = shipmentsResult.results || [];
-          break;
-
-        case 'license_assignments':
-          const assignmentsResult = await env.DB.prepare(`
-            SELECT l.id, l.license_key, l.status,
-                   l.created_at as assigned_at,
-                   u.email as assigned_to,
-                   p.name as product_name
-            FROM license_keys l
-            LEFT JOIN orders o ON l.assigned_to_order_id = o.id
-            LEFT JOIN users u ON o.user_id = u.id
-            LEFT JOIN products p ON l.product_id = p.id
-            ORDER BY l.created_at DESC
-            LIMIT 50
-          `).all();
-          data = assignmentsResult.results || [];
-          break;
-
-        case 'customers':
-          const customersResult = await env.DB.prepare(`
-            SELECT u.id, u.email, u.first_name, u.last_name, 
-                   u.created_at, u.is_active,
-                   COUNT(DISTINCT o.id) as order_count
-            FROM users u
-            LEFT JOIN orders o ON o.user_id = u.id
-            WHERE u.role != 'admin'
-            GROUP BY u.id
-            ORDER BY u.created_at DESC
-            LIMIT 100
-          `).all();
-          data = customersResult.results || [];
-          break;
-      }
-    }
-
-    // Use specialized component if specified
-    if (config.useComponent) {
-      switch (config.useComponent) {
-        case 'OrdersCompleted':
-          return c.html(OrdersCompletedPage(data));
-        case 'OrdersCancelled':
-          return c.html(OrdersCancelledPage(data));
-        case 'ShippingStatus':
-          return c.html(ShippingStatusPage(data));
-        case 'LicenseAssignments':
-          return c.html(LicenseAssignmentsPage(data));
-        case 'Customers':
-          return c.html(CustomersPage(data));
-      }
-    }
-
-    // Generate page dynamically
-    const pageHtml = generateAdminPage({
-      path: path,
-      title: config.title,
-      icon: config.icon,
-      description: config.description,
-      statsCards: config.statsCards || [],
-      tableColumns: config.tableColumns || [],
-      actions: config.actions || []
-    }, data);
-
-    return c.html(pageHtml);
-
-  } catch (error: any) {
-    console.error('Error generating admin page:', error);
-    return c.html(`<h1>Fehler</h1><pre>${error.message}</pre>`, 500);
-  }
-});
-*/
 
 // ============================================
 // SMART DYNAMIC ROUTE HANDLER FOR ALL 44 ADMIN PAGES
