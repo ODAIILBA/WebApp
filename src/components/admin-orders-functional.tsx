@@ -582,17 +582,18 @@ export function AdminOrdersFunctional() {
             const orders = allOrders.map(order => ({
                 'Bestellnummer': order.order_number,
                 'Datum': AdminUtils.formatDate(order.created_at),
-                'Kunde': \`\${order.first_name} \${order.last_name}\`,
+                'Kunde': order.first_name + ' ' + order.last_name,
                 'E-Mail': order.email,
                 'Betrag': order.total,
                 'Status': order.order_status,
                 'Zahlung': order.payment_status
             }));
             
-            AdminUtils.exportToCSV(orders, \`orders_\${new Date().toISOString().split('T')[0]}.csv\`);
+            const today = new Date().toISOString().split('T')[0];
+            AdminUtils.exportToCSV(orders, 'orders_' + today + '.csv');
             AdminNotify.success('Bestellungen erfolgreich exportiert');
         }
     </script>
 </body>
-</html>\`;
+</html>`;
 }

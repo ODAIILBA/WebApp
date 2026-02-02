@@ -6677,6 +6677,129 @@ app.get('/api/admin/dashboard/revenue-chart', async (c) => {
 // ============================================
 
 // ============================================
+// ADMIN TICKETS API
+// ============================================
+
+// Get all support tickets
+app.get('/api/admin/tickets', async (c) => {
+  try {
+    const { env } = c;
+    
+    const result = await env.DB.prepare(`
+      SELECT 
+        st.id,
+        st.ticket_number,
+        st.subject,
+        st.category,
+        st.priority,
+        st.status,
+        st.message,
+        st.order_id,
+        st.created_at,
+        st.updated_at,
+        cm.email as customer_email,
+        cm.name as customer_name
+      FROM support_tickets st
+      LEFT JOIN contact_messages cm ON cm.subject LIKE st.ticket_number || '%'
+      ORDER BY st.created_at DESC
+    `).all();
+
+    return c.json({ success: true, tickets: result.results || [] });
+  } catch (error: any) {
+    console.error('Error fetching tickets:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get single ticket details
+app.get('/api/admin/tickets/:id', async (c) => {
+  try {
+    const { env } = c;
+    const ticketId = c.req.param('id');
+    
+    const ticket = await env.DB.prepare(`
+      SELECT 
+        st.*,
+        cm.email as customer_email,
+        cm.name as customer_name
+      FROM support_tickets st
+      LEFT JOIN contact_messages cm ON cm.subject LIKE st.ticket_number || '%'
+      WHERE st.id = ?
+    `).bind(ticketId).first();
+
+    if (!ticket) {
+      return c.json({ success: false, error: 'Ticket not found' }, 404);
+    }
+
+    return c.json({ success: true, ticket });
+  } catch (error: any) {
+    console.error('Error fetching ticket:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Update ticket status
+app.put('/api/admin/tickets/:id', async (c) => {
+  try {
+    const { env } = c;
+    const ticketId = c.req.param('id');
+    const body = await c.req.json();
+
+    await env.DB.prepare(`
+      UPDATE support_tickets 
+      SET status = ?, 
+          priority = ?,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(body.status || 'open', body.priority || 'normal', ticketId).run();
+
+    return c.json({ success: true, message: 'Ticket updated successfully' });
+  } catch (error: any) {
+    console.error('Error updating ticket:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// ============================================
+// END ADMIN TICKETS API
+// ============================================
+
+// ============================================
+// ADMIN USERS API
+// ============================================
+
+// Get all admin users
+app.get('/api/admin/users', async (c) => {
+  try {
+    const { env } = c;
+    
+    const result = await env.DB.prepare(`
+      SELECT 
+        au.id,
+        au.username,
+        au.email,
+        au.first_name,
+        au.last_name,
+        au.role,
+        au.is_active,
+        au.last_login,
+        au.created_at
+      FROM admin_users au
+      ORDER BY au.created_at DESC
+    `).all();
+
+    return c.json({ success: true, admins: result.results || [] });
+  } catch (error: any) {
+    console.error('Error fetching admin users:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// ============================================
+// END ADMIN USERS API
+// ============================================
+
+// ============================================
 // LICENSES CRUD API ENDPOINTS
 // ============================================
 
@@ -11031,6 +11154,11 @@ app.post('/api/admin/certificates/bulk-generate', async (c) => {
 import { AdminLayout, AdminDashboard } from './components/admin'
 import { AdminSidebarAdvanced } from './components/admin-sidebar-advanced'
 import { AdminPlaceholder } from './components/admin-placeholder'
+import { AdminTickets } from './components/admin-tickets'
+import { AdminAnalyticsTraffic } from './components/admin-analytics-traffic'
+import { AdminAnalyticsBehavior } from './components/admin-analytics-behavior'
+import { AdminAnalyticsDevices } from './components/admin-analytics-devices'
+import { AdminUsers } from './components/admin-users'
 import { FrontendPlaceholder } from './components/frontend-placeholder'
 import { AdminProducts, AdminProductForm } from './components/admin-products'
 import { AdminProductImport } from './components/admin-product-import'
@@ -11061,6 +11189,48 @@ import { OrdersCompletedPage, OrdersCancelledPage, ShippingStatusPage, LicenseAs
 // Admin Dashboard
 app.get('/admin', (c) => {
   const html = AdminDashboardAdvanced()
+  return c.html(html)
+})
+
+// Admin Dashboard (explicit /admin/dashboard route)
+app.get('/admin/dashboard', (c) => {
+  const html = AdminDashboardAdvanced()
+  return c.html(html)
+})
+
+// Admin Orders Management
+app.get('/admin/orders', async (c) => {
+  const html = AdminOrdersFunctional()
+  return c.html(html)
+})
+
+// Admin Support Tickets
+app.get('/admin/tickets', async (c) => {
+  const html = AdminTickets()
+  return c.html(html)
+})
+
+// Admin Analytics - Traffic
+app.get('/admin/analytics/traffic', async (c) => {
+  const html = AdminAnalyticsTraffic()
+  return c.html(html)
+})
+
+// Admin Analytics - Behavior
+app.get('/admin/analytics/behavior', async (c) => {
+  const html = AdminAnalyticsBehavior()
+  return c.html(html)
+})
+
+// Admin Analytics - Devices
+app.get('/admin/analytics/devices', async (c) => {
+  const html = AdminAnalyticsDevices()
+  return c.html(html)
+})
+
+// Admin User Management
+app.get('/admin/admins', async (c) => {
+  const html = AdminUsers()
   return c.html(html)
 })
 
