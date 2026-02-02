@@ -804,6 +804,18 @@ app.get('/account', (c) => {
       <title>Mein Konto - SoftwareKing24</title>
       <script src="https://cdn.tailwindcss.com"></script>
       <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+      <script>
+        tailwind.config = {
+          theme: {
+            extend: {
+              colors: {
+                'brand-navy': '#132C46',
+                'brand-gold': '#D9A50B',
+              }
+            }
+          }
+        }
+      </script>
     </head>
     <body class="bg-gray-50">
       <div class="min-h-screen">
@@ -811,9 +823,9 @@ app.get('/account', (c) => {
           <div class="container mx-auto px-4 py-4">
             <div class="flex items-center justify-between">
               <a href="/" class="flex items-center">
-                <img src="/static/logo.png" alt="SoftwareKing24" class="h-10">
+                <span class="text-2xl font-bold text-brand-navy">SoftwareKing24</span>
               </a>
-              <a href="/" class="text-gray-600 hover:text-blue-600">
+              <a href="/" class="text-gray-600 hover:text-brand-navy">
                 <i class="fas fa-arrow-left mr-2"></i>Zurück zum Shop
               </a>
             </div>
@@ -821,50 +833,183 @@ app.get('/account', (c) => {
         </header>
 
         <div class="container mx-auto px-4 py-12">
-          <div class="max-w-4xl mx-auto">
-            <h1 class="text-4xl font-bold text-gray-900 mb-8">
-              <i class="fas fa-user text-blue-600 mr-3"></i>Mein Konto
+          <div class="max-w-6xl mx-auto">
+            <h1 class="text-4xl font-bold text-gray-900 mb-12">
+              <i class="fas fa-user text-brand-navy mr-3"></i>Mein Konto
             </h1>
 
-            <div class="grid md:grid-cols-2 gap-6">
-              <div class="bg-white rounded-lg shadow-md p-6">
-                <h3 class="text-xl font-semibold mb-4"><i class="fas fa-sign-in-alt mr-2 text-blue-600"></i>Anmelden</h3>
-                <form class="space-y-4">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">E-Mail</label>
-                    <input type="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" placeholder="ihre@email.de">
+            <!-- Login/Register Forms -->
+            <div id="authForms" class="grid md:grid-cols-2 gap-8">
+              <!-- Login Form -->
+              <div class="bg-white rounded-xl shadow-lg p-8">
+                <div class="flex items-center mb-6">
+                  <div class="w-12 h-12 bg-brand-navy/10 rounded-lg flex items-center justify-center mr-4">
+                    <i class="fas fa-sign-in-alt text-brand-navy text-xl"></i>
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Passwort</label>
-                    <input type="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" placeholder="••••••••">
+                    <h3 class="text-2xl font-bold">Anmelden</h3>
+                    <p class="text-sm text-gray-500">Bereits Kunde? Jetzt einloggen</p>
                   </div>
-                  <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition">Anmelden</button>
-                  <a href="#" class="block text-center text-sm text-blue-600 hover:underline">Passwort vergessen?</a>
+                </div>
+                <form id="loginForm" class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">E-Mail *</label>
+                    <input type="email" id="loginEmail" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-brand-navy transition">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Passwort *</label>
+                    <input type="password" id="loginPassword" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-brand-navy transition">
+                  </div>
+                  <div class="flex items-center justify-between text-sm">
+                    <label class="flex items-center">
+                      <input type="checkbox" class="mr-2">
+                      <span class="text-gray-600">Angemeldet bleiben</span>
+                    </label>
+                    <a href="#" class="text-brand-navy hover:underline">Passwort vergessen?</a>
+                  </div>
+                  <button type="submit" class="w-full bg-brand-navy text-white py-3 rounded-lg hover:bg-brand-navy/90 transition font-semibold">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Jetzt anmelden
+                  </button>
+                  <div id="loginStatus" class="hidden mt-4 p-4 rounded-lg"></div>
                 </form>
               </div>
 
-              <div class="bg-white rounded-lg shadow-md p-6">
-                <h3 class="text-xl font-semibold mb-4"><i class="fas fa-user-plus mr-2 text-green-600"></i>Registrieren</h3>
-                <form class="space-y-4">
-                  <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Name</label>
-                    <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" placeholder="Ihr Name">
+              <!-- Register Form -->
+              <div class="bg-white rounded-xl shadow-lg p-8">
+                <div class="flex items-center mb-6">
+                  <div class="w-12 h-12 bg-brand-gold/10 rounded-lg flex items-center justify-center mr-4">
+                    <i class="fas fa-user-plus text-brand-gold text-xl"></i>
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">E-Mail</label>
-                    <input type="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" placeholder="ihre@email.de">
+                    <h3 class="text-2xl font-bold">Registrieren</h3>
+                    <p class="text-sm text-gray-500">Neu hier? Konto erstellen</p>
+                  </div>
+                </div>
+                <form id="registerForm" class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Vorname *</label>
+                    <input type="text" id="registerFirstName" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-brand-navy transition">
                   </div>
                   <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Passwort</label>
-                    <input type="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" placeholder="••••••••">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Nachname *</label>
+                    <input type="text" id="registerLastName" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-brand-navy transition">
                   </div>
-                  <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition">Registrieren</button>
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">E-Mail *</label>
+                    <input type="email" id="registerEmail" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-brand-navy transition">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Passwort *</label>
+                    <input type="password" id="registerPassword" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-brand-navy transition">
+                  </div>
+                  <label class="flex items-start text-sm">
+                    <input type="checkbox" required class="mr-2 mt-1">
+                    <span class="text-gray-600">Ich akzeptiere die <a href="#" class="text-brand-navy hover:underline">AGB</a> und <a href="#" class="text-brand-navy hover:underline">Datenschutzerklärung</a></span>
+                  </label>
+                  <button type="submit" class="w-full bg-brand-gold text-white py-3 rounded-lg hover:bg-brand-gold/90 transition font-semibold">
+                    <i class="fas fa-user-plus mr-2"></i>Jetzt registrieren
+                  </button>
+                  <div id="registerStatus" class="hidden mt-4 p-4 rounded-lg"></div>
                 </form>
+              </div>
+            </div>
+
+            <!-- Benefits Section -->
+            <div class="mt-12 bg-gradient-to-br from-brand-navy to-brand-navy/90 rounded-xl p-8 text-white">
+              <h3 class="text-2xl font-bold mb-6 text-center">Vorteile eines Kundenkontos</h3>
+              <div class="grid md:grid-cols-3 gap-6">
+                <div class="flex items-start">
+                  <i class="fas fa-shopping-bag text-brand-gold text-2xl mr-4 mt-1"></i>
+                  <div>
+                    <h4 class="font-bold mb-2">Bestellübersicht</h4>
+                    <p class="text-white/80 text-sm">Alle Ihre Bestellungen und Lizenzschlüssel an einem Ort</p>
+                  </div>
+                </div>
+                <div class="flex items-start">
+                  <i class="fas fa-bolt text-brand-gold text-2xl mr-4 mt-1"></i>
+                  <div>
+                    <h4 class="font-bold mb-2">Schnellerer Checkout</h4>
+                    <p class="text-white/80 text-sm">Gespeicherte Rechnungsdaten für blitzschnelle Käufe</p>
+                  </div>
+                </div>
+                <div class="flex items-start">
+                  <i class="fas fa-star text-brand-gold text-2xl mr-4 mt-1"></i>
+                  <div>
+                    <h4 class="font-bold mb-2">Exklusive Angebote</h4>
+                    <p class="text-white/80 text-sm">Spezielle Rabatte nur für registrierte Kunden</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <script>
+        // Login Form Handler
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const status = document.getElementById('loginStatus');
+          const button = e.target.querySelector('button[type="submit"]');
+          const originalText = button.innerHTML;
+          
+          button.disabled = true;
+          button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Wird angemeldet...';
+          
+          // TODO: Implement real authentication with API
+          // For now, show a demo message
+          setTimeout(() => {
+            status.className = 'mt-4 p-4 rounded-lg bg-blue-50 border-2 border-blue-200';
+            status.innerHTML = \`
+              <div class="flex items-start gap-3">
+                <i class="fas fa-info-circle text-blue-600 text-2xl"></i>
+                <div>
+                  <div class="font-bold text-blue-900 mb-1">Demo-Modus</div>
+                  <div class="text-blue-800 text-sm">
+                    Die Authentifizierung ist bereit für die Integration mit einem Backend-System (JWT, Sessions, etc.).
+                    Kontaktieren Sie den Support, um ein echtes Konto zu erstellen.
+                  </div>
+                </div>
+              </div>
+            \`;
+            status.classList.remove('hidden');
+            button.disabled = false;
+            button.innerHTML = originalText;
+          }, 1000);
+        });
+
+        // Register Form Handler
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const status = document.getElementById('registerStatus');
+          const button = e.target.querySelector('button[type="submit"]');
+          const originalText = button.innerHTML;
+          
+          button.disabled = true;
+          button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Wird registriert...';
+          
+          // TODO: Implement real registration with API
+          // For now, show a demo message
+          setTimeout(() => {
+            status.className = 'mt-4 p-4 rounded-lg bg-blue-50 border-2 border-blue-200';
+            status.innerHTML = \`
+              <div class="flex items-start gap-3">
+                <i class="fas fa-info-circle text-blue-600 text-2xl"></i>
+                <div>
+                  <div class="font-bold text-blue-900 mb-1">Demo-Modus</div>
+                  <div class="text-blue-800 text-sm">
+                    Die Registrierung ist bereit für die Integration. In der Produktion würde hier ein Konto erstellt,
+                    eine Bestätigungs-E-Mail gesendet und der Benutzer angemeldet werden.
+                  </div>
+                </div>
+              </div>
+            \`;
+            status.classList.remove('hidden');
+            button.disabled = false;
+            button.innerHTML = originalText;
+          }, 1000);
+        });
+      </script>
     </body>
     </html>
   `)
@@ -1557,6 +1702,18 @@ app.get('/download-center', (c) => {
       <title>Download Center - SoftwareKing24</title>
       <script src="https://cdn.tailwindcss.com"></script>
       <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+      <script>
+        tailwind.config = {
+          theme: {
+            extend: {
+              colors: {
+                'brand-navy': '#132C46',
+                'brand-gold': '#D9A50B',
+              }
+            }
+          }
+        }
+      </script>
     </head>
     <body class="bg-gray-50">
       <div class="min-h-screen">
@@ -1564,56 +1721,140 @@ app.get('/download-center', (c) => {
           <div class="container mx-auto px-4 py-4">
             <div class="flex items-center justify-between">
               <a href="/" class="flex items-center">
-                <img src="/static/logo.png" alt="SoftwareKing24" class="h-10">
+                <span class="text-2xl font-bold text-brand-navy">SoftwareKing24</span>
               </a>
-              <a href="/" class="text-gray-600 hover:text-blue-600">
-                <i class="fas fa-arrow-left mr-2"></i>Zurück zum Shop
-              </a>
+              <div class="flex items-center gap-4">
+                <a href="/account" class="text-gray-600 hover:text-brand-navy">
+                  <i class="fas fa-user mr-2"></i>Mein Konto
+                </a>
+                <a href="/" class="text-gray-600 hover:text-brand-navy">
+                  <i class="fas fa-arrow-left mr-2"></i>Zurück zum Shop
+                </a>
+              </div>
             </div>
           </div>
         </header>
 
         <div class="container mx-auto px-4 py-12">
-          <div class="max-w-4xl mx-auto">
-            <h1 class="text-4xl font-bold text-gray-900 mb-8">
-              <i class="fas fa-download text-blue-600 mr-3"></i>Download Center
+          <div class="max-w-5xl mx-auto">
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">
+              <i class="fas fa-download text-brand-navy mr-3"></i>Download Center
             </h1>
+            <p class="text-xl text-gray-600 mb-12">Offizielle Download-Links für Ihre Software</p>
 
-            <div class="bg-blue-50 border-l-4 border-blue-600 p-6 rounded mb-8">
-              <p class="text-gray-700">
-                <i class="fas fa-info-circle mr-2"></i>
-                Nach dem Kauf erhalten Sie Ihre Lizenzschlüssel per E-Mail. Hier finden Sie Links zu den offiziellen Download-Quellen.
-              </p>
+            <div class="bg-blue-50 border-l-4 border-brand-navy p-6 rounded-xl mb-8">
+              <div class="flex items-start">
+                <i class="fas fa-info-circle text-brand-navy text-2xl mr-4 mt-1"></i>
+                <div>
+                  <h3 class="font-bold text-lg mb-2">So funktioniert es:</h3>
+                  <ol class="list-decimal list-inside space-y-2 text-gray-700">
+                    <li>Nach dem Kauf erhalten Sie Ihre Lizenzschlüssel per E-Mail</li>
+                    <li>Laden Sie die Software über die offiziellen Links unten herunter</li>
+                    <li>Installieren Sie die Software und aktivieren Sie mit Ihrem Lizenzschlüssel</li>
+                    <li>Bei Problemen kontaktieren Sie unseren Support</li>
+                  </ol>
+                </div>
+              </div>
             </div>
 
-            <div class="space-y-4">
-              <div class="bg-white rounded-lg shadow-md p-6">
-                <h3 class="text-xl font-semibold mb-3">
-                  <i class="fab fa-windows text-blue-600 mr-2"></i>Windows Downloads
-                </h3>
-                <p class="text-gray-600 mb-4">Laden Sie Windows direkt von Microsoft herunter:</p>
-                <a href="https://www.microsoft.com/de-de/software-download" target="_blank" class="inline-block bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">
-                  <i class="fas fa-external-link-alt mr-2"></i>Microsoft Download Center
+            <div class="grid md:grid-cols-2 gap-6">
+              <!-- Windows -->
+              <div class="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition">
+                <div class="flex items-center mb-4">
+                  <div class="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                    <i class="fab fa-windows text-blue-600 text-3xl"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-xl font-bold">Windows</h3>
+                    <p class="text-sm text-gray-500">Betriebssysteme</p>
+                  </div>
+                </div>
+                <p class="text-gray-600 mb-4">Windows 10, 11 & Server direkt von Microsoft:</p>
+                <a href="https://www.microsoft.com/de-de/software-download" target="_blank" class="inline-flex items-center bg-brand-navy text-white px-6 py-3 rounded-lg hover:bg-brand-navy/90 transition font-semibold">
+                  <i class="fas fa-external-link-alt mr-2"></i>Download starten
                 </a>
               </div>
 
-              <div class="bg-white rounded-lg shadow-md p-6">
-                <h3 class="text-xl font-semibold mb-3">
-                  <i class="fab fa-microsoft text-blue-600 mr-2"></i>Office Downloads
-                </h3>
-                <p class="text-gray-600 mb-4">Laden Sie Microsoft Office herunter:</p>
-                <a href="https://www.office.com/" target="_blank" class="inline-block bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">
-                  <i class="fas fa-external-link-alt mr-2"></i>Office.com
+              <!-- Office -->
+              <div class="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition">
+                <div class="flex items-center mb-4">
+                  <div class="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
+                    <i class="fab fa-microsoft text-blue-600 text-3xl"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-xl font-bold">Microsoft Office</h3>
+                    <p class="text-sm text-gray-500">Produktivität</p>
+                  </div>
+                </div>
+                <p class="text-gray-600 mb-4">Office 2021, 2024 & Microsoft 365:</p>
+                <a href="https://www.office.com/" target="_blank" class="inline-flex items-center bg-brand-navy text-white px-6 py-3 rounded-lg hover:bg-brand-navy/90 transition font-semibold">
+                  <i class="fas fa-external-link-alt mr-2"></i>Download starten
                 </a>
               </div>
 
-              <div class="bg-white rounded-lg shadow-md p-6">
-                <h3 class="text-xl font-semibold mb-3">
-                  <i class="fas fa-question-circle text-blue-600 mr-2"></i>Benötigen Sie Hilfe?
-                </h3>
-                <p class="text-gray-600 mb-4">Unser Support-Team hilft Ihnen gerne bei der Installation:</p>
-                <a href="/contact" class="inline-block bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition">
+              <!-- Antivirus -->
+              <div class="bg-white rounded-xl shadow-lg p-8 hover:shadow-xl transition">
+                <div class="flex items-center mb-4">
+                  <div class="w-16 h-16 bg-red-100 rounded-lg flex items-center justify-center mr-4">
+                    <i class="fas fa-shield-alt text-red-600 text-3xl"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-xl font-bold">Antivirus</h3>
+                    <p class="text-sm text-gray-500">Sicherheit</p>
+                  </div>
+                </div>
+                <p class="text-gray-600 mb-4">Kaspersky, Norton, ESET & mehr:</p>
+                <div class="space-y-2 text-sm">
+                  <a href="https://www.kaspersky.de/downloads" target="_blank" class="block text-brand-navy hover:underline">
+                    <i class="fas fa-arrow-right mr-2"></i>Kaspersky
+                  </a>
+                  <a href="https://support.norton.com/sp/de/de/home/current/solutions/v59066422" target="_blank" class="block text-brand-navy hover:underline">
+                    <i class="fas fa-arrow-right mr-2"></i>Norton
+                  </a>
+                  <a href="https://www.eset.com/de/download/" target="_blank" class="block text-brand-navy hover:underline">
+                    <i class="fas fa-arrow-right mr-2"></i>ESET
+                  </a>
+                </div>
+              </div>
+
+              <!-- Support -->
+              <div class="bg-gradient-to-br from-brand-gold to-brand-gold/80 rounded-xl shadow-lg p-8 text-white">
+                <div class="flex items-center mb-4">
+                  <div class="w-16 h-16 bg-white/20 rounded-lg flex items-center justify-center mr-4">
+                    <i class="fas fa-headset text-white text-3xl"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-xl font-bold">Benötigen Sie Hilfe?</h3>
+                    <p class="text-sm text-white/80">Wir sind für Sie da</p>
+                  </div>
+                </div>
+                <p class="text-white/90 mb-4">Unser Support-Team hilft Ihnen bei der Installation und Aktivierung:</p>
+                <a href="/contact" class="inline-flex items-center bg-white text-brand-gold px-6 py-3 rounded-lg hover:bg-gray-100 transition font-semibold">
                   <i class="fas fa-envelope mr-2"></i>Support kontaktieren
+                </a>
+              </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="mt-12 bg-white rounded-xl shadow-lg p-8">
+              <h3 class="text-2xl font-bold mb-6">
+                <i class="fas fa-book text-brand-navy mr-3"></i>Installationsanleitungen
+              </h3>
+              <div class="grid md:grid-cols-3 gap-6">
+                <a href="/faq" class="block p-4 border-2 border-gray-200 rounded-lg hover:border-brand-navy hover:shadow-md transition">
+                  <i class="fas fa-question-circle text-brand-navy text-2xl mb-3"></i>
+                  <h4 class="font-semibold mb-2">Häufige Fragen</h4>
+                  <p class="text-sm text-gray-600">Antworten auf die häufigsten Installations-Fragen</p>
+                </a>
+                <a href="/contact" class="block p-4 border-2 border-gray-200 rounded-lg hover:border-brand-navy hover:shadow-md transition">
+                  <i class="fas fa-video text-brand-navy text-2xl mb-3"></i>
+                  <h4 class="font-semibold mb-2">Video-Tutorials</h4>
+                  <p class="text-sm text-gray-600">Schritt-für-Schritt Anleitungen als Video</p>
+                </a>
+                <a href="/contact" class="block p-4 border-2 border-gray-200 rounded-lg hover:border-brand-navy hover:shadow-md transition">
+                  <i class="fas fa-life-ring text-brand-navy text-2xl mb-3"></i>
+                  <h4 class="font-semibold mb-2">Persönliche Hilfe</h4>
+                  <p class="text-sm text-gray-600">Individuelle Unterstützung durch unser Team</p>
                 </a>
               </div>
             </div>
@@ -1636,6 +1877,18 @@ app.get('/manufacturers', (c) => {
       <title>Hersteller - SoftwareKing24</title>
       <script src="https://cdn.tailwindcss.com"></script>
       <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+      <script>
+        tailwind.config = {
+          theme: {
+            extend: {
+              colors: {
+                'brand-navy': '#132C46',
+                'brand-gold': '#D9A50B',
+              }
+            }
+          }
+        }
+      </script>
     </head>
     <body class="bg-gray-50">
       <div class="min-h-screen">
@@ -1643,9 +1896,9 @@ app.get('/manufacturers', (c) => {
           <div class="container mx-auto px-4 py-4">
             <div class="flex items-center justify-between">
               <a href="/" class="flex items-center">
-                <img src="/static/logo.png" alt="SoftwareKing24" class="h-10">
+                <span class="text-2xl font-bold text-brand-navy">SoftwareKing24</span>
               </a>
-              <a href="/" class="text-gray-600 hover:text-blue-600">
+              <a href="/" class="text-gray-600 hover:text-brand-navy">
                 <i class="fas fa-arrow-left mr-2"></i>Zurück zum Shop
               </a>
             </div>
@@ -1654,56 +1907,95 @@ app.get('/manufacturers', (c) => {
 
         <div class="container mx-auto px-4 py-12">
           <div class="max-w-6xl mx-auto">
-            <h1 class="text-4xl font-bold text-gray-900 mb-8">
-              <i class="fas fa-industry text-blue-600 mr-3"></i>Unsere Hersteller
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">
+              <i class="fas fa-industry text-brand-navy mr-3"></i>Unsere Hersteller
             </h1>
+            <p class="text-xl text-gray-600 mb-12">Marken, denen Sie vertrauen können</p>
 
-            <div class="grid md:grid-cols-3 gap-6">
-              <div class="bg-white rounded-lg shadow-md p-8 text-center hover:shadow-xl transition">
-                <i class="fab fa-microsoft text-6xl text-blue-600 mb-4"></i>
-                <h3 class="text-xl font-semibold mb-2">Microsoft</h3>
-                <p class="text-gray-600 text-sm mb-4">Windows, Office, Server-Lösungen</p>
-                <a href="/products?brand=microsoft" class="text-blue-600 hover:underline">Produkte ansehen →</a>
-              </div>
+            <!-- Loading State -->
+            <div id="loading" class="text-center py-12">
+              <i class="fas fa-spinner fa-spin text-4xl text-brand-navy mb-4"></i>
+              <p class="text-gray-600">Lade Hersteller...</p>
+            </div>
 
-              <div class="bg-white rounded-lg shadow-md p-8 text-center hover:shadow-xl transition">
-                <i class="fas fa-shield-alt text-6xl text-red-600 mb-4"></i>
-                <h3 class="text-xl font-semibold mb-2">Kaspersky</h3>
-                <p class="text-gray-600 text-sm mb-4">Antivirus & Sicherheitssoftware</p>
-                <a href="/products?brand=kaspersky" class="text-blue-600 hover:underline">Produkte ansehen →</a>
-              </div>
+            <!-- Brands Grid -->
+            <div id="brandsContainer" class="grid md:grid-cols-3 lg:grid-cols-4 gap-6 hidden">
+              <!-- Brands will be loaded here -->
+            </div>
 
-              <div class="bg-white rounded-lg shadow-md p-8 text-center hover:shadow-xl transition">
-                <i class="fas fa-shield-virus text-6xl text-yellow-600 mb-4"></i>
-                <h3 class="text-xl font-semibold mb-2">Norton</h3>
-                <p class="text-gray-600 text-sm mb-4">Internet Security Lösungen</p>
-                <a href="/products?brand=norton" class="text-blue-600 hover:underline">Produkte ansehen →</a>
-              </div>
-
-              <div class="bg-white rounded-lg shadow-md p-8 text-center hover:shadow-xl transition">
-                <i class="fas fa-shield text-6xl text-green-600 mb-4"></i>
-                <h3 class="text-xl font-semibold mb-2">ESET</h3>
-                <p class="text-gray-600 text-sm mb-4">NOD32 Antivirus & Security</p>
-                <a href="/products?brand=eset" class="text-blue-600 hover:underline">Produkte ansehen →</a>
-              </div>
-
-              <div class="bg-white rounded-lg shadow-md p-8 text-center hover:shadow-xl transition">
-                <i class="fas fa-shield-alt text-6xl text-orange-600 mb-4"></i>
-                <h3 class="text-xl font-semibold mb-2">Bitdefender</h3>
-                <p class="text-gray-600 text-sm mb-4">Total Security Lösungen</p>
-                <a href="/products?brand=bitdefender" class="text-blue-600 hover:underline">Produkte ansehen →</a>
-              </div>
-
-              <div class="bg-white rounded-lg shadow-md p-8 text-center hover:shadow-xl transition">
-                <i class="fas fa-drafting-compass text-6xl text-purple-600 mb-4"></i>
-                <h3 class="text-xl font-semibold mb-2">Autodesk</h3>
-                <p class="text-gray-600 text-sm mb-4">CAD & Design Software</p>
-                <a href="/products?brand=autodesk" class="text-blue-600 hover:underline">Produkte ansehen →</a>
-              </div>
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden text-center py-12">
+              <i class="fas fa-industry text-gray-300 text-6xl mb-4"></i>
+              <p class="text-gray-600">Keine Hersteller gefunden</p>
             </div>
           </div>
         </div>
       </div>
+
+      <script>
+        // Load brands from API
+        async function loadBrands() {
+          try {
+            const response = await fetch('/api/brands');
+            const data = await response.json();
+            
+            document.getElementById('loading').classList.add('hidden');
+            
+            if (data.success && data.brands.length > 0) {
+              renderBrands(data.brands);
+              document.getElementById('brandsContainer').classList.remove('hidden');
+            } else {
+              document.getElementById('emptyState').classList.remove('hidden');
+            }
+          } catch (error) {
+            console.error('Error loading brands:', error);
+            document.getElementById('loading').classList.add('hidden');
+            document.getElementById('emptyState').classList.remove('hidden');
+          }
+        }
+        
+        function renderBrands(brands) {
+          const container = document.getElementById('brandsContainer');
+          
+          // Brand icon mapping
+          const brandIcons = {
+            'Microsoft': 'fab fa-microsoft',
+            'Kaspersky': 'fas fa-shield-alt',
+            'Norton': 'fas fa-shield-virus',
+            'ESET': 'fas fa-shield',
+            'Bitdefender': 'fas fa-shield-alt',
+            'Autodesk': 'fas fa-drafting-compass',
+            'Adobe': 'fab fa-adobe',
+            'Apple': 'fab fa-apple',
+            'Google': 'fab fa-google'
+          };
+          
+          const brandColors = [
+            'text-blue-600', 'text-red-600', 'text-yellow-600', 
+            'text-green-600', 'text-orange-600', 'text-purple-600',
+            'text-pink-600', 'text-indigo-600', 'text-teal-600'
+          ];
+          
+          container.innerHTML = brands.map((brand, index) => {
+            const icon = brandIcons[brand.name] || 'fas fa-building';
+            const color = brandColors[index % brandColors.length];
+            
+            return \`
+              <a href="/?brand=\${brand.id}" class="bg-white rounded-xl shadow-md p-8 text-center hover:shadow-xl transition group">
+                <i class="\${icon} text-6xl \${color} mb-4 group-hover:scale-110 transition-transform"></i>
+                <h3 class="text-xl font-semibold mb-2 text-gray-900">\${brand.name}</h3>
+                \${brand.description ? \`<p class="text-gray-600 text-sm mb-4">\${brand.description}</p>\` : ''}
+                <div class="text-brand-navy font-semibold">
+                  <i class="fas fa-box mr-2"></i>\${brand.product_count || 0} Produkte
+                </div>
+              </a>
+            \`;
+          }).join('');
+        }
+        
+        // Load on page load
+        loadBrands();
+      </script>
     </body>
     </html>
   `)
@@ -3112,6 +3404,35 @@ app.post('/api/products/by-ids', async (c) => {
   } catch (error) {
     console.error('Error fetching products by IDs:', error)
     return c.json({ success: false, error: 'Failed to load products' }, 500)
+  }
+})
+
+// API: Get all brands with product counts
+app.get('/api/brands', async (c) => {
+  try {
+    const brands = await c.env.DB.prepare(`
+      SELECT 
+        b.id,
+        b.name,
+        b.slug,
+        b.description,
+        b.logo_url,
+        b.website,
+        COUNT(p.id) as product_count
+      FROM brands b
+      LEFT JOIN products p ON b.id = p.brand_id AND p.is_active = 1
+      WHERE b.is_active = 1
+      GROUP BY b.id, b.name, b.slug, b.description, b.logo_url, b.website
+      ORDER BY b.name ASC
+    `).all()
+    
+    return c.json({
+      success: true,
+      brands: brands.results
+    })
+  } catch (error) {
+    console.error('Error fetching brands:', error)
+    return c.json({ success: false, error: 'Failed to load brands' }, 500)
   }
 })
 
