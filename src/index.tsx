@@ -314,6 +314,18 @@ app.get('/wishlist', (c) => {
       <title>Meine Wunschliste - SoftwareKing24</title>
       <script src="https://cdn.tailwindcss.com"></script>
       <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+      <script>
+        tailwind.config = {
+          theme: {
+            extend: {
+              colors: {
+                'brand-navy': '#132C46',
+                'brand-gold': '#D9A50B',
+              }
+            }
+          }
+        }
+      </script>
     </head>
     <body class="bg-gray-50">
       <div class="min-h-screen">
@@ -322,33 +334,149 @@ app.get('/wishlist', (c) => {
           <div class="container mx-auto px-4 py-4">
             <div class="flex items-center justify-between">
               <a href="/" class="flex items-center">
-                <img src="/static/logo.png" alt="SoftwareKing24" class="h-10">
+                <span class="text-2xl font-bold text-brand-navy">SoftwareKing24</span>
               </a>
-              <a href="/" class="text-gray-600 hover:text-blue-600">
-                <i class="fas fa-arrow-left mr-2"></i>Zurück zum Shop
-              </a>
+              <div class="flex items-center gap-4">
+                <a href="/cart" class="text-gray-600 hover:text-brand-navy relative">
+                  <i class="fas fa-shopping-cart text-xl"></i>
+                  <span id="cartBadge" class="absolute -top-2 -right-2 bg-brand-gold text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
+                </a>
+                <a href="/" class="text-gray-600 hover:text-brand-navy">
+                  <i class="fas fa-arrow-left mr-2"></i>Zurück zum Shop
+                </a>
+              </div>
             </div>
           </div>
         </header>
 
         <!-- Main Content -->
         <div class="container mx-auto px-4 py-12">
-          <div class="max-w-4xl mx-auto">
-            <h1 class="text-4xl font-bold text-gray-900 mb-8">
-              <i class="fas fa-heart text-red-500 mr-3"></i>Meine Wunschliste
-            </h1>
+          <div class="max-w-6xl mx-auto">
+            <div class="flex items-center justify-between mb-8">
+              <h1 class="text-4xl font-bold text-gray-900">
+                <i class="fas fa-heart text-red-500 mr-3"></i>Meine Wunschliste
+                <span id="wishlistCount" class="text-2xl text-gray-500 ml-2">(0 Artikel)</span>
+              </h1>
+              <button onclick="clearWishlist()" class="text-red-600 hover:text-red-700 text-sm font-semibold">
+                <i class="fas fa-trash mr-2"></i>Alle entfernen
+              </button>
+            </div>
 
-            <div class="bg-white rounded-lg shadow-md p-8 text-center">
+            <!-- Empty State -->
+            <div id="emptyState" class="bg-white rounded-lg shadow-md p-12 text-center">
               <i class="fas fa-heart text-gray-300 text-6xl mb-4"></i>
               <h2 class="text-2xl font-semibold text-gray-700 mb-2">Ihre Wunschliste ist leer</h2>
               <p class="text-gray-500 mb-6">Fügen Sie Produkte zu Ihrer Wunschliste hinzu, um sie später zu kaufen.</p>
-              <a href="/" class="inline-block bg-blue-600 text-white px-8 py-3 rounded-full hover:bg-blue-700 transition">
+              <a href="/" class="inline-block bg-brand-navy text-white px-8 py-3 rounded-full hover:bg-brand-navy/90 transition">
                 Jetzt einkaufen
               </a>
+            </div>
+
+            <!-- Wishlist Items -->
+            <div id="wishlistItems" class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 hidden">
+              <!-- Items will be loaded here -->
             </div>
           </div>
         </div>
       </div>
+
+      <script>
+        // Load wishlist from localStorage
+        function loadWishlist() {
+          const wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+          const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+          
+          document.getElementById('wishlistCount').textContent = '(' + wishlist.length + ' Artikel)';
+          document.getElementById('cartBadge').textContent = cart.length;
+          
+          if (wishlist.length === 0) {
+            document.getElementById('emptyState').classList.remove('hidden');
+            document.getElementById('wishlistItems').classList.add('hidden');
+            return;
+          }
+          
+          document.getElementById('emptyState').classList.add('hidden');
+          document.getElementById('wishlistItems').classList.remove('hidden');
+          
+          // Fetch product details from API
+          fetch('/api/products/by-ids', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ids: wishlist })
+          })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              renderWishlist(data.products);
+            }
+          })
+          .catch(err => console.error('Error loading wishlist:', err));
+        }
+        
+        function renderWishlist(products) {
+          const container = document.getElementById('wishlistItems');
+          container.innerHTML = products.map(product => \`
+            <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition">
+              <div class="relative">
+                <img src="\${product.image_url || '/static/placeholder.jpg'}" alt="\${product.name}" class="w-full h-48 object-cover">
+                <button onclick="removeFromWishlist(\${product.id})" class="absolute top-3 right-3 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-red-50 transition">
+                  <i class="fas fa-times text-red-600"></i>
+                </button>
+              </div>
+              <div class="p-5">
+                <h3 class="font-bold text-lg text-gray-900 mb-2">\${product.name}</h3>
+                <p class="text-gray-600 text-sm mb-4 line-clamp-2">\${product.short_description || ''}</p>
+                <div class="flex items-center justify-between mb-4">
+                  <div class="text-2xl font-bold text-brand-navy">€\${product.price.toFixed(2)}</div>
+                  \${product.discount_price ? \`<div class="text-sm text-gray-500 line-through">€\${product.discount_price.toFixed(2)}</div>\` : ''}
+                </div>
+                <div class="flex gap-2">
+                  <button onclick="addToCart(\${product.id}, '\${product.name}', \${product.price})" class="flex-1 bg-brand-navy text-white py-2 px-4 rounded-lg hover:bg-brand-navy/90 transition text-sm font-semibold">
+                    <i class="fas fa-shopping-cart mr-2"></i>In den Warenkorb
+                  </button>
+                  <a href="/product/\${product.id}" class="bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition text-sm">
+                    <i class="fas fa-info-circle"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+          \`).join('');
+        }
+        
+        function removeFromWishlist(productId) {
+          let wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+          wishlist = wishlist.filter(id => id !== productId);
+          localStorage.setItem('wishlist', JSON.stringify(wishlist));
+          loadWishlist();
+        }
+        
+        function clearWishlist() {
+          if (confirm('Möchten Sie wirklich alle Artikel aus Ihrer Wunschliste entfernen?')) {
+            localStorage.setItem('wishlist', JSON.stringify([]));
+            loadWishlist();
+          }
+        }
+        
+        function addToCart(productId, name, price) {
+          let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+          const existingItem = cart.find(item => item.id === productId);
+          
+          if (existingItem) {
+            existingItem.quantity += 1;
+          } else {
+            cart.push({ id: productId, name, price, quantity: 1 });
+          }
+          
+          localStorage.setItem('cart', JSON.stringify(cart));
+          document.getElementById('cartBadge').textContent = cart.length;
+          
+          // Show notification
+          alert('Produkt wurde zum Warenkorb hinzugefügt!');
+        }
+        
+        // Load on page load
+        loadWishlist();
+      </script>
     </body>
     </html>
   `)
@@ -2256,6 +2384,34 @@ app.get('/api/products', async (c) => {
 // ============================================
 
 // Get hero slides
+// API: Get products by IDs (for wishlist/cart)
+app.post('/api/products/by-ids', async (c) => {
+  try {
+    const { ids } = await c.req.json()
+    
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return c.json({ success: true, products: [] })
+    }
+    
+    const placeholders = ids.map(() => '?').join(',')
+    const products = await c.env.DB.prepare(`
+      SELECT 
+        id, name, slug, base_price as price, discount_price,
+        short_description, image_url, sku, rating, review_count
+      FROM products 
+      WHERE id IN (${placeholders}) AND is_active = 1
+    `).bind(...ids).all()
+    
+    return c.json({
+      success: true,
+      products: products.results
+    })
+  } catch (error) {
+    console.error('Error fetching products by IDs:', error)
+    return c.json({ success: false, error: 'Failed to load products' }, 500)
+  }
+})
+
 app.get('/api/homepage/hero', async (c) => {
   try {
     const query = `SELECT * FROM homepage_hero_slides WHERE is_active = 1 ORDER BY order_position ASC`
