@@ -29,21 +29,21 @@ export function HomepageModernEcommerce() {
         }
       </script>
       <style>
-        /* CSS Variables for Light Theme */
+        /* CSS Variables - BRAND COLORS */
         :root {
-          /* Light theme colors */
+          /* Background colors */
           --bg-primary: #FFFFFF;
           --bg-secondary: #F8F9FA;
           --bg-tertiary: #F3F4F6;
           
-          /* Brand colors */
-          --primary-blue: #132C46;
-          --primary-blue-dark: #0D1F31;
-          --primary-blue-light: #1A3A5C;
+          /* BRAND COLORS - Navy & Gold */
+          --brand-navy: #132C46;
+          --brand-navy-dark: #0D1F31;
+          --brand-navy-light: #1A3A5C;
           
-          --accent-gold: #F4C400;
-          --accent-gold-dark: #D9A50B;
-          --accent-gold-light: #FFD633;
+          --brand-gold: #D9A50B;
+          --brand-gold-dark: #B8890A;
+          --brand-gold-light: #F4C400;
           
           /* Text colors */
           --text-primary: #1A1A1A;
@@ -88,7 +88,7 @@ export function HomepageModernEcommerce() {
         .product-card:hover {
           transform: translateY(-8px);
           box-shadow: var(--shadow-xl);
-          border-color: var(--primary-blue);
+          border-color: var(--brand-navy);
         }
 
         /* Category circle hover */
@@ -99,40 +99,97 @@ export function HomepageModernEcommerce() {
         .category-circle:hover {
           transform: scale(1.1);
         }
+        
+        /* Dropdown Menu Styles */
+        .dropdown {
+          position: relative;
+        }
+        
+        .dropdown-menu {
+          position: absolute;
+          top: 100%;
+          left: 0;
+          background: white;
+          min-width: 200px;
+          box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+          border-radius: 8px;
+          opacity: 0;
+          visibility: hidden;
+          transform: translateY(-10px);
+          transition: all 0.3s ease;
+          z-index: 100;
+          margin-top: 10px;
+        }
+        
+        .dropdown:hover .dropdown-menu {
+          opacity: 1;
+          visibility: visible;
+          transform: translateY(0);
+        }
+        
+        .dropdown-menu a {
+          display: block;
+          padding: 12px 20px;
+          color: var(--text-primary);
+          text-decoration: none;
+          transition: all 0.2s;
+          border-bottom: 1px solid var(--border-light);
+        }
+        
+        .dropdown-menu a:last-child {
+          border-bottom: none;
+        }
+        
+        .dropdown-menu a:hover {
+          background: #F3F4F6;
+          color: var(--brand-navy);
+          padding-left: 25px;
+        }
+        
+        .mega-dropdown {
+          width: 800px;
+          left: 50%;
+          transform: translateX(-50%) translateY(-10px);
+        }
+        
+        .dropdown:hover .mega-dropdown {
+          transform: translateX(-50%) translateY(0);
+        }
 
         /* Button animations */
         .btn-primary {
-          background: var(--primary-blue);
+          background: var(--brand-navy);
           color: white;
           transition: all 0.3s ease;
         }
         
         .btn-primary:hover {
-          background: var(--primary-blue-dark);
+          background: var(--brand-navy-dark);
           transform: translateY(-2px);
           box-shadow: 0 8px 16px rgba(19, 44, 70, 0.3);
         }
 
         .btn-gold {
-          background: var(--accent-gold);
-          color: var(--text-primary);
+          background: var(--brand-gold);
+          color: white;
           transition: all 0.3s ease;
         }
         
         .btn-gold:hover {
-          background: var(--accent-gold-dark);
+          background: var(--brand-gold-dark);
           transform: translateY(-2px);
+          box-shadow: 0 8px 16px rgba(217, 165, 11, 0.3);
         }
 
         .btn-secondary {
           background: transparent;
-          border: 2px solid var(--primary-blue);
-          color: var(--primary-blue);
+          border: 2px solid var(--brand-navy);
+          color: var(--brand-navy);
           transition: all 0.3s ease;
         }
         
         .btn-secondary:hover {
-          background: var(--primary-blue);
+          background: var(--brand-navy);
           color: white;
         }
 
@@ -140,7 +197,7 @@ export function HomepageModernEcommerce() {
         .countdown-box {
           background: white;
           border: 2px solid var(--border-light);
-          color: var(--primary-blue);
+          color: var(--brand-navy);
           padding: 12px;
           border-radius: 8px;
           text-align: center;
@@ -225,17 +282,36 @@ export function HomepageModernEcommerce() {
     </head>
     <body class="bg-white">
       
-      <!-- Top Bar -->
+      <!-- Utility Bar -->
       <div class="bg-gray-100 text-gray-700 py-2 text-sm border-b border-gray-200">
         <div class="container mx-auto px-4 flex justify-between items-center">
           <div class="flex items-center gap-6">
-            <span><i class="fas fa-envelope mr-2 text-blue-600"></i>support@softwareking24.com</span>
-            <span><i class="fas fa-phone mr-2 text-blue-600"></i>+49 (0)30 1234 5678</span>
+            <a href="/download-center" class="hover:text-brand-navy transition flex items-center gap-1">
+              <i class="fas fa-download"></i>
+              <span>Download Center</span>
+            </a>
+            <a href="/faq" class="hover:text-brand-navy transition flex items-center gap-1">
+              <i class="fas fa-question-circle"></i>
+              <span>FAQ</span>
+            </a>
+            <a href="/contact" class="hover:text-brand-navy transition flex items-center gap-1">
+              <i class="fas fa-envelope"></i>
+              <span>Kontakt</span>
+            </a>
           </div>
-          <div class="flex items-center gap-4">
-            <span>Willkommen!</span>
-            <span>|</span>
-            <a href="/account" class="hover:text-blue-600 transition">Mein Konto</a>
+          <div class="flex items-center gap-6">
+            <a href="/wishlist" class="hover:text-brand-navy transition flex items-center gap-1">
+              <i class="fas fa-heart"></i>
+              <span>Meine Wunschliste</span>
+            </a>
+            <a href="/manufacturers" class="hover:text-brand-navy transition flex items-center gap-1">
+              <i class="fas fa-industry"></i>
+              <span>Hersteller</span>
+            </a>
+            <a href="/about" class="hover:text-brand-navy transition flex items-center gap-1">
+              <i class="fas fa-info-circle"></i>
+              <span>Über uns</span>
+            </a>
           </div>
         </div>
       </div>
@@ -260,7 +336,7 @@ export function HomepageModernEcommerce() {
                   placeholder="Suchen Sie nach Produkten, Kategorien..." 
                   class="w-full px-6 py-3 border-2 border-gray-300 rounded-full focus:outline-none focus:border-brand-gold"
                 >
-                <button class="absolute right-2 top-1/2 -translate-y-1/2 bg-yellow-400 text-white px-6 py-2 rounded-full hover:bg-yellow-600 transition">
+                <button class="absolute right-2 top-1/2 -translate-y-1/2 bg-brand-gold text-white px-6 py-2 rounded-full hover:bg-brand-gold-dark transition">
                   <i class="fas fa-search"></i>
                 </button>
               </div>
@@ -268,35 +344,109 @@ export function HomepageModernEcommerce() {
 
             <!-- Header Icons -->
             <div class="flex items-center gap-6">
-              <a href="/account" class="flex flex-col items-center text-gray-700 hover:text-blue-600 transition">
+              <a href="/account" class="flex flex-col items-center text-gray-700 hover:text-brand-navy transition">
                 <i class="fas fa-user text-2xl mb-1"></i>
                 <span class="text-xs">Konto</span>
               </a>
-              <a href="/wishlist" class="flex flex-col items-center text-gray-700 hover:text-blue-600 transition relative">
+              <a href="/wishlist" class="flex flex-col items-center text-gray-700 hover:text-brand-navy transition relative">
                 <i class="fas fa-heart text-2xl mb-1"></i>
                 <span class="text-xs">Wunschliste</span>
-                <span class="absolute -top-2 -right-2 bg-yellow-400 text-gray-900 text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
+                <span class="absolute -top-2 -right-2 bg-brand-gold text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
               </a>
-              <a href="/cart" class="flex flex-col items-center text-gray-700 hover:text-blue-600 transition relative">
+              <a href="/cart" class="flex flex-col items-center text-gray-700 hover:text-brand-navy transition relative">
                 <i class="fas fa-shopping-cart text-2xl mb-1"></i>
                 <span class="text-xs">Warenkorb</span>
-                <span class="absolute -top-2 -right-2 bg-yellow-400 text-gray-900 text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
+                <span class="absolute -top-2 -right-2 bg-brand-gold text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">0</span>
               </a>
             </div>
           </div>
         </div>
 
-        <!-- Main Navigation -->
-        <nav class="bg-blue-600 text-white">
+        <!-- Advanced Navigation with Dropdowns -->
+        <nav class="bg-brand-navy text-white">
           <div class="container mx-auto px-4">
-            <ul class="flex items-center justify-center gap-8 py-3">
-              <li><a href="/" class="hover:text-yellow-300 transition font-medium"><i class="fas fa-home mr-2"></i>Startseite</a></li>
-              <li><a href="/products?category=windows" class="hover:text-yellow-300 transition font-medium">Windows</a></li>
-              <li><a href="/products?category=office" class="hover:text-yellow-300 transition font-medium">Microsoft Office</a></li>
-              <li><a href="/products?category=server" class="hover:text-yellow-300 transition font-medium">Server</a></li>
-              <li><a href="/products?category=antivirus" class="hover:text-yellow-300 transition font-medium">Antivirus</a></li>
-              <li><a href="/products?category=cad" class="hover:text-yellow-300 transition font-medium">CAD Software</a></li>
-              <li><a href="/contact" class="hover:text-yellow-300 transition font-medium">Kontakt</a></li>
+            <ul class="flex items-center justify-center gap-1 py-0">
+              
+              <!-- Home -->
+              <li class="dropdown">
+                <a href="/" class="block px-5 py-4 hover:bg-brand-navy-light transition font-medium">
+                  <i class="fas fa-home mr-2"></i>Startseite
+                </a>
+              </li>
+              
+              <!-- Office Dropdown -->
+              <li class="dropdown">
+                <a href="/products?category=office" class="block px-5 py-4 hover:bg-brand-navy-light transition font-medium cursor-pointer">
+                  <i class="fas fa-file-word mr-2"></i>Office <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                </a>
+                <div class="dropdown-menu">
+                  <a href="/products?category=office&product=office-2024">Microsoft Office 2024</a>
+                  <a href="/products?category=office&product=office-2021">Microsoft Office 2021</a>
+                  <a href="/products?category=office&product=office-2019">Microsoft Office 2019</a>
+                  <a href="/products?category=office&product=office-365">Microsoft 365</a>
+                  <a href="/products?category=office&product=office-mac">Office für Mac</a>
+                </div>
+              </li>
+              
+              <!-- Antivirus Dropdown -->
+              <li class="dropdown">
+                <a href="/products?category=antivirus" class="block px-5 py-4 hover:bg-brand-navy-light transition font-medium cursor-pointer">
+                  <i class="fas fa-shield-virus mr-2"></i>Antivirus <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                </a>
+                <div class="dropdown-menu">
+                  <a href="/products?brand=kaspersky">Kaspersky</a>
+                  <a href="/products?brand=norton">Norton</a>
+                  <a href="/products?brand=eset">ESET</a>
+                  <a href="/products?brand=bitdefender">Bitdefender</a>
+                  <a href="/products?brand=mcafee">McAfee</a>
+                  <a href="/products?brand=avast">Avast</a>
+                </div>
+              </li>
+              
+              <!-- Games -->
+              <li class="dropdown">
+                <a href="/products?category=games" class="block px-5 py-4 hover:bg-brand-navy-light transition font-medium">
+                  <i class="fas fa-gamepad mr-2"></i>Games
+                </a>
+              </li>
+              
+              <!-- Development -->
+              <li class="dropdown">
+                <a href="/products?category=development" class="block px-5 py-4 hover:bg-brand-navy-light transition font-medium cursor-pointer">
+                  <i class="fas fa-code mr-2"></i>Development <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                </a>
+                <div class="dropdown-menu">
+                  <a href="/products?category=development&product=visual-studio">Visual Studio</a>
+                  <a href="/products?category=development&product=sql-server">SQL Server</a>
+                  <a href="/products?category=development&product=jetbrains">JetBrains Tools</a>
+                </div>
+              </li>
+              
+              <!-- Server Dropdown -->
+              <li class="dropdown">
+                <a href="/products?category=server" class="block px-5 py-4 hover:bg-brand-navy-light transition font-medium cursor-pointer">
+                  <i class="fas fa-server mr-2"></i>Server <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                </a>
+                <div class="dropdown-menu">
+                  <a href="/products?category=server&product=windows-server-2022">Windows Server 2022</a>
+                  <a href="/products?category=server&product=windows-server-2019">Windows Server 2019</a>
+                  <a href="/products?category=server&product=sql-server">SQL Server</a>
+                  <a href="/products?category=server&product=exchange-server">Exchange Server</a>
+                </div>
+              </li>
+              
+              <!-- PC & Windows Dropdown -->
+              <li class="dropdown">
+                <a href="/products?category=windows" class="block px-5 py-4 hover:bg-brand-navy-light transition font-medium cursor-pointer">
+                  <i class="fas fa-windows mr-2"></i>PC & Windows <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                </a>
+                <div class="dropdown-menu">
+                  <a href="/products?category=windows&product=windows-11">Windows 11</a>
+                  <a href="/products?category=windows&product=windows-10">Windows 10</a>
+                  <a href="/products?category=windows&product=windows-7">Windows 7</a>
+                </div>
+              </li>
+              
             </ul>
           </div>
         </nav>
@@ -309,10 +459,10 @@ export function HomepageModernEcommerce() {
             
             <!-- Left: Text Content -->
             <div class="z-10">
-              <span class="text-yellow-500 text-lg font-semibold mb-4 block">Günstige Software Lizenzen</span>
+              <span class="text-brand-gold text-lg font-semibold mb-4 block">Günstige Software Lizenzen</span>
               <h1 class="hero-title text-5xl font-bold mb-6 text-gray-900">
                 Original & Sofort <br>
-                <span class="text-blue-600">verfügbar</span>
+                <span class="text-brand-navy">verfügbar</span>
               </h1>
               <p class="text-xl text-gray-600 mb-8 leading-relaxed">
                 Windows 11, Microsoft Office 2024, Antivirus-Programme, Serverlösungen – 
@@ -333,7 +483,7 @@ export function HomepageModernEcommerce() {
               <div class="bg-white rounded-2xl p-8 border border-gray-200 shadow-lg">
                 <div class="aspect-video bg-gradient-to-br from-blue-50 to-yellow-50 rounded-xl flex items-center justify-center">
                   <div class="text-center">
-                    <i class="fas fa-laptop-code text-8xl text-blue-200 mb-4"></i>
+                    <i class="fas fa-laptop-code text-8xl text-brand-navy opacity-20 mb-4"></i>
                     <p class="text-gray-400 text-sm">Hero Image Placeholder</p>
                   </div>
                 </div>
@@ -406,42 +556,42 @@ export function HomepageModernEcommerce() {
               <div class="w-24 h-24 mx-auto bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mb-3 shadow-md group-hover:shadow-xl transition-all">
                 <i class="fab fa-windows text-white text-4xl"></i>
               </div>
-              <h4 class="font-semibold text-gray-700 group-hover:text-blue-600 transition">Windows</h4>
+              <h4 class="font-semibold text-gray-700 group-hover:text-brand-navy transition">Windows</h4>
             </a>
 
             <a href="/products?category=office" class="category-circle text-center group">
               <div class="w-24 h-24 mx-auto bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mb-3 shadow-md group-hover:shadow-xl transition-all">
                 <i class="fas fa-file-word text-white text-4xl"></i>
               </div>
-              <h4 class="font-semibold text-gray-700 group-hover:text-blue-600 transition">Office</h4>
+              <h4 class="font-semibold text-gray-700 group-hover:text-brand-navy transition">Office</h4>
             </a>
 
             <a href="/products?category=server" class="category-circle text-center group">
               <div class="w-24 h-24 mx-auto bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mb-3 shadow-md group-hover:shadow-xl transition-all">
                 <i class="fas fa-server text-white text-4xl"></i>
               </div>
-              <h4 class="font-semibold text-gray-700 group-hover:text-blue-600 transition">Server</h4>
+              <h4 class="font-semibold text-gray-700 group-hover:text-brand-navy transition">Server</h4>
             </a>
 
             <a href="/products?category=antivirus" class="category-circle text-center group">
               <div class="w-24 h-24 mx-auto bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mb-3 shadow-md group-hover:shadow-xl transition-all">
                 <i class="fas fa-shield-virus text-white text-4xl"></i>
               </div>
-              <h4 class="font-semibold text-gray-700 group-hover:text-blue-600 transition">Antivirus</h4>
+              <h4 class="font-semibold text-gray-700 group-hover:text-brand-navy transition">Antivirus</h4>
             </a>
 
             <a href="/products?category=cad" class="category-circle text-center group">
               <div class="w-24 h-24 mx-auto bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mb-3 shadow-md group-hover:shadow-xl transition-all">
                 <i class="fas fa-drafting-compass text-white text-4xl"></i>
               </div>
-              <h4 class="font-semibold text-gray-700 group-hover:text-blue-600 transition">CAD</h4>
+              <h4 class="font-semibold text-gray-700 group-hover:text-brand-navy transition">CAD</h4>
             </a>
 
             <a href="/products" class="category-circle text-center group">
               <div class="w-24 h-24 mx-auto bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mb-3 shadow-md group-hover:shadow-xl transition-all">
                 <i class="fas fa-th text-white text-4xl"></i>
               </div>
-              <h4 class="font-semibold text-gray-700 group-hover:text-blue-600 transition">Alle</h4>
+              <h4 class="font-semibold text-gray-700 group-hover:text-brand-navy transition">Alle</h4>
             </a>
 
           </div>
@@ -492,10 +642,10 @@ export function HomepageModernEcommerce() {
                   <span class="text-sm text-gray-500 ml-2">(127)</span>
                 </div>
                 <div class="flex items-baseline gap-2 mb-4">
-                  <span class="text-2xl font-bold text-yellow-500">€49,90</span>
+                  <span class="text-2xl font-bold text-brand-gold">€49,90</span>
                   <span class="text-sm text-gray-400 line-through">€76,90</span>
                 </div>
-                <button class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-semibold">
+                <button class="w-full bg-brand-navy text-white py-3 rounded-lg hover:bg-brand-navy-dark transition font-semibold">
                   <i class="fas fa-shopping-cart mr-2"></i>In den Warenkorb
                 </button>
               </div>
@@ -519,10 +669,10 @@ export function HomepageModernEcommerce() {
                   <span class="text-sm text-gray-500 ml-2">(95)</span>
                 </div>
                 <div class="flex items-baseline gap-2 mb-4">
-                  <span class="text-2xl font-bold text-yellow-500">€39,90</span>
+                  <span class="text-2xl font-bold text-brand-gold">€39,90</span>
                   <span class="text-sm text-gray-400 line-through">€66,90</span>
                 </div>
-                <button class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-yellow-400 transition font-semibold">
+                <button class="w-full bg-brand-navy text-white py-3 rounded-lg hover:bg-brand-gold transition font-semibold">
                   <i class="fas fa-shopping-cart mr-2"></i>In den Warenkorb
                 </button>
               </div>
@@ -546,10 +696,10 @@ export function HomepageModernEcommerce() {
                   <span class="text-sm text-gray-500 ml-2">(82)</span>
                 </div>
                 <div class="flex items-baseline gap-2 mb-4">
-                  <span class="text-2xl font-bold text-yellow-500">€29,90</span>
+                  <span class="text-2xl font-bold text-brand-gold">€29,90</span>
                   <span class="text-sm text-gray-400 line-through">€59,90</span>
                 </div>
-                <button class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-yellow-400 transition font-semibold">
+                <button class="w-full bg-brand-navy text-white py-3 rounded-lg hover:bg-brand-gold transition font-semibold">
                   <i class="fas fa-shopping-cart mr-2"></i>In den Warenkorb
                 </button>
               </div>
@@ -573,10 +723,10 @@ export function HomepageModernEcommerce() {
                   <span class="text-sm text-gray-500 ml-2">(64)</span>
                 </div>
                 <div class="flex items-baseline gap-2 mb-4">
-                  <span class="text-2xl font-bold text-yellow-500">€299,90</span>
+                  <span class="text-2xl font-bold text-brand-gold">€299,90</span>
                   <span class="text-sm text-gray-400 line-through">€428,90</span>
                 </div>
-                <button class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-yellow-400 transition font-semibold">
+                <button class="w-full bg-brand-navy text-white py-3 rounded-lg hover:bg-brand-gold transition font-semibold">
                   <i class="fas fa-shopping-cart mr-2"></i>In den Warenkorb
                 </button>
               </div>
@@ -609,7 +759,7 @@ export function HomepageModernEcommerce() {
               <div class="space-y-6">
                 <div class="flex gap-4">
                   <div class="flex-shrink-0">
-                    <div class="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center">
+                    <div class="w-12 h-12 bg-brand-gold rounded-full flex items-center justify-center">
                       <i class="fas fa-check text-white text-xl"></i>
                     </div>
                   </div>
@@ -624,7 +774,7 @@ export function HomepageModernEcommerce() {
 
                 <div class="flex gap-4">
                   <div class="flex-shrink-0">
-                    <div class="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center">
+                    <div class="w-12 h-12 bg-brand-gold rounded-full flex items-center justify-center">
                       <i class="fas fa-info-circle text-white text-xl"></i>
                     </div>
                   </div>
@@ -639,7 +789,7 @@ export function HomepageModernEcommerce() {
 
                 <div class="flex gap-4">
                   <div class="flex-shrink-0">
-                    <div class="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center">
+                    <div class="w-12 h-12 bg-brand-gold rounded-full flex items-center justify-center">
                       <i class="fas fa-microchip text-white text-xl"></i>
                     </div>
                   </div>
@@ -790,25 +940,25 @@ export function HomepageModernEcommerce() {
                 </p>
                 <ul class="space-y-3">
                   <li class="flex items-center gap-3">
-                    <i class="fas fa-check-circle text-yellow-500 text-xl"></i>
+                    <i class="fas fa-check-circle text-brand-gold text-xl"></i>
                     <span>Sofort nach Kauf verfügbar</span>
                   </li>
                   <li class="flex items-center gap-3">
-                    <i class="fas fa-check-circle text-yellow-500 text-xl"></i>
+                    <i class="fas fa-check-circle text-brand-gold text-xl"></i>
                     <span>Umweltfreundlich ohne physischen Versand</span>
                   </li>
                   <li class="flex items-center gap-3">
-                    <i class="fas fa-check-circle text-yellow-500 text-xl"></i>
+                    <i class="fas fa-check-circle text-brand-gold text-xl"></i>
                     <span>Rechtssicher und zertifiziert</span>
                   </li>
                   <li class="flex items-center gap-3">
-                    <i class="fas fa-check-circle text-yellow-500 text-xl"></i>
+                    <i class="fas fa-check-circle text-brand-gold text-xl"></i>
                     <span>Inklusive Installationsanleitung</span>
                   </li>
                 </ul>
               </div>
               <div class="bg-white/10 backdrop-blur-sm rounded-xl p-8">
-                <div class="aspect-square bg-yellow-400/20 rounded-xl flex items-center justify-center">
+                <div class="aspect-square bg-brand-gold/20 rounded-xl flex items-center justify-center">
                   <i class="fas fa-download text-9xl text-white/20"></i>
                 </div>
               </div>
@@ -825,7 +975,7 @@ export function HomepageModernEcommerce() {
             <!-- Betriebssysteme -->
             <div class="grid md:grid-cols-2 gap-12 items-center">
               <div>
-                <span class="inline-block bg-yellow-400/10 text-yellow-500 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+                <span class="inline-block bg-brand-gold/10 text-brand-gold px-4 py-2 rounded-full text-sm font-semibold mb-4">
                   Betriebssysteme
                 </span>
                 <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -859,7 +1009,7 @@ export function HomepageModernEcommerce() {
                 </div>
               </div>
               <div class="order-1 md:order-2">
-                <span class="inline-block bg-yellow-400/10 text-yellow-500 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+                <span class="inline-block bg-brand-gold/10 text-brand-gold px-4 py-2 rounded-full text-sm font-semibold mb-4">
                   Serverbetriebssysteme
                 </span>
                 <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -882,7 +1032,7 @@ export function HomepageModernEcommerce() {
             <!-- Microsoft Office -->
             <div class="grid md:grid-cols-2 gap-12 items-center">
               <div>
-                <span class="inline-block bg-yellow-400/10 text-yellow-500 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+                <span class="inline-block bg-brand-gold/10 text-brand-gold px-4 py-2 rounded-full text-sm font-semibold mb-4">
                   Microsoft Office
                 </span>
                 <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -916,7 +1066,7 @@ export function HomepageModernEcommerce() {
                 </div>
               </div>
               <div class="order-1 md:order-2">
-                <span class="inline-block bg-yellow-400/10 text-yellow-500 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+                <span class="inline-block bg-brand-gold/10 text-brand-gold px-4 py-2 rounded-full text-sm font-semibold mb-4">
                   CAD Software
                 </span>
                 <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -940,7 +1090,7 @@ export function HomepageModernEcommerce() {
             <!-- Antivirus -->
             <div class="grid md:grid-cols-2 gap-12 items-center">
               <div>
-                <span class="inline-block bg-yellow-400/10 text-yellow-500 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+                <span class="inline-block bg-brand-gold/10 text-brand-gold px-4 py-2 rounded-full text-sm font-semibold mb-4">
                   Antivirus Software
                 </span>
                 <h2 class="text-4xl font-bold text-gray-900 mb-4">
@@ -983,7 +1133,7 @@ export function HomepageModernEcommerce() {
             <div class="faq-item bg-gray-50 rounded-xl p-6">
               <div class="faq-question flex justify-between items-center" onclick="toggleFaq(1)">
                 <h3 class="font-bold text-lg text-gray-900">Wie erhalte ich meine Software nach dem Kauf?</h3>
-                <i class="fas fa-chevron-down text-yellow-500 transition-transform" id="faq-icon-1"></i>
+                <i class="fas fa-chevron-down text-brand-gold transition-transform" id="faq-icon-1"></i>
               </div>
               <div class="faq-answer mt-4" id="faq-answer-1">
                 <p class="text-gray-600 leading-relaxed">
@@ -998,7 +1148,7 @@ export function HomepageModernEcommerce() {
             <div class="faq-item bg-gray-50 rounded-xl p-6">
               <div class="faq-question flex justify-between items-center" onclick="toggleFaq(2)">
                 <h3 class="font-bold text-lg text-gray-900">Sind die Lizenzen legal und original?</h3>
-                <i class="fas fa-chevron-down text-yellow-500 transition-transform" id="faq-icon-2"></i>
+                <i class="fas fa-chevron-down text-brand-gold transition-transform" id="faq-icon-2"></i>
               </div>
               <div class="faq-answer mt-4" id="faq-answer-2">
                 <p class="text-gray-600 leading-relaxed">
@@ -1013,7 +1163,7 @@ export function HomepageModernEcommerce() {
             <div class="faq-item bg-gray-50 rounded-xl p-6">
               <div class="faq-question flex justify-between items-center" onclick="toggleFaq(3)">
                 <h3 class="font-bold text-lg text-gray-900">Kann ich die Software auf mehreren Geräten nutzen?</h3>
-                <i class="fas fa-chevron-down text-yellow-500 transition-transform" id="faq-icon-3"></i>
+                <i class="fas fa-chevron-down text-brand-gold transition-transform" id="faq-icon-3"></i>
               </div>
               <div class="faq-answer mt-4" id="faq-answer-3">
                 <p class="text-gray-600 leading-relaxed">
@@ -1029,7 +1179,7 @@ export function HomepageModernEcommerce() {
             <div class="faq-item bg-gray-50 rounded-xl p-6">
               <div class="faq-question flex justify-between items-center" onclick="toggleFaq(4)">
                 <h3 class="font-bold text-lg text-gray-900">Was ist der Unterschied zwischen Retail und OEM-Lizenzen?</h3>
-                <i class="fas fa-chevron-down text-yellow-500 transition-transform" id="faq-icon-4"></i>
+                <i class="fas fa-chevron-down text-brand-gold transition-transform" id="faq-icon-4"></i>
               </div>
               <div class="faq-answer mt-4" id="faq-answer-4">
                 <p class="text-gray-600 leading-relaxed">
@@ -1045,7 +1195,7 @@ export function HomepageModernEcommerce() {
             <div class="faq-item bg-gray-50 rounded-xl p-6">
               <div class="faq-question flex justify-between items-center" onclick="toggleFaq(5)">
                 <h3 class="font-bold text-lg text-gray-900">Bietet ihr auch Support bei der Installation?</h3>
-                <i class="fas fa-chevron-down text-yellow-500 transition-transform" id="faq-icon-5"></i>
+                <i class="fas fa-chevron-down text-brand-gold transition-transform" id="faq-icon-5"></i>
               </div>
               <div class="faq-answer mt-4" id="faq-answer-5">
                 <p class="text-gray-600 leading-relaxed">
@@ -1060,7 +1210,7 @@ export function HomepageModernEcommerce() {
             <div class="faq-item bg-gray-50 rounded-xl p-6">
               <div class="faq-question flex justify-between items-center" onclick="toggleFaq(6)">
                 <h3 class="font-bold text-lg text-gray-900">Welche Zahlungsmethoden akzeptiert ihr?</h3>
-                <i class="fas fa-chevron-down text-yellow-500 transition-transform" id="faq-icon-6"></i>
+                <i class="fas fa-chevron-down text-brand-gold transition-transform" id="faq-icon-6"></i>
               </div>
               <div class="faq-answer mt-4" id="faq-answer-6">
                 <p class="text-gray-600 leading-relaxed">
@@ -1075,7 +1225,7 @@ export function HomepageModernEcommerce() {
             <div class="faq-item bg-gray-50 rounded-xl p-6">
               <div class="faq-question flex justify-between items-center" onclick="toggleFaq(7)">
                 <h3 class="font-bold text-lg text-gray-900">Was passiert, wenn der Lizenzschlüssel nicht funktioniert?</h3>
-                <i class="fas fa-chevron-down text-yellow-500 transition-transform" id="faq-icon-7"></i>
+                <i class="fas fa-chevron-down text-brand-gold transition-transform" id="faq-icon-7"></i>
               </div>
               <div class="faq-answer mt-4" id="faq-answer-7">
                 <p class="text-gray-600 leading-relaxed">
@@ -1090,7 +1240,7 @@ export function HomepageModernEcommerce() {
             <div class="faq-item bg-gray-50 rounded-xl p-6">
               <div class="faq-question flex justify-between items-center" onclick="toggleFaq(8)">
                 <h3 class="font-bold text-lg text-gray-900">Kann ich meine Lizenz zurückgeben oder umtauschen?</h3>
-                <i class="fas fa-chevron-down text-yellow-500 transition-transform" id="faq-icon-8"></i>
+                <i class="fas fa-chevron-down text-brand-gold transition-transform" id="faq-icon-8"></i>
               </div>
               <div class="faq-answer mt-4" id="faq-answer-8">
                 <p class="text-gray-600 leading-relaxed">
@@ -1120,7 +1270,7 @@ export function HomepageModernEcommerce() {
               placeholder="Ihre E-Mail-Adresse" 
               class="flex-1 px-6 py-4 rounded-full text-gray-900 focus:outline-none focus:ring-2 focus:ring-brand-gold"
             >
-            <button class="bg-yellow-400 hover:bg-yellow-600 text-white px-8 py-4 rounded-full font-semibold transition">
+            <button class="bg-brand-gold hover:bg-brand-gold-dark text-white px-8 py-4 rounded-full font-semibold transition">
               Anmelden
             </button>
           </div>
@@ -1143,16 +1293,16 @@ export function HomepageModernEcommerce() {
                 Schnell, sicher und rechtssicher.
               </p>
               <div class="flex gap-4">
-                <a href="#" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-yellow-400 transition">
+                <a href="#" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-brand-gold transition">
                   <i class="fab fa-facebook-f"></i>
                 </a>
-                <a href="#" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-yellow-400 transition">
+                <a href="#" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-brand-gold transition">
                   <i class="fab fa-twitter"></i>
                 </a>
-                <a href="#" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-yellow-400 transition">
+                <a href="#" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-brand-gold transition">
                   <i class="fab fa-instagram"></i>
                 </a>
-                <a href="#" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-yellow-400 transition">
+                <a href="#" class="w-10 h-10 bg-gray-800 rounded-full flex items-center justify-center hover:bg-brand-gold transition">
                   <i class="fab fa-linkedin-in"></i>
                 </a>
               </div>
@@ -1162,11 +1312,11 @@ export function HomepageModernEcommerce() {
             <div>
               <h4 class="font-bold text-white mb-4 text-lg">Schnelllinks</h4>
               <ul class="space-y-2">
-                <li><a href="/" class="hover:text-yellow-500 transition">Startseite</a></li>
-                <li><a href="/products" class="hover:text-yellow-500 transition">Alle Produkte</a></li>
-                <li><a href="/about" class="hover:text-yellow-500 transition">Über uns</a></li>
-                <li><a href="/contact" class="hover:text-yellow-500 transition">Kontakt</a></li>
-                <li><a href="/faq" class="hover:text-yellow-500 transition">FAQ</a></li>
+                <li><a href="/" class="hover:text-brand-gold transition">Startseite</a></li>
+                <li><a href="/products" class="hover:text-brand-gold transition">Alle Produkte</a></li>
+                <li><a href="/about" class="hover:text-brand-gold transition">Über uns</a></li>
+                <li><a href="/contact" class="hover:text-brand-gold transition">Kontakt</a></li>
+                <li><a href="/faq" class="hover:text-brand-gold transition">FAQ</a></li>
               </ul>
             </div>
 
@@ -1174,11 +1324,11 @@ export function HomepageModernEcommerce() {
             <div>
               <h4 class="font-bold text-white mb-4 text-lg">Kategorien</h4>
               <ul class="space-y-2">
-                <li><a href="/products?category=windows" class="hover:text-yellow-500 transition">Windows</a></li>
-                <li><a href="/products?category=office" class="hover:text-yellow-500 transition">Microsoft Office</a></li>
-                <li><a href="/products?category=server" class="hover:text-yellow-500 transition">Server Lösungen</a></li>
-                <li><a href="/products?category=antivirus" class="hover:text-yellow-500 transition">Antivirus</a></li>
-                <li><a href="/products?category=cad" class="hover:text-yellow-500 transition">CAD Software</a></li>
+                <li><a href="/products?category=windows" class="hover:text-brand-gold transition">Windows</a></li>
+                <li><a href="/products?category=office" class="hover:text-brand-gold transition">Microsoft Office</a></li>
+                <li><a href="/products?category=server" class="hover:text-brand-gold transition">Server Lösungen</a></li>
+                <li><a href="/products?category=antivirus" class="hover:text-brand-gold transition">Antivirus</a></li>
+                <li><a href="/products?category=cad" class="hover:text-brand-gold transition">CAD Software</a></li>
               </ul>
             </div>
 
@@ -1187,19 +1337,19 @@ export function HomepageModernEcommerce() {
               <h4 class="font-bold text-white mb-4 text-lg">Kontakt</h4>
               <ul class="space-y-3">
                 <li class="flex items-start gap-3">
-                  <i class="fas fa-map-marker-alt text-yellow-500 mt-1"></i>
+                  <i class="fas fa-map-marker-alt text-brand-gold mt-1"></i>
                   <span class="text-sm">Musterstraße 123<br>10115 Berlin, Deutschland</span>
                 </li>
                 <li class="flex items-center gap-3">
-                  <i class="fas fa-phone text-yellow-500"></i>
+                  <i class="fas fa-phone text-brand-gold"></i>
                   <span class="text-sm">+49 (0)30 1234 5678</span>
                 </li>
                 <li class="flex items-center gap-3">
-                  <i class="fas fa-envelope text-yellow-500"></i>
+                  <i class="fas fa-envelope text-brand-gold"></i>
                   <span class="text-sm">support@softwareking24.com</span>
                 </li>
                 <li class="flex items-center gap-3">
-                  <i class="fas fa-clock text-yellow-500"></i>
+                  <i class="fas fa-clock text-brand-gold"></i>
                   <span class="text-sm">Mo-Fr: 9:00 - 18:00 Uhr</span>
                 </li>
               </ul>
@@ -1214,10 +1364,10 @@ export function HomepageModernEcommerce() {
                 © 2024 SoftwareKing24. Alle Rechte vorbehalten.
               </p>
               <div class="flex gap-6 text-sm">
-                <a href="/privacy" class="hover:text-yellow-500 transition">Datenschutz</a>
-                <a href="/terms" class="hover:text-yellow-500 transition">AGB</a>
-                <a href="/impressum" class="hover:text-yellow-500 transition">Impressum</a>
-                <a href="/widerruf" class="hover:text-yellow-500 transition">Widerrufsrecht</a>
+                <a href="/privacy" class="hover:text-brand-gold transition">Datenschutz</a>
+                <a href="/terms" class="hover:text-brand-gold transition">AGB</a>
+                <a href="/impressum" class="hover:text-brand-gold transition">Impressum</a>
+                <a href="/widerruf" class="hover:text-brand-gold transition">Widerrufsrecht</a>
               </div>
             </div>
           </div>
