@@ -49,7 +49,7 @@ import { AdminLiveChat } from './components/admin-live-chat'
 import { AdminPageTemplates } from './components/admin-page-templates'
 import { AdminAnalytics } from './components/admin-analytics'
 import { AdminFAQ } from './components/admin-faq'
-import { AdminSidebarWorking } from './components/admin-sidebar-working'
+import { AdminSidebarAdvanced } from './components/admin-sidebar-advanced'
 import { ShopHomepagePremium } from './components/shop-homepage-premium'
 import { AdminLicenseAnalytics } from './components/admin-license-analytics'
 import { AdminAutomations } from './components/admin-automations'
@@ -2057,7 +2057,7 @@ app.post('/api/admin/chat/send', async (c) => {
     `).bind(session_id, admin_name || 'Admin', message).run()
     
     await c.env.DB.prepare(`
-      UPDATE chat_sessions SET status = 'active', updated_at = CURRENT_TIMESTAMP WHERE session_id = ?
+      UPDATE chat_sessions SET order_status = 'active', updated_at = CURRENT_TIMESTAMP WHERE session_id = ?
     `).bind(session_id).run()
     
     return c.json({ success: true })
@@ -2073,7 +2073,7 @@ app.post('/api/admin/chat/close', async (c) => {
     
     await c.env.DB.prepare(`
       UPDATE chat_sessions 
-      SET status = 'closed', closed_at = CURRENT_TIMESTAMP 
+      SET order_status = 'closed', closed_at = CURRENT_TIMESTAMP 
       WHERE session_id = ?
     `).bind(session_id).run()
     
@@ -2622,7 +2622,7 @@ app.post('/api/admin/cms-pages/:id/publish', async (c) => {
 
     await c.env.DB.prepare(`
       UPDATE cms_pages 
-      SET status = 'published', published_at = CURRENT_TIMESTAMP
+      SET order_status = 'published', published_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).bind(id).run()
 
@@ -3298,7 +3298,7 @@ app.post('/api/admin/chat/convert-to-ticket', async (c) => {
     // Update chat session
     await c.env.DB.prepare(`
       UPDATE chat_sessions 
-      SET status = 'closed', closed_at = CURRENT_TIMESTAMP 
+      SET order_status = 'closed', closed_at = CURRENT_TIMESTAMP 
       WHERE session_id = ?
     `).bind(session_id).run()
     
@@ -4314,9 +4314,9 @@ app.get('/api/admin/orders', async (c) => {
     const stats = await db.db.prepare(`
       SELECT 
         COUNT(*) as total_orders,
-        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_orders,
-        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_orders,
-        SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_orders,
+        SUM(CASE WHEN order_status = 'completed' THEN 1 ELSE 0 END) as completed_orders,
+        SUM(CASE WHEN order_status = 'pending' THEN 1 ELSE 0 END) as pending_orders,
+        SUM(CASE WHEN order_status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_orders,
         COALESCE(SUM(CASE WHEN payment_status = 'paid' THEN total ELSE 0 END), 0) as total_revenue,
         COALESCE(AVG(total), 0) as avg_order_value
       FROM orders
@@ -4420,7 +4420,7 @@ app.delete('/api/admin/orders/:id', async (c) => {
       return c.json({ success: false, error: 'Order not found' }, 404)
     }
 
-    await db.db.prepare(`UPDATE orders SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP WHERE id = ?`).bind(orderId).run()
+    await db.db.prepare(`UPDATE orders SET order_status = 'cancelled', updated_at = CURRENT_TIMESTAMP WHERE id = ?`).bind(orderId).run()
 
     return c.json({ success: true, message: 'Order cancelled successfully' })
   } catch (error: any) {
@@ -4592,7 +4592,7 @@ app.delete('/api/admin/customers/:id', async (c) => {
       return c.json({ success: false, error: 'Customer not found' }, 404)
     }
 
-    await db.db.prepare(`UPDATE users SET status = 'deleted', updated_at = CURRENT_TIMESTAMP WHERE id = ?`).bind(customerId).run()
+    await db.db.prepare(`UPDATE users SET order_status = 'deleted', updated_at = CURRENT_TIMESTAMP WHERE id = ?`).bind(customerId).run()
 
     return c.json({ success: true, message: 'Customer deleted successfully' })
   } catch (error: any) {
@@ -4648,9 +4648,9 @@ app.get('/api/admin/dashboard/stats', async (c) => {
     const orderStats = await db.db.prepare(`
       SELECT 
         COUNT(*) as total,
-        SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed,
-        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending,
-        SUM(CASE WHEN status = 'processing' THEN 1 ELSE 0 END) as processing,
+        SUM(CASE WHEN order_status = 'completed' THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN order_status = 'pending' THEN 1 ELSE 0 END) as pending,
+        SUM(CASE WHEN order_status = 'processing' THEN 1 ELSE 0 END) as processing,
         SUM(CASE WHEN payment_status = 'paid' THEN total ELSE 0 END) as total_revenue
       FROM orders
     `).first()
@@ -4659,13 +4659,13 @@ app.get('/api/admin/dashboard/stats', async (c) => {
     const customerStats = await db.db.prepare(`
       SELECT 
         COUNT(*) as total,
-        SUM(CASE WHEN role = 'customer' AND status = 'active' THEN 1 ELSE 0 END) as active
+        SUM(CASE WHEN role = 'customer' AND is_active = 1 THEN 1 ELSE 0 END) as active
       FROM users
     `).first()
 
     // Get recent orders
     const recentOrders = await db.db.prepare(`
-      SELECT id, order_number, email, first_name, last_name, total, status, created_at
+      SELECT id, order_number, email, first_name, last_name, total, order_status as status, created_at
       FROM orders
       ORDER BY created_at DESC
       LIMIT 10
@@ -4854,7 +4854,7 @@ app.delete('/api/admin/licenses/:id', async (c) => {
       return c.json({ success: false, error: 'License not found' }, 404)
     }
 
-    await db.db.prepare(`UPDATE license_keys SET status = 'revoked', updated_at = CURRENT_TIMESTAMP WHERE id = ?`).bind(licenseId).run()
+    await db.db.prepare(`UPDATE license_keys SET order_status = 'revoked', updated_at = CURRENT_TIMESTAMP WHERE id = ?`).bind(licenseId).run()
 
     return c.json({ success: true, message: 'License revoked successfully' })
   } catch (error: any) {
@@ -5721,9 +5721,9 @@ app.get('/api/admin/contact-messages/stats', async (c) => {
     const stats = await db.db.prepare(`
       SELECT 
         COUNT(*) as total,
-        SUM(CASE WHEN status = 'new' THEN 1 ELSE 0 END) as new,
-        SUM(CASE WHEN status = 'in_progress' THEN 1 ELSE 0 END) as in_progress,
-        SUM(CASE WHEN status = 'resolved' THEN 1 ELSE 0 END) as resolved
+        SUM(CASE WHEN order_status = 'new' THEN 1 ELSE 0 END) as new,
+        SUM(CASE WHEN order_status = 'in_progress' THEN 1 ELSE 0 END) as in_progress,
+        SUM(CASE WHEN order_status = 'resolved' THEN 1 ELSE 0 END) as resolved
       FROM contact_messages
     `).first()
     
@@ -6152,7 +6152,7 @@ app.post('/api/reviews', async (c) => {
       const order = await db.db.prepare(`
         SELECT o.id FROM orders o
         JOIN order_items oi ON o.id = oi.order_id
-        WHERE o.id = ? AND o.user_id = ? AND oi.product_id = ? AND o.status = 'completed'
+        WHERE o.id = ? AND o.user_id = ? AND oi.product_id = ? AND o.order_status = 'completed'
       `).bind(orderId, userId, productId).first()
       
       if (order) {
@@ -7274,7 +7274,7 @@ app.get('/api/admin/roles/:roleId/users', async (c) => {
     const roleId = c.req.param('roleId')
 
     const users = await db.db.prepare(`
-      SELECT u.id, u.email, u.first_name, u.last_name, u.status, ura.assigned_at
+      SELECT u.id, u.email, u.first_name, u.last_name, u.is_active, ura.assigned_at
       FROM users u
       JOIN user_role_assignments ura ON u.id = ura.user_id
       WHERE ura.role_id = ?
@@ -7494,9 +7494,9 @@ app.get('/api/admin/licenses/stats', async (c) => {
     const stats = await c.env.DB.prepare(`
       SELECT 
         COUNT(*) as total,
-        SUM(CASE WHEN status = 'available' THEN 1 ELSE 0 END) as available,
-        SUM(CASE WHEN status = 'sold' THEN 1 ELSE 0 END) as sold,
-        SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) as expired
+        SUM(CASE WHEN order_status = 'available' THEN 1 ELSE 0 END) as available,
+        SUM(CASE WHEN order_status = 'sold' THEN 1 ELSE 0 END) as sold,
+        SUM(CASE WHEN order_status = 'expired' THEN 1 ELSE 0 END) as expired
       FROM license_keys
     `).first()
     
@@ -7581,9 +7581,9 @@ app.get('/api/admin/invoices/stats', async (c) => {
     const stats = await db.db.prepare(`
       SELECT 
         COUNT(*) as total,
-        SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as paid,
-        SUM(CASE WHEN status = 'overdue' THEN 1 ELSE 0 END) as overdue,
-        SUM(CASE WHEN status = 'paid' THEN total ELSE 0 END) as total_revenue
+        SUM(CASE WHEN order_status = 'paid' THEN 1 ELSE 0 END) as paid,
+        SUM(CASE WHEN order_status = 'overdue' THEN 1 ELSE 0 END) as overdue,
+        SUM(CASE WHEN order_status = 'paid' THEN total ELSE 0 END) as total_revenue
       FROM invoices
     `).first()
 
@@ -8804,8 +8804,8 @@ app.get('/api/admin/certificates/stats', async (c) => {
     const stats = await db.db.prepare(`
       SELECT 
         COUNT(*) as total,
-        SUM(CASE WHEN status = 'sent' THEN 1 ELSE 0 END) as sent,
-        SUM(CASE WHEN status = 'generated' THEN 1 ELSE 0 END) as unsent,
+        SUM(CASE WHEN order_status = 'sent' THEN 1 ELSE 0 END) as sent,
+        SUM(CASE WHEN order_status = 'generated' THEN 1 ELSE 0 END) as unsent,
         SUM(CASE WHEN brand = 'Microsoft' THEN 1 ELSE 0 END) as microsoft_count,
         SUM(CASE WHEN brand = 'Adobe' THEN 1 ELSE 0 END) as adobe_count,
         SUM(CASE WHEN brand = 'Kaspersky' THEN 1 ELSE 0 END) as kaspersky_count,
@@ -9067,7 +9067,7 @@ app.post('/api/admin/certificates/bulk-generate', async (c) => {
 
 // Import admin components
 import { AdminLayout, AdminDashboard } from './components/admin'
-import { AdminSidebarWorking } from './components/admin-sidebar-working'
+import { AdminSidebarAdvanced } from './components/admin-sidebar-advanced'
 import { AdminPlaceholder } from './components/admin-placeholder'
 import { FrontendPlaceholder } from './components/frontend-placeholder'
 import { AdminProducts, AdminProductForm } from './components/admin-products'
@@ -9357,7 +9357,7 @@ app.get('/admin/v2', (c) => {
         `}</style>
       </head>
       <body>
-        <div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/v2')}} />
+        <div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/v2')}} />
         <div style="margin-left: 280px; padding: 2rem; background: #f5f7fa; min-height: 100vh; transition: margin-left 0.3s ease;" class="admin-main-content">
           <div class="max-w-6xl mx-auto">
             <div class="mb-8">
@@ -9567,14 +9567,14 @@ app.get('/admin/products/import', (c) => {
 app.get('/admin/categories', async (c) => {
   const { env } = c;
   const categories = await env.DB.prepare(`SELECT c.*, COUNT(DISTINCT p.id) as product_count FROM categories c LEFT JOIN products p ON p.category_id = c.id GROUP BY c.id ORDER BY c.sort_order ASC`).all();
-  return c.html(<html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Kategorien - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/></head><body class="bg-gray-50"><div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/categories')}} /><div style="margin-left: 280px; padding: 2rem;"><div class="mb-6 flex justify-between items-center"><div><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-folder-open mr-3 text-blue-600"></i>Kategorien</h1><p class="text-gray-600">Produktkategorien verwalten</p></div><button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg"><i class="fas fa-plus mr-2"></i>Neue Kategorie</button></div><div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt</p><p class="text-2xl font-bold">{categories.results?.length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Aktiv</p><p class="text-2xl font-bold text-green-600">{categories.results?.filter((c: any) => c.is_active === 1).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Produkte</p><p class="text-2xl font-bold text-purple-600">{categories.results?.reduce((sum: number, c: any) => sum + (c.product_count || 0), 0) || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Ø Produkte</p><p class="text-2xl font-bold text-orange-600">{categories.results?.length > 0 ? Math.round(categories.results.reduce((sum: number, c: any) => sum + (c.product_count || 0), 0) / categories.results.length) : 0}</p></div></div><div class="bg-white rounded-lg shadow"><div class="p-6 border-b"><h2 class="text-xl font-semibold">Alle Kategorien</h2></div><table class="w-full"><thead class="bg-gray-50 border-b"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produkte</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th></tr></thead><tbody>{categories.results && categories.results.length > 0 ? categories.results.map((cat: any) => (<tr class="hover:bg-gray-50 border-b"><td class="px-6 py-4"><div class="flex items-center"><i class="fas fa-folder text-blue-500 mr-3"></i><div><div class="font-medium">{cat.name}</div><div class="text-sm text-gray-500">{cat.slug}</div></div></div></td><td class="px-6 py-4"><span class="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-full">{cat.product_count || 0}</span></td><td class="px-6 py-4">{cat.is_active === 1 ? <span class="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full">Aktiv</span> : <span class="px-3 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Inaktiv</span>}</td><td class="px-6 py-4"><button class="text-blue-600 mr-3"><i class="fas fa-edit"></i></button><button class="text-red-600"><i class="fas fa-trash"></i></button></td></tr>)) : (<tr><td colspan="4" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-folder-open text-6xl mb-4 text-gray-300"></i><p class="text-lg mb-4">Keine Kategorien gefunden</p><button class="bg-blue-600 text-white px-6 py-2 rounded-lg">Erste Kategorie erstellen</button></td></tr>)}</tbody></table></div></div></body></html>);
+  return c.html(<html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Kategorien - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/></head><body class="bg-gray-50"><div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/categories')}} /><div style="margin-left: 280px; padding: 2rem;"><div class="mb-6 flex justify-between items-center"><div><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-folder-open mr-3 text-blue-600"></i>Kategorien</h1><p class="text-gray-600">Produktkategorien verwalten</p></div><button class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg"><i class="fas fa-plus mr-2"></i>Neue Kategorie</button></div><div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt</p><p class="text-2xl font-bold">{categories.results?.length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Aktiv</p><p class="text-2xl font-bold text-green-600">{categories.results?.filter((c: any) => c.is_active === 1).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Produkte</p><p class="text-2xl font-bold text-purple-600">{categories.results?.reduce((sum: number, c: any) => sum + (c.product_count || 0), 0) || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Ø Produkte</p><p class="text-2xl font-bold text-orange-600">{categories.results?.length > 0 ? Math.round(categories.results.reduce((sum: number, c: any) => sum + (c.product_count || 0), 0) / categories.results.length) : 0}</p></div></div><div class="bg-white rounded-lg shadow"><div class="p-6 border-b"><h2 class="text-xl font-semibold">Alle Kategorien</h2></div><table class="w-full"><thead class="bg-gray-50 border-b"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produkte</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th></tr></thead><tbody>{categories.results && categories.results.length > 0 ? categories.results.map((cat: any) => (<tr class="hover:bg-gray-50 border-b"><td class="px-6 py-4"><div class="flex items-center"><i class="fas fa-folder text-blue-500 mr-3"></i><div><div class="font-medium">{cat.name}</div><div class="text-sm text-gray-500">{cat.slug}</div></div></div></td><td class="px-6 py-4"><span class="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-full">{cat.product_count || 0}</span></td><td class="px-6 py-4">{cat.is_active === 1 ? <span class="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full">Aktiv</span> : <span class="px-3 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Inaktiv</span>}</td><td class="px-6 py-4"><button class="text-blue-600 mr-3"><i class="fas fa-edit"></i></button><button class="text-red-600"><i class="fas fa-trash"></i></button></td></tr>)) : (<tr><td colspan="4" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-folder-open text-6xl mb-4 text-gray-300"></i><p class="text-lg mb-4">Keine Kategorien gefunden</p><button class="bg-blue-600 text-white px-6 py-2 rounded-lg">Erste Kategorie erstellen</button></td></tr>)}</tbody></table></div></div></body></html>);
 });
 
 // 2. BRANDS
 app.get('/admin/brands', async (c) => {
   const { env } = c;
   const brands = await env.DB.prepare(`SELECT b.*, COUNT(DISTINCT p.id) as product_count FROM brands b LEFT JOIN products p ON p.brand_id = b.id GROUP BY b.id ORDER BY b.name ASC`).all();
-  return c.html(<html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Marken - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/></head><body class="bg-gray-50"><div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/brands')}} /><div style="margin-left: 280px; padding: 2rem;"><div class="mb-6 flex justify-between items-center"><div><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-trademark mr-3 text-purple-600"></i>Marken & Hersteller</h1><p class="text-gray-600">Produktmarken verwalten</p></div><button class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg"><i class="fas fa-plus mr-2"></i>Neue Marke</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Marken</p><p class="text-2xl font-bold">{brands.results?.length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Aktive Marken</p><p class="text-2xl font-bold text-green-600">{brands.results?.filter((b: any) => b.is_active === 1).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Produkte</p><p class="text-2xl font-bold text-blue-600">{brands.results?.reduce((sum: number, b: any) => sum + (b.product_count || 0), 0) || 0}</p></div></div><div class="bg-white rounded-lg shadow p-6"><h2 class="text-xl font-semibold mb-6">Alle Marken</h2>{brands.results && brands.results.length > 0 ? (<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{brands.results.map((brand: any) => (<div class="border rounded-lg p-6 hover:shadow-lg transition"><div class="flex items-start justify-between mb-4"><div class="flex items-center space-x-3"><div class="w-12 h-12 bg-purple-100 rounded flex items-center justify-center"><i class="fas fa-trademark text-purple-600 text-xl"></i></div><div><h3 class="font-semibold">{brand.name}</h3><p class="text-sm text-gray-500">{brand.product_count || 0} Produkte</p></div></div>{brand.is_active === 1 ? <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">Aktiv</span> : <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded">Inaktiv</span>}</div><div class="flex space-x-2"><button class="flex-1 px-4 py-2 bg-purple-600 text-white rounded"><i class="fas fa-edit mr-2"></i>Bearbeiten</button><button class="px-4 py-2 bg-gray-100 rounded"><i class="fas fa-trash"></i></button></div></div>))}</div>) : (<div class="text-center py-12"><i class="fas fa-trademark text-6xl mb-4 text-gray-300"></i><p class="text-lg text-gray-500 mb-4">Keine Marken gefunden</p><button class="bg-purple-600 text-white px-6 py-2 rounded-lg">Erste Marke erstellen</button></div>)}</div></div></body></html>);
+  return c.html(<html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Marken - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/></head><body class="bg-gray-50"><div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/brands')}} /><div style="margin-left: 280px; padding: 2rem;"><div class="mb-6 flex justify-between items-center"><div><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-trademark mr-3 text-purple-600"></i>Marken & Hersteller</h1><p class="text-gray-600">Produktmarken verwalten</p></div><button class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg"><i class="fas fa-plus mr-2"></i>Neue Marke</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Marken</p><p class="text-2xl font-bold">{brands.results?.length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Aktive Marken</p><p class="text-2xl font-bold text-green-600">{brands.results?.filter((b: any) => b.is_active === 1).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Produkte</p><p class="text-2xl font-bold text-blue-600">{brands.results?.reduce((sum: number, b: any) => sum + (b.product_count || 0), 0) || 0}</p></div></div><div class="bg-white rounded-lg shadow p-6"><h2 class="text-xl font-semibold mb-6">Alle Marken</h2>{brands.results && brands.results.length > 0 ? (<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{brands.results.map((brand: any) => (<div class="border rounded-lg p-6 hover:shadow-lg transition"><div class="flex items-start justify-between mb-4"><div class="flex items-center space-x-3"><div class="w-12 h-12 bg-purple-100 rounded flex items-center justify-center"><i class="fas fa-trademark text-purple-600 text-xl"></i></div><div><h3 class="font-semibold">{brand.name}</h3><p class="text-sm text-gray-500">{brand.product_count || 0} Produkte</p></div></div>{brand.is_active === 1 ? <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded">Aktiv</span> : <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded">Inaktiv</span>}</div><div class="flex space-x-2"><button class="flex-1 px-4 py-2 bg-purple-600 text-white rounded"><i class="fas fa-edit mr-2"></i>Bearbeiten</button><button class="px-4 py-2 bg-gray-100 rounded"><i class="fas fa-trash"></i></button></div></div>))}</div>) : (<div class="text-center py-12"><i class="fas fa-trademark text-6xl mb-4 text-gray-300"></i><p class="text-lg text-gray-500 mb-4">Keine Marken gefunden</p><button class="bg-purple-600 text-white px-6 py-2 rounded-lg">Erste Marke erstellen</button></div>)}</div></div></body></html>);
 });
 
 // 3. ATTRIBUTES
@@ -9586,7 +9586,7 @@ app.get('/admin/attributes', async (c) => {
   } catch (e) {
     console.log('Product attributes table not yet created');
   }
-  return c.html(<html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Attribute - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/></head><body class="bg-gray-50"><div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/attributes')}} /><div style="margin-left: 280px; padding: 2rem;"><div class="mb-6 flex justify-between items-center"><div><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-tags mr-3 text-green-600"></i>Attribute & Varianten</h1><p class="text-gray-600">Produktattribute verwalten (Größe, Farbe, etc.)</p></div><button class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg"><i class="fas fa-plus mr-2"></i>Neues Attribut</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Attribute</p><p class="text-2xl font-bold">{attributes.results?.length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Aktive Attribute</p><p class="text-2xl font-bold text-green-600">{attributes.results?.filter((a: any) => a.is_active === 1).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Werte</p><p class="text-2xl font-bold text-blue-600">{attributes.results?.reduce((sum: number, a: any) => sum + (a.value_count || 0), 0) || 0}</p></div></div><div class="bg-white rounded-lg shadow"><div class="p-6 border-b"><h2 class="text-xl font-semibold">Alle Attribute</h2></div><table class="w-full"><thead class="bg-gray-50 border-b"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Typ</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Werte</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th></tr></thead><tbody>{attributes.results && attributes.results.length > 0 ? attributes.results.map((attr: any) => (<tr class="hover:bg-gray-50 border-b"><td class="px-6 py-4"><div class="flex items-center"><i class="fas fa-tag text-green-500 mr-3"></i><div><div class="font-medium">{attr.name}</div><div class="text-sm text-gray-500">{attr.code}</div></div></div></td><td class="px-6 py-4 text-sm text-gray-600">{attr.input_type || 'select'}</td><td class="px-6 py-4"><span class="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-full">{attr.value_count || 0}</span></td><td class="px-6 py-4">{attr.is_active === 1 ? <span class="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full">Aktiv</span> : <span class="px-3 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Inaktiv</span>}</td><td class="px-6 py-4"><button class="text-blue-600 mr-3"><i class="fas fa-edit"></i></button><button class="text-red-600"><i class="fas fa-trash"></i></button></td></tr>)) : (<tr><td colspan="5" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-tags text-6xl mb-4 text-gray-300"></i><p class="text-lg mb-4">Keine Attribute gefunden</p><button class="bg-green-600 text-white px-6 py-2 rounded-lg">Erstes Attribut erstellen</button></td></tr>)}</tbody></table></div></div></body></html>);
+  return c.html(<html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Attribute - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/></head><body class="bg-gray-50"><div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/attributes')}} /><div style="margin-left: 280px; padding: 2rem;"><div class="mb-6 flex justify-between items-center"><div><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-tags mr-3 text-green-600"></i>Attribute & Varianten</h1><p class="text-gray-600">Produktattribute verwalten (Größe, Farbe, etc.)</p></div><button class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg"><i class="fas fa-plus mr-2"></i>Neues Attribut</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Attribute</p><p class="text-2xl font-bold">{attributes.results?.length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Aktive Attribute</p><p class="text-2xl font-bold text-green-600">{attributes.results?.filter((a: any) => a.is_active === 1).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Werte</p><p class="text-2xl font-bold text-blue-600">{attributes.results?.reduce((sum: number, a: any) => sum + (a.value_count || 0), 0) || 0}</p></div></div><div class="bg-white rounded-lg shadow"><div class="p-6 border-b"><h2 class="text-xl font-semibold">Alle Attribute</h2></div><table class="w-full"><thead class="bg-gray-50 border-b"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Typ</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Werte</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th></tr></thead><tbody>{attributes.results && attributes.results.length > 0 ? attributes.results.map((attr: any) => (<tr class="hover:bg-gray-50 border-b"><td class="px-6 py-4"><div class="flex items-center"><i class="fas fa-tag text-green-500 mr-3"></i><div><div class="font-medium">{attr.name}</div><div class="text-sm text-gray-500">{attr.code}</div></div></div></td><td class="px-6 py-4 text-sm text-gray-600">{attr.input_type || 'select'}</td><td class="px-6 py-4"><span class="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-full">{attr.value_count || 0}</span></td><td class="px-6 py-4">{attr.is_active === 1 ? <span class="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full">Aktiv</span> : <span class="px-3 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Inaktiv</span>}</td><td class="px-6 py-4"><button class="text-blue-600 mr-3"><i class="fas fa-edit"></i></button><button class="text-red-600"><i class="fas fa-trash"></i></button></td></tr>)) : (<tr><td colspan="5" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-tags text-6xl mb-4 text-gray-300"></i><p class="text-lg mb-4">Keine Attribute gefunden</p><button class="bg-green-600 text-white px-6 py-2 rounded-lg">Erstes Attribut erstellen</button></td></tr>)}</tbody></table></div></div></body></html>);
 });
 
 // 4. BUNDLES
@@ -9598,7 +9598,7 @@ app.get('/admin/bundles', async (c) => {
   } catch (e) {
     console.log('Bundles table not yet created');
   }
-  return c.html(<html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Bundles - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/></head><body class="bg-gray-50"><div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/bundles')}} /><div style="margin-left: 280px; padding: 2rem;"><div class="mb-6 flex justify-between items-center"><div><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-boxes mr-3 text-orange-600"></i>Produkt-Bundles</h1><p class="text-gray-600">Produktpakete verwalten</p></div><button class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg"><i class="fas fa-plus mr-2"></i>Neues Bundle</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Bundles</p><p class="text-2xl font-bold">{bundles.results?.length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Aktive Bundles</p><p class="text-2xl font-bold text-green-600">{bundles.results?.filter((b: any) => b.is_active === 1).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Ø Produkte pro Bundle</p><p class="text-2xl font-bold text-blue-600">{bundles.results?.length > 0 ? Math.round(bundles.results.reduce((sum: number, b: any) => sum + (b.item_count || 0), 0) / bundles.results.length) : 0}</p></div></div><div class="bg-white rounded-lg shadow"><div class="p-6 border-b"><h2 class="text-xl font-semibold">Alle Bundles</h2></div><table class="w-full"><thead class="bg-gray-50 border-b"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produkte</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Preis</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th></tr></thead><tbody>{bundles.results && bundles.results.length > 0 ? bundles.results.map((bundle: any) => (<tr class="hover:bg-gray-50 border-b"><td class="px-6 py-4"><div class="flex items-center"><i class="fas fa-box text-orange-500 mr-3"></i><div><div class="font-medium">{bundle.name}</div><div class="text-sm text-gray-500">{bundle.description?.substring(0, 40)}...</div></div></div></td><td class="px-6 py-4"><span class="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-full">{bundle.item_count || 0} Produkte</span></td><td class="px-6 py-4 font-semibold text-gray-900">{bundle.price ? `€${parseFloat(bundle.price).toFixed(2)}` : 'N/A'}</td><td class="px-6 py-4">{bundle.is_active === 1 ? <span class="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full">Aktiv</span> : <span class="px-3 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Inaktiv</span>}</td><td class="px-6 py-4"><button class="text-blue-600 mr-3"><i class="fas fa-edit"></i></button><button class="text-red-600"><i class="fas fa-trash"></i></button></td></tr>)) : (<tr><td colspan="5" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-boxes text-6xl mb-4 text-gray-300"></i><p class="text-lg mb-4">Keine Bundles gefunden</p><button class="bg-orange-600 text-white px-6 py-2 rounded-lg">Erstes Bundle erstellen</button></td></tr>)}</tbody></table></div></div></body></html>);
+  return c.html(<html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Bundles - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/></head><body class="bg-gray-50"><div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/bundles')}} /><div style="margin-left: 280px; padding: 2rem;"><div class="mb-6 flex justify-between items-center"><div><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-boxes mr-3 text-orange-600"></i>Produkt-Bundles</h1><p class="text-gray-600">Produktpakete verwalten</p></div><button class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg"><i class="fas fa-plus mr-2"></i>Neues Bundle</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Bundles</p><p class="text-2xl font-bold">{bundles.results?.length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Aktive Bundles</p><p class="text-2xl font-bold text-green-600">{bundles.results?.filter((b: any) => b.is_active === 1).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Ø Produkte pro Bundle</p><p class="text-2xl font-bold text-blue-600">{bundles.results?.length > 0 ? Math.round(bundles.results.reduce((sum: number, b: any) => sum + (b.item_count || 0), 0) / bundles.results.length) : 0}</p></div></div><div class="bg-white rounded-lg shadow"><div class="p-6 border-b"><h2 class="text-xl font-semibold">Alle Bundles</h2></div><table class="w-full"><thead class="bg-gray-50 border-b"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produkte</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Preis</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th></tr></thead><tbody>{bundles.results && bundles.results.length > 0 ? bundles.results.map((bundle: any) => (<tr class="hover:bg-gray-50 border-b"><td class="px-6 py-4"><div class="flex items-center"><i class="fas fa-box text-orange-500 mr-3"></i><div><div class="font-medium">{bundle.name}</div><div class="text-sm text-gray-500">{bundle.description?.substring(0, 40)}...</div></div></div></td><td class="px-6 py-4"><span class="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-full">{bundle.item_count || 0} Produkte</span></td><td class="px-6 py-4 font-semibold text-gray-900">{bundle.price ? `€${parseFloat(bundle.price).toFixed(2)}` : 'N/A'}</td><td class="px-6 py-4">{bundle.is_active === 1 ? <span class="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full">Aktiv</span> : <span class="px-3 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Inaktiv</span>}</td><td class="px-6 py-4"><button class="text-blue-600 mr-3"><i class="fas fa-edit"></i></button><button class="text-red-600"><i class="fas fa-trash"></i></button></td></tr>)) : (<tr><td colspan="5" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-boxes text-6xl mb-4 text-gray-300"></i><p class="text-lg mb-4">Keine Bundles gefunden</p><button class="bg-orange-600 text-white px-6 py-2 rounded-lg">Erstes Bundle erstellen</button></td></tr>)}</tbody></table></div></div></body></html>);
 });
 
 // 5. VOLUME PRODUCTS
@@ -9610,7 +9610,7 @@ app.get('/admin/volume-products', async (c) => {
   } catch (e) {
     console.log('Volume pricing table not yet created');
   }
-  return c.html(<html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Volumenprodukte - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/></head><body class="bg-gray-50"><div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/volume-products')}} /><div style="margin-left: 280px; padding: 2rem;"><div class="mb-6 flex justify-between items-center"><div><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-layer-group mr-3 text-indigo-600"></i>Volumenprodukte</h1><p class="text-gray-600">Mengenrabatte und Volumenlizenzen verwalten</p></div><button class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg"><i class="fas fa-plus mr-2"></i>Neue Preisstufe</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Preisstufen</p><p class="text-2xl font-bold">{volumePricing.results?.length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Aktive Regeln</p><p class="text-2xl font-bold text-green-600">{volumePricing.results?.filter((v: any) => v.is_active === 1).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Produkte mit Rabatten</p><p class="text-2xl font-bold text-blue-600">{new Set(volumePricing.results?.map((v: any) => v.product_id)).size || 0}</p></div></div><div class="bg-white rounded-lg shadow"><div class="p-6 border-b"><h2 class="text-xl font-semibold">Alle Volumen-Preisstufen</h2></div><table class="w-full"><thead class="bg-gray-50 border-b"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produkt</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Min. Menge</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Max. Menge</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Preis</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rabatt</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th></tr></thead><tbody>{volumePricing.results && volumePricing.results.length > 0 ? volumePricing.results.map((vol: any) => (<tr class="hover:bg-gray-50 border-b"><td class="px-6 py-4"><div class="font-medium">{vol.product_name || `Produkt #${vol.product_id}`}</div></td><td class="px-6 py-4 text-sm text-gray-600">{vol.min_quantity}</td><td class="px-6 py-4 text-sm text-gray-600">{vol.max_quantity || '∞'}</td><td class="px-6 py-4 font-semibold text-gray-900">{vol.price ? `€${parseFloat(vol.price).toFixed(2)}` : 'N/A'}</td><td class="px-6 py-4"><span class="px-3 py-1 text-sm bg-green-100 text-green-800 rounded-full">{vol.discount_percentage ? `${vol.discount_percentage}%` : '-'}</span></td><td class="px-6 py-4"><button class="text-blue-600 mr-3"><i class="fas fa-edit"></i></button><button class="text-red-600"><i class="fas fa-trash"></i></button></td></tr>)) : (<tr><td colspan="6" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-layer-group text-6xl mb-4 text-gray-300"></i><p class="text-lg mb-4">Keine Volumen-Preisstufen gefunden</p><button class="bg-indigo-600 text-white px-6 py-2 rounded-lg">Erste Preisstufe erstellen</button></td></tr>)}</tbody></table></div></div></body></html>);
+  return c.html(<html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Volumenprodukte - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/></head><body class="bg-gray-50"><div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/volume-products')}} /><div style="margin-left: 280px; padding: 2rem;"><div class="mb-6 flex justify-between items-center"><div><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-layer-group mr-3 text-indigo-600"></i>Volumenprodukte</h1><p class="text-gray-600">Mengenrabatte und Volumenlizenzen verwalten</p></div><button class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg"><i class="fas fa-plus mr-2"></i>Neue Preisstufe</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Preisstufen</p><p class="text-2xl font-bold">{volumePricing.results?.length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Aktive Regeln</p><p class="text-2xl font-bold text-green-600">{volumePricing.results?.filter((v: any) => v.is_active === 1).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Produkte mit Rabatten</p><p class="text-2xl font-bold text-blue-600">{new Set(volumePricing.results?.map((v: any) => v.product_id)).size || 0}</p></div></div><div class="bg-white rounded-lg shadow"><div class="p-6 border-b"><h2 class="text-xl font-semibold">Alle Volumen-Preisstufen</h2></div><table class="w-full"><thead class="bg-gray-50 border-b"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produkt</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Min. Menge</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Max. Menge</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Preis</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rabatt</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th></tr></thead><tbody>{volumePricing.results && volumePricing.results.length > 0 ? volumePricing.results.map((vol: any) => (<tr class="hover:bg-gray-50 border-b"><td class="px-6 py-4"><div class="font-medium">{vol.product_name || `Produkt #${vol.product_id}`}</div></td><td class="px-6 py-4 text-sm text-gray-600">{vol.min_quantity}</td><td class="px-6 py-4 text-sm text-gray-600">{vol.max_quantity || '∞'}</td><td class="px-6 py-4 font-semibold text-gray-900">{vol.price ? `€${parseFloat(vol.price).toFixed(2)}` : 'N/A'}</td><td class="px-6 py-4"><span class="px-3 py-1 text-sm bg-green-100 text-green-800 rounded-full">{vol.discount_percentage ? `${vol.discount_percentage}%` : '-'}</span></td><td class="px-6 py-4"><button class="text-blue-600 mr-3"><i class="fas fa-edit"></i></button><button class="text-red-600"><i class="fas fa-trash"></i></button></td></tr>)) : (<tr><td colspan="6" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-layer-group text-6xl mb-4 text-gray-300"></i><p class="text-lg mb-4">Keine Volumen-Preisstufen gefunden</p><button class="bg-indigo-600 text-white px-6 py-2 rounded-lg">Erste Preisstufe erstellen</button></td></tr>)}</tbody></table></div></div></body></html>);
 });
 
 // 6. INVENTORY
@@ -9622,7 +9622,7 @@ app.get('/admin/inventory', async (c) => {
   } catch (e) {
     console.log('Inventory/product_variants table not yet fully configured');
   }
-  return c.html(<html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Lager - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/></head><body class="bg-gray-50"><div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/inventory')}} /><div style="margin-left: 280px; padding: 2rem;"><div class="mb-6 flex justify-between items-center"><div><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-warehouse mr-3 text-cyan-600"></i>Lager & Verfügbarkeit</h1><p class="text-gray-600">Bestandsverwaltung und Lagerbewegungen</p></div><button class="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 rounded-lg"><i class="fas fa-plus mr-2"></i>Bestand hinzufügen</button></div><div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Artikel</p><p class="text-2xl font-bold">{inventory.results?.length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Niedriger Bestand</p><p class="text-2xl font-bold text-orange-600">{inventory.results?.filter((i: any) => i.stock_quantity <= (i.low_stock_threshold || 10)).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Ausverkauft</p><p class="text-2xl font-bold text-red-600">{inventory.results?.filter((i: any) => i.stock_quantity === 0).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Auf Lager</p><p class="text-2xl font-bold text-green-600">{inventory.results?.filter((i: any) => i.stock_quantity > 0).length || 0}</p></div></div><div class="bg-white rounded-lg shadow"><div class="p-6 border-b"><h2 class="text-xl font-semibold">Lagerbestand</h2></div><table class="w-full"><thead class="bg-gray-50 border-b"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produkt</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bestand</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reserviert</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Verfügbar</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th></tr></thead><tbody>{inventory.results && inventory.results.length > 0 ? inventory.results.map((item: any) => {const available = (item.stock_quantity || 0) - (item.reserved_quantity || 0); const isLowStock = item.stock_quantity <= (item.low_stock_threshold || 10); const isOutOfStock = item.stock_quantity === 0; return (<tr class="hover:bg-gray-50 border-b"><td class="px-6 py-4"><div class="font-medium">{item.name}</div></td><td class="px-6 py-4 text-sm text-gray-600">{item.variant_sku || item.sku || 'N/A'}</td><td class="px-6 py-4 font-semibold">{item.stock_quantity || 0}</td><td class="px-6 py-4 text-sm text-gray-600">{item.reserved_quantity || 0}</td><td class="px-6 py-4 font-semibold text-green-600">{available}</td><td class="px-6 py-4">{isOutOfStock ? <span class="px-3 py-1 text-xs bg-red-100 text-red-800 rounded-full">Ausverkauft</span> : isLowStock ? <span class="px-3 py-1 text-xs bg-orange-100 text-orange-800 rounded-full">Niedriger Bestand</span> : <span class="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full">Auf Lager</span>}</td><td class="px-6 py-4"><button class="text-blue-600 mr-3"><i class="fas fa-edit"></i></button><button class="text-gray-600"><i class="fas fa-history"></i></button></td></tr>);}) : (<tr><td colspan="7" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-warehouse text-6xl mb-4 text-gray-300"></i><p class="text-lg mb-4">Kein Lagerbestand gefunden</p><button class="bg-cyan-600 text-white px-6 py-2 rounded-lg">Ersten Artikel hinzufügen</button></td></tr>)}</tbody></table></div></div></body></html>);
+  return c.html(<html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Lager - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/></head><body class="bg-gray-50"><div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/inventory')}} /><div style="margin-left: 280px; padding: 2rem;"><div class="mb-6 flex justify-between items-center"><div><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-warehouse mr-3 text-cyan-600"></i>Lager & Verfügbarkeit</h1><p class="text-gray-600">Bestandsverwaltung und Lagerbewegungen</p></div><button class="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 rounded-lg"><i class="fas fa-plus mr-2"></i>Bestand hinzufügen</button></div><div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Artikel</p><p class="text-2xl font-bold">{inventory.results?.length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Niedriger Bestand</p><p class="text-2xl font-bold text-orange-600">{inventory.results?.filter((i: any) => i.stock_quantity <= (i.low_stock_threshold || 10)).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Ausverkauft</p><p class="text-2xl font-bold text-red-600">{inventory.results?.filter((i: any) => i.stock_quantity === 0).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Auf Lager</p><p class="text-2xl font-bold text-green-600">{inventory.results?.filter((i: any) => i.stock_quantity > 0).length || 0}</p></div></div><div class="bg-white rounded-lg shadow"><div class="p-6 border-b"><h2 class="text-xl font-semibold">Lagerbestand</h2></div><table class="w-full"><thead class="bg-gray-50 border-b"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produkt</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bestand</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reserviert</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Verfügbar</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th></tr></thead><tbody>{inventory.results && inventory.results.length > 0 ? inventory.results.map((item: any) => {const available = (item.stock_quantity || 0) - (item.reserved_quantity || 0); const isLowStock = item.stock_quantity <= (item.low_stock_threshold || 10); const isOutOfStock = item.stock_quantity === 0; return (<tr class="hover:bg-gray-50 border-b"><td class="px-6 py-4"><div class="font-medium">{item.name}</div></td><td class="px-6 py-4 text-sm text-gray-600">{item.variant_sku || item.sku || 'N/A'}</td><td class="px-6 py-4 font-semibold">{item.stock_quantity || 0}</td><td class="px-6 py-4 text-sm text-gray-600">{item.reserved_quantity || 0}</td><td class="px-6 py-4 font-semibold text-green-600">{available}</td><td class="px-6 py-4">{isOutOfStock ? <span class="px-3 py-1 text-xs bg-red-100 text-red-800 rounded-full">Ausverkauft</span> : isLowStock ? <span class="px-3 py-1 text-xs bg-orange-100 text-orange-800 rounded-full">Niedriger Bestand</span> : <span class="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full">Auf Lager</span>}</td><td class="px-6 py-4"><button class="text-blue-600 mr-3"><i class="fas fa-edit"></i></button><button class="text-gray-600"><i class="fas fa-history"></i></button></td></tr>);}) : (<tr><td colspan="7" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-warehouse text-6xl mb-4 text-gray-300"></i><p class="text-lg mb-4">Kein Lagerbestand gefunden</p><button class="bg-cyan-600 text-white px-6 py-2 rounded-lg">Ersten Artikel hinzufügen</button></td></tr>)}</tbody></table></div></div></body></html>);
 });
 
 // 7. PRODUCT SEO
@@ -9634,7 +9634,7 @@ app.get('/admin/products/seo', async (c) => {
   } catch (e) {
     console.log('Products SEO columns may not exist');
   }
-  return c.html(<html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Produkt SEO - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/></head><body class="bg-gray-50"><div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/products/seo')}} /><div style="margin-left: 280px; padding: 2rem;"><div class="mb-6 flex justify-between items-center"><div><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-search mr-3 text-pink-600"></i>Produkt-SEO</h1><p class="text-gray-600">SEO-Metadaten für Produkte verwalten</p></div><button class="bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-lg"><i class="fas fa-magic mr-2"></i>Bulk SEO</button></div><div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Produkte</p><p class="text-2xl font-bold">{products.results?.length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Mit SEO-Titel</p><p class="text-2xl font-bold text-green-600">{products.results?.filter((p: any) => p.seo_title).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Mit Description</p><p class="text-2xl font-bold text-blue-600">{products.results?.filter((p: any) => p.seo_description).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Mit Keywords</p><p class="text-2xl font-bold text-purple-600">{products.results?.filter((p: any) => p.seo_keywords).length || 0}</p></div></div><div class="bg-white rounded-lg shadow"><div class="p-6 border-b"><h2 class="text-xl font-semibold">Produkt SEO-Übersicht</h2></div><table class="w-full"><thead class="bg-gray-50 border-b"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produkt</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SEO-Titel</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Meta Description</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th></tr></thead><tbody>{products.results && products.results.length > 0 ? products.results.map((prod: any) => {const hasSeo = prod.seo_title && prod.seo_description; return (<tr class="hover:bg-gray-50 border-b"><td class="px-6 py-4"><div><div class="font-medium">{prod.name}</div><div class="text-sm text-gray-500">/{prod.slug}</div></div></td><td class="px-6 py-4"><div class="text-sm">{prod.seo_title ? <span class="text-gray-900">{prod.seo_title.substring(0, 40)}...</span> : <span class="text-gray-400 italic">Nicht gesetzt</span>}</div></td><td class="px-6 py-4"><div class="text-sm">{prod.seo_description ? <span class="text-gray-900">{prod.seo_description.substring(0, 50)}...</span> : <span class="text-gray-400 italic">Nicht gesetzt</span>}</div></td><td class="px-6 py-4">{hasSeo ? <span class="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full"><i class="fas fa-check-circle mr-1"></i>Optimiert</span> : <span class="px-3 py-1 text-xs bg-orange-100 text-orange-800 rounded-full"><i class="fas fa-exclamation-triangle mr-1"></i>Unvollständig</span>}</td><td class="px-6 py-4"><button class="text-blue-600 mr-3"><i class="fas fa-edit"></i></button><button class="text-gray-600"><i class="fas fa-chart-line"></i></button></td></tr>);}) : (<tr><td colspan="5" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-search text-6xl mb-4 text-gray-300"></i><p class="text-lg mb-4">Keine Produkte gefunden</p></td></tr>)}</tbody></table></div></div></body></html>);
+  return c.html(<html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Produkt SEO - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/></head><body class="bg-gray-50"><div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/products/seo')}} /><div style="margin-left: 280px; padding: 2rem;"><div class="mb-6 flex justify-between items-center"><div><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-search mr-3 text-pink-600"></i>Produkt-SEO</h1><p class="text-gray-600">SEO-Metadaten für Produkte verwalten</p></div><button class="bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-lg"><i class="fas fa-magic mr-2"></i>Bulk SEO</button></div><div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Produkte</p><p class="text-2xl font-bold">{products.results?.length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Mit SEO-Titel</p><p class="text-2xl font-bold text-green-600">{products.results?.filter((p: any) => p.seo_title).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Mit Description</p><p class="text-2xl font-bold text-blue-600">{products.results?.filter((p: any) => p.seo_description).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Mit Keywords</p><p class="text-2xl font-bold text-purple-600">{products.results?.filter((p: any) => p.seo_keywords).length || 0}</p></div></div><div class="bg-white rounded-lg shadow"><div class="p-6 border-b"><h2 class="text-xl font-semibold">Produkt SEO-Übersicht</h2></div><table class="w-full"><thead class="bg-gray-50 border-b"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produkt</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SEO-Titel</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Meta Description</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th></tr></thead><tbody>{products.results && products.results.length > 0 ? products.results.map((prod: any) => {const hasSeo = prod.seo_title && prod.seo_description; return (<tr class="hover:bg-gray-50 border-b"><td class="px-6 py-4"><div><div class="font-medium">{prod.name}</div><div class="text-sm text-gray-500">/{prod.slug}</div></div></td><td class="px-6 py-4"><div class="text-sm">{prod.seo_title ? <span class="text-gray-900">{prod.seo_title.substring(0, 40)}...</span> : <span class="text-gray-400 italic">Nicht gesetzt</span>}</div></td><td class="px-6 py-4"><div class="text-sm">{prod.seo_description ? <span class="text-gray-900">{prod.seo_description.substring(0, 50)}...</span> : <span class="text-gray-400 italic">Nicht gesetzt</span>}</div></td><td class="px-6 py-4">{hasSeo ? <span class="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full"><i class="fas fa-check-circle mr-1"></i>Optimiert</span> : <span class="px-3 py-1 text-xs bg-orange-100 text-orange-800 rounded-full"><i class="fas fa-exclamation-triangle mr-1"></i>Unvollständig</span>}</td><td class="px-6 py-4"><button class="text-blue-600 mr-3"><i class="fas fa-edit"></i></button><button class="text-gray-600"><i class="fas fa-chart-line"></i></button></td></tr>);}) : (<tr><td colspan="5" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-search text-6xl mb-4 text-gray-300"></i><p class="text-lg mb-4">Keine Produkte gefunden</p></td></tr>)}</tbody></table></div></div></body></html>);
 });
 
 
@@ -9703,7 +9703,7 @@ app.get('/admin/sliders', (c) => {
         `}} />
       </head>
       <body>
-        <div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/sliders')}} />
+        <div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/sliders')}} />
         <div class="admin-content">
           <AdminSliders />
         </div>
@@ -10588,7 +10588,7 @@ app.post('/api/payments/stripe/webhook', async (c) => {
         // Update order status to completed
         await c.env.DB.prepare(`
           UPDATE orders 
-          SET status = 'completed',
+          SET order_status = 'completed',
               completed_at = datetime('now')
           WHERE id = ?
         `).bind(order.id).run()
@@ -11445,12 +11445,12 @@ app.get('/api/admin/dashboard/stats', async (c) => {
     console.log('Revenue result:', revenueResult)
     const revenueToday = Number(revenueResult?.revenue) || 0
     
-    // Available licenses
-    const licensesResult = await db.db.prepare(`
-      SELECT COUNT(*) as available FROM license_keys WHERE status = 'available'
-    `).first()
-    console.log('Licenses result:', licensesResult)
-    const availableLicenses = Number(licensesResult?.available) || 0
+    // Available licenses (table not in schema - disabled for now)
+    // const licensesResult = await db.db.prepare(`
+    //   SELECT COUNT(*) as available FROM license_keys WHERE status = 'available'
+    // `).first()
+    // console.log('Licenses result:', licensesResult)
+    const availableLicenses = 0 // TODO: Add license_keys table to schema
     
     // Total customers
     const customersResult = await db.db.prepare(`SELECT COUNT(*) as total FROM users`).first()
@@ -11529,9 +11529,9 @@ app.get('/api/admin/licenses/stats', async (c) => {
     const stats = await db.db.prepare(`
       SELECT 
         COUNT(*) as total,
-        SUM(CASE WHEN status = 'available' THEN 1 ELSE 0 END) as available,
-        SUM(CASE WHEN status = 'sold' THEN 1 ELSE 0 END) as sold,
-        SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) as expired
+        SUM(CASE WHEN order_status = 'available' THEN 1 ELSE 0 END) as available,
+        SUM(CASE WHEN order_status = 'sold' THEN 1 ELSE 0 END) as sold,
+        SUM(CASE WHEN order_status = 'expired' THEN 1 ELSE 0 END) as expired
       FROM license_keys
     `).first()
     
@@ -12304,7 +12304,7 @@ app.get('/konto/adressen', (c) => c.html(FrontendPlaceholder('/konto/adressen', 
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
     </head>
     <body class="bg-gray-50">
-        $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/categories')}} />
+        $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/categories')}} />
         <div class="ml-64 p-8">
             <div class="mb-8">
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">
@@ -12541,7 +12541,7 @@ app.get('/konto/adressen', (c) => c.html(FrontendPlaceholder('/konto/adressen', 
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
     </head>
     <body class="bg-gray-50">
-        $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/brands')}} />
+        $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/brands')}} />
         <div class="ml-64 p-8">
             <div class="mb-8">
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">
@@ -12737,7 +12737,7 @@ app.get('/admin/customer-profiles', async (c) => {
     SELECT u.*,
            COUNT(DISTINCT o.id) as order_count,
            COUNT(DISTINCT lk.id) as license_count,
-           SUM(CASE WHEN o.status = 'completed' THEN o.total ELSE 0 END) as total_spent
+           SUM(CASE WHEN o.order_status = 'completed' THEN o.total ELSE 0 END) as total_spent
     FROM users u
     LEFT JOIN orders o ON u.id = o.user_id
     LEFT JOIN license_keys lk ON o.id = lk.assigned_to_order_id
@@ -12762,7 +12762,7 @@ app.get('/admin/customer-profiles', async (c) => {
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
     </head>
     <body class="bg-gray-50">
-        $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/customer-profiles')}} />
+        $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/customer-profiles')}} />
         <div class="ml-64 p-8">
             <div class="mb-8">
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">
@@ -12877,9 +12877,9 @@ app.get('/admin/refunds', async (c) => {
   
   const refunds = await db.db.prepare(`
     SELECT o.id, o.order_number, o.email, o.first_name, o.last_name,
-           o.total, o.status, o.payment_status, o.created_at, o.updated_at
+           o.total, o.order_status, o.payment_status, o.created_at, o.updated_at
     FROM orders o
-    WHERE o.status = 'refunded' OR o.payment_status = 'refunded'
+    WHERE o.order_status = 'refunded' OR o.payment_status = 'refunded'
     ORDER BY o.updated_at DESC
     LIMIT 50
   `).all()
@@ -12896,7 +12896,7 @@ app.get('/admin/refunds', async (c) => {
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
     </head>
     <body class="bg-gray-50">
-        $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/refunds')}} />
+        $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/refunds')}} />
         <div class="ml-64 p-8">
             <div class="mb-8">
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">
@@ -13009,7 +13009,7 @@ app.get('/admin/system-status', async (c) => {
   // Get system statistics
   const stats = {
     products: await db.db.prepare('SELECT COUNT(*) as count FROM products WHERE is_active = 1').first(),
-    orders: await db.db.prepare('SELECT COUNT(*) as count FROM orders WHERE status != "cancelled"').first(),
+    orders: await db.db.prepare('SELECT COUNT(*) as count FROM orders WHERE order_status != "cancelled"').first(),
     customers: await db.db.prepare('SELECT COUNT(*) as count FROM users WHERE role = "customer"').first(),
     licenses: await db.db.prepare('SELECT COUNT(*) as count FROM license_keys WHERE status = "available"').first(),
   }
@@ -13025,7 +13025,7 @@ app.get('/admin/system-status', async (c) => {
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     </head>
     <body class="bg-gray-50">
-        $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/system-status')}} />
+        $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/system-status')}} />
         <div class="ml-64 p-8">
             <div class="mb-8">
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">
@@ -13200,7 +13200,7 @@ app.get('/admin/quick-actions', async (c) => {
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     </head>
     <body class="bg-gray-50">
-        $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/quick-actions')}} />
+        $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/quick-actions')}} />
         <div class="ml-64 p-8">
             <div class="mb-8">
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">
@@ -13474,7 +13474,7 @@ app.get('/admin/volume-licenses', async (c) => {
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     </head>
     <body class="bg-gray-50">
-        $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/volume-licenses')}} />
+        $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/volume-licenses')}} />
         <div class="ml-64 p-8">
             <div class="mb-8">
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">
@@ -13596,7 +13596,7 @@ app.get('/admin/volume-licenses', async (c) => {
           <script src="https://cdn.tailwindcss.com"></script>
       </head>
       <body class="bg-gray-50">
-          $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/volume-licenses')}} />
+          $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/volume-licenses')}} />
           <div class="ml-64 p-8">
               <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
                   <p>Fehler beim Laden der Volumenlizenzen</p>
@@ -13639,10 +13639,10 @@ app.get('/admin/license-usage', async (c) => {
       LIMIT 50
     `).all()
     
-    return c.html(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Lizenznutzung - SOFTWAREKING24 Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"></head><body class="bg-gray-50">$<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/license-usage')}} /><div class="ml-64 p-8"><div class="mb-8"><h1 class="text-3xl font-bold text-gray-900 mb-2"><i class="fas fa-chart-line mr-2 text-purple-600"></i>Lizenznutzung & Aktivierungen</h1><p class="text-gray-600">Überwachung von Lizenzaktivierungen und Nutzungsstatistiken</p></div><div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Lizenzen gesamt</p><p class="text-2xl font-bold text-gray-900">${usageStats.total_licenses}</p></div><div class="p-3 bg-blue-100 rounded-full"><i class="fas fa-key text-blue-600 text-xl"></i></div></div></div><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Aktive Lizenzen</p><p class="text-2xl font-bold text-gray-900">${usageStats.active_licenses}</p></div><div class="p-3 bg-green-100 rounded-full"><i class="fas fa-check-circle text-green-600 text-xl"></i></div></div></div><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Verfügbar</p><p class="text-2xl font-bold text-gray-900">${usageStats.available_licenses}</p></div><div class="p-3 bg-yellow-100 rounded-full"><i class="fas fa-clock text-yellow-600 text-xl"></i></div></div></div><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Aktivierungen</p><p class="text-2xl font-bold text-gray-900">${usageStats.total_activations}</p></div><div class="p-3 bg-purple-100 rounded-full"><i class="fas fa-history text-purple-600 text-xl"></i></div></div></div></div><div class="bg-white rounded-lg shadow-md overflow-hidden"><div class="px-6 py-4 border-b border-gray-200"><h2 class="text-xl font-bold text-gray-900">Letzte Aktivierungen</h2></div>${recentActivations.results && recentActivations.results.length > 0 ? `<div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Zeitpunkt</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lizenzschlüssel</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP-Adresse</th></tr></thead><tbody class="bg-white divide-y divide-gray-200">${(recentActivations.results as any[]).map(activation => `<tr class="hover:bg-gray-50"><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${activation.activated_at ? new Date(activation.activated_at).toLocaleString('de-DE') : 'N/A'}</td><td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-600">${activation.license_key || 'N/A'}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${activation.ip_address || 'N/A'}</td></tr>`).join('')}</tbody></table></div>` : `<div class="p-8 text-center text-gray-500"><i class="fas fa-inbox text-4xl mb-4"></i><p>Keine Aktivierungen gefunden</p></div>`}</div></div></body></html>`)
+    return c.html(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Lizenznutzung - SOFTWAREKING24 Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"></head><body class="bg-gray-50">$<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/license-usage')}} /><div class="ml-64 p-8"><div class="mb-8"><h1 class="text-3xl font-bold text-gray-900 mb-2"><i class="fas fa-chart-line mr-2 text-purple-600"></i>Lizenznutzung & Aktivierungen</h1><p class="text-gray-600">Überwachung von Lizenzaktivierungen und Nutzungsstatistiken</p></div><div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Lizenzen gesamt</p><p class="text-2xl font-bold text-gray-900">${usageStats.total_licenses}</p></div><div class="p-3 bg-blue-100 rounded-full"><i class="fas fa-key text-blue-600 text-xl"></i></div></div></div><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Aktive Lizenzen</p><p class="text-2xl font-bold text-gray-900">${usageStats.active_licenses}</p></div><div class="p-3 bg-green-100 rounded-full"><i class="fas fa-check-circle text-green-600 text-xl"></i></div></div></div><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Verfügbar</p><p class="text-2xl font-bold text-gray-900">${usageStats.available_licenses}</p></div><div class="p-3 bg-yellow-100 rounded-full"><i class="fas fa-clock text-yellow-600 text-xl"></i></div></div></div><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Aktivierungen</p><p class="text-2xl font-bold text-gray-900">${usageStats.total_activations}</p></div><div class="p-3 bg-purple-100 rounded-full"><i class="fas fa-history text-purple-600 text-xl"></i></div></div></div></div><div class="bg-white rounded-lg shadow-md overflow-hidden"><div class="px-6 py-4 border-b border-gray-200"><h2 class="text-xl font-bold text-gray-900">Letzte Aktivierungen</h2></div>${recentActivations.results && recentActivations.results.length > 0 ? `<div class="overflow-x-auto"><table class="min-w-full divide-y divide-gray-200"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Zeitpunkt</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lizenzschlüssel</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">IP-Adresse</th></tr></thead><tbody class="bg-white divide-y divide-gray-200">${(recentActivations.results as any[]).map(activation => `<tr class="hover:bg-gray-50"><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${activation.activated_at ? new Date(activation.activated_at).toLocaleString('de-DE') : 'N/A'}</td><td class="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-600">${activation.license_key || 'N/A'}</td><td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${activation.ip_address || 'N/A'}</td></tr>`).join('')}</tbody></table></div>` : `<div class="p-8 text-center text-gray-500"><i class="fas fa-inbox text-4xl mb-4"></i><p>Keine Aktivierungen gefunden</p></div>`}</div></div></body></html>`)
   } catch (error) {
     console.error('Error loading license usage:', error)
-    return c.html(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><title>Fehler</title><script src="https://cdn.tailwindcss.com"></script></head><body class="bg-gray-50">$<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/license-usage')}} /><div class="ml-64 p-8"><div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"><p>Fehler beim Laden der Lizenznutzungsdaten</p></div></div></body></html>`)
+    return c.html(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><title>Fehler</title><script src="https://cdn.tailwindcss.com"></script></head><body class="bg-gray-50">$<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/license-usage')}} /><div class="ml-64 p-8"><div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"><p>Fehler beim Laden der Lizenznutzungsdaten</p></div></div></body></html>`)
   }
 })
 
@@ -13657,10 +13657,10 @@ app.get('/admin/security-dashboard', async (c) => {
       recentLogins: await db.db.prepare('SELECT COUNT(*) as count FROM sessions WHERE created_at > datetime("now", "-24 hours")').first()
     }
     
-    return c.html(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Sicherheits-Dashboard - SOFTWAREKING24 Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"></head><body class="bg-gray-50">$<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/security-dashboard')}} /><div class="ml-64 p-8"><div class="mb-8"><h1 class="text-3xl font-bold text-gray-900 mb-2"><i class="fas fa-shield-alt mr-2 text-red-600"></i>Sicherheits-Dashboard</h1><p class="text-gray-600">Überwachung von Sicherheitsereignissen und Zugriffen</p></div><div class="bg-white rounded-lg shadow-md p-6 mb-6"><div class="flex items-center justify-between mb-6"><h2 class="text-xl font-bold text-gray-900">Sicherheitsstatus</h2><div class="flex items-center"><div class="h-3 w-3 bg-green-500 rounded-full mr-2 animate-pulse"></div><span class="text-sm font-medium text-green-600">System gesichert</span></div></div><div class="grid grid-cols-1 md:grid-cols-4 gap-6"><div class="text-center p-4 bg-green-50 rounded-lg"><i class="fas fa-lock text-3xl text-green-600 mb-2"></i><p class="text-sm text-gray-600">SSL/TLS</p><p class="text-lg font-bold text-green-600">Aktiv</p></div><div class="text-center p-4 bg-green-50 rounded-lg"><i class="fas fa-shield-virus text-3xl text-green-600 mb-2"></i><p class="text-sm text-gray-600">Firewall</p><p class="text-lg font-bold text-green-600">Aktiv</p></div><div class="text-center p-4 bg-green-50 rounded-lg"><i class="fas fa-user-shield text-3xl text-green-600 mb-2"></i><p class="text-sm text-gray-600">2FA</p><p class="text-lg font-bold text-green-600">Verfügbar</p></div><div class="text-center p-4 bg-green-50 rounded-lg"><i class="fas fa-key text-3xl text-green-600 mb-2"></i><p class="text-sm text-gray-600">Passwortstärke</p><p class="text-lg font-bold text-green-600">Hoch</p></div></div></div><div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Benutzer gesamt</p><p class="text-2xl font-bold text-gray-900">${(securityStats.totalUsers as any)?.count || 0}</p></div><div class="p-3 bg-blue-100 rounded-full"><i class="fas fa-users text-blue-600 text-xl"></i></div></div></div><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Aktive Admins</p><p class="text-2xl font-bold text-gray-900">${(securityStats.activeAdmins as any)?.count || 0}</p></div><div class="p-3 bg-purple-100 rounded-full"><i class="fas fa-user-tie text-purple-600 text-xl"></i></div></div></div><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Logins (24h)</p><p class="text-2xl font-bold text-gray-900">${(securityStats.recentLogins as any)?.count || 0}</p></div><div class="p-3 bg-green-100 rounded-full"><i class="fas fa-sign-in-alt text-green-600 text-xl"></i></div></div></div></div><div class="bg-white rounded-lg shadow-md p-6 mb-6"><h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fas fa-lightbulb text-yellow-600 mr-2"></i>Sicherheitsempfehlungen</h2><div class="space-y-3"><div class="flex items-start p-3 bg-green-50 rounded-lg"><i class="fas fa-check-circle text-green-600 mt-1 mr-3"></i><div><p class="font-medium text-green-900">SSL/TLS aktiviert</p><p class="text-sm text-green-700">Alle Verbindungen sind verschlüsselt</p></div></div><div class="flex items-start p-3 bg-yellow-50 rounded-lg"><i class="fas fa-exclamation-triangle text-yellow-600 mt-1 mr-3"></i><div><p class="font-medium text-yellow-900">2FA empfohlen</p><p class="text-sm text-yellow-700">Aktivieren Sie Zwei-Faktor-Authentifizierung für alle Admins</p></div></div></div></div><div class="bg-white rounded-lg shadow-md overflow-hidden"><div class="px-6 py-4 border-b border-gray-200"><h2 class="text-xl font-bold text-gray-900">Sicherheitsereignisse</h2></div><div class="p-8 text-center text-gray-500"><i class="fas fa-shield-alt text-4xl mb-4"></i><p>Keine kritischen Sicherheitsereignisse</p><p class="text-sm mt-2">Alle Systeme funktionieren normal</p></div></div></div></body></html>`)
+    return c.html(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Sicherheits-Dashboard - SOFTWAREKING24 Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"></head><body class="bg-gray-50">$<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/security-dashboard')}} /><div class="ml-64 p-8"><div class="mb-8"><h1 class="text-3xl font-bold text-gray-900 mb-2"><i class="fas fa-shield-alt mr-2 text-red-600"></i>Sicherheits-Dashboard</h1><p class="text-gray-600">Überwachung von Sicherheitsereignissen und Zugriffen</p></div><div class="bg-white rounded-lg shadow-md p-6 mb-6"><div class="flex items-center justify-between mb-6"><h2 class="text-xl font-bold text-gray-900">Sicherheitsstatus</h2><div class="flex items-center"><div class="h-3 w-3 bg-green-500 rounded-full mr-2 animate-pulse"></div><span class="text-sm font-medium text-green-600">System gesichert</span></div></div><div class="grid grid-cols-1 md:grid-cols-4 gap-6"><div class="text-center p-4 bg-green-50 rounded-lg"><i class="fas fa-lock text-3xl text-green-600 mb-2"></i><p class="text-sm text-gray-600">SSL/TLS</p><p class="text-lg font-bold text-green-600">Aktiv</p></div><div class="text-center p-4 bg-green-50 rounded-lg"><i class="fas fa-shield-virus text-3xl text-green-600 mb-2"></i><p class="text-sm text-gray-600">Firewall</p><p class="text-lg font-bold text-green-600">Aktiv</p></div><div class="text-center p-4 bg-green-50 rounded-lg"><i class="fas fa-user-shield text-3xl text-green-600 mb-2"></i><p class="text-sm text-gray-600">2FA</p><p class="text-lg font-bold text-green-600">Verfügbar</p></div><div class="text-center p-4 bg-green-50 rounded-lg"><i class="fas fa-key text-3xl text-green-600 mb-2"></i><p class="text-sm text-gray-600">Passwortstärke</p><p class="text-lg font-bold text-green-600">Hoch</p></div></div></div><div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Benutzer gesamt</p><p class="text-2xl font-bold text-gray-900">${(securityStats.totalUsers as any)?.count || 0}</p></div><div class="p-3 bg-blue-100 rounded-full"><i class="fas fa-users text-blue-600 text-xl"></i></div></div></div><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Aktive Admins</p><p class="text-2xl font-bold text-gray-900">${(securityStats.activeAdmins as any)?.count || 0}</p></div><div class="p-3 bg-purple-100 rounded-full"><i class="fas fa-user-tie text-purple-600 text-xl"></i></div></div></div><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Logins (24h)</p><p class="text-2xl font-bold text-gray-900">${(securityStats.recentLogins as any)?.count || 0}</p></div><div class="p-3 bg-green-100 rounded-full"><i class="fas fa-sign-in-alt text-green-600 text-xl"></i></div></div></div></div><div class="bg-white rounded-lg shadow-md p-6 mb-6"><h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fas fa-lightbulb text-yellow-600 mr-2"></i>Sicherheitsempfehlungen</h2><div class="space-y-3"><div class="flex items-start p-3 bg-green-50 rounded-lg"><i class="fas fa-check-circle text-green-600 mt-1 mr-3"></i><div><p class="font-medium text-green-900">SSL/TLS aktiviert</p><p class="text-sm text-green-700">Alle Verbindungen sind verschlüsselt</p></div></div><div class="flex items-start p-3 bg-yellow-50 rounded-lg"><i class="fas fa-exclamation-triangle text-yellow-600 mt-1 mr-3"></i><div><p class="font-medium text-yellow-900">2FA empfohlen</p><p class="text-sm text-yellow-700">Aktivieren Sie Zwei-Faktor-Authentifizierung für alle Admins</p></div></div></div></div><div class="bg-white rounded-lg shadow-md overflow-hidden"><div class="px-6 py-4 border-b border-gray-200"><h2 class="text-xl font-bold text-gray-900">Sicherheitsereignisse</h2></div><div class="p-8 text-center text-gray-500"><i class="fas fa-shield-alt text-4xl mb-4"></i><p>Keine kritischen Sicherheitsereignisse</p><p class="text-sm mt-2">Alle Systeme funktionieren normal</p></div></div></div></body></html>`)
   } catch (error) {
     console.error('Error loading security dashboard:', error)
-    return c.html(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><title>Fehler</title><script src="https://cdn.tailwindcss.com"></script></head><body class="bg-gray-50">$<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/security-dashboard')}} /><div class="ml-64 p-8"><div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"><p>Fehler beim Laden des Sicherheits-Dashboards</p></div></div></body></html>`)
+    return c.html(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><title>Fehler</title><script src="https://cdn.tailwindcss.com"></script></head><body class="bg-gray-50">$<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/security-dashboard')}} /><div class="ml-64 p-8"><div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"><p>Fehler beim Laden des Sicherheits-Dashboards</p></div></div></body></html>`)
   }
 })
 
@@ -13676,10 +13676,10 @@ app.get('/admin/marketing-overview', async (c) => {
       certificates: await db.db.prepare('SELECT COUNT(*) as count FROM certificates').first()
     }
     
-    return c.html(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Marketing-Übersicht - SOFTWAREKING24 Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"></head><body class="bg-gray-50">$<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/marketing-overview')}} /><div class="ml-64 p-8"><div class="mb-8"><h1 class="text-3xl font-bold text-gray-900 mb-2"><i class="fas fa-bullhorn mr-2 text-orange-600"></i>Marketing-Übersicht</h1><p class="text-gray-600">Übersicht über Marketing-Aktivitäten und Kampagnen</p></div><div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Aktive Coupons</p><p class="text-2xl font-bold text-gray-900">${(stats.coupons as any)?.count || 0}</p></div><div class="p-3 bg-green-100 rounded-full"><i class="fas fa-ticket-alt text-green-600 text-xl"></i></div></div></div><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Bestellungen gesamt</p><p class="text-2xl font-bold text-gray-900">${(stats.totalOrders as any)?.count || 0}</p></div><div class="p-3 bg-blue-100 rounded-full"><i class="fas fa-shopping-cart text-blue-600 text-xl"></i></div></div></div><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Aktive Kunden</p><p class="text-2xl font-bold text-gray-900">${(stats.activeCustomers as any)?.count || 0}</p></div><div class="p-3 bg-purple-100 rounded-full"><i class="fas fa-users text-purple-600 text-xl"></i></div></div></div><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Zertifikate</p><p class="text-2xl font-bold text-gray-900">${(stats.certificates as any)?.count || 0}</p></div><div class="p-3 bg-yellow-100 rounded-full"><i class="fas fa-certificate text-yellow-600 text-xl"></i></div></div></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6"><div class="bg-white rounded-lg shadow-md p-6"><h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fas fa-chart-line text-blue-600 mr-2"></i>Marketing-Kanäle</h2><div class="space-y-3"><div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg"><div class="flex items-center"><i class="fas fa-envelope text-blue-600 mr-3"></i><span class="font-medium">E-Mail Marketing</span></div><a href="/admin/email-templates" class="text-blue-600 hover:text-blue-800"><i class="fas fa-arrow-right"></i></a></div><div class="flex items-center justify-between p-3 bg-green-50 rounded-lg"><div class="flex items-center"><i class="fas fa-tags text-green-600 mr-3"></i><span class="font-medium">Coupons & Rabatte</span></div><a href="/admin/coupons" class="text-green-600 hover:text-green-800"><i class="fas fa-arrow-right"></i></a></div><div class="flex items-center justify-between p-3 bg-purple-50 rounded-lg"><div class="flex items-center"><i class="fas fa-certificate text-purple-600 mr-3"></i><span class="font-medium">Zertifikate</span></div><a href="/admin/certificates" class="text-purple-600 hover:text-purple-800"><i class="fas fa-arrow-right"></i></a></div></div></div><div class="bg-white rounded-lg shadow-md p-6"><h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fas fa-lightbulb text-yellow-600 mr-2"></i>Schnellaktionen</h2><div class="space-y-3"><a href="/admin/coupons" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"><span><i class="fas fa-plus-circle text-green-600 mr-2"></i>Neuen Coupon erstellen</span><i class="fas fa-chevron-right text-gray-400"></i></a><a href="/admin/email-templates" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"><span><i class="fas fa-envelope text-blue-600 mr-2"></i>E-Mail-Vorlage bearbeiten</span><i class="fas fa-chevron-right text-gray-400"></i></a><a href="/admin/homepage-sections" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"><span><i class="fas fa-home text-purple-600 mr-2"></i>Homepage-Bereiche verwalten</span><i class="fas fa-chevron-right text-gray-400"></i></a></div></div></div><div class="bg-white rounded-lg shadow-md p-6"><h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fas fa-info-circle text-blue-600 mr-2"></i>Marketing-Tipps</h2><div class="space-y-3"><div class="p-3 bg-blue-50 rounded-lg"><p class="text-sm text-gray-700"><i class="fas fa-check-circle text-blue-600 mr-2"></i>Nutzen Sie Coupons für Erstkäufer-Aktionen</p></div><div class="p-3 bg-green-50 rounded-lg"><p class="text-sm text-gray-700"><i class="fas fa-check-circle text-green-600 mr-2"></i>E-Mail-Marketing für wiederkehrende Kunden</p></div><div class="p-3 bg-purple-50 rounded-lg"><p class="text-sm text-gray-700"><i class="fas fa-check-circle text-purple-600 mr-2"></i>Zertifikate steigern das Vertrauen</p></div></div></div></div></body></html>`)
+    return c.html(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Marketing-Übersicht - SOFTWAREKING24 Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"></head><body class="bg-gray-50">$<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/marketing-overview')}} /><div class="ml-64 p-8"><div class="mb-8"><h1 class="text-3xl font-bold text-gray-900 mb-2"><i class="fas fa-bullhorn mr-2 text-orange-600"></i>Marketing-Übersicht</h1><p class="text-gray-600">Übersicht über Marketing-Aktivitäten und Kampagnen</p></div><div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Aktive Coupons</p><p class="text-2xl font-bold text-gray-900">${(stats.coupons as any)?.count || 0}</p></div><div class="p-3 bg-green-100 rounded-full"><i class="fas fa-ticket-alt text-green-600 text-xl"></i></div></div></div><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Bestellungen gesamt</p><p class="text-2xl font-bold text-gray-900">${(stats.totalOrders as any)?.count || 0}</p></div><div class="p-3 bg-blue-100 rounded-full"><i class="fas fa-shopping-cart text-blue-600 text-xl"></i></div></div></div><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Aktive Kunden</p><p class="text-2xl font-bold text-gray-900">${(stats.activeCustomers as any)?.count || 0}</p></div><div class="p-3 bg-purple-100 rounded-full"><i class="fas fa-users text-purple-600 text-xl"></i></div></div></div><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Zertifikate</p><p class="text-2xl font-bold text-gray-900">${(stats.certificates as any)?.count || 0}</p></div><div class="p-3 bg-yellow-100 rounded-full"><i class="fas fa-certificate text-yellow-600 text-xl"></i></div></div></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6"><div class="bg-white rounded-lg shadow-md p-6"><h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fas fa-chart-line text-blue-600 mr-2"></i>Marketing-Kanäle</h2><div class="space-y-3"><div class="flex items-center justify-between p-3 bg-blue-50 rounded-lg"><div class="flex items-center"><i class="fas fa-envelope text-blue-600 mr-3"></i><span class="font-medium">E-Mail Marketing</span></div><a href="/admin/email-templates" class="text-blue-600 hover:text-blue-800"><i class="fas fa-arrow-right"></i></a></div><div class="flex items-center justify-between p-3 bg-green-50 rounded-lg"><div class="flex items-center"><i class="fas fa-tags text-green-600 mr-3"></i><span class="font-medium">Coupons & Rabatte</span></div><a href="/admin/coupons" class="text-green-600 hover:text-green-800"><i class="fas fa-arrow-right"></i></a></div><div class="flex items-center justify-between p-3 bg-purple-50 rounded-lg"><div class="flex items-center"><i class="fas fa-certificate text-purple-600 mr-3"></i><span class="font-medium">Zertifikate</span></div><a href="/admin/certificates" class="text-purple-600 hover:text-purple-800"><i class="fas fa-arrow-right"></i></a></div></div></div><div class="bg-white rounded-lg shadow-md p-6"><h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fas fa-lightbulb text-yellow-600 mr-2"></i>Schnellaktionen</h2><div class="space-y-3"><a href="/admin/coupons" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"><span><i class="fas fa-plus-circle text-green-600 mr-2"></i>Neuen Coupon erstellen</span><i class="fas fa-chevron-right text-gray-400"></i></a><a href="/admin/email-templates" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"><span><i class="fas fa-envelope text-blue-600 mr-2"></i>E-Mail-Vorlage bearbeiten</span><i class="fas fa-chevron-right text-gray-400"></i></a><a href="/admin/homepage-sections" class="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"><span><i class="fas fa-home text-purple-600 mr-2"></i>Homepage-Bereiche verwalten</span><i class="fas fa-chevron-right text-gray-400"></i></a></div></div></div><div class="bg-white rounded-lg shadow-md p-6"><h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fas fa-info-circle text-blue-600 mr-2"></i>Marketing-Tipps</h2><div class="space-y-3"><div class="p-3 bg-blue-50 rounded-lg"><p class="text-sm text-gray-700"><i class="fas fa-check-circle text-blue-600 mr-2"></i>Nutzen Sie Coupons für Erstkäufer-Aktionen</p></div><div class="p-3 bg-green-50 rounded-lg"><p class="text-sm text-gray-700"><i class="fas fa-check-circle text-green-600 mr-2"></i>E-Mail-Marketing für wiederkehrende Kunden</p></div><div class="p-3 bg-purple-50 rounded-lg"><p class="text-sm text-gray-700"><i class="fas fa-check-circle text-purple-600 mr-2"></i>Zertifikate steigern das Vertrauen</p></div></div></div></div></body></html>`)
   } catch (error) {
     console.error('Error loading marketing overview:', error)
-    return c.html(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><title>Fehler</title><script src="https://cdn.tailwindcss.com"></script></head><body class="bg-gray-50">$<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/marketing-overview')}} /><div class="ml-64 p-8"><div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"><p>Fehler beim Laden der Marketing-Übersicht</p></div></div></body></html>`)
+    return c.html(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><title>Fehler</title><script src="https://cdn.tailwindcss.com"></script></head><body class="bg-gray-50">$<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/marketing-overview')}} /><div class="ml-64 p-8"><div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"><p>Fehler beim Laden der Marketing-Übersicht</p></div></div></body></html>`)
   }
 })
 
@@ -13691,16 +13691,16 @@ app.get('/admin/seo-management', async (c) => {
     const products = await db.db.prepare('SELECT COUNT(*) as count FROM products WHERE is_active = 1').first()
     const categories = await db.db.prepare('SELECT COUNT(*) as count FROM categories').first()
     
-    return c.html(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>SEO-Verwaltung - SOFTWAREKING24 Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"></head><body class="bg-gray-50">$<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/seo-management')}} /><div class="ml-64 p-8"><div class="mb-8"><h1 class="text-3xl font-bold text-gray-900 mb-2"><i class="fas fa-search mr-2 text-green-600"></i>SEO-Verwaltung</h1><p class="text-gray-600">Suchmaschinenoptimierung für Ihren Shop</p></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Aktive Produkte</p><p class="text-2xl font-bold text-gray-900">${(products as any)?.count || 0}</p></div><div class="p-3 bg-blue-100 rounded-full"><i class="fas fa-box text-blue-600 text-xl"></i></div></div></div><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Kategorien</p><p class="text-2xl font-bold text-gray-900">${(categories as any)?.count || 0}</p></div><div class="p-3 bg-green-100 rounded-full"><i class="fas fa-folder text-green-600 text-xl"></i></div></div></div></div><div class="bg-white rounded-lg shadow-md p-6 mb-6"><h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fas fa-cog text-blue-600 mr-2"></i>SEO-Einstellungen</h2><div class="space-y-4"><div class="p-4 border border-gray-200 rounded-lg"><div class="flex items-center justify-between mb-2"><h3 class="font-medium text-gray-900">Meta-Tags</h3><span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Aktiv</span></div><p class="text-sm text-gray-600">Meta-Beschreibungen und Titel für alle Seiten</p></div><div class="p-4 border border-gray-200 rounded-lg"><div class="flex items-center justify-between mb-2"><h3 class="font-medium text-gray-900">Sitemap</h3><span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Aktiv</span></div><p class="text-sm text-gray-600">Automatische Sitemap-Generierung</p></div><div class="p-4 border border-gray-200 rounded-lg"><div class="flex items-center justify-between mb-2"><h3 class="font-medium text-gray-900">Robots.txt</h3><span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Aktiv</span></div><p class="text-sm text-gray-600">Suchmaschinen-Crawler-Steuerung</p></div></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div class="bg-white rounded-lg shadow-md p-6"><h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fas fa-link text-purple-600 mr-2"></i>Schnellzugriff</h2><div class="space-y-2"><a href="/admin/products" class="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"><i class="fas fa-box text-blue-600 mr-2"></i>Produkt-SEO bearbeiten</a><a href="/admin/categories" class="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"><i class="fas fa-folder text-green-600 mr-2"></i>Kategorie-SEO bearbeiten</a><a href="/admin/pages" class="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"><i class="fas fa-file text-purple-600 mr-2"></i>Seiten-SEO bearbeiten</a></div></div><div class="bg-white rounded-lg shadow-md p-6"><h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fas fa-chart-bar text-orange-600 mr-2"></i>SEO-Tipps</h2><div class="space-y-3"><div class="p-3 bg-blue-50 rounded-lg"><p class="text-sm text-gray-700"><i class="fas fa-check-circle text-blue-600 mr-2"></i>Optimieren Sie Produkttitel</p></div><div class="p-3 bg-green-50 rounded-lg"><p class="text-sm text-gray-700"><i class="fas fa-check-circle text-green-600 mr-2"></i>Verwenden Sie aussagekräftige URLs</p></div><div class="p-3 bg-purple-50 rounded-lg"><p class="text-sm text-gray-700"><i class="fas fa-check-circle text-purple-600 mr-2"></i>Alt-Tags für alle Bilder</p></div></div></div></div></div></body></html>`)
+    return c.html(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>SEO-Verwaltung - SOFTWAREKING24 Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"></head><body class="bg-gray-50">$<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/seo-management')}} /><div class="ml-64 p-8"><div class="mb-8"><h1 class="text-3xl font-bold text-gray-900 mb-2"><i class="fas fa-search mr-2 text-green-600"></i>SEO-Verwaltung</h1><p class="text-gray-600">Suchmaschinenoptimierung für Ihren Shop</p></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Aktive Produkte</p><p class="text-2xl font-bold text-gray-900">${(products as any)?.count || 0}</p></div><div class="p-3 bg-blue-100 rounded-full"><i class="fas fa-box text-blue-600 text-xl"></i></div></div></div><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Kategorien</p><p class="text-2xl font-bold text-gray-900">${(categories as any)?.count || 0}</p></div><div class="p-3 bg-green-100 rounded-full"><i class="fas fa-folder text-green-600 text-xl"></i></div></div></div></div><div class="bg-white rounded-lg shadow-md p-6 mb-6"><h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fas fa-cog text-blue-600 mr-2"></i>SEO-Einstellungen</h2><div class="space-y-4"><div class="p-4 border border-gray-200 rounded-lg"><div class="flex items-center justify-between mb-2"><h3 class="font-medium text-gray-900">Meta-Tags</h3><span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Aktiv</span></div><p class="text-sm text-gray-600">Meta-Beschreibungen und Titel für alle Seiten</p></div><div class="p-4 border border-gray-200 rounded-lg"><div class="flex items-center justify-between mb-2"><h3 class="font-medium text-gray-900">Sitemap</h3><span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Aktiv</span></div><p class="text-sm text-gray-600">Automatische Sitemap-Generierung</p></div><div class="p-4 border border-gray-200 rounded-lg"><div class="flex items-center justify-between mb-2"><h3 class="font-medium text-gray-900">Robots.txt</h3><span class="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">Aktiv</span></div><p class="text-sm text-gray-600">Suchmaschinen-Crawler-Steuerung</p></div></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div class="bg-white rounded-lg shadow-md p-6"><h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fas fa-link text-purple-600 mr-2"></i>Schnellzugriff</h2><div class="space-y-2"><a href="/admin/products" class="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"><i class="fas fa-box text-blue-600 mr-2"></i>Produkt-SEO bearbeiten</a><a href="/admin/categories" class="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"><i class="fas fa-folder text-green-600 mr-2"></i>Kategorie-SEO bearbeiten</a><a href="/admin/pages" class="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition"><i class="fas fa-file text-purple-600 mr-2"></i>Seiten-SEO bearbeiten</a></div></div><div class="bg-white rounded-lg shadow-md p-6"><h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fas fa-chart-bar text-orange-600 mr-2"></i>SEO-Tipps</h2><div class="space-y-3"><div class="p-3 bg-blue-50 rounded-lg"><p class="text-sm text-gray-700"><i class="fas fa-check-circle text-blue-600 mr-2"></i>Optimieren Sie Produkttitel</p></div><div class="p-3 bg-green-50 rounded-lg"><p class="text-sm text-gray-700"><i class="fas fa-check-circle text-green-600 mr-2"></i>Verwenden Sie aussagekräftige URLs</p></div><div class="p-3 bg-purple-50 rounded-lg"><p class="text-sm text-gray-700"><i class="fas fa-check-circle text-purple-600 mr-2"></i>Alt-Tags für alle Bilder</p></div></div></div></div></div></body></html>`)
   } catch (error) {
     console.error('Error loading SEO management:', error)
-    return c.html(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><title>Fehler</title><script src="https://cdn.tailwindcss.com"></script></head><body class="bg-gray-50">$<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/seo-management')}} /><div class="ml-64 p-8"><div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"><p>Fehler beim Laden der SEO-Verwaltung</p></div></div></body></html>`)
+    return c.html(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><title>Fehler</title><script src="https://cdn.tailwindcss.com"></script></head><body class="bg-gray-50">$<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/seo-management')}} /><div class="ml-64 p-8"><div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"><p>Fehler beim Laden der SEO-Verwaltung</p></div></div></body></html>`)
   }
 })
 
 // REVIEWS MANAGEMENT PAGE
 app.get('/admin/reviews-management', async (c) => {
-  return c.html(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Bewertungen - SOFTWAREKING24 Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"></head><body class="bg-gray-50">$<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/reviews-management')}} /><div class="ml-64 p-8"><div class="mb-8"><h1 class="text-3xl font-bold text-gray-900 mb-2"><i class="fas fa-star mr-2 text-yellow-600"></i>Bewertungen verwalten</h1><p class="text-gray-600">Kundenbewertungen und Reviews</p></div><div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Gesamt</p><p class="text-2xl font-bold text-gray-900">0</p></div><div class="p-3 bg-blue-100 rounded-full"><i class="fas fa-comment text-blue-600 text-xl"></i></div></div></div><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Ausstehend</p><p class="text-2xl font-bold text-gray-900">0</p></div><div class="p-3 bg-yellow-100 rounded-full"><i class="fas fa-clock text-yellow-600 text-xl"></i></div></div></div><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Genehmigt</p><p class="text-2xl font-bold text-gray-900">0</p></div><div class="p-3 bg-green-100 rounded-full"><i class="fas fa-check-circle text-green-600 text-xl"></i></div></div></div><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Durchschnitt</p><p class="text-2xl font-bold text-gray-900">0.0</p><div class="flex mt-1">${[1,2,3,4,5].map(() => '<i class="fas fa-star text-yellow-400 text-xs"></i>').join('')}</div></div></div></div></div><div class="bg-white rounded-lg shadow-md p-6 mb-6"><h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fas fa-filter text-blue-600 mr-2"></i>Filter</h2><div class="grid grid-cols-1 md:grid-cols-4 gap-4"><select class="px-3 py-2 border border-gray-300 rounded-lg"><option>Alle Status</option><option>Ausstehend</option><option>Genehmigt</option><option>Abgelehnt</option></select><select class="px-3 py-2 border border-gray-300 rounded-lg"><option>Alle Bewertungen</option><option>5 Sterne</option><option>4 Sterne</option><option>3 Sterne</option><option>2 Sterne</option><option>1 Stern</option></select><input type="text" placeholder="Produkt suchen..." class="px-3 py-2 border border-gray-300 rounded-lg"><button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"><i class="fas fa-search mr-2"></i>Filtern</button></div></div><div class="bg-white rounded-lg shadow-md p-8 text-center text-gray-500"><i class="fas fa-inbox text-4xl mb-4"></i><p class="text-lg font-medium mb-2">Keine Bewertungen vorhanden</p><p class="text-sm">Bewertungen erscheinen hier, sobald Kunden Produkte bewerten</p></div></div></body></html>`)
+  return c.html(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Bewertungen - SOFTWAREKING24 Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"></head><body class="bg-gray-50">$<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/reviews-management')}} /><div class="ml-64 p-8"><div class="mb-8"><h1 class="text-3xl font-bold text-gray-900 mb-2"><i class="fas fa-star mr-2 text-yellow-600"></i>Bewertungen verwalten</h1><p class="text-gray-600">Kundenbewertungen und Reviews</p></div><div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Gesamt</p><p class="text-2xl font-bold text-gray-900">0</p></div><div class="p-3 bg-blue-100 rounded-full"><i class="fas fa-comment text-blue-600 text-xl"></i></div></div></div><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Ausstehend</p><p class="text-2xl font-bold text-gray-900">0</p></div><div class="p-3 bg-yellow-100 rounded-full"><i class="fas fa-clock text-yellow-600 text-xl"></i></div></div></div><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Genehmigt</p><p class="text-2xl font-bold text-gray-900">0</p></div><div class="p-3 bg-green-100 rounded-full"><i class="fas fa-check-circle text-green-600 text-xl"></i></div></div></div><div class="bg-white rounded-lg shadow p-6"><div class="flex items-center justify-between"><div><p class="text-sm text-gray-600">Durchschnitt</p><p class="text-2xl font-bold text-gray-900">0.0</p><div class="flex mt-1">${[1,2,3,4,5].map(() => '<i class="fas fa-star text-yellow-400 text-xs"></i>').join('')}</div></div></div></div></div><div class="bg-white rounded-lg shadow-md p-6 mb-6"><h2 class="text-xl font-bold text-gray-900 mb-4"><i class="fas fa-filter text-blue-600 mr-2"></i>Filter</h2><div class="grid grid-cols-1 md:grid-cols-4 gap-4"><select class="px-3 py-2 border border-gray-300 rounded-lg"><option>Alle Status</option><option>Ausstehend</option><option>Genehmigt</option><option>Abgelehnt</option></select><select class="px-3 py-2 border border-gray-300 rounded-lg"><option>Alle Bewertungen</option><option>5 Sterne</option><option>4 Sterne</option><option>3 Sterne</option><option>2 Sterne</option><option>1 Stern</option></select><input type="text" placeholder="Produkt suchen..." class="px-3 py-2 border border-gray-300 rounded-lg"><button class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"><i class="fas fa-search mr-2"></i>Filtern</button></div></div><div class="bg-white rounded-lg shadow-md p-8 text-center text-gray-500"><i class="fas fa-inbox text-4xl mb-4"></i><p class="text-lg font-medium mb-2">Keine Bewertungen vorhanden</p><p class="text-sm">Bewertungen erscheinen hier, sobald Kunden Produkte bewerten</p></div></div></body></html>`)
 })
 
 // ============================================
@@ -13767,7 +13767,7 @@ app.get('/admin/security', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebarWorking(c.req.path)}
+          ${AdminSidebarAdvanced(c.req.path)}
           
           <div class="flex-1 ml-64">
             <div class="p-8">
@@ -14027,8 +14027,8 @@ app.get('/admin/security/login-history', async (c) => {
     const stats = await db.db.prepare(`
       SELECT 
         COUNT(*) as total_attempts,
-        SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) as successful,
-        SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed,
+        SUM(CASE WHEN order_status = 'success' THEN 1 ELSE 0 END) as successful,
+        SUM(CASE WHEN order_status = 'failed' THEN 1 ELSE 0 END) as failed,
         COUNT(DISTINCT user_id) as unique_users
       FROM login_history
       WHERE created_at > datetime('now', '-7 days')
@@ -14046,7 +14046,7 @@ app.get('/admin/security/login-history', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebarWorking(c.req.path)}
+          ${AdminSidebarAdvanced(c.req.path)}
           
           <div class="flex-1 ml-64">
             <div class="p-8">
@@ -14250,7 +14250,7 @@ app.get('/admin/security/sessions', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebarWorking(c.req.path)}
+          ${AdminSidebarAdvanced(c.req.path)}
           
           <div class="flex-1 ml-64">
             <div class="p-8">
@@ -14445,7 +14445,7 @@ app.get('/admin/security/audit-log', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebarWorking(c.req.path)}
+          ${AdminSidebarAdvanced(c.req.path)}
           
           <div class="flex-1 ml-64">
             <div class="p-8">
@@ -14642,7 +14642,7 @@ app.get('/admin/security/settings', async (c) => {
     </head>
     <body class="bg-gray-50">
       <div class="flex">
-        ${AdminSidebarWorking(c.req.path)}
+        ${AdminSidebarAdvanced(c.req.path)}
         
         <div class="flex-1 ml-64">
           <div class="p-8">
@@ -14949,7 +14949,7 @@ app.get('/admin/security/firewall', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebarWorking(c.req.path)}
+          ${AdminSidebarAdvanced(c.req.path)}
           
           <div class="flex-1 ml-64">
             <div class="p-8">
@@ -15168,7 +15168,7 @@ app.get('/admin/security/blocked-ips', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebarWorking(c.req.path)}
+          ${AdminSidebarAdvanced(c.req.path)}
           
           <div class="flex-1 ml-64">
             <div class="p-8">
@@ -15343,7 +15343,7 @@ app.get('/admin/security/login-protection', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebarWorking(c.req.path)}
+          ${AdminSidebarAdvanced(c.req.path)}
           <div class="flex-1 ml-64">
             <div class="p-8">
               <div class="mb-8">
@@ -15500,7 +15500,7 @@ app.get('/admin/security/users-roles', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebarWorking(c.req.path)}
+          ${AdminSidebarAdvanced(c.req.path)}
           <div class="flex-1 ml-64">
             <div class="p-8">
               <div class="mb-8">
@@ -16066,7 +16066,7 @@ app.get('/admin/security/2fa', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebarWorking(c.req.path)}
+          ${AdminSidebarAdvanced(c.req.path)}
           <div class="flex-1 ml-64">
             <div class="p-8">
               <div class="mb-8">
@@ -16231,7 +16231,7 @@ app.get('/admin/security/file-protection', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebarWorking(c.req.path)}
+          ${AdminSidebarAdvanced(c.req.path)}
           <div class="flex-1 ml-64">
             <div class="p-8">
               <div class="mb-8">
@@ -16388,7 +16388,7 @@ app.get('/admin/security/api-webhooks', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebarWorking(c.req.path)}
+          ${AdminSidebarAdvanced(c.req.path)}
           <div class="flex-1 ml-64">
             <div class="p-8">
               <div class="mb-8">
@@ -16560,7 +16560,7 @@ app.get('/admin/security/email-security', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebarWorking(c.req.path)}
+          ${AdminSidebarAdvanced(c.req.path)}
           <div class="flex-1 ml-64">
             <div class="p-8">
               <div class="mb-8">
@@ -16720,7 +16720,7 @@ app.get('/admin/security/scans', async (c) => {
       </head>
       <body class="bg-gray-50">
         <div class="flex">
-          ${AdminSidebarWorking(c.req.path)}
+          ${AdminSidebarAdvanced(c.req.path)}
           <div class="flex-1 ml-64">
             <div class="p-8">
               <div class="mb-8">
@@ -16971,8 +16971,8 @@ app.get('/admin/marketing/campaigns', async (c) => {
     const statsQuery = `
       SELECT 
         COUNT(*) as total_campaigns,
-        COUNT(CASE WHEN status = 'active' THEN 1 END) as active_campaigns,
-        COUNT(CASE WHEN status = 'scheduled' THEN 1 END) as scheduled_campaigns,
+        COUNT(CASE WHEN order_status = 'active' THEN 1 END) as active_campaigns,
+        COUNT(CASE WHEN order_status = 'scheduled' THEN 1 END) as scheduled_campaigns,
         COALESCE(SUM(budget), 0) as total_budget
       FROM coupons
     `;
@@ -17019,7 +17019,7 @@ app.get('/admin/marketing/campaigns', async (c) => {
         </style>
       </head>
       <body class="bg-gray-50">
-        $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/marketing/campaigns')}} />
+        $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/marketing/campaigns')}} />
         
         <div class="lg:ml-64 min-h-screen">
           <div class="gradient-header text-white p-6 shadow-lg">
@@ -17290,9 +17290,9 @@ app.get('/admin/marketing/emails', async (c) => {
     const statsQuery = `
       SELECT 
         COUNT(*) as total_emails,
-        COUNT(CASE WHEN status = 'pending' THEN 1 END) as pending_emails,
-        COUNT(CASE WHEN status = 'sent' THEN 1 END) as sent_emails,
-        COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_emails
+        COUNT(CASE WHEN order_status = 'pending' THEN 1 END) as pending_emails,
+        COUNT(CASE WHEN order_status = 'sent' THEN 1 END) as sent_emails,
+        COUNT(CASE WHEN order_status = 'failed' THEN 1 END) as failed_emails
       FROM email_queue
     `;
     const stats = await db.db.prepare(statsQuery).first() as any;
@@ -17322,7 +17322,7 @@ app.get('/admin/marketing/emails', async (c) => {
         </style>
       </head>
       <body class="bg-gray-50">
-        $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/marketing/emails')}} />
+        $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/marketing/emails')}} />
         
         <div class="lg:ml-64 min-h-screen">
           <div class="gradient-header text-white p-6 shadow-lg">
@@ -17551,8 +17551,8 @@ app.get('/admin/marketing/coupons', async (c) => {
     const statsQuery = `
       SELECT 
         COUNT(*) as total_coupons,
-        COUNT(CASE WHEN status = 'active' THEN 1 END) as active_coupons,
-        COUNT(CASE WHEN status = 'expired' THEN 1 END) as expired_coupons,
+        COUNT(CASE WHEN order_status = 'active' THEN 1 END) as active_coupons,
+        COUNT(CASE WHEN order_status = 'expired' THEN 1 END) as expired_coupons,
         COALESCE(SUM(max_uses), 0) as total_max_uses,
         COALESCE(SUM(used_count), 0) as total_used
       FROM coupons
@@ -17584,7 +17584,7 @@ app.get('/admin/marketing/coupons', async (c) => {
         </style>
       </head>
       <body class="bg-gray-50">
-        $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/marketing/coupons')}} />
+        $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/marketing/coupons')}} />
         
         <div class="lg:ml-64 min-h-screen">
           <div class="gradient-header text-white p-6 shadow-lg">
@@ -17801,7 +17801,7 @@ app.get('/admin/marketing/promotions', async (c) => {
       </style>
     </head>
     <body class="bg-gray-50">
-      $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/marketing/promotions')}} />
+      $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/marketing/promotions')}} />
       
       <div class="lg:ml-64 min-h-screen">
         <div class="gradient-header text-white p-6 shadow-lg">
@@ -18003,8 +18003,8 @@ app.get('/admin/marketing/analytics', async (c) => {
     const emailStats = await db.db.prepare(`
       SELECT 
         COUNT(*) as total_emails,
-        COUNT(CASE WHEN status = 'sent' THEN 1 END) as sent_emails,
-        COUNT(CASE WHEN status = 'failed' THEN 1 END) as failed_emails
+        COUNT(CASE WHEN order_status = 'sent' THEN 1 END) as sent_emails,
+        COUNT(CASE WHEN order_status = 'failed' THEN 1 END) as failed_emails
       FROM email_queue
     `).first() as any;
 
@@ -18034,7 +18034,7 @@ app.get('/admin/marketing/analytics', async (c) => {
         </style>
       </head>
       <body class="bg-gray-50">
-        $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/marketing/analytics')}} />
+        $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/marketing/analytics')}} />
         
         <div class="lg:ml-64 min-h-screen">
           <div class="gradient-header text-white p-6 shadow-lg">
@@ -18322,7 +18322,7 @@ app.get('/admin/marketing/automation', async (c) => {
       </style>
     </head>
     <body class="bg-gray-50">
-      $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/marketing/automation')}} />
+      $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/marketing/automation')}} />
       
       <div class="lg:ml-64 min-h-screen">
         <div class="gradient-header text-white p-6 shadow-lg">
@@ -18608,7 +18608,7 @@ app.get('/admin/users', async (c) => {
         COUNT(*) as total_users,
         COUNT(CASE WHEN role = 'admin' THEN 1 END) as admin_users,
         COUNT(CASE WHEN role = 'customer' THEN 1 END) as customer_users,
-        COUNT(CASE WHEN status = 'active' THEN 1 END) as active_users,
+        COUNT(CASE WHEN order_status = 'active' THEN 1 END) as active_users,
         COUNT(CASE WHEN email_verified = 1 THEN 1 END) as verified_users
       FROM users
     `;
@@ -18639,7 +18639,7 @@ app.get('/admin/users', async (c) => {
         </style>
       </head>
       <body class="bg-gray-50">
-        $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/users')}} />
+        $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/users')}} />
         
         <div class="lg:ml-64 min-h-screen">
           <div class="gradient-header text-white p-6 shadow-lg">
@@ -18926,7 +18926,7 @@ app.get('/admin/users/roles', async (c) => {
       </style>
     </head>
     <body class="bg-gray-50">
-      $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/users/roles')}} />
+      $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/users/roles')}} />
       
       <div class="lg:ml-64 min-h-screen">
         <div class="gradient-header text-white p-6 shadow-lg">
@@ -19172,7 +19172,7 @@ app.get('/admin/users/permissions', async (c) => {
       </style>
     </head>
     <body class="bg-gray-50">
-      $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/users/permissions')}} />
+      $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/users/permissions')}} />
       
       <div class="lg:ml-64 min-h-screen">
         <div class="gradient-header text-white p-6 shadow-lg">
@@ -20086,8 +20086,8 @@ app.get('/admin/users/login-history', async (c) => {
     const stats = await c.env.DB.prepare(`
       SELECT 
         COUNT(*) as total_logins,
-        SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) as successful_logins,
-        SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END) as failed_logins,
+        SUM(CASE WHEN order_status = 'success' THEN 1 ELSE 0 END) as successful_logins,
+        SUM(CASE WHEN order_status = 'failed' THEN 1 ELSE 0 END) as failed_logins,
         SUM(CASE WHEN created_at >= datetime('now', '-1 day') THEN 1 ELSE 0 END) as today_logins
       FROM login_history
     `).first();
@@ -20453,7 +20453,7 @@ app.get('/admin/orders/pending', async (c) => {
              u.first_name || ' ' || u.last_name as customer_name
       FROM orders o
       LEFT JOIN users u ON o.user_id = u.id
-      WHERE o.status = 'pending'
+      WHERE o.order_status = 'pending'
       ORDER BY o.created_at DESC
       LIMIT 50
     `).all();
@@ -20468,7 +20468,7 @@ app.get('/admin/orders/pending', async (c) => {
           <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/>
         </head>
         <body class="bg-gray-50">
-          <div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/orders/pending')}} />
+          <div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/orders/pending')}} />
           
           <div style="margin-left: 280px; padding: 2rem;">
             <div class="mb-6">
@@ -20598,7 +20598,7 @@ app.get('/admin/orders/processing', async (c) => {
              u.first_name || ' ' || u.last_name as customer_name
       FROM orders o
       LEFT JOIN users u ON o.user_id = u.id
-      WHERE o.status = 'processing'
+      WHERE o.order_status = 'processing'
       ORDER BY o.created_at DESC
       LIMIT 50
     `).all();
@@ -20613,7 +20613,7 @@ app.get('/admin/orders/processing', async (c) => {
           <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/>
         </head>
         <body class="bg-gray-50">
-          <div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/orders/processing')}} />
+          <div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/orders/processing')}} />
           
           <div style="margin-left: 280px; padding: 2rem;">
             <div class="mb-6">
@@ -21078,7 +21078,7 @@ app.get('/admin/*', async (c) => {
                    u.first_name || ' ' || u.last_name as customer_name
             FROM orders o
             LEFT JOIN users u ON o.user_id = u.id
-            WHERE o.status = ?
+            WHERE o.order_status = ?
             ORDER BY o.updated_at DESC
             LIMIT 100
           `).bind(config.status).all();
@@ -21087,7 +21087,7 @@ app.get('/admin/*', async (c) => {
 
         case 'shipments':
           const shipmentsResult = await env.DB.prepare(`
-            SELECT o.id, o.order_number, o.status as order_status,
+            SELECT o.id, o.order_number, o.order_status as order_status,
                    o.created_at, o.updated_at,
                    u.email as customer_email,
                    u.first_name || ' ' || u.last_name as customer_name,
@@ -21095,7 +21095,7 @@ app.get('/admin/*', async (c) => {
             FROM orders o
             LEFT JOIN users u ON o.user_id = u.id
             LEFT JOIN license_keys l ON l.assigned_to_order_id = o.id
-            WHERE o.status IN ('completed', 'processing')
+            WHERE o.order_status IN ('completed', 'processing')
             GROUP BY o.id
             ORDER BY o.updated_at DESC
             LIMIT 50
@@ -21229,7 +21229,7 @@ app.get('/admin/*', async (c) => {
         threatPatterns: threatPatternsResult.results || [],
         recentEvents: recentEvents.results || [],
         settings: settingsMap,
-        sidebar: AdminSidebarWorking(path)
+        sidebar: AdminSidebarAdvanced(path)
       });
 
       return c.html(html);
@@ -21307,7 +21307,7 @@ app.get('/admin/*', async (c) => {
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
       </head>
       <body class="bg-gray-50">
-        ${AdminSidebarWorking(path)}
+        ${AdminSidebarAdvanced(path)}
         
         <div style="margin-left: 280px; padding: 2rem;">
           <!-- Header -->
@@ -21592,7 +21592,7 @@ app.get('/admin/marketing', async (c) => {
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     </head>
     <body class="bg-gray-50">
-        $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/marketing')}} />
+        $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/marketing')}} />
         
         <div class="ml-64 p-8">
             <div class="mb-8">
@@ -21827,7 +21827,7 @@ app.get('/admin/seo', async (c) => {
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     </head>
     <body class="bg-gray-50">
-        $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/seo')}} />
+        $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/seo')}} />
         
         <div class="ml-64 p-8">
             <div class="mb-8">
@@ -22124,8 +22124,8 @@ app.get('/admin/reviews', async (c) => {
       SELECT 
         COUNT(*) as total_reviews,
         AVG(rating) as average_rating,
-        SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_reviews,
-        SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) as approved_reviews
+        SUM(CASE WHEN order_status = 'pending' THEN 1 ELSE 0 END) as pending_reviews,
+        SUM(CASE WHEN order_status = 'approved' THEN 1 ELSE 0 END) as approved_reviews
       FROM product_reviews
     `).first();
 
@@ -22168,7 +22168,7 @@ app.get('/admin/reviews', async (c) => {
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     </head>
     <body class="bg-gray-50">
-        $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/reviews')}} />
+        $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/reviews')}} />
         
         <div class="ml-64 p-8">
             <div class="mb-8">
@@ -22389,7 +22389,7 @@ app.get('/admin/footer-settings', async (c) => {
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     </head>
     <body class="bg-gray-50">
-        $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/footer-settings')}} />
+        $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/footer-settings')}} />
         
         <div class="ml-64 p-8">
             <div class="mb-8">
@@ -22794,7 +22794,7 @@ app.get('/admin/themes', async (c) => {
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     </head>
     <body class="bg-gray-50">
-        $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/themes')}} />
+        $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/themes')}} />
         
         <div class="ml-64 p-8">
             <div class="mb-8">
@@ -23211,7 +23211,7 @@ app.get('/admin/payment-methods', async (c) => {
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     </head>
     <body class="bg-gray-50">
-        $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/payment-methods')}} />
+        $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/payment-methods')}} />
         
         <div class="ml-64 p-8">
             <div class="mb-8">
@@ -23542,7 +23542,7 @@ app.get('/admin/inventory', async (c) => {
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     </head>
     <body class="bg-gray-50">
-        $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/inventory')}} />
+        $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/inventory')}} />
         
         <div class="ml-64 p-8">
             <div class="mb-8">
@@ -23803,7 +23803,7 @@ app.get('/admin/gdpr-requests', async (c) => {
         <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
     </head>
     <body class="bg-gray-50">
-        $<div dangerouslySetInnerHTML={{__html: AdminSidebarWorking('/admin/gdpr-requests')}} />
+        $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/gdpr-requests')}} />
         
         <div class="ml-64 p-8">
             <div class="mb-8">
@@ -24420,7 +24420,7 @@ app.get('/admin/firewall/enhanced', async (c) => {
       rules,
       threatPatterns,
       settings,
-      sidebar: AdminSidebarWorking('/admin/firewall')
+      sidebar: AdminSidebarAdvanced('/admin/firewall')
     })
 
     return c.html(html)

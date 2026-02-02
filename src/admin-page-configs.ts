@@ -48,9 +48,9 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
               ORDER BY o.created_at DESC LIMIT 100`,
     statsCards: [
       { label: 'Gesamt', query: 'SELECT COUNT(*) as count FROM orders', color: 'text-blue-600', icon: 'shopping-cart' },
-      { label: 'Ausstehend', query: 'SELECT COUNT(*) as count FROM orders WHERE status = "pending"', color: 'text-yellow-600', icon: 'clock' },
-      { label: 'Abgeschlossen', query: 'SELECT COUNT(*) as count FROM orders WHERE status = "completed"', color: 'text-green-600', icon: 'check-circle' },
-      { label: 'Umsatz', query: 'SELECT SUM(total) as sum FROM orders WHERE status = "completed"', color: 'text-green-600', icon: 'euro-sign', format: 'currency' }
+      { label: 'Ausstehend', query: 'SELECT COUNT(*) as count FROM orders WHERE order_status = "pending"', color: 'text-yellow-600', icon: 'clock' },
+      { label: 'Abgeschlossen', query: 'SELECT COUNT(*) as count FROM orders WHERE order_status = "completed"', color: 'text-green-600', icon: 'check-circle' },
+      { label: 'Umsatz', query: 'SELECT SUM(total) as sum FROM orders WHERE order_status = "completed"', color: 'text-green-600', icon: 'euro-sign', format: 'currency' }
     ],
     tableColumns: [
       { key: 'order_number', label: 'Bestellnummer' },
@@ -228,9 +228,9 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
               FROM orders o LEFT JOIN users u ON o.user_id = u.id 
               WHERE o.status = 'pending' ORDER BY o.created_at DESC LIMIT 50`,
     statsCards: [
-      { label: 'Gesamt Ausstehend', query: 'SELECT COUNT(*) as count FROM orders WHERE status = "pending"', color: 'text-yellow-600', icon: 'clock' },
-      { label: 'Heute', query: 'SELECT COUNT(*) as count FROM orders WHERE status = "pending" AND date(created_at) = date("now")', color: 'text-blue-600', icon: 'calendar-day' },
-      { label: 'Gesamtwert', query: 'SELECT SUM(total) as sum FROM orders WHERE status = "pending"', color: 'text-green-600', icon: 'euro-sign', format: 'currency' }
+      { label: 'Gesamt Ausstehend', query: 'SELECT COUNT(*) as count FROM orders WHERE order_status = "pending"', color: 'text-yellow-600', icon: 'clock' },
+      { label: 'Heute', query: 'SELECT COUNT(*) as count FROM orders WHERE order_status = "pending" AND date(created_at) = date("now")', color: 'text-blue-600', icon: 'calendar-day' },
+      { label: 'Gesamtwert', query: 'SELECT SUM(total) as sum FROM orders WHERE order_status = "pending"', color: 'text-green-600', icon: 'euro-sign', format: 'currency' }
     ],
     tableColumns: [
       { key: 'order_number', label: 'Bestellnummer' },
@@ -255,7 +255,7 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
               FROM orders o LEFT JOIN users u ON o.user_id = u.id 
               WHERE o.status = 'processing' ORDER BY o.updated_at DESC LIMIT 50`,
     statsCards: [
-      { label: 'In Bearbeitung', query: 'SELECT COUNT(*) as count FROM orders WHERE status = "processing"', color: 'text-blue-600', icon: 'spinner' },
+      { label: 'In Bearbeitung', query: 'SELECT COUNT(*) as count FROM orders WHERE order_status = "processing"', color: 'text-blue-600', icon: 'spinner' },
       { label: 'Durchschn. Zeit', color: 'text-purple-600', icon: 'clock', format: 'text' }
     ],
     tableColumns: [
@@ -279,9 +279,9 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
               FROM orders o LEFT JOIN users u ON o.user_id = u.id 
               WHERE o.status = 'completed' ORDER BY o.updated_at DESC LIMIT 100`,
     statsCards: [
-      { label: 'Abgeschlossen', query: 'SELECT COUNT(*) as count FROM orders WHERE status = "completed"', color: 'text-green-600', icon: 'check-circle' },
-      { label: 'Gesamtumsatz', query: 'SELECT SUM(total) as sum FROM orders WHERE status = "completed"', color: 'text-green-600', icon: 'euro-sign', format: 'currency' },
-      { label: 'Heute', query: 'SELECT COUNT(*) as count FROM orders WHERE status = "completed" AND date(updated_at) = date("now")', color: 'text-blue-600', icon: 'calendar-day' }
+      { label: 'Abgeschlossen', query: 'SELECT COUNT(*) as count FROM orders WHERE order_status = "completed"', color: 'text-green-600', icon: 'check-circle' },
+      { label: 'Gesamtumsatz', query: 'SELECT SUM(total) as sum FROM orders WHERE order_status = "completed"', color: 'text-green-600', icon: 'euro-sign', format: 'currency' },
+      { label: 'Heute', query: 'SELECT COUNT(*) as count FROM orders WHERE order_status = "completed" AND date(updated_at) = date("now")', color: 'text-blue-600', icon: 'calendar-day' }
     ],
     tableColumns: [
       { key: 'order_number', label: 'Bestellnummer' },
@@ -306,8 +306,8 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
               FROM orders o LEFT JOIN users u ON o.user_id = u.id 
               WHERE o.status = 'cancelled' ORDER BY o.updated_at DESC LIMIT 50`,
     statsCards: [
-      { label: 'Storniert', query: 'SELECT COUNT(*) as count FROM orders WHERE status = "cancelled"', color: 'text-red-600', icon: 'times-circle' },
-      { label: 'Verlorener Wert', query: 'SELECT SUM(total) as sum FROM orders WHERE status = "cancelled"', color: 'text-orange-600', icon: 'euro-sign', format: 'currency' }
+      { label: 'Storniert', query: 'SELECT COUNT(*) as count FROM orders WHERE order_status = "cancelled"', color: 'text-red-600', icon: 'times-circle' },
+      { label: 'Verlorener Wert', query: 'SELECT SUM(total) as sum FROM orders WHERE order_status = "cancelled"', color: 'text-orange-600', icon: 'euro-sign', format: 'currency' }
     ],
     tableColumns: [
       { key: 'order_number', label: 'Bestellnummer' },
@@ -326,7 +326,7 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
     icon: 'shipping-fast',
     iconColor: 'indigo',
     description: 'Übersicht über den digitalen Versandstatus',
-    dbQuery: `SELECT o.id, o.order_number, o.status, o.created_at, o.updated_at,
+    dbQuery: `SELECT o.id, o.order_number, o.order_status as status, o.created_at, o.updated_at,
               u.email as customer_email, u.first_name || ' ' || u.last_name as customer_name,
               COUNT(l.id) as license_count
               FROM orders o
@@ -338,7 +338,7 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
               LIMIT 50`,
     statsCards: [
       { label: 'Lizenzen versandt', query: "SELECT COUNT(*) as count FROM license_keys WHERE status = 'available'", color: 'text-green-600', icon: 'envelope' },
-      { label: 'Ausstehend', query: 'SELECT COUNT(*) as count FROM orders WHERE status = "processing"', color: 'text-yellow-600', icon: 'clock' }
+      { label: 'Ausstehend', query: 'SELECT COUNT(*) as count FROM orders WHERE order_status = "processing"', color: 'text-yellow-600', icon: 'clock' }
     ],
     tableColumns: [
       { key: 'order_number', label: 'Bestellnummer' },
@@ -590,7 +590,7 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
     iconColor: 'purple',
     description: 'Analytische Berichte und Statistiken',
     statsCards: [
-      { label: 'Gesamt Umsatz', query: 'SELECT SUM(total) as sum FROM orders WHERE status = "completed"', color: 'text-green-600', icon: 'euro-sign', format: 'currency' },
+      { label: 'Gesamt Umsatz', query: 'SELECT SUM(total) as sum FROM orders WHERE order_status = "completed"', color: 'text-green-600', icon: 'euro-sign', format: 'currency' },
       { label: 'Bestellungen', query: 'SELECT COUNT(*) as count FROM orders', color: 'text-blue-600', icon: 'shopping-cart' },
       { label: 'Kunden', query: 'SELECT COUNT(*) as count FROM users', color: 'text-purple-600', icon: 'users' }
     ],
@@ -732,8 +732,8 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
               'text' as setting_type
               LIMIT 20`,
     statsCards: [
-      { label: 'Checkout-Rate', query: 'SELECT ROUND(CAST(COUNT(CASE WHEN status = "completed" THEN 1 END) AS REAL) * 100 / COUNT(*), 2) as count FROM orders', color: 'text-green-600', icon: 'check-circle', format: 'percentage' },
-      { label: 'Abgebrochen', query: 'SELECT COUNT(*) as count FROM orders WHERE status = "cancelled"', color: 'text-red-600', icon: 'times-circle' }
+      { label: 'Checkout-Rate', query: 'SELECT ROUND(CAST(COUNT(CASE WHEN order_status = "completed" THEN 1 END) AS REAL) * 100 / COUNT(*), 2) as count FROM orders', color: 'text-green-600', icon: 'check-circle', format: 'percentage' },
+      { label: 'Abgebrochen', query: 'SELECT COUNT(*) as count FROM orders WHERE order_status = "cancelled"', color: 'text-red-600', icon: 'times-circle' }
     ],
     tableColumns: [
       { key: 'setting_name', label: 'Einstellung' },
@@ -957,8 +957,8 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
               LIMIT 50`,
     statsCards: [
       { label: 'Aktive Abos', query: 'SELECT COUNT(*) as count FROM orders WHERE status IN ("completed", "processing")', color: 'text-green-600', icon: 'sync-alt' },
-      { label: 'Gekündigt', query: 'SELECT COUNT(*) as count FROM orders WHERE status = "cancelled"', color: 'text-red-600', icon: 'times' },
-      { label: 'MRR', query: 'SELECT SUM(total) as sum FROM orders WHERE status = "completed"', color: 'text-blue-600', icon: 'euro-sign', format: 'currency' }
+      { label: 'Gekündigt', query: 'SELECT COUNT(*) as count FROM orders WHERE order_status = "cancelled"', color: 'text-red-600', icon: 'times' },
+      { label: 'MRR', query: 'SELECT SUM(total) as sum FROM orders WHERE order_status = "completed"', color: 'text-blue-600', icon: 'euro-sign', format: 'currency' }
     ],
     tableColumns: [
       { key: 'customer', label: 'Kunde' },
