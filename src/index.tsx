@@ -1073,6 +1073,28 @@ app.get('/faq', (c) => {
       <title>FAQ - SoftwareKing24</title>
       <script src="https://cdn.tailwindcss.com"></script>
       <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+      <script>
+        tailwind.config = {
+          theme: {
+            extend: {
+              colors: {
+                'brand-navy': '#132C46',
+                'brand-gold': '#D9A50B',
+              }
+            }
+          }
+        }
+      </script>
+      <style>
+        .faq-answer {
+          max-height: 0;
+          overflow: hidden;
+          transition: max-height 0.3s ease-out;
+        }
+        .faq-answer.active {
+          max-height: 500px;
+        }
+      </style>
     </head>
     <body class="bg-gray-50">
       <div class="min-h-screen">
@@ -1080,9 +1102,9 @@ app.get('/faq', (c) => {
           <div class="container mx-auto px-4 py-4">
             <div class="flex items-center justify-between">
               <a href="/" class="flex items-center">
-                <img src="/static/logo.png" alt="SoftwareKing24" class="h-10">
+                <span class="text-2xl font-bold text-brand-navy">SoftwareKing24</span>
               </a>
-              <a href="/" class="text-gray-600 hover:text-blue-600">
+              <a href="/" class="text-gray-600 hover:text-brand-navy">
                 <i class="fas fa-arrow-left mr-2"></i>Zurück zum Shop
               </a>
             </div>
@@ -1091,39 +1113,261 @@ app.get('/faq', (c) => {
 
         <div class="container mx-auto px-4 py-12">
           <div class="max-w-4xl mx-auto">
-            <h1 class="text-4xl font-bold text-gray-900 mb-8">
-              <i class="fas fa-question-circle text-blue-600 mr-3"></i>Häufig gestellte Fragen (FAQ)
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">
+              <i class="fas fa-question-circle text-brand-navy mr-3"></i>Häufig gestellte Fragen (FAQ)
             </h1>
+            <p class="text-gray-600 mb-8">Finden Sie schnell Antworten auf die häufigsten Fragen</p>
 
-            <div class="space-y-4">
-              <div class="bg-white rounded-lg shadow-md p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">Wie erhalte ich meine Software-Lizenz?</h3>
-                <p class="text-gray-600">Nach erfolgreicher Zahlung erhalten Sie Ihre Lizenzschlüssel sofort per E-Mail. In der Regel dauert dies nur wenige Minuten.</p>
+            <!-- Search Bar -->
+            <div class="mb-8">
+              <div class="relative">
+                <input 
+                  type="text" 
+                  id="searchInput" 
+                  placeholder="Fragen durchsuchen..." 
+                  class="w-full px-6 py-4 pl-12 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-brand-navy transition"
+                  onkeyup="searchFAQ()"
+                >
+                <i class="fas fa-search absolute left-4 top-5 text-gray-400"></i>
+              </div>
+              <p id="searchResults" class="text-sm text-gray-500 mt-2 hidden"></p>
+            </div>
+
+            <!-- Categories -->
+            <div class="flex flex-wrap gap-3 mb-8">
+              <button onclick="filterCategory('all')" class="category-btn active px-4 py-2 rounded-full bg-brand-navy text-white hover:bg-brand-navy/90 transition">
+                Alle
+              </button>
+              <button onclick="filterCategory('lizenz')" class="category-btn px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 transition">
+                Lizenzen
+              </button>
+              <button onclick="filterCategory('zahlung')" class="category-btn px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 transition">
+                Zahlung
+              </button>
+              <button onclick="filterCategory('lieferung')" class="category-btn px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 transition">
+                Lieferung
+              </button>
+              <button onclick="filterCategory('support')" class="category-btn px-4 py-2 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 transition">
+                Support
+              </button>
+            </div>
+
+            <div id="faqContainer" class="space-y-4">
+              <!-- FAQ Items -->
+              <div class="faq-item bg-white rounded-xl shadow-md overflow-hidden" data-category="lizenz lieferung">
+                <button class="faq-question w-full p-6 text-left flex justify-between items-center hover:bg-gray-50 transition" onclick="toggleFAQ(this)">
+                  <h3 class="text-lg font-semibold text-gray-900 pr-4">Wie erhalte ich meine Software-Lizenz?</h3>
+                  <i class="fas fa-chevron-down text-brand-gold transition-transform"></i>
+                </button>
+                <div class="faq-answer px-6 pb-6">
+                  <p class="text-gray-600 leading-relaxed">
+                    Nach erfolgreicher Zahlung erhalten Sie Ihre Lizenzschlüssel <strong>sofort per E-Mail</strong>. 
+                    In der Regel dauert dies nur wenige Minuten. Bitte überprüfen Sie auch Ihren Spam-Ordner, 
+                    falls Sie keine E-Mail erhalten haben. Sie können Ihre Lizenzen auch jederzeit in Ihrem 
+                    Konto unter "Download Center" abrufen.
+                  </p>
+                </div>
               </div>
 
-              <div class="bg-white rounded-lg shadow-md p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">Sind die Lizenzen original und legal?</h3>
-                <p class="text-gray-600">Ja, wir verkaufen ausschließlich originale und legale Software-Lizenzen von Microsoft und anderen renommierten Herstellern.</p>
+              <div class="faq-item bg-white rounded-xl shadow-md overflow-hidden" data-category="lizenz">
+                <button class="faq-question w-full p-6 text-left flex justify-between items-center hover:bg-gray-50 transition" onclick="toggleFAQ(this)">
+                  <h3 class="text-lg font-semibold text-gray-900 pr-4">Sind die Lizenzen original und legal?</h3>
+                  <i class="fas fa-chevron-down text-brand-gold transition-transform"></i>
+                </button>
+                <div class="faq-answer px-6 pb-6">
+                  <p class="text-gray-600 leading-relaxed">
+                    Ja, <strong>100% original und legal</strong>! Wir verkaufen ausschließlich originale Software-Lizenzen 
+                    von Microsoft und anderen renommierten Herstellern. Alle Produkte sind vollständig lizenziert und 
+                    entsprechen den Richtlinien der Hersteller. Sie erhalten echte Produktschlüssel, die Sie aktivieren 
+                    und für Updates verwenden können.
+                  </p>
+                </div>
               </div>
 
-              <div class="bg-white rounded-lg shadow-md p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">Welche Zahlungsmethoden werden akzeptiert?</h3>
-                <p class="text-gray-600">Wir akzeptieren Kreditkarten, PayPal, Sofortüberweisung und weitere gängige Zahlungsmethoden.</p>
+              <div class="faq-item bg-white rounded-xl shadow-md overflow-hidden" data-category="zahlung">
+                <button class="faq-question w-full p-6 text-left flex justify-between items-center hover:bg-gray-50 transition" onclick="toggleFAQ(this)">
+                  <h3 class="text-lg font-semibold text-gray-900 pr-4">Welche Zahlungsmethoden werden akzeptiert?</h3>
+                  <i class="fas fa-chevron-down text-brand-gold transition-transform"></i>
+                </button>
+                <div class="faq-answer px-6 pb-6">
+                  <p class="text-gray-600 leading-relaxed mb-3">
+                    Wir bieten verschiedene sichere Zahlungsmethoden an:
+                  </p>
+                  <ul class="list-disc list-inside space-y-2 text-gray-600">
+                    <li>Kreditkarte (Visa, Mastercard, American Express)</li>
+                    <li>PayPal</li>
+                    <li>Sofortüberweisung</li>
+                    <li>Banküberweisung</li>
+                    <li>Klarna (Ratenkauf)</li>
+                  </ul>
+                  <p class="text-gray-600 mt-3">
+                    Alle Transaktionen sind <strong>SSL-verschlüsselt</strong> für maximale Sicherheit.
+                  </p>
+                </div>
               </div>
 
-              <div class="bg-white rounded-lg shadow-md p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">Kann ich eine Rechnung erhalten?</h3>
-                <p class="text-gray-600">Ja, Sie erhalten automatisch eine Rechnung per E-Mail nach dem Kauf.</p>
+              <div class="faq-item bg-white rounded-xl shadow-md overflow-hidden" data-category="zahlung">
+                <button class="faq-question w-full p-6 text-left flex justify-between items-center hover:bg-gray-50 transition" onclick="toggleFAQ(this)">
+                  <h3 class="text-lg font-semibold text-gray-900 pr-4">Kann ich eine Rechnung erhalten?</h3>
+                  <i class="fas fa-chevron-down text-brand-gold transition-transform"></i>
+                </button>
+                <div class="faq-answer px-6 pb-6">
+                  <p class="text-gray-600 leading-relaxed">
+                    Ja, Sie erhalten <strong>automatisch eine Rechnung per E-Mail</strong> nach dem Kauf. 
+                    Die Rechnung enthält alle relevanten Informationen und kann für Ihre Buchhaltung oder 
+                    Steuererklärung verwendet werden. Sie können die Rechnung auch in Ihrem Konto unter 
+                    "Bestellungen" jederzeit herunterladen.
+                  </p>
+                </div>
               </div>
 
-              <div class="bg-white rounded-lg shadow-md p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-2">Gibt es technischen Support?</h3>
-                <p class="text-gray-600">Ja, unser Support-Team steht Ihnen bei Fragen zur Verfügung. Kontaktieren Sie uns per E-Mail oder Telefon.</p>
+              <div class="faq-item bg-white rounded-xl shadow-md overflow-hidden" data-category="support">
+                <button class="faq-question w-full p-6 text-left flex justify-between items-center hover:bg-gray-50 transition" onclick="toggleFAQ(this)">
+                  <h3 class="text-lg font-semibold text-gray-900 pr-4">Gibt es technischen Support?</h3>
+                  <i class="fas fa-chevron-down text-brand-gold transition-transform"></i>
+                </button>
+                <div class="faq-answer px-6 pb-6">
+                  <p class="text-gray-600 leading-relaxed">
+                    Ja, unser <strong>deutschsprachiges Support-Team</strong> steht Ihnen bei Fragen zur Verfügung. 
+                    Sie können uns per E-Mail (support@softwareking24.de), Telefon (+49 30 123 456 789) oder 
+                    über unser Kontaktformular erreichen. Unsere Öffnungszeiten sind Mo-Fr: 9:00-18:00 Uhr. 
+                    Wir antworten in der Regel innerhalb von 24 Stunden.
+                  </p>
+                </div>
+              </div>
+
+              <div class="faq-item bg-white rounded-xl shadow-md overflow-hidden" data-category="lizenz">
+                <button class="faq-question w-full p-6 text-left flex justify-between items-center hover:bg-gray-50 transition" onclick="toggleFAQ(this)">
+                  <h3 class="text-lg font-semibold text-gray-900 pr-4">Was mache ich, wenn der Lizenzschlüssel nicht funktioniert?</h3>
+                  <i class="fas fa-chevron-down text-brand-gold transition-transform"></i>
+                </button>
+                <div class="faq-answer px-6 pb-6">
+                  <p class="text-gray-600 leading-relaxed">
+                    In diesem seltenen Fall kontaktieren Sie bitte <strong>umgehend unseren Support</strong>. 
+                    Wir prüfen das Problem und stellen Ihnen bei Bedarf einen Ersatzschlüssel zur Verfügung. 
+                    Häufige Ursachen sind Tippfehler beim Eingeben oder eine bereits aktivierte Lizenz. 
+                    Unser Team hilft Ihnen schnell und unkompliziert weiter.
+                  </p>
+                </div>
+              </div>
+
+              <div class="faq-item bg-white rounded-xl shadow-md overflow-hidden" data-category="lieferung lizenz">
+                <button class="faq-question w-full p-6 text-left flex justify-between items-center hover:bg-gray-50 transition" onclick="toggleFAQ(this)">
+                  <h3 class="text-lg font-semibold text-gray-900 pr-4">Kann ich die Software auf mehreren Geräten installieren?</h3>
+                  <i class="fas fa-chevron-down text-brand-gold transition-transform"></i>
+                </button>
+                <div class="faq-answer px-6 pb-6">
+                  <p class="text-gray-600 leading-relaxed">
+                    Das hängt von der spezifischen Lizenz ab. Die meisten unserer Lizenzen sind 
+                    <strong>für 1 Gerät</strong> gedacht. Bei Microsoft Office 365 können Sie die Software 
+                    auf mehreren Geräten installieren. Bitte prüfen Sie die Produktbeschreibung für Details 
+                    zur jeweiligen Lizenz oder kontaktieren Sie unseren Support.
+                  </p>
+                </div>
+              </div>
+
+              <div class="faq-item bg-white rounded-xl shadow-md overflow-hidden" data-category="zahlung">
+                <button class="faq-question w-full p-6 text-left flex justify-between items-center hover:bg-gray-50 transition" onclick="toggleFAQ(this)">
+                  <h3 class="text-lg font-semibold text-gray-900 pr-4">Gibt es eine Rückgaberecht?</h3>
+                  <i class="fas fa-chevron-down text-brand-gold transition-transform"></i>
+                </button>
+                <div class="faq-answer px-6 pb-6">
+                  <p class="text-gray-600 leading-relaxed">
+                    Da es sich um <strong>digitale Produkte</strong> handelt, ist nach Versand des Lizenzschlüssels 
+                    ein Widerruf oder Umtausch in der Regel nicht mehr möglich (gemäß § 356 BGB). 
+                    Sollten Sie jedoch technische Probleme haben oder das falsche Produkt erhalten haben, 
+                    finden wir gemeinsam eine Lösung. Ihre Zufriedenheit ist uns wichtig!
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Contact CTA -->
+            <div class="mt-12 bg-gradient-to-br from-brand-navy to-brand-navy/90 rounded-xl p-8 text-center text-white">
+              <h3 class="text-2xl font-bold mb-3">Ihre Frage wurde nicht beantwortet?</h3>
+              <p class="text-white/80 mb-6">Unser Support-Team hilft Ihnen gerne weiter!</p>
+              <div class="flex flex-wrap justify-center gap-4">
+                <a href="/contact" class="bg-brand-gold hover:bg-brand-gold/90 text-white px-8 py-3 rounded-full font-semibold transition">
+                  <i class="fas fa-envelope mr-2"></i>Kontakt aufnehmen
+                </a>
+                <a href="tel:+493012345678" class="bg-white/20 hover:bg-white/30 text-white px-8 py-3 rounded-full font-semibold transition">
+                  <i class="fas fa-phone mr-2"></i>Anrufen
+                </a>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      <script>
+        function toggleFAQ(button) {
+          const answer = button.nextElementSibling;
+          const icon = button.querySelector('i');
+          const isActive = answer.classList.contains('active');
+          
+          // Close all other FAQs
+          document.querySelectorAll('.faq-answer').forEach(a => a.classList.remove('active'));
+          document.querySelectorAll('.faq-question i').forEach(i => i.classList.remove('rotate-180'));
+          
+          if (!isActive) {
+            answer.classList.add('active');
+            icon.classList.add('rotate-180');
+          }
+        }
+
+        function searchFAQ() {
+          const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+          const faqItems = document.querySelectorAll('.faq-item');
+          const searchResults = document.getElementById('searchResults');
+          let visibleCount = 0;
+          
+          faqItems.forEach(item => {
+            const question = item.querySelector('.faq-question h3').textContent.toLowerCase();
+            const answer = item.querySelector('.faq-answer p').textContent.toLowerCase();
+            
+            if (searchTerm === '' || question.includes(searchTerm) || answer.includes(searchTerm)) {
+              item.style.display = 'block';
+              visibleCount++;
+            } else {
+              item.style.display = 'none';
+            }
+          });
+          
+          if (searchTerm) {
+            searchResults.classList.remove('hidden');
+            searchResults.textContent = visibleCount + ' Ergebnis(se) gefunden';
+          } else {
+            searchResults.classList.add('hidden');
+          }
+        }
+
+        function filterCategory(category) {
+          const faqItems = document.querySelectorAll('.faq-item');
+          const categoryBtns = document.querySelectorAll('.category-btn');
+          
+          // Update button states
+          categoryBtns.forEach(btn => {
+            btn.classList.remove('active', 'bg-brand-navy', 'text-white');
+            btn.classList.add('bg-gray-200', 'text-gray-700');
+          });
+          event.target.classList.remove('bg-gray-200', 'text-gray-700');
+          event.target.classList.add('active', 'bg-brand-navy', 'text-white');
+          
+          // Filter FAQs
+          faqItems.forEach(item => {
+            const itemCategories = item.getAttribute('data-category');
+            if (category === 'all' || itemCategories.includes(category)) {
+              item.style.display = 'block';
+            } else {
+              item.style.display = 'none';
+            }
+          });
+          
+          // Clear search
+          document.getElementById('searchInput').value = '';
+          document.getElementById('searchResults').classList.add('hidden');
+        }
+      </script>
     </body>
     </html>
   `)
