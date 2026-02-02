@@ -273,10 +273,17 @@ setupReviewRoutes(app)
 
 // Homepage - Premium Modern Design (NEW STUNNING UI)
 app.get('/', (c) => {
+  // Force browser to reload by disabling cache
+  c.header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+  c.header('Pragma', 'no-cache')
+  c.header('Expires', '0')
   return c.html(HomepageModernEcommerce())
 })
 
 app.get('/de', (c) => {
+  c.header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+  c.header('Pragma', 'no-cache')
+  c.header('Expires', '0')
   return c.html(HomepageModernEcommerce())
 })
 

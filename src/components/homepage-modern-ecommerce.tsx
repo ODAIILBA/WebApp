@@ -4,13 +4,13 @@
 export function HomepageModernEcommerce() {
   return `
     <!DOCTYPE html>
-    <html lang="de">
+    <html lang="de" data-theme="light" data-version="2.0">
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>SoftwareKing24 – Ihr Partner für günstige Software Lizenzen</title>
       <meta name="description" content="Günstige Software Lizenzen kaufen – Original & Sofort verfügbar. Windows 11, Microsoft Office 2024, Antivirus-Programme, Serverlösungen zu Top-Preisen.">
-      <script src="https://cdn.tailwindcss.com"></script>
+      <script src="https://cdn.tailwindcss.com?v=2.0"></script>
       <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
       <script>
         tailwind.config = {
