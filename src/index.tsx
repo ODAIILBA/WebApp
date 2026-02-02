@@ -1384,6 +1384,18 @@ app.get('/about', (c) => {
       <title>Über uns - SoftwareKing24</title>
       <script src="https://cdn.tailwindcss.com"></script>
       <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+      <script>
+        tailwind.config = {
+          theme: {
+            extend: {
+              colors: {
+                'brand-navy': '#132C46',
+                'brand-gold': '#D9A50B',
+              }
+            }
+          }
+        }
+      </script>
     </head>
     <body class="bg-gray-50">
       <div class="min-h-screen">
@@ -1391,9 +1403,9 @@ app.get('/about', (c) => {
           <div class="container mx-auto px-4 py-4">
             <div class="flex items-center justify-between">
               <a href="/" class="flex items-center">
-                <img src="/static/logo.png" alt="SoftwareKing24" class="h-10">
+                <span class="text-2xl font-bold text-brand-navy">SoftwareKing24</span>
               </a>
-              <a href="/" class="text-gray-600 hover:text-blue-600">
+              <a href="/" class="text-gray-600 hover:text-brand-navy">
                 <i class="fas fa-arrow-left mr-2"></i>Zurück zum Shop
               </a>
             </div>
@@ -1401,51 +1413,130 @@ app.get('/about', (c) => {
         </header>
 
         <div class="container mx-auto px-4 py-12">
-          <div class="max-w-4xl mx-auto">
-            <h1 class="text-4xl font-bold text-gray-900 mb-8">
-              <i class="fas fa-info-circle text-blue-600 mr-3"></i>Über SoftwareKing24
+          <div class="max-w-5xl mx-auto">
+            <h1 class="text-4xl font-bold text-gray-900 mb-4">
+              <i class="fas fa-info-circle text-brand-navy mr-3"></i>Über SoftwareKing24
             </h1>
+            <p class="text-xl text-gray-600 mb-12">Ihr vertrauenswürdiger Partner für originale Software-Lizenzen</p>
 
-            <div class="bg-white rounded-lg shadow-md p-8 mb-8">
-              <h2 class="text-2xl font-semibold mb-4">Wer wir sind</h2>
-              <p class="text-gray-700 mb-4">
-                SoftwareKing24 ist Ihr vertrauenswürdiger Partner für originale Software-Lizenzen zu günstigen Preisen. 
-                Wir bieten eine breite Palette von Microsoft-Produkten, Antivirenprogrammen, CAD-Software und weiteren 
-                professionellen Lösungen für Privat- und Geschäftskunden.
-              </p>
-              <p class="text-gray-700">
-                Mit jahrelanger Erfahrung im digitalen Software-Vertrieb garantieren wir schnelle Lieferung, 
-                persönlichen Support und 100% originale Lizenzen.
-              </p>
-            </div>
-
-            <div class="grid md:grid-cols-3 gap-6 mb-8">
-              <div class="bg-white rounded-lg shadow-md p-6 text-center">
-                <i class="fas fa-shield-alt text-blue-600 text-4xl mb-4"></i>
-                <h3 class="font-semibold text-lg mb-2">100% Original</h3>
-                <p class="text-gray-600 text-sm">Nur geprüfte und originale Software-Lizenzen</p>
-              </div>
-
-              <div class="bg-white rounded-lg shadow-md p-6 text-center">
-                <i class="fas fa-shipping-fast text-blue-600 text-4xl mb-4"></i>
-                <h3 class="font-semibold text-lg mb-2">Sofortiger Versand</h3>
-                <p class="text-gray-600 text-sm">Lieferung per E-Mail innerhalb weniger Minuten</p>
-              </div>
-
-              <div class="bg-white rounded-lg shadow-md p-6 text-center">
-                <i class="fas fa-headset text-blue-600 text-4xl mb-4"></i>
-                <h3 class="font-semibold text-lg mb-2">Persönlicher Support</h3>
-                <p class="text-gray-600 text-sm">Unser Team hilft Ihnen bei allen Fragen</p>
+            <!-- Hero Section -->
+            <div class="bg-gradient-to-br from-brand-navy to-brand-navy/90 rounded-2xl p-12 mb-12 text-white">
+              <div class="max-w-3xl">
+                <h2 class="text-3xl font-bold mb-4">Wer wir sind</h2>
+                <p class="text-white/90 text-lg leading-relaxed mb-4">
+                  SoftwareKing24 ist Ihr vertrauenswürdiger Partner für <strong>originale Software-Lizenzen zu günstigen Preisen</strong>. 
+                  Wir bieten eine breite Palette von Microsoft-Produkten, Antivirenprogrammen, CAD-Software und weiteren 
+                  professionellen Lösungen für Privat- und Geschäftskunden.
+                </p>
+                <p class="text-white/90 text-lg leading-relaxed">
+                  Mit <strong>jahrelanger Erfahrung</strong> im digitalen Software-Vertrieb garantieren wir schnelle Lieferung, 
+                  persönlichen Support und 100% originale Lizenzen.
+                </p>
               </div>
             </div>
 
-            <div class="bg-blue-50 border-l-4 border-blue-600 p-6 rounded">
-              <h3 class="font-semibold text-lg mb-2">Unsere Mission</h3>
-              <p class="text-gray-700">
-                Wir möchten hochwertige Software für jeden zugänglich und erschwinglich machen. 
-                Durch faire Preise und exzellenten Service schaffen wir Vertrauen und langfristige 
-                Kundenbeziehungen.
-              </p>
+            <!-- Features Grid -->
+            <div class="grid md:grid-cols-3 gap-6 mb-12">
+              <div class="bg-white rounded-xl shadow-lg p-8 text-center hover:shadow-xl transition">
+                <div class="w-16 h-16 bg-brand-navy/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i class="fas fa-shield-alt text-brand-navy text-3xl"></i>
+                </div>
+                <h3 class="font-bold text-xl mb-3">100% Original</h3>
+                <p class="text-gray-600">Nur geprüfte und originale Software-Lizenzen direkt von autorisierten Partnern</p>
+              </div>
+
+              <div class="bg-white rounded-xl shadow-lg p-8 text-center hover:shadow-xl transition">
+                <div class="w-16 h-16 bg-brand-gold/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i class="fas fa-shipping-fast text-brand-gold text-3xl"></i>
+                </div>
+                <h3 class="font-bold text-xl mb-3">Sofortiger Versand</h3>
+                <p class="text-gray-600">Lieferung per E-Mail innerhalb weniger Minuten nach Zahlungseingang</p>
+              </div>
+
+              <div class="bg-white rounded-xl shadow-lg p-8 text-center hover:shadow-xl transition">
+                <div class="w-16 h-16 bg-brand-navy/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <i class="fas fa-headset text-brand-navy text-3xl"></i>
+                </div>
+                <h3 class="font-bold text-xl mb-3">Persönlicher Support</h3>
+                <p class="text-gray-600">Deutschsprachiges Team hilft Ihnen bei allen Fragen - Mo-Fr 9-18 Uhr</p>
+              </div>
+            </div>
+
+            <!-- Mission & Values -->
+            <div class="grid md:grid-cols-2 gap-8 mb-12">
+              <div class="bg-white rounded-xl shadow-lg p-8">
+                <div class="flex items-center mb-4">
+                  <div class="w-12 h-12 bg-brand-gold/10 rounded-lg flex items-center justify-center mr-4">
+                    <i class="fas fa-bullseye text-brand-gold text-2xl"></i>
+                  </div>
+                  <h3 class="font-bold text-2xl">Unsere Mission</h3>
+                </div>
+                <p class="text-gray-700 leading-relaxed">
+                  Wir möchten hochwertige Software für jeden zugänglich und erschwinglich machen. 
+                  Durch faire Preise und exzellenten Service schaffen wir Vertrauen und langfristige 
+                  Kundenbeziehungen.
+                </p>
+              </div>
+
+              <div class="bg-white rounded-xl shadow-lg p-8">
+                <div class="flex items-center mb-4">
+                  <div class="w-12 h-12 bg-brand-navy/10 rounded-lg flex items-center justify-center mr-4">
+                    <i class="fas fa-gem text-brand-navy text-2xl"></i>
+                  </div>
+                  <h3 class="font-bold text-2xl">Unsere Werte</h3>
+                </div>
+                <ul class="space-y-3">
+                  <li class="flex items-start">
+                    <i class="fas fa-check text-brand-gold mr-3 mt-1"></i>
+                    <span class="text-gray-700"><strong>Transparenz</strong> - Klare Preise ohne versteckte Kosten</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i class="fas fa-check text-brand-gold mr-3 mt-1"></i>
+                    <span class="text-gray-700"><strong>Qualität</strong> - Nur originale Produkte von Markenherstellern</span>
+                  </li>
+                  <li class="flex items-start">
+                    <i class="fas fa-check text-brand-gold mr-3 mt-1"></i>
+                    <span class="text-gray-700"><strong>Service</strong> - Schnelle Hilfe bei allen Fragen</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Stats -->
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-12">
+              <h3 class="font-bold text-2xl text-center mb-8">SoftwareKing24 in Zahlen</h3>
+              <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <div class="text-center">
+                  <div class="text-4xl font-bold text-brand-navy mb-2">50.000+</div>
+                  <div class="text-gray-600">Zufriedene Kunden</div>
+                </div>
+                <div class="text-center">
+                  <div class="text-4xl font-bold text-brand-navy mb-2">500+</div>
+                  <div class="text-gray-600">Produkte</div>
+                </div>
+                <div class="text-center">
+                  <div class="text-4xl font-bold text-brand-navy mb-2">99.8%</div>
+                  <div class="text-gray-600">Kundenzufriedenheit</div>
+                </div>
+                <div class="text-center">
+                  <div class="text-4xl font-bold text-brand-navy mb-2">24/7</div>
+                  <div class="text-gray-600">Online verfügbar</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- CTA -->
+            <div class="bg-gradient-to-r from-brand-gold to-brand-gold/80 rounded-xl p-8 text-center text-white">
+              <h3 class="text-2xl font-bold mb-3">Haben Sie Fragen?</h3>
+              <p class="text-white/90 mb-6">Unser Team steht Ihnen gerne zur Verfügung!</p>
+              <div class="flex flex-wrap justify-center gap-4">
+                <a href="/contact" class="bg-white text-brand-navy px-8 py-3 rounded-full font-semibold hover:bg-gray-100 transition">
+                  <i class="fas fa-envelope mr-2"></i>Kontakt aufnehmen
+                </a>
+                <a href="/" class="bg-brand-navy text-white px-8 py-3 rounded-full font-semibold hover:bg-brand-navy/90 transition">
+                  <i class="fas fa-shopping-bag mr-2"></i>Zum Shop
+                </a>
+              </div>
             </div>
           </div>
         </div>
