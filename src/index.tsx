@@ -300,6 +300,586 @@ app.get('/new-light-theme', (c) => {
 })
 
 // ============================================
+// ESSENTIAL PAGES
+// ============================================
+
+// Wishlist Page
+app.get('/wishlist', (c) => {
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Meine Wunschliste - SoftwareKing24</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-50">
+      <div class="min-h-screen">
+        <!-- Header -->
+        <header class="bg-white shadow-sm">
+          <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+              <a href="/" class="flex items-center">
+                <img src="/static/logo.png" alt="SoftwareKing24" class="h-10">
+              </a>
+              <a href="/" class="text-gray-600 hover:text-blue-600">
+                <i class="fas fa-arrow-left mr-2"></i>Zurück zum Shop
+              </a>
+            </div>
+          </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="container mx-auto px-4 py-12">
+          <div class="max-w-4xl mx-auto">
+            <h1 class="text-4xl font-bold text-gray-900 mb-8">
+              <i class="fas fa-heart text-red-500 mr-3"></i>Meine Wunschliste
+            </h1>
+
+            <div class="bg-white rounded-lg shadow-md p-8 text-center">
+              <i class="fas fa-heart text-gray-300 text-6xl mb-4"></i>
+              <h2 class="text-2xl font-semibold text-gray-700 mb-2">Ihre Wunschliste ist leer</h2>
+              <p class="text-gray-500 mb-6">Fügen Sie Produkte zu Ihrer Wunschliste hinzu, um sie später zu kaufen.</p>
+              <a href="/" class="inline-block bg-blue-600 text-white px-8 py-3 rounded-full hover:bg-blue-700 transition">
+                Jetzt einkaufen
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `)
+})
+
+// Cart Page
+app.get('/cart', (c) => {
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Warenkorb - SoftwareKing24</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-50">
+      <div class="min-h-screen">
+        <header class="bg-white shadow-sm">
+          <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+              <a href="/" class="flex items-center">
+                <img src="/static/logo.png" alt="SoftwareKing24" class="h-10">
+              </a>
+              <a href="/" class="text-gray-600 hover:text-blue-600">
+                <i class="fas fa-arrow-left mr-2"></i>Zurück zum Shop
+              </a>
+            </div>
+          </div>
+        </header>
+
+        <div class="container mx-auto px-4 py-12">
+          <div class="max-w-4xl mx-auto">
+            <h1 class="text-4xl font-bold text-gray-900 mb-8">
+              <i class="fas fa-shopping-cart text-blue-600 mr-3"></i>Warenkorb
+            </h1>
+
+            <div class="bg-white rounded-lg shadow-md p-8 text-center">
+              <i class="fas fa-shopping-cart text-gray-300 text-6xl mb-4"></i>
+              <h2 class="text-2xl font-semibold text-gray-700 mb-2">Ihr Warenkorb ist leer</h2>
+              <p class="text-gray-500 mb-6">Fügen Sie Produkte hinzu, um mit dem Einkauf zu beginnen.</p>
+              <a href="/" class="inline-block bg-blue-600 text-white px-8 py-3 rounded-full hover:bg-blue-700 transition">
+                Jetzt einkaufen
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `)
+})
+
+// Account Page
+app.get('/account', (c) => {
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Mein Konto - SoftwareKing24</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-50">
+      <div class="min-h-screen">
+        <header class="bg-white shadow-sm">
+          <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+              <a href="/" class="flex items-center">
+                <img src="/static/logo.png" alt="SoftwareKing24" class="h-10">
+              </a>
+              <a href="/" class="text-gray-600 hover:text-blue-600">
+                <i class="fas fa-arrow-left mr-2"></i>Zurück zum Shop
+              </a>
+            </div>
+          </div>
+        </header>
+
+        <div class="container mx-auto px-4 py-12">
+          <div class="max-w-4xl mx-auto">
+            <h1 class="text-4xl font-bold text-gray-900 mb-8">
+              <i class="fas fa-user text-blue-600 mr-3"></i>Mein Konto
+            </h1>
+
+            <div class="grid md:grid-cols-2 gap-6">
+              <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-semibold mb-4"><i class="fas fa-sign-in-alt mr-2 text-blue-600"></i>Anmelden</h3>
+                <form class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">E-Mail</label>
+                    <input type="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" placeholder="ihre@email.de">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Passwort</label>
+                    <input type="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" placeholder="••••••••">
+                  </div>
+                  <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition">Anmelden</button>
+                  <a href="#" class="block text-center text-sm text-blue-600 hover:underline">Passwort vergessen?</a>
+                </form>
+              </div>
+
+              <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-semibold mb-4"><i class="fas fa-user-plus mr-2 text-green-600"></i>Registrieren</h3>
+                <form class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                    <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" placeholder="Ihr Name">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">E-Mail</label>
+                    <input type="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" placeholder="ihre@email.de">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Passwort</label>
+                    <input type="password" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500" placeholder="••••••••">
+                  </div>
+                  <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition">Registrieren</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `)
+})
+
+// Contact Page
+app.get('/contact', (c) => {
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Kontakt - SoftwareKing24</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-50">
+      <div class="min-h-screen">
+        <header class="bg-white shadow-sm">
+          <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+              <a href="/" class="flex items-center">
+                <img src="/static/logo.png" alt="SoftwareKing24" class="h-10">
+              </a>
+              <a href="/" class="text-gray-600 hover:text-blue-600">
+                <i class="fas fa-arrow-left mr-2"></i>Zurück zum Shop
+              </a>
+            </div>
+          </div>
+        </header>
+
+        <div class="container mx-auto px-4 py-12">
+          <div class="max-w-5xl mx-auto">
+            <h1 class="text-4xl font-bold text-gray-900 mb-8">
+              <i class="fas fa-envelope text-blue-600 mr-3"></i>Kontakt
+            </h1>
+
+            <div class="grid md:grid-cols-2 gap-8">
+              <div class="bg-white rounded-lg shadow-md p-8">
+                <h3 class="text-2xl font-semibold mb-6">Kontaktieren Sie uns</h3>
+                <form class="space-y-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Name</label>
+                    <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">E-Mail</label>
+                    <input type="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Betreff</label>
+                    <input type="text" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500">
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nachricht</label>
+                    <textarea rows="5" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500"></textarea>
+                  </div>
+                  <button type="submit" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition">
+                    <i class="fas fa-paper-plane mr-2"></i>Nachricht senden
+                  </button>
+                </form>
+              </div>
+
+              <div class="space-y-6">
+                <div class="bg-white rounded-lg shadow-md p-8">
+                  <h3 class="text-xl font-semibold mb-4"><i class="fas fa-phone text-blue-600 mr-2"></i>Telefon</h3>
+                  <p class="text-gray-700 text-lg">+49 (0)30 1234 5678</p>
+                  <p class="text-sm text-gray-500 mt-2">Mo-Fr: 9:00 - 18:00 Uhr</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md p-8">
+                  <h3 class="text-xl font-semibold mb-4"><i class="fas fa-envelope text-blue-600 mr-2"></i>E-Mail</h3>
+                  <p class="text-gray-700 text-lg">support@softwareking24.com</p>
+                  <p class="text-sm text-gray-500 mt-2">Antwort innerhalb von 24 Stunden</p>
+                </div>
+
+                <div class="bg-white rounded-lg shadow-md p-8">
+                  <h3 class="text-xl font-semibold mb-4"><i class="fas fa-map-marker-alt text-blue-600 mr-2"></i>Adresse</h3>
+                  <p class="text-gray-700">SoftwareKing24 GmbH<br>Beispielstraße 123<br>10115 Berlin<br>Deutschland</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `)
+})
+
+// FAQ Page
+app.get('/faq', (c) => {
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>FAQ - SoftwareKing24</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-50">
+      <div class="min-h-screen">
+        <header class="bg-white shadow-sm">
+          <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+              <a href="/" class="flex items-center">
+                <img src="/static/logo.png" alt="SoftwareKing24" class="h-10">
+              </a>
+              <a href="/" class="text-gray-600 hover:text-blue-600">
+                <i class="fas fa-arrow-left mr-2"></i>Zurück zum Shop
+              </a>
+            </div>
+          </div>
+        </header>
+
+        <div class="container mx-auto px-4 py-12">
+          <div class="max-w-4xl mx-auto">
+            <h1 class="text-4xl font-bold text-gray-900 mb-8">
+              <i class="fas fa-question-circle text-blue-600 mr-3"></i>Häufig gestellte Fragen (FAQ)
+            </h1>
+
+            <div class="space-y-4">
+              <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Wie erhalte ich meine Software-Lizenz?</h3>
+                <p class="text-gray-600">Nach erfolgreicher Zahlung erhalten Sie Ihre Lizenzschlüssel sofort per E-Mail. In der Regel dauert dies nur wenige Minuten.</p>
+              </div>
+
+              <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Sind die Lizenzen original und legal?</h3>
+                <p class="text-gray-600">Ja, wir verkaufen ausschließlich originale und legale Software-Lizenzen von Microsoft und anderen renommierten Herstellern.</p>
+              </div>
+
+              <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Welche Zahlungsmethoden werden akzeptiert?</h3>
+                <p class="text-gray-600">Wir akzeptieren Kreditkarten, PayPal, Sofortüberweisung und weitere gängige Zahlungsmethoden.</p>
+              </div>
+
+              <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Kann ich eine Rechnung erhalten?</h3>
+                <p class="text-gray-600">Ja, Sie erhalten automatisch eine Rechnung per E-Mail nach dem Kauf.</p>
+              </div>
+
+              <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Gibt es technischen Support?</h3>
+                <p class="text-gray-600">Ja, unser Support-Team steht Ihnen bei Fragen zur Verfügung. Kontaktieren Sie uns per E-Mail oder Telefon.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `)
+})
+
+// About Page
+app.get('/about', (c) => {
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Über uns - SoftwareKing24</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-50">
+      <div class="min-h-screen">
+        <header class="bg-white shadow-sm">
+          <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+              <a href="/" class="flex items-center">
+                <img src="/static/logo.png" alt="SoftwareKing24" class="h-10">
+              </a>
+              <a href="/" class="text-gray-600 hover:text-blue-600">
+                <i class="fas fa-arrow-left mr-2"></i>Zurück zum Shop
+              </a>
+            </div>
+          </div>
+        </header>
+
+        <div class="container mx-auto px-4 py-12">
+          <div class="max-w-4xl mx-auto">
+            <h1 class="text-4xl font-bold text-gray-900 mb-8">
+              <i class="fas fa-info-circle text-blue-600 mr-3"></i>Über SoftwareKing24
+            </h1>
+
+            <div class="bg-white rounded-lg shadow-md p-8 mb-8">
+              <h2 class="text-2xl font-semibold mb-4">Wer wir sind</h2>
+              <p class="text-gray-700 mb-4">
+                SoftwareKing24 ist Ihr vertrauenswürdiger Partner für originale Software-Lizenzen zu günstigen Preisen. 
+                Wir bieten eine breite Palette von Microsoft-Produkten, Antivirenprogrammen, CAD-Software und weiteren 
+                professionellen Lösungen für Privat- und Geschäftskunden.
+              </p>
+              <p class="text-gray-700">
+                Mit jahrelanger Erfahrung im digitalen Software-Vertrieb garantieren wir schnelle Lieferung, 
+                persönlichen Support und 100% originale Lizenzen.
+              </p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-6 mb-8">
+              <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                <i class="fas fa-shield-alt text-blue-600 text-4xl mb-4"></i>
+                <h3 class="font-semibold text-lg mb-2">100% Original</h3>
+                <p class="text-gray-600 text-sm">Nur geprüfte und originale Software-Lizenzen</p>
+              </div>
+
+              <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                <i class="fas fa-shipping-fast text-blue-600 text-4xl mb-4"></i>
+                <h3 class="font-semibold text-lg mb-2">Sofortiger Versand</h3>
+                <p class="text-gray-600 text-sm">Lieferung per E-Mail innerhalb weniger Minuten</p>
+              </div>
+
+              <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                <i class="fas fa-headset text-blue-600 text-4xl mb-4"></i>
+                <h3 class="font-semibold text-lg mb-2">Persönlicher Support</h3>
+                <p class="text-gray-600 text-sm">Unser Team hilft Ihnen bei allen Fragen</p>
+              </div>
+            </div>
+
+            <div class="bg-blue-50 border-l-4 border-blue-600 p-6 rounded">
+              <h3 class="font-semibold text-lg mb-2">Unsere Mission</h3>
+              <p class="text-gray-700">
+                Wir möchten hochwertige Software für jeden zugänglich und erschwinglich machen. 
+                Durch faire Preise und exzellenten Service schaffen wir Vertrauen und langfristige 
+                Kundenbeziehungen.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `)
+})
+
+// Download Center Page
+app.get('/download-center', (c) => {
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Download Center - SoftwareKing24</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-50">
+      <div class="min-h-screen">
+        <header class="bg-white shadow-sm">
+          <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+              <a href="/" class="flex items-center">
+                <img src="/static/logo.png" alt="SoftwareKing24" class="h-10">
+              </a>
+              <a href="/" class="text-gray-600 hover:text-blue-600">
+                <i class="fas fa-arrow-left mr-2"></i>Zurück zum Shop
+              </a>
+            </div>
+          </div>
+        </header>
+
+        <div class="container mx-auto px-4 py-12">
+          <div class="max-w-4xl mx-auto">
+            <h1 class="text-4xl font-bold text-gray-900 mb-8">
+              <i class="fas fa-download text-blue-600 mr-3"></i>Download Center
+            </h1>
+
+            <div class="bg-blue-50 border-l-4 border-blue-600 p-6 rounded mb-8">
+              <p class="text-gray-700">
+                <i class="fas fa-info-circle mr-2"></i>
+                Nach dem Kauf erhalten Sie Ihre Lizenzschlüssel per E-Mail. Hier finden Sie Links zu den offiziellen Download-Quellen.
+              </p>
+            </div>
+
+            <div class="space-y-4">
+              <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-semibold mb-3">
+                  <i class="fab fa-windows text-blue-600 mr-2"></i>Windows Downloads
+                </h3>
+                <p class="text-gray-600 mb-4">Laden Sie Windows direkt von Microsoft herunter:</p>
+                <a href="https://www.microsoft.com/de-de/software-download" target="_blank" class="inline-block bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">
+                  <i class="fas fa-external-link-alt mr-2"></i>Microsoft Download Center
+                </a>
+              </div>
+
+              <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-semibold mb-3">
+                  <i class="fab fa-microsoft text-blue-600 mr-2"></i>Office Downloads
+                </h3>
+                <p class="text-gray-600 mb-4">Laden Sie Microsoft Office herunter:</p>
+                <a href="https://www.office.com/" target="_blank" class="inline-block bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 transition">
+                  <i class="fas fa-external-link-alt mr-2"></i>Office.com
+                </a>
+              </div>
+
+              <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-semibold mb-3">
+                  <i class="fas fa-question-circle text-blue-600 mr-2"></i>Benötigen Sie Hilfe?
+                </h3>
+                <p class="text-gray-600 mb-4">Unser Support-Team hilft Ihnen gerne bei der Installation:</p>
+                <a href="/contact" class="inline-block bg-green-600 text-white px-6 py-2 rounded hover:bg-green-700 transition">
+                  <i class="fas fa-envelope mr-2"></i>Support kontaktieren
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `)
+})
+
+// Manufacturers Page
+app.get('/manufacturers', (c) => {
+  return c.html(`
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Hersteller - SoftwareKing24</title>
+      <script src="https://cdn.tailwindcss.com"></script>
+      <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    </head>
+    <body class="bg-gray-50">
+      <div class="min-h-screen">
+        <header class="bg-white shadow-sm">
+          <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+              <a href="/" class="flex items-center">
+                <img src="/static/logo.png" alt="SoftwareKing24" class="h-10">
+              </a>
+              <a href="/" class="text-gray-600 hover:text-blue-600">
+                <i class="fas fa-arrow-left mr-2"></i>Zurück zum Shop
+              </a>
+            </div>
+          </div>
+        </header>
+
+        <div class="container mx-auto px-4 py-12">
+          <div class="max-w-6xl mx-auto">
+            <h1 class="text-4xl font-bold text-gray-900 mb-8">
+              <i class="fas fa-industry text-blue-600 mr-3"></i>Unsere Hersteller
+            </h1>
+
+            <div class="grid md:grid-cols-3 gap-6">
+              <div class="bg-white rounded-lg shadow-md p-8 text-center hover:shadow-xl transition">
+                <i class="fab fa-microsoft text-6xl text-blue-600 mb-4"></i>
+                <h3 class="text-xl font-semibold mb-2">Microsoft</h3>
+                <p class="text-gray-600 text-sm mb-4">Windows, Office, Server-Lösungen</p>
+                <a href="/products?brand=microsoft" class="text-blue-600 hover:underline">Produkte ansehen →</a>
+              </div>
+
+              <div class="bg-white rounded-lg shadow-md p-8 text-center hover:shadow-xl transition">
+                <i class="fas fa-shield-alt text-6xl text-red-600 mb-4"></i>
+                <h3 class="text-xl font-semibold mb-2">Kaspersky</h3>
+                <p class="text-gray-600 text-sm mb-4">Antivirus & Sicherheitssoftware</p>
+                <a href="/products?brand=kaspersky" class="text-blue-600 hover:underline">Produkte ansehen →</a>
+              </div>
+
+              <div class="bg-white rounded-lg shadow-md p-8 text-center hover:shadow-xl transition">
+                <i class="fas fa-shield-virus text-6xl text-yellow-600 mb-4"></i>
+                <h3 class="text-xl font-semibold mb-2">Norton</h3>
+                <p class="text-gray-600 text-sm mb-4">Internet Security Lösungen</p>
+                <a href="/products?brand=norton" class="text-blue-600 hover:underline">Produkte ansehen →</a>
+              </div>
+
+              <div class="bg-white rounded-lg shadow-md p-8 text-center hover:shadow-xl transition">
+                <i class="fas fa-shield text-6xl text-green-600 mb-4"></i>
+                <h3 class="text-xl font-semibold mb-2">ESET</h3>
+                <p class="text-gray-600 text-sm mb-4">NOD32 Antivirus & Security</p>
+                <a href="/products?brand=eset" class="text-blue-600 hover:underline">Produkte ansehen →</a>
+              </div>
+
+              <div class="bg-white rounded-lg shadow-md p-8 text-center hover:shadow-xl transition">
+                <i class="fas fa-shield-alt text-6xl text-orange-600 mb-4"></i>
+                <h3 class="text-xl font-semibold mb-2">Bitdefender</h3>
+                <p class="text-gray-600 text-sm mb-4">Total Security Lösungen</p>
+                <a href="/products?brand=bitdefender" class="text-blue-600 hover:underline">Produkte ansehen →</a>
+              </div>
+
+              <div class="bg-white rounded-lg shadow-md p-8 text-center hover:shadow-xl transition">
+                <i class="fas fa-drafting-compass text-6xl text-purple-600 mb-4"></i>
+                <h3 class="text-xl font-semibold mb-2">Autodesk</h3>
+                <p class="text-gray-600 text-sm mb-4">CAD & Design Software</p>
+                <a href="/products?brand=autodesk" class="text-blue-600 hover:underline">Produkte ansehen →</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `)
+})
+
+
+// ============================================
 // HOMEPAGE PREVIEW ROUTES - 3 FINALISTS
 // ============================================
 
