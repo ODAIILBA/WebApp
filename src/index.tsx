@@ -15539,187 +15539,8 @@ app.get('/admin/refunds', async (c) => {
 
 // SYSTEM STATUS MONITORING PAGE
 app.get('/admin/system-status', async (c) => {
-  const db = c.get('db') as DatabaseHelper
-  
-  // Get system statistics
-  const stats = {
-    products: await db.db.prepare('SELECT COUNT(*) as count FROM products WHERE is_active = 1').first(),
-    orders: await db.db.prepare('SELECT COUNT(*) as count FROM orders WHERE order_status != "cancelled"').first(),
-    customers: await db.db.prepare('SELECT COUNT(*) as count FROM users WHERE role = "customer"').first(),
-    licenses: await db.db.prepare('SELECT COUNT(*) as count FROM license_keys WHERE status = "available"').first(),
-  }
-  
-  return c.html(`
-    <!DOCTYPE html>
-    <html lang="de">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Systemstatus - SOFTWAREKING24 Admin</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
-    </head>
-    <body class="bg-gray-50">
-        $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/system-status')}} />
-        <div class="ml-64 p-8">
-            <div class="mb-8">
-                <h1 class="text-3xl font-bold text-gray-900 mb-2">
-                    <i class="fas fa-server mr-2 text-green-600"></i>
-                    Systemstatus
-                </h1>
-                <p class="text-gray-600">Überwachung der Systemgesundheit und Leistung</p>
-            </div>
-
-            <!-- Overall System Health -->
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-bold text-gray-900">Systemgesundheit</h2>
-                    <div class="flex items-center">
-                        <div class="h-3 w-3 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-                        <span class="text-sm font-medium text-green-600">Alle Systeme betriebsbereit</span>
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                    <div class="text-center p-4 bg-green-50 rounded-lg">
-                        <i class="fas fa-database text-3xl text-green-600 mb-2"></i>
-                        <p class="text-sm text-gray-600">Datenbank</p>
-                        <p class="text-lg font-bold text-green-600">Online</p>
-                    </div>
-                    <div class="text-center p-4 bg-green-50 rounded-lg">
-                        <i class="fas fa-cloud text-3xl text-green-600 mb-2"></i>
-                        <p class="text-sm text-gray-600">Cloudflare</p>
-                        <p class="text-lg font-bold text-green-600">Aktiv</p>
-                    </div>
-                    <div class="text-center p-4 bg-green-50 rounded-lg">
-                        <i class="fas fa-globe text-3xl text-green-600 mb-2"></i>
-                        <p class="text-sm text-gray-600">API</p>
-                        <p class="text-lg font-bold text-green-600">Online</p>
-                    </div>
-                    <div class="text-center p-4 bg-green-50 rounded-lg">
-                        <i class="fas fa-shield-alt text-3xl text-green-600 mb-2"></i>
-                        <p class="text-sm text-gray-600">Sicherheit</p>
-                        <p class="text-lg font-bold text-green-600">Gesichert</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- System Statistics -->
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                <div class="bg-white rounded-lg shadow p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-600">Aktive Produkte</p>
-                            <p class="text-2xl font-bold text-gray-900">${(stats.products as any)?.count || 0}</p>
-                        </div>
-                        <div class="p-3 bg-blue-100 rounded-full">
-                            <i class="fas fa-box text-blue-600 text-xl"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-lg shadow p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-600">Offene Bestellungen</p>
-                            <p class="text-2xl font-bold text-gray-900">${(stats.orders as any)?.count || 0}</p>
-                        </div>
-                        <div class="p-3 bg-green-100 rounded-full">
-                            <i class="fas fa-shopping-cart text-green-600 text-xl"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-lg shadow p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-600">Registrierte Kunden</p>
-                            <p class="text-2xl font-bold text-gray-900">${(stats.customers as any)?.count || 0}</p>
-                        </div>
-                        <div class="p-3 bg-purple-100 rounded-full">
-                            <i class="fas fa-users text-purple-600 text-xl"></i>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-lg shadow p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-600">Verfügbare Lizenzen</p>
-                            <p class="text-2xl font-bold text-gray-900">${(stats.licenses as any)?.count || 0}</p>
-                        </div>
-                        <div class="p-3 bg-yellow-100 rounded-full">
-                            <i class="fas fa-key text-yellow-600 text-xl"></i>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Performance Metrics -->
-            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-4">Leistungsmetriken</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-sm text-gray-600">CPU-Auslastung</span>
-                            <span class="text-sm font-medium text-green-600">12%</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-green-600 h-2 rounded-full" style="width: 12%"></div>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-sm text-gray-600">Speicher</span>
-                            <span class="text-sm font-medium text-blue-600">34%</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-blue-600 h-2 rounded-full" style="width: 34%"></div>
-                        </div>
-                    </div>
-                    <div>
-                        <div class="flex justify-between items-center mb-2">
-                            <span class="text-sm text-gray-600">Datenbank</span>
-                            <span class="text-sm font-medium text-purple-600">18%</span>
-                        </div>
-                        <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-purple-600 h-2 rounded-full" style="width: 18%"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Recent Activity Log -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-xl font-bold text-gray-900 mb-4">Systemaktivität</h2>
-                <div class="space-y-3">
-                    <div class="flex items-center p-3 bg-gray-50 rounded">
-                        <i class="fas fa-check-circle text-green-600 mr-3"></i>
-                        <div class="flex-1">
-                            <p class="text-sm font-medium text-gray-900">System erfolgreich gestartet</p>
-                            <p class="text-xs text-gray-500">vor 2 Stunden</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center p-3 bg-gray-50 rounded">
-                        <i class="fas fa-sync text-blue-600 mr-3"></i>
-                        <div class="flex-1">
-                            <p class="text-sm font-medium text-gray-900">Datenbank-Backup erstellt</p>
-                            <p class="text-xs text-gray-500">vor 5 Stunden</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center p-3 bg-gray-50 rounded">
-                        <i class="fas fa-info-circle text-gray-600 mr-3"></i>
-                        <div class="flex-1">
-                            <p class="text-sm font-medium text-gray-900">Routinemäßige Wartung durchgeführt</p>
-                            <p class="text-xs text-gray-500">vor 12 Stunden</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </body>
-    </html>
-  `)
+  const { SystemStatusPage } = await import('./components/system-status-page')
+  return c.html(SystemStatusPage())
 })
 
 // QUICK ACTIONS DASHBOARD
@@ -27818,6 +27639,14 @@ export default {
     ctx.waitUntil(handleScheduledTasks(event, env))
   }
 }
+
+// ============================================
+// SYSTEM MONITOR API ENDPOINTS
+// ============================================
+
+// Mount system monitor API routes
+import systemMonitorAPI from './api/system-monitor-api'
+app.route('/api/admin/system', systemMonitorAPI)
 
 // ============================================
 // FIREWALL API ENDPOINTS
