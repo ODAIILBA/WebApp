@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add to Cart Test - SoftwareKing24</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Header with Cart Counter -->
+    <header class="bg-white shadow-md py-4 sticky top-0 z-40">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-center">
+                <h1 class="text-2xl font-bold text-blue-600">
+                    <i class="fas fa-shopping-cart mr-2"></i>
+                    Add to Cart Test
+                </h1>
+                <div class="flex items-center space-x-4">
+                    <a href="#" class="relative">
+                        <i class="fas fa-shopping-cart text-2xl text-gray-700"></i>
+                        <span id="cart-count" class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold">0</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        <div class="mb-8">
+            <h2 class="text-3xl font-bold mb-4">Test Products</h2>
+            <p class="text-gray-600">Click "Add to Cart" to test the backend integration</p>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="products-grid">
+            <!-- Products will be loaded here -->
+        </div>
+
+        <!-- Cart Preview -->
+        <div class="mt-12">
+            <h2 class="text-2xl font-bold mb-4">Current Cart</h2>
+            <div id="cart-preview" class="bg-white rounded-lg shadow-md p-6">
+                <p class="text-gray-500">Loading cart...</p>
+            </div>
+        </div>
+    </main>
+
+    <script src="/static/cart-manager-enhanced.js"></script>
+    <script>
+        // Load products
+        async function loadProducts() {
+            try {
+                const response = await axios.get('/api/products');
+                if (response.data.success) {
+                    const products = response.data.data.slice(0, 6); // First 6 products
+                    displayProducts(products);
+                }
+            } catch (error) {
+                console.error('Error loading products:', error);
+            }
+        }
+
+        // Display products
+        function displayProducts(products) {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = products.map(product => `
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
+                    <div class="p-6">
+                        <h3 class="text-xl font-bold mb-2">${product.name}</h3>
+                        <p class="text-gray-600 text-sm mb-4">${product.sku}</p>
+                        <div class="flex items-baseline mb-4">
+                            ${product.discount_price ? `
+                                <span class="text-3xl font-bold text-green-600">€${product.discount_price}</span>
+                                <span class="ml-2 text-lg text-gray-400 line-through">€${product.base_price}</span>
+                            ` : `
+                                <span class="text-3xl font-bold text-blue-600">€${product.base_price}</span>
+                            `}
+                        </div>
+                        <button 
+                            onclick="addToCart(${product.id})" 
+                            class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors"
+                        >
+                            <i class="fas fa-cart-plus mr-2"></i>
+                            Add to Cart
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Load and display cart
+        async function loadCart() {
+            const cart = await cartManager.getCart();
+            if (cart) {
+                displayCart(cart);
+            }
+        }
+
+        // Display cart
+        function displayCart(cart) {
+            const preview = document.getElementById('cart-preview');
+            
+            if (cart.items.length === 0) {
+                preview.innerHTML = '<p class="text-gray-500">Your cart is empty</p>';
+                return;
+            }
+
+            preview.innerHTML = `
+                <div class="space-y-4">
+                    ${cart.items.map(item => `
+                        <div class="flex justify-between items-center border-b pb-4">
+                            <div class="flex-1">
+                                <h4 class="font-bold">${item.product_name}</h4>
+                                <p class="text-sm text-gray-600">${item.product_sku}</p>
+                                <p class="text-sm">Quantity: ${item.quantity}</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-bold text-lg">€${item.subtotal.toFixed(2)}</p>
+                                ${item.discount_price < item.price ? 
+                                    `<p class="text-sm text-gray-500 line-through">€${(item.price * item.quantity).toFixed(2)}</p>` 
+                                : ''}
+                            </div>
+                        </div>
+                    `).join('')}
+                    <div class="pt-4 border-t-2 border-gray-300">
+                        <div class="flex justify-between mb-2">
+                            <span class="text-gray-600">Subtotal:</span>
+                            <span class="font-bold">€${cart.subtotal.toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between text-xl font-bold">
+                            <span>Total:</span>
+                            <span class="text-blue-600">€${cart.total.toFixed(2)}</span>
+                        </div>
+                        <p class="text-sm text-gray-500 mt-2">${cart.item_count} item(s) in cart</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Override addToCart to refresh cart display
+        const originalAddToCart = window.addToCart;
+        window.addToCart = async function(productId, quantity = 1) {
+            const result = await originalAddToCart(productId, quantity);
+            if (result) {
+                await loadCart();
+            }
+            return result;
+        };
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadProducts();
+            await loadCart();
+            
+            // Auto-refresh cart every 5 seconds
+            setInterval(loadCart, 5000);
+        });
+    </script>
+</body>
+</html>
