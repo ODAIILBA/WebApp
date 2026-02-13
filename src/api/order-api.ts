@@ -30,12 +30,26 @@ orderAPI.post('/', async (c) => {
     } = await c.req.json()
 
     // Validate required fields
-    if (!cart_id || !email || !first_name || !last_name) {
-      return c.json({ success: false, error: 'Cart ID, email, first name, and last name are required' }, 400)
+    console.log('[Order API] Received data:', { cart_id, email, first_name, last_name, billing_address, billing_city, billing_postal_code, payment_method })
+    
+    if (!cart_id) {
+      return c.json({ success: false, error: 'Cart ID is required' }, 400)
+    }
+    
+    if (!email || !first_name || !last_name) {
+      return c.json({ success: false, error: 'Email, first name, and last name are required' }, 400)
     }
 
-    if (!billing_address || !billing_city || !billing_postal_code) {
+    if (!billing_address) {
       return c.json({ success: false, error: 'Billing address is required' }, 400)
+    }
+    
+    if (!billing_city) {
+      return c.json({ success: false, error: 'Billing city is required' }, 400)
+    }
+    
+    if (!billing_postal_code) {
+      return c.json({ success: false, error: 'Billing postal code is required' }, 400)
     }
 
     if (!payment_method) {

@@ -193,8 +193,25 @@ app.use('/api/*', async (c, next) => {
     return next()
   }
   
-  // Skip CSRF for all admin API endpoints, public support endpoints, and contact form
-  if (c.req.path.startsWith('/api/admin/') || c.req.path.startsWith('/api/support/') || c.req.path === '/api/contact') {
+  // Skip CSRF for public e-commerce and license endpoints
+  const publicEndpoints = [
+    '/api/admin/',
+    '/api/support/',
+    '/api/contact',
+    '/api/cart',           // Shopping cart (session-based)
+    '/api/orders',         // Order creation (guest checkout)
+    '/api/licenses/validate',  // License validation (public)
+    '/api/licenses/activate',  // License activation (public)
+    '/api/auth/login',     // Login (needs to work)
+    '/api/auth/register',  // Registration (needs to work)
+  ]
+  
+  // Check if path matches any public endpoint
+  const isPublicEndpoint = publicEndpoints.some(endpoint => 
+    c.req.path.startsWith(endpoint) || c.req.path === endpoint
+  )
+  
+  if (isPublicEndpoint) {
     return next()
   }
   
@@ -3298,14 +3315,13 @@ app.get('/api/brands', async (c) => {
         b.id,
         b.name,
         b.slug,
-        b.description,
         b.logo_url,
-        b.website,
+        b.website_url as website,
         COUNT(p.id) as product_count
       FROM brands b
       LEFT JOIN products p ON b.id = p.brand_id AND p.is_active = 1
-      WHERE b.is_active = 1
-      GROUP BY b.id, b.name, b.slug, b.description, b.logo_url, b.website
+      WHERE b.is_featured = 1
+      GROUP BY b.id, b.name, b.slug, b.logo_url, b.website_url
       ORDER BY b.name ASC
     `).all()
     
@@ -3626,17 +3642,18 @@ app.get('/api/custom-css', async (c) => {
       query += ` ORDER BY priority ASC`
       const result = await c.env.DB.prepare(query).bind(page).all()
       
-      const combinedCSS = (result.results || []).map(r => r.css_code).join('\n\n')
+      const combinedCSS = (result.results || []).map((r: any) => r.css_code).join('\n\n')
       return c.text(combinedCSS, 200, { 'Content-Type': 'text/css' })
     } else {
       query += ` ORDER BY priority ASC`
       const result = await c.env.DB.prepare(query).all()
       
-      const combinedCSS = (result.results || []).map(r => r.css_code).join('\n\n')
+      const combinedCSS = (result.results || []).map((r: any) => r.css_code).join('\n\n')
       return c.text(combinedCSS, 200, { 'Content-Type': 'text/css' })
     }
-  } catch (error) {
-    console.error('Error fetching custom CSS:', error)
+  } catch (error: any) {
+    console.error('Error loading custom CSS:', error)
+    // Return empty CSS instead of error
     return c.text('', 200, { 'Content-Type': 'text/css' })
   }
 })
@@ -7608,117 +7625,117 @@ app.delete('/api/admin/pages/:id', async (c) => {
 // END CMS PAGES CRUD API
 // ============================================
 
-// ============================================
-// NOTIFICATIONS CRUD API
-// ============================================
-
-// GET: List notifications
-app.get('/api/admin/notifications', async (c) => {
-  try {
-    const db = c.get('db') as DatabaseHelper
-    const page = parseInt(c.req.query('page') || '1')
-    const limit = parseInt(c.req.query('limit') || '20')
-    const offset = (page - 1) * limit
-    
-    const notifications = await db.db.prepare(`
-      SELECT * FROM notifications
-      ORDER BY created_at DESC
-      LIMIT ? OFFSET ?
-    `).bind(limit, offset).all()
-    
-    const total = await db.db.prepare('SELECT COUNT(*) as count FROM notifications').first()
-    
-    return c.json({ 
-      success: true, 
-      data: notifications.results,
-      pagination: { page, limit, total: (total as any)?.count || 0 }
-    })
-  } catch (error: any) {
-    console.error('Error fetching notifications:', error)
-    return c.json({ success: false, error: 'Failed to fetch notifications' }, 500)
-  }
-})
-
-// POST: Create notification
-app.post('/api/admin/notifications', async (c) => {
-  try {
-    const db = c.get('db') as DatabaseHelper
-    const body = await c.req.json()
-    
-    if (!body.notification_type || !body.title) {
-      return c.json({ success: false, error: 'Missing required fields: notification_type, title' }, 400)
-    }
-    
-    const result = await db.db.prepare(`
-      INSERT INTO notifications (notification_type, user_id, title, message, link, is_read, is_global)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `).bind(
-      body.notification_type,
-      body.user_id || null,
-      body.title,
-      body.message || '',
-      body.link || null,
-      0,
-      body.is_global !== undefined ? body.is_global : 0
-    ).run()
-    
-    return c.json({ success: true, data: { id: result.meta.last_row_id }, message: 'Notification created successfully' })
-  } catch (error: any) {
-    console.error('Error creating notification:', error)
-    return c.json({ success: false, error: error.message || 'Failed to create notification' }, 500)
-  }
-})
-
-// PATCH: Mark as read
-app.patch('/api/admin/notifications/:id/read', async (c) => {
-  try {
-    const db = c.get('db') as DatabaseHelper
-    const id = c.req.param('id')
-    
-    await db.db.prepare('UPDATE notifications SET is_read = 1 WHERE id = ?').bind(id).run()
-    
-    return c.json({ success: true, message: 'Notification marked as read' })
-  } catch (error: any) {
-    console.error('Error updating notification:', error)
-    return c.json({ success: false, error: 'Failed to update notification' }, 500)
-  }
-})
-
-// DELETE: Delete notification
-app.delete('/api/admin/notifications/:id', async (c) => {
-  try {
-    const db = c.get('db') as DatabaseHelper
-    const id = c.req.param('id')
-    
-    await db.db.prepare('DELETE FROM notifications WHERE id = ?').bind(id).run()
-    
-    return c.json({ success: true, message: 'Notification deleted successfully' })
-  } catch (error: any) {
-    console.error('Error deleting notification:', error)
-    return c.json({ success: false, error: 'Failed to delete notification' }, 500)
-  }
-})
-
-// GET: Stats
-app.get('/api/admin/notifications/stats', async (c) => {
-  try {
-    const db = c.get('db') as DatabaseHelper
-    const stats = await db.db.prepare(`
-      SELECT 
-        COUNT(*) as total,
-        SUM(CASE WHEN is_read = 0 THEN 1 ELSE 0 END) as unread,
-        SUM(CASE WHEN is_global = 1 THEN 1 ELSE 0 END) as global_notifications
-      FROM notifications
-    `).first()
-    
-    return c.json({ success: true, data: stats })
-  } catch (error: any) {
-    console.error('Error fetching notification stats:', error)
-    return c.json({ success: false, error: 'Failed to fetch stats' }, 500)
-  }
-})
-
-// END NOTIFICATIONS CRUD API
+// // ============================================
+// // NOTIFICATIONS CRUD API
+// // ============================================
+// 
+// // GET: List notifications
+// app.get('/api/admin/notifications', async (c) => {
+//   try {
+//     const db = c.get('db') as DatabaseHelper
+//     const page = parseInt(c.req.query('page') || '1')
+//     const limit = parseInt(c.req.query('limit') || '20')
+//     const offset = (page - 1) * limit
+//     
+//     const notifications = await db.db.prepare(`
+//       SELECT * FROM notifications
+//       ORDER BY created_at DESC
+//       LIMIT ? OFFSET ?
+//     `).bind(limit, offset).all()
+//     
+//     const total = await db.db.prepare('SELECT COUNT(*) as count FROM notifications').first()
+//     
+//     return c.json({ 
+//       success: true, 
+//       data: notifications.results,
+//       pagination: { page, limit, total: (total as any)?.count || 0 }
+//     })
+//   } catch (error: any) {
+//     console.error('Error fetching notifications:', error)
+//     return c.json({ success: false, error: 'Failed to fetch notifications' }, 500)
+//   }
+// })
+// 
+// // POST: Create notification
+// app.post('/api/admin/notifications', async (c) => {
+//   try {
+//     const db = c.get('db') as DatabaseHelper
+//     const body = await c.req.json()
+//     
+//     if (!body.notification_type || !body.title) {
+//       return c.json({ success: false, error: 'Missing required fields: notification_type, title' }, 400)
+//     }
+//     
+//     const result = await db.db.prepare(`
+//       INSERT INTO notifications (notification_type, user_id, title, message, link, is_read, is_global)
+//       VALUES (?, ?, ?, ?, ?, ?, ?)
+//     `).bind(
+//       body.notification_type,
+//       body.user_id || null,
+//       body.title,
+//       body.message || '',
+//       body.link || null,
+//       0,
+//       body.is_global !== undefined ? body.is_global : 0
+//     ).run()
+//     
+//     return c.json({ success: true, data: { id: result.meta.last_row_id }, message: 'Notification created successfully' })
+//   } catch (error: any) {
+//     console.error('Error creating notification:', error)
+//     return c.json({ success: false, error: error.message || 'Failed to create notification' }, 500)
+//   }
+// })
+// 
+// // PATCH: Mark as read
+// app.patch('/api/admin/notifications/:id/read', async (c) => {
+//   try {
+//     const db = c.get('db') as DatabaseHelper
+//     const id = c.req.param('id')
+//     
+//     await db.db.prepare('UPDATE notifications SET is_read = 1 WHERE id = ?').bind(id).run()
+//     
+//     return c.json({ success: true, message: 'Notification marked as read' })
+//   } catch (error: any) {
+//     console.error('Error updating notification:', error)
+//     return c.json({ success: false, error: 'Failed to update notification' }, 500)
+//   }
+// })
+// 
+// // DELETE: Delete notification
+// app.delete('/api/admin/notifications/:id', async (c) => {
+//   try {
+//     const db = c.get('db') as DatabaseHelper
+//     const id = c.req.param('id')
+//     
+//     await db.db.prepare('DELETE FROM notifications WHERE id = ?').bind(id).run()
+//     
+//     return c.json({ success: true, message: 'Notification deleted successfully' })
+//   } catch (error: any) {
+//     console.error('Error deleting notification:', error)
+//     return c.json({ success: false, error: 'Failed to delete notification' }, 500)
+//   }
+// })
+// 
+// // GET: Stats
+// app.get('/api/admin/notifications/stats', async (c) => {
+//   try {
+//     const db = c.get('db') as DatabaseHelper
+//     const stats = await db.db.prepare(`
+//       SELECT 
+//         COUNT(*) as total,
+//         SUM(CASE WHEN is_read = 0 THEN 1 ELSE 0 END) as unread,
+//         SUM(CASE WHEN is_global = 1 THEN 1 ELSE 0 END) as global_notifications
+//       FROM notifications
+//     `).first()
+//     
+//     return c.json({ success: true, data: stats })
+//   } catch (error: any) {
+//     console.error('Error fetching notification stats:', error)
+//     return c.json({ success: false, error: 'Failed to fetch stats' }, 500)
+//   }
+// })
+// 
+// // END NOTIFICATIONS CRUD API
 // ============================================
 
 // ============================================
@@ -9095,123 +9112,123 @@ app.get('/api/auth/me', async (c) => {
 })
 */
 
-// ============================================
-// API ROUTES: Orders
-// ============================================
-
-app.post('/api/orders', async (c) => {
-  try {
-    const db = c.get('db') as DatabaseHelper
-    const body = await c.req.json()
-
-    // Validate input from checkout form
-    if (!body.customer || !body.items || body.items.length === 0) {
-      return c.json({ success: false, error: 'Missing required fields' }, 400)
-    }
-
-    const customer = body.customer
-    
-    // Validate customer data
-    if (!customer.email || !customer.firstName || !customer.lastName) {
-      return c.json({ success: false, error: 'Missing customer information' }, 400)
-    }
-
-    // Calculate totals (values come from frontend in cents)
-    const subtotal = body.subtotal || 0
-    const discount = body.discount || 0
-    const vat = body.vat || 0
-    const total = body.total || 0
-
-    // Create order
-    const orderNumber = generateOrderNumber()
-    
-    // Insert order into database
-    const orderResult = await db.db.prepare(`
-      INSERT INTO orders (
-        order_number, email, status, 
-        subtotal, tax, total, 
-        payment_method, payment_status,
-        created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-    `).bind(
-      orderNumber,
-      customer.email,
-      'pending',
-      subtotal,
-      vat,
-      total,
-      body.paymentMethod || 'stripe',
-      'pending'
-    ).run()
-
-    const orderId = orderResult.meta.last_row_id
-
-    // Add order items
-    for (const item of body.items) {
-      await db.db.prepare(`
-        INSERT INTO order_items (
-          order_id, product_id, quantity, 
-          unit_price, total_price
-        ) VALUES (?, ?, ?, ?, ?)
-      `).bind(
-        orderId,
-        item.productId,
-        item.quantity,
-        item.price,
-        item.price * item.quantity
-      ).run()
-    }
-
-    // Store customer billing address
-    await db.db.prepare(`
-      INSERT INTO addresses (
-        user_id, address_type, first_name, last_name, 
-        company, street, city, zip, country, 
-        created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
-    `).bind(
-      null, // guest order
-      'billing',
-      customer.firstName,
-      customer.lastName,
-      customer.company || null,
-      customer.street,
-      customer.city,
-      customer.zip,
-      customer.country
-    ).run()
-
-    return c.json({ 
-      success: true, 
-      data: {
-        orderNumber: orderNumber,
-        orderId: orderId,
-        total: total,
-        message: 'Order created successfully'
-      }
-    })
-  } catch (error) {
-    console.error('Order creation error:', error)
-    return c.json({ success: false, error: 'Failed to create order: ' + error.message }, 500)
-  }
-})
-
-app.get('/api/orders/:orderNumber', async (c) => {
-  try {
-    const db = c.get('db') as DatabaseHelper
-    const orderNumber = c.req.param('orderNumber')
-
-    const order = await db.getOrderByNumber(orderNumber)
-
-    if (!order) {
-      return c.json({ success: false, error: 'Order not found' }, 404)
-    }
-
-    return c.json({ success: true, data: order })
-  } catch (error) {
-    return c.json({ success: false, error: 'Failed to fetch order' }, 500)
-  }
-})
+// // ============================================
+// // API ROUTES: Orders
+// // ============================================
+// 
+// app.post('/api/orders', async (c) => {
+//   try {
+//     const db = c.get('db') as DatabaseHelper
+//     const body = await c.req.json()
+// 
+//     // Validate input from checkout form
+//     if (!body.customer || !body.items || body.items.length === 0) {
+//       return c.json({ success: false, error: 'Missing required fields' }, 400)
+//     }
+// 
+//     const customer = body.customer
+//     
+//     // Validate customer data
+//     if (!customer.email || !customer.firstName || !customer.lastName) {
+//       return c.json({ success: false, error: 'Missing customer information' }, 400)
+//     }
+// 
+//     // Calculate totals (values come from frontend in cents)
+//     const subtotal = body.subtotal || 0
+//     const discount = body.discount || 0
+//     const vat = body.vat || 0
+//     const total = body.total || 0
+// 
+//     // Create order
+//     const orderNumber = generateOrderNumber()
+//     
+//     // Insert order into database
+//     const orderResult = await db.db.prepare(`
+//       INSERT INTO orders (
+//         order_number, email, status, 
+//         subtotal, tax, total, 
+//         payment_method, payment_status,
+//         created_at
+//       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+//     `).bind(
+//       orderNumber,
+//       customer.email,
+//       'pending',
+//       subtotal,
+//       vat,
+//       total,
+//       body.paymentMethod || 'stripe',
+//       'pending'
+//     ).run()
+// 
+//     const orderId = orderResult.meta.last_row_id
+// 
+//     // Add order items
+//     for (const item of body.items) {
+//       await db.db.prepare(`
+//         INSERT INTO order_items (
+//           order_id, product_id, quantity, 
+//           unit_price, total_price
+//         ) VALUES (?, ?, ?, ?, ?)
+//       `).bind(
+//         orderId,
+//         item.productId,
+//         item.quantity,
+//         item.price,
+//         item.price * item.quantity
+//       ).run()
+//     }
+// 
+//     // Store customer billing address
+//     await db.db.prepare(`
+//       INSERT INTO addresses (
+//         user_id, address_type, first_name, last_name, 
+//         company, street, city, zip, country, 
+//         created_at
+//       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+//     `).bind(
+//       null, // guest order
+//       'billing',
+//       customer.firstName,
+//       customer.lastName,
+//       customer.company || null,
+//       customer.street,
+//       customer.city,
+//       customer.zip,
+//       customer.country
+//     ).run()
+// 
+//     return c.json({ 
+//       success: true, 
+//       data: {
+//         orderNumber: orderNumber,
+//         orderId: orderId,
+//         total: total,
+//         message: 'Order created successfully'
+//       }
+//     })
+//   } catch (error) {
+//     console.error('Order creation error:', error)
+//     return c.json({ success: false, error: 'Failed to create order: ' + error.message }, 500)
+//   }
+// })
+// 
+// app.get('/api/orders/:orderNumber', async (c) => {
+//   try {
+//     const db = c.get('db') as DatabaseHelper
+//     const orderNumber = c.req.param('orderNumber')
+// 
+//     const order = await db.getOrderByNumber(orderNumber)
+// 
+//     if (!order) {
+//       return c.json({ success: false, error: 'Order not found' }, 404)
+//     }
+// 
+//     return c.json({ success: true, data: order })
+//   } catch (error) {
+//     return c.json({ success: false, error: 'Failed to fetch order' }, 500)
+//   }
+// })
 
 // ============================================
 // ADMIN API ROUTES (Protected)
