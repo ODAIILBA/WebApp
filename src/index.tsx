@@ -28526,3 +28526,524 @@ app.get('/admin/firewall/enhanced', async (c) => {
   }
 })
 
+
+// ============================================
+// ADVANCED FIREWALL SYSTEM - API ENDPOINTS
+
+// Advanced Firewall Admin Page Route
+app.get('/admin/firewall/advanced', async (c) => {
+  return c.html(`
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Firewall - Admin - SOFTWAREKING24</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/firewall-advanced.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+</head>
+<body class="bg-gray-50">
+    ${AdminSidebarAdvanced('/admin/firewall')}
+    
+    <div class="content-area ml-64 p-8">
+        <!-- Header -->
+        <div class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-3">
+                <i class="fas fa-shield-alt text-orange-600"></i>
+                Advanced Firewall System
+            </h1>
+            <p class="text-gray-600 mt-2">Intelligente Bedrohungserkennung und Regelv erwaltung</p>
+        </div>
+
+        <!-- Emergency Lockdown -->
+        <div class="mb-6">
+            <button id="emergency-lockdown-btn" onclick="toggleEmergencyLockdown()" class="btn btn-lg btn-red">
+                <i class="fas fa-lock"></i> Notfall-Sperre AKTIVIEREN
+            </button>
+        </div>
+
+        <!-- Live Analytics -->
+        <div class="stats-grid mb-8">
+            <div class="stat-card">
+                <div class="stat-label">🔒 Blockiert Heute</div>
+                <div class="stat-value" id="stat-blocked-today">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">🎯 Top Blocked IP</div>
+                <div class="stat-value text-2xl" id="stat-top-ip">N/A</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">🌍 Top Land</div>
+                <div class="stat-value text-2xl" id="stat-top-country">N/A</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">⚡ Requests/Min</div>
+                <div class="stat-value" id="stat-rpm">0</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="bg-white rounded-lg shadow-sm mb-6">
+            <div class="border-b border-gray-200">
+                <nav class="flex">
+                    <button onclick="showTab('rules')" class="tab-btn active px-6 py-3 font-semibold">
+                        <i class="fas fa-list-ul"></i> Regeln
+                    </button>
+                    <button onclick="showTab('analytics')" class="tab-btn px-6 py-3 font-semibold">
+                        <i class="fas fa-chart-line"></i> Live Analytics
+                    </button>
+                    <button onclick="showTab('presets')" class="tab-btn px-6 py-3 font-semibold">
+                        <i class="fas fa-layer-group"></i> Presets
+                    </button>
+                    <button onclick="showTab('ai')" class="tab-btn px-6 py-3 font-semibold">
+                        <i class="fas fa-robot"></i> AI-Vorschläge
+                    </button>
+                    <button onclick="showLogsModal()" class="tab-btn px-6 py-3 font-semibold">
+                        <i class="fas fa-file-alt"></i> Logs
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Tab: Rules -->
+            <div id="tab-rules" class="tab-content p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold">Firewall-Regeln</h2>
+                    <button onclick="showCreateRuleModal()" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Neue Regel
+                    </button>
+                </div>
+                <div id="rules-container"></div>
+            </div>
+
+            <!-- Tab: Analytics -->
+            <div id="tab-analytics" class="tab-content p-6 hidden">
+                <h2 class="text-xl font-bold mb-4">Live Attack Analytics</h2>
+                <div style="height: 400px;">
+                    <canvas id="timeline-chart"></canvas>
+                </div>
+                <h3 class="text-lg font-bold mt-6 mb-3">Top Blocked IPs (24h)</h3>
+                <table class="w-full">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="p-3 text-left">#</th>
+                            <th class="p-3 text-left">IP-Adresse</th>
+                            <th class="p-3 text-left">Anzahl</th>
+                            <th class="p-3 text-left">Zuletzt</th>
+                            <th class="p-3 text-left">Aktion</th>
+                        </tr>
+                    </thead>
+                    <tbody id="top-ips-table"></tbody>
+                </table>
+            </div>
+
+            <!-- Tab: Presets -->
+            <div id="tab-presets" class="tab-content p-6 hidden">
+                <h2 class="text-xl font-bold mb-4">Sicherheits-Presets</h2>
+                <div class="preset-grid">
+                    <div class="preset-card" onclick="applyPreset('Strict Mode')">
+                        <div class="preset-icon">🔒</div>
+                        <h3 class="font-bold">Strict Mode</h3>
+                        <p class="text-sm text-gray-600">Maximale Sicherheit</p>
+                    </div>
+                    <div class="preset-card" onclick="applyPreset('Balanced Mode')">
+                        <div class="preset-icon">⚖️</div>
+                        <h3 class="font-bold">Balanced Mode</h3>
+                        <p class="text-sm text-gray-600">Ausgewogen</p>
+                    </div>
+                    <div class="preset-card" onclick="applyPreset('Open Mode')">
+                        <div class="preset-icon">🔓</div>
+                        <h3 class="font-bold">Open Mode</h3>
+                        <p class="text-sm text-gray-600">Minimal Blocking</p>
+                    </div>
+                    <div class="preset-card" onclick="applyPreset('API Protection Mode')">
+                        <div class="preset-icon">🔑</div>
+                        <h3 class="font-bold">API Protection</h3>
+                        <p class="text-sm text-gray-600">API-optimiert</p>
+                    </div>
+                    <div class="preset-card" onclick="applyPreset('E-Commerce Mode')">
+                        <div class="preset-icon">🛒</div>
+                        <h3 class="font-bold">E-Commerce</h3>
+                        <p class="text-sm text-gray-600">Shop-optimiert</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: AI Suggestions -->
+            <div id="tab-ai" class="tab-content p-6 hidden">
+                <h2 class="text-xl font-bold mb-4">🤖 AI-Sicherheitsvorschläge</h2>
+                <div id="ai-suggestions"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Create Rule -->
+    <div id="rule-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2 class="text-2xl font-bold mb-4">Neue Firewall-Regel erstellen</h2>
+            <form id="create-rule-form" onsubmit="event.preventDefault(); createRule();">
+                <div class="form-group">
+                    <label>Regelname</label>
+                    <input type="text" name="rule_name" required placeholder="z.B. Block Suspicious IP">
+                </div>
+                <div class="form-group">
+                    <label>Ziel-Typ</label>
+                    <select name="target_type" required>
+                        <option value="ip_address">IP-Adresse</option>
+                        <option value="ip_range">IP-Bereich (CIDR)</option>
+                        <option value="country">Land</option>
+                        <option value="user_role">Benutzerrolle</option>
+                        <option value="url_path">URL-Pfad</option>
+                        <option value="http_method">HTTP-Methode</option>
+                        <option value="user_agent">User-Agent</option>
+                        <option value="api_key">API-Key</option>
+                        <option value="rate_per_minute">Rate pro Minute</option>
+                        <option value="device_type">Gerätetyp</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Wert</label>
+                    <input type="text" name="target_value" required placeholder="z.B. 192.168.1.100">
+                </div>
+                <div class="form-group">
+                    <label>Aktion</label>
+                    <select name="action" required>
+                        <option value="block">Blockieren</option>
+                        <option value="allow">Erlauben</option>
+                        <option value="rate_limit">Rate-Limit</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Operator</label>
+                    <select name="operator">
+                        <option value="equals">Gleich</option>
+                        <option value="contains">Enthält</option>
+                        <option value="starts_with">Beginnt mit</option>
+                        <option value="ends_with">Endet mit</option>
+                    </select>
+                </div>
+                <div class="flex gap-3 mt-6">
+                    <button type="submit" class="btn btn-primary flex-1">Erstellen</button>
+                    <button type="button" onclick="hideCreateRuleModal()" class="btn" style="background:#6b7280;color:white;">Abbrechen</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Logs -->
+    <div id="logs-modal" class="modal hidden">
+        <div class="modal-content" style="max-width:90%;max-height:90vh;">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold">Firewall-Logs</h2>
+                <button onclick="hideLogsModal()" class="btn-icon"><i class="fas fa-times"></i></button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="p-2 text-left">IP</th>
+                            <th class="p-2 text-left">Land</th>
+                            <th class="p-2 text-left">Pfad</th>
+                            <th class="p-2 text-left">Typ</th>
+                            <th class="p-2 text-left">Status</th>
+                            <th class="p-2 text-left">Zeit</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-table-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/firewall-advanced.js"></script>
+    <script>
+    function showTab(tabName) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-' + tabName).classList.remove('hidden');
+        event.target.closest('.tab-btn').classList.add('active');
+    }
+    </script>
+    <style>
+    .tab-btn.active { border-bottom: 3px solid #3b82f6; color: #3b82f6; }
+    .tab-btn { color: #6b7280; transition: all 0.2s; }
+    .tab-btn:hover { color: #111827; background: #f9fafb; }
+    .content-area { min-height: 100vh; }
+    </style>
+</body>
+</html>
+  `)
+})
+
+// ============================================
+
+// Get all firewall rules with analytics
+app.get('/api/admin/firewall/rules', async (c) => {
+  try {
+    const { env } = c
+    const rules = await env.DB.prepare(`
+      SELECT fr.*, 0 as hit_count, NULL as last_triggered
+      FROM firewall_rules fr
+      WHERE fr.is_active = 1
+      ORDER BY fr.priority ASC, fr.created_at DESC
+    `).all()
+    
+    return c.json({ success: true, rules: rules.results || [] })
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// Create new firewall rule
+app.post('/api/admin/firewall/rules', async (c) => {
+  try {
+    const { env } = c
+    const body = await c.req.json()
+    
+    const maxPriority = await env.DB.prepare('SELECT MAX(priority) as max FROM firewall_rules').first() as any
+    const newPriority = (maxPriority?.max || 0) + 1
+    
+    const result = await env.DB.prepare(`
+      INSERT INTO firewall_rules (
+        rule_name, rule_type, target_type, target_value, 
+        action, priority, conditions, is_active
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 1)
+    `).bind(
+      body.rule_name,
+      body.rule_type || 'block',
+      body.target_type,
+      body.target_value,
+      body.action || 'block',
+      newPriority,
+      JSON.stringify(body.conditions || {})
+    ).run()
+    
+    return c.json({ success: true, ruleId: result.meta.last_row_id })
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// Update rule priority
+app.post('/api/admin/firewall/rules/reorder', async (c) => {
+  try {
+    const { env } = c
+    const { rules } = await c.req.json()
+    
+    for (const rule of rules) {
+      await env.DB.prepare('UPDATE firewall_rules SET priority = ? WHERE id = ?')
+        .bind(rule.priority, rule.id).run()
+    }
+    
+    return c.json({ success: true })
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// Toggle rule
+app.post('/api/admin/firewall/rules/:id/toggle', async (c) => {
+  try {
+    const { env } = c
+    await env.DB.prepare(`UPDATE firewall_rules SET is_active = NOT is_active WHERE id = ?`)
+      .bind(c.req.param('id')).run()
+    return c.json({ success: true })
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// Duplicate rule
+app.post('/api/admin/firewall/rules/:id/duplicate', async (c) => {
+  try {
+    const { env } = c
+    await env.DB.prepare(`
+      INSERT INTO firewall_rules (rule_name, rule_type, target_type, target_value, action, priority, conditions, is_active)
+      SELECT rule_name || ' (Kopie)', rule_type, target_type, target_value, action, priority + 1, conditions, 0
+      FROM firewall_rules WHERE id = ?
+    `).bind(c.req.param('id')).run()
+    return c.json({ success: true })
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// Delete rule
+app.delete('/api/admin/firewall/rules/:id', async (c) => {
+  try {
+    const { env } = c
+    await env.DB.prepare('UPDATE firewall_rules SET is_active = 0 WHERE id = ?')
+      .bind(c.req.param('id')).run()
+    return c.json({ success: true })
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// Test rule
+app.post('/api/admin/firewall/rules/test', async (c) => {
+  try {
+    const { rule, testRequest } = await c.req.json()
+    let matched = false
+    let reason = ''
+    
+    if (rule.target_type === 'ip_address' && testRequest.ip === rule.target_value) {
+      matched = true
+      reason = 'IP-Adresse stimmt überein'
+    } else if (rule.target_type === 'country' && testRequest.country === rule.target_value) {
+      matched = true
+      reason = 'Land stimmt überein'
+    } else if (rule.target_type === 'url_path' && testRequest.path?.includes(rule.target_value)) {
+      matched = true
+      reason = 'URL-Pfad stimmt überein'
+    }
+    
+    return c.json({
+      success: true,
+      matched,
+      action: matched ? rule.action : 'allow',
+      reason: matched ? reason : 'Keine Übereinstimmung',
+      rule: rule.rule_name
+    })
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// Get analytics
+app.get('/api/admin/firewall/analytics', async (c) => {
+  try {
+    const { env } = c
+    
+    const blocked = await env.DB.prepare(`SELECT COUNT(*) as count FROM security_events 
+      WHERE DATE(created_at) = DATE('now') AND is_blocked = 1`).first() as any
+    
+    const topIP = await env.DB.prepare(`SELECT ip_address FROM security_events 
+      WHERE DATE(created_at) = DATE('now') 
+      GROUP BY ip_address ORDER BY COUNT(*) DESC LIMIT 1`).first() as any
+    
+    const timeline = await env.DB.prepare(`
+      SELECT strftime('%H:00', created_at) as hour,
+             COUNT(*) as total,
+             SUM(CASE WHEN is_blocked = 1 THEN 1 ELSE 0 END) as blocked
+      FROM security_events
+      WHERE created_at >= datetime('now', '-24 hours')
+      GROUP BY hour ORDER BY hour ASC
+    `).all()
+    
+    const topIPs = await env.DB.prepare(`
+      SELECT ip_address, COUNT(*) as count, MAX(created_at) as last_seen
+      FROM security_events
+      WHERE created_at >= datetime('now', '-24 hours') AND is_blocked = 1
+      GROUP BY ip_address ORDER BY count DESC LIMIT 10
+    `).all()
+    
+    return c.json({
+      success: true,
+      stats: {
+        blockedToday: blocked?.count || 0,
+        topBlockedIP: topIP?.ip_address || 'N/A',
+        requestsPerMinute: 0
+      },
+      topIPs: topIPs.results || [],
+      topCountries: [],
+      attackTypes: [],
+      timeline: timeline.results || []
+    })
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// Get logs
+app.get('/api/admin/firewall/logs', async (c) => {
+  try {
+    const { env } = c
+    const logs = await env.DB.prepare(`
+      SELECT se.*, fr.rule_name
+      FROM security_events se
+      LEFT JOIN firewall_rules fr ON se.rule_id = fr.id
+      ORDER BY se.created_at DESC LIMIT 50
+    `).all()
+    
+    return c.json({ success: true, logs: logs.results || [] })
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// Apply preset
+app.post('/api/admin/firewall/presets/:name/apply', async (c) => {
+  try {
+    const { env } = c
+    const preset = await env.DB.prepare('SELECT * FROM security_presets WHERE preset_name = ?')
+      .bind(c.req.param('name')).first()
+    
+    if (!preset) {
+      return c.json({ success: false, error: 'Preset nicht gefunden' }, 404)
+    }
+    
+    return c.json({ success: true, preset: c.req.param('name') })
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// Emergency lockdown
+app.post('/api/admin/firewall/emergency-lockdown', async (c) => {
+  try {
+    const { env } = c
+    const { enabled } = await c.req.json()
+    
+    if (enabled) {
+      const adminIP = c.req.header('CF-Connecting-IP') || '127.0.0.1'
+      await env.DB.prepare(`INSERT INTO firewall_rules (rule_name, rule_type, target_type, target_value, action, priority)
+        VALUES ('EMERGENCY LOCKDOWN', 'allow', 'ip_address', ?, 'allow', 0)`).bind(adminIP).run()
+      await env.DB.prepare(`INSERT INTO firewall_rules (rule_name, rule_type, target_type, target_value, action, priority)
+        VALUES ('EMERGENCY LOCKDOWN - BLOCK ALL', 'block', 'all', '*', 'block', 1)`).run()
+    } else {
+      await env.DB.prepare(`DELETE FROM firewall_rules WHERE rule_name LIKE '%EMERGENCY LOCKDOWN%'`).run()
+    }
+    
+    return c.json({ success: true, lockdown: enabled })
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// AI suggestions
+app.get('/api/admin/firewall/ai-suggestions', async (c) => {
+  try {
+    const { env } = c
+    const suggestions = []
+    
+    const bruteForce = await env.DB.prepare(`
+      SELECT ip_address, COUNT(*) as attempts
+      FROM security_events
+      WHERE created_at >= datetime('now', '-1 hour') AND attack_type LIKE '%brute%force%'
+      GROUP BY ip_address HAVING attempts > 5
+    `).all()
+    
+    for (const ip of (bruteForce.results || [])) {
+      suggestions.push({
+        type: 'brute_force',
+        severity: 'high',
+        title: 'Brute-Force-Angriff erkannt',
+        description: `IP ${(ip as any).ip_address} hat ${(ip as any).attempts} fehlgeschlagene Login-Versuche`,
+        suggestedAction: {
+          type: 'block_ip',
+          value: (ip as any).ip_address,
+          duration: '24h'
+        }
+      })
+    }
+    
+    return c.json({ success: true, suggestions })
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+export default app
