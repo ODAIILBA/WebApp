@@ -29046,4 +29046,3 @@ app.get('/api/admin/firewall/ai-suggestions', async (c) => {
   }
 })
 
-export default app
