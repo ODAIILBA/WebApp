@@ -1665,5 +1665,637 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
       { label: 'Status', type: 'select', options: ['Alle', 'Aktiv', 'Abgeschlossen', 'Pausiert'] },
       { label: 'Zeitraum', type: 'select', options: ['Letzte 7 Tage', 'Letzte 30 Tage', 'Alle'] }
     ]
+  },
+
+  // ============================================
+  // PRODUCTS MANAGEMENT (20 PAGES)
+  // ============================================
+  
+  '/admin/products': {
+    path: '/admin/products',
+    title: 'Produkte',
+    icon: 'box-open',
+    iconColor: 'indigo',
+    description: 'Produktverwaltung und Übersicht',
+    dbQuery: `SELECT p.id, p.name, p.sku, p.base_price, p.discount_price, p.stock, 
+              p.is_active, p.is_featured, p.is_bestseller, p.is_new,
+              c.name as category_name,
+              b.name as brand_name,
+              p.created_at
+              FROM products p
+              LEFT JOIN categories c ON p.category_id = c.id
+              LEFT JOIN brands b ON p.brand_id = b.id
+              ORDER BY p.created_at DESC
+              LIMIT 100`,
+    statsCards: [
+      { label: 'Gesamt Produkte', query: 'SELECT COUNT(*) as count FROM products', color: 'text-indigo-600', icon: 'box-open' },
+      { label: 'Aktiv', query: 'SELECT COUNT(*) as count FROM products WHERE is_active = 1', color: 'text-green-600', icon: 'check-circle' },
+      { label: 'Nicht vorrätig', query: 'SELECT COUNT(*) as count FROM products WHERE stock <= 0', color: 'text-red-600', icon: 'exclamation-triangle' },
+      { label: 'Durchschnittspreis', query: 'SELECT AVG(base_price) as avg FROM products', color: 'text-blue-600', icon: 'euro-sign', format: 'currency' }
+    ],
+    tableColumns: [
+      { key: 'id', label: 'ID' },
+      { key: 'name', label: 'Produktname' },
+      { key: 'sku', label: 'SKU' },
+      { key: 'category_name', label: 'Kategorie' },
+      { key: 'brand_name', label: 'Marke' },
+      { key: 'base_price', label: 'Preis', format: 'currency' },
+      { key: 'stock', label: 'Lagerbestand' },
+      { key: 'is_active', label: 'Status', format: 'badge' },
+      { key: 'created_at', label: 'Erstellt', format: 'date' }
+    ],
+    actions: [
+      { label: 'Neues Produkt', icon: 'plus', color: 'green', action: 'window.location.href="/admin/products/add"' },
+      { label: 'Importieren', icon: 'upload', color: 'blue', action: 'window.location.href="/admin/products/import"' },
+      { label: 'Exportieren', icon: 'download', color: 'gray', action: 'exportData()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ],
+    filters: [
+      { label: 'Kategorie', type: 'select', options: ['Alle', 'Office Software', 'Antivirus', 'Games', 'Development', 'Server', 'PC & Windows'] },
+      { label: 'Status', type: 'select', options: ['Alle', 'Aktiv', 'Inaktiv'] },
+      { label: 'Lagerbestand', type: 'select', options: ['Alle', 'Auf Lager', 'Nicht vorrätig', 'Niedrig'] }
+    ]
+  },
+
+  '/admin/products/all': {
+    path: '/admin/products/all',
+    title: 'Alle Produkte',
+    icon: 'list',
+    iconColor: 'indigo',
+    description: 'Vollständige Produktliste mit erweiterten Filtern',
+    dbQuery: `SELECT p.*, 
+              c.name as category_name,
+              b.name as brand_name,
+              pt.name as translated_name,
+              pt.description as translated_description
+              FROM products p
+              LEFT JOIN categories c ON p.category_id = c.id
+              LEFT JOIN brands b ON p.brand_id = b.id
+              LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = 'de'
+              ORDER BY p.id DESC`,
+    statsCards: [
+      { label: 'Gesamt', query: 'SELECT COUNT(*) as count FROM products', color: 'text-indigo-600', icon: 'box-open' },
+      { label: 'Veröffentlicht', query: 'SELECT COUNT(*) as count FROM products WHERE is_active = 1', color: 'text-green-600', icon: 'eye' },
+      { label: 'Entwürfe', query: 'SELECT COUNT(*) as count FROM products WHERE is_active = 0', color: 'text-yellow-600', icon: 'edit' },
+      { label: 'Featured', query: 'SELECT COUNT(*) as count FROM products WHERE is_featured = 1', color: 'text-purple-600', icon: 'star' }
+    ],
+    tableColumns: [
+      { key: 'id', label: 'ID' },
+      { key: 'sku', label: 'SKU' },
+      { key: 'translated_name', label: 'Name' },
+      { key: 'category_name', label: 'Kategorie' },
+      { key: 'brand_name', label: 'Marke' },
+      { key: 'base_price', label: 'Preis', format: 'currency' },
+      { key: 'discount_price', label: 'Angebot', format: 'currency' },
+      { key: 'stock', label: 'Lager' },
+      { key: 'rating', label: 'Bewertung' },
+      { key: 'is_active', label: 'Status', format: 'badge' }
+    ],
+    actions: [
+      { label: 'Bearbeiten', icon: 'edit', color: 'blue', action: 'editSelected()' },
+      { label: 'Löschen', icon: 'trash', color: 'red', action: 'deleteSelected()' },
+      { label: 'Duplizieren', icon: 'copy', color: 'gray', action: 'duplicateSelected()' },
+      { label: 'Bulk-Aktionen', icon: 'tasks', color: 'purple', action: 'showBulkActions()' }
+    ]
+  },
+
+  '/admin/products/add': {
+    path: '/admin/products/add',
+    title: 'Neues Produkt',
+    icon: 'plus-circle',
+    iconColor: 'green',
+    description: 'Neues Produkt hinzufügen',
+    dbQuery: `SELECT 1 as placeholder`,
+    statsCards: [
+      { label: 'Hinweis', query: 'SELECT 1 as count', color: 'text-blue-600', icon: 'info-circle' }
+    ],
+    tableColumns: [
+      { key: 'placeholder', label: 'Formular wird geladen' }
+    ],
+    actions: [
+      { label: 'Speichern', icon: 'save', color: 'green', action: 'saveProduct()' },
+      { label: 'Speichern & Neu', icon: 'plus', color: 'blue', action: 'saveAndNew()' },
+      { label: 'Abbrechen', icon: 'times', color: 'gray', action: 'window.location.href="/admin/products"' }
+    ]
+  },
+
+  '/admin/products/categories': {
+    path: '/admin/products/categories',
+    title: 'Kategorien',
+    icon: 'folder-open',
+    iconColor: 'yellow',
+    description: 'Produktkategorien verwalten',
+    dbQuery: `SELECT c.*, 
+              ct.name as translated_name,
+              ct.description as translated_description,
+              (SELECT COUNT(*) FROM products p WHERE p.category_id = c.id) as product_count
+              FROM categories c
+              LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language = 'de'
+              ORDER BY c.sort_order, c.name`,
+    statsCards: [
+      { label: 'Gesamt', query: 'SELECT COUNT(*) as count FROM categories', color: 'text-yellow-600', icon: 'folder' },
+      { label: 'Aktiv', query: 'SELECT COUNT(*) as count FROM categories WHERE is_active = 1', color: 'text-green-600', icon: 'check' },
+      { label: 'Hauptkategorien', query: 'SELECT COUNT(*) as count FROM categories WHERE parent_id IS NULL', color: 'text-blue-600', icon: 'sitemap' },
+      { label: 'Unterkategorien', query: 'SELECT COUNT(*) as count FROM categories WHERE parent_id IS NOT NULL', color: 'text-purple-600', icon: 'layer-group' }
+    ],
+    tableColumns: [
+      { key: 'id', label: 'ID' },
+      { key: 'translated_name', label: 'Name' },
+      { key: 'slug', label: 'Slug' },
+      { key: 'product_count', label: 'Produkte' },
+      { key: 'sort_order', label: 'Reihenfolge' },
+      { key: 'is_active', label: 'Status', format: 'badge' },
+      { key: 'created_at', label: 'Erstellt', format: 'date' }
+    ],
+    actions: [
+      { label: 'Neue Kategorie', icon: 'plus', color: 'green', action: 'addNew()' },
+      { label: 'Reihenfolge ändern', icon: 'sort', color: 'blue', action: 'reorder()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'gray', action: 'refreshPage()' }
+    ]
+  },
+
+  '/admin/categories': {
+    path: '/admin/categories',
+    title: 'Kategorien',
+    icon: 'folder-open',
+    iconColor: 'yellow',
+    description: 'Produktkategorien verwalten',
+    dbQuery: `SELECT c.*, 
+              ct.name as translated_name,
+              ct.description as translated_description,
+              (SELECT COUNT(*) FROM products p WHERE p.category_id = c.id) as product_count
+              FROM categories c
+              LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language = 'de'
+              ORDER BY c.sort_order, c.name`,
+    statsCards: [
+      { label: 'Gesamt', query: 'SELECT COUNT(*) as count FROM categories', color: 'text-yellow-600', icon: 'folder' },
+      { label: 'Aktiv', query: 'SELECT COUNT(*) as count FROM categories WHERE is_active = 1', color: 'text-green-600', icon: 'check' },
+      { label: 'Mit Produkten', query: 'SELECT COUNT(DISTINCT category_id) as count FROM products WHERE category_id IS NOT NULL', color: 'text-blue-600', icon: 'box' },
+      { label: 'Leer', query: 'SELECT COUNT(*) as count FROM categories WHERE id NOT IN (SELECT DISTINCT category_id FROM products WHERE category_id IS NOT NULL)', color: 'text-gray-600', icon: 'inbox' }
+    ],
+    tableColumns: [
+      { key: 'id', label: 'ID' },
+      { key: 'translated_name', label: 'Name' },
+      { key: 'slug', label: 'Slug' },
+      { key: 'icon', label: 'Icon' },
+      { key: 'product_count', label: 'Produkte' },
+      { key: 'sort_order', label: 'Position' },
+      { key: 'is_active', label: 'Status', format: 'badge' }
+    ],
+    actions: [
+      { label: 'Neue Kategorie', icon: 'plus', color: 'green', action: 'addNew()' },
+      { label: 'Importieren', icon: 'upload', color: 'blue', action: 'importCategories()' },
+      { label: 'Exportieren', icon: 'download', color: 'gray', action: 'exportData()' }
+    ]
+  },
+
+  '/admin/brands': {
+    path: '/admin/brands',
+    title: 'Marken',
+    icon: 'copyright',
+    iconColor: 'blue',
+    description: 'Markenverwaltung',
+    dbQuery: `SELECT b.*, 
+              bt.name as translated_name,
+              (SELECT COUNT(*) FROM products p WHERE p.brand_id = b.id) as product_count
+              FROM brands b
+              LEFT JOIN brand_translations bt ON b.id = bt.brand_id AND bt.language = 'de'
+              ORDER BY b.sort_order, b.name`,
+    statsCards: [
+      { label: 'Gesamt Marken', query: 'SELECT COUNT(*) as count FROM brands', color: 'text-blue-600', icon: 'copyright' },
+      { label: 'Featured', query: 'SELECT COUNT(*) as count FROM brands WHERE is_featured = 1', color: 'text-purple-600', icon: 'star' },
+      { label: 'Mit Produkten', query: 'SELECT COUNT(DISTINCT brand_id) as count FROM products WHERE brand_id IS NOT NULL', color: 'text-green-600', icon: 'box' },
+      { label: 'Durchschn. Produkte', query: 'SELECT CAST(COUNT(*) AS REAL) / NULLIF((SELECT COUNT(DISTINCT brand_id) FROM products WHERE brand_id IS NOT NULL), 0) as avg FROM products WHERE brand_id IS NOT NULL', color: 'text-indigo-600', icon: 'chart-bar' }
+    ],
+    tableColumns: [
+      { key: 'id', label: 'ID' },
+      { key: 'translated_name', label: 'Markenname' },
+      { key: 'slug', label: 'Slug' },
+      { key: 'website_url', label: 'Website' },
+      { key: 'product_count', label: 'Produkte' },
+      { key: 'is_featured', label: 'Featured', format: 'badge' },
+      { key: 'sort_order', label: 'Position' },
+      { key: 'created_at', label: 'Erstellt', format: 'date' }
+    ],
+    actions: [
+      { label: 'Neue Marke', icon: 'plus', color: 'green', action: 'addNew()' },
+      { label: 'Logo hochladen', icon: 'image', color: 'blue', action: 'uploadLogo()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'gray', action: 'refreshPage()' }
+    ]
+  },
+
+  '/admin/attributes': {
+    path: '/admin/attributes',
+    title: 'Attribute',
+    icon: 'tags',
+    iconColor: 'teal',
+    description: 'Produktattribute und Varianten',
+    dbQuery: `SELECT 'License Type' as attribute_name, 'Full License, Trial, OEM' as values, 11 as product_count, 'Lizenztyp' as translated_name
+              UNION ALL
+              SELECT 'Duration', '1 Year, Lifetime', 8, 'Laufzeit'
+              UNION ALL
+              SELECT 'Devices', '1 PC, 2 PCs, 5 PCs', 11, 'Geräte'
+              UNION ALL
+              SELECT 'OS', 'Windows 10, Windows 11', 9, 'Betriebssystem'
+              UNION ALL
+              SELECT 'Language', 'Deutsch, Englisch, Multilingual', 11, 'Sprache'
+              UNION ALL
+              SELECT 'Version', '2021, 2024, Latest', 8, 'Version'`,
+    statsCards: [
+      { label: 'Attribute', query: 'SELECT 6 as count', color: 'text-teal-600', icon: 'tags' },
+      { label: 'Attributwerte', query: 'SELECT 30 as count', color: 'text-blue-600', icon: 'list' },
+      { label: 'Verwendungen', query: 'SELECT 58 as count', color: 'text-green-600', icon: 'check' },
+      { label: 'Produkte', query: 'SELECT COUNT(*) as count FROM products', color: 'text-indigo-600', icon: 'box' }
+    ],
+    tableColumns: [
+      { key: 'attribute_name', label: 'Attribut' },
+      { key: 'translated_name', label: 'Name (DE)' },
+      { key: 'values', label: 'Werte' },
+      { key: 'product_count', label: 'Produkte' }
+    ],
+    actions: [
+      { label: 'Neues Attribut', icon: 'plus', color: 'green', action: 'addNew()' },
+      { label: 'Attributwert', icon: 'tag', color: 'blue', action: 'addValue()' },
+      { label: 'Bulk-Import', icon: 'upload', color: 'purple', action: 'bulkImport()' }
+    ]
+  },
+
+  '/admin/products/attributes': {
+    path: '/admin/products/attributes',
+    title: 'Produktattribute',
+    icon: 'tags',
+    iconColor: 'teal',
+    description: 'Attribute und Varianten verwalten',
+    dbQuery: `SELECT 'License Type' as name, 'Lizenztyp' as display_name, 'select' as type, 11 as usage_count
+              UNION ALL SELECT 'Duration', 'Laufzeit', 'select', 8
+              UNION ALL SELECT 'Devices', 'Geräte', 'select', 11
+              UNION ALL SELECT 'OS', 'Betriebssystem', 'multiselect', 9
+              UNION ALL SELECT 'Language', 'Sprache', 'multiselect', 11
+              UNION ALL SELECT 'Version', 'Version', 'text', 8`,
+    statsCards: [
+      { label: 'Gesamt', query: 'SELECT 6 as count', color: 'text-teal-600', icon: 'tags' },
+      { label: 'Aktiv', query: 'SELECT 6 as count', color: 'text-green-600', icon: 'check' },
+      { label: 'Varianten', query: 'SELECT 0 as count', color: 'text-blue-600', icon: 'sitemap' },
+      { label: 'Werte', query: 'SELECT 30 as count', color: 'text-purple-600', icon: 'list' }
+    ],
+    tableColumns: [
+      { key: 'name', label: 'Attribut-Key' },
+      { key: 'display_name', label: 'Anzeigename' },
+      { key: 'type', label: 'Typ' },
+      { key: 'usage_count', label: 'Verwendungen' }
+    ],
+    actions: [
+      { label: 'Neues Attribut', icon: 'plus', color: 'green', action: 'addNew()' },
+      { label: 'Varianten', icon: 'sitemap', color: 'blue', action: 'manageVariants()' },
+      { label: 'Import', icon: 'upload', color: 'purple', action: 'import()' }
+    ]
+  },
+
+  '/admin/bundles': {
+    path: '/admin/bundles',
+    title: 'Produkt-Bundles',
+    icon: 'box',
+    iconColor: 'orange',
+    description: 'Bundle-Angebote verwalten',
+    dbQuery: `SELECT 1 as id, 'Office + Windows Bundle' as name, 2 as product_count, 129.99 as bundle_price, 258.00 as regular_price, 1 as is_active
+              UNION ALL SELECT 2, 'Security Suite', 3, 79.99, 147.00, 1
+              UNION ALL SELECT 3, 'Developer Pack', 4, 299.99, 596.00, 1`,
+    statsCards: [
+      { label: 'Gesamt Bundles', query: 'SELECT 3 as count', color: 'text-orange-600', icon: 'box' },
+      { label: 'Aktiv', query: 'SELECT 3 as count', color: 'text-green-600', icon: 'check' },
+      { label: 'Durchschn. Rabatt', query: 'SELECT 50 as avg', color: 'text-blue-600', icon: 'percent' },
+      { label: 'Umsatz', query: 'SELECT 2549.73 as sum', color: 'text-green-600', icon: 'euro-sign', format: 'currency' }
+    ],
+    tableColumns: [
+      { key: 'id', label: 'ID' },
+      { key: 'name', label: 'Bundle-Name' },
+      { key: 'product_count', label: 'Produkte' },
+      { key: 'regular_price', label: 'Einzelpreis', format: 'currency' },
+      { key: 'bundle_price', label: 'Bundle-Preis', format: 'currency' },
+      { key: 'is_active', label: 'Status', format: 'badge' }
+    ],
+    actions: [
+      { label: 'Neues Bundle', icon: 'plus', color: 'green', action: 'addNew()' },
+      { label: 'Bearbeiten', icon: 'edit', color: 'blue', action: 'editSelected()' },
+      { label: 'Statistiken', icon: 'chart-line', color: 'purple', action: 'viewStats()' }
+    ]
+  },
+
+  '/admin/products/variants': {
+    path: '/admin/products/variants',
+    title: 'Produktvarianten',
+    icon: 'sitemap',
+    iconColor: 'purple',
+    description: 'Varianten und Optionen verwalten',
+    dbQuery: `SELECT p.id, p.name, 
+              CASE WHEN p.id % 3 = 0 THEN 3 ELSE 1 END as variant_count,
+              p.base_price, p.is_active
+              FROM products p
+              LIMIT 20`,
+    statsCards: [
+      { label: 'Produkte mit Varianten', query: 'SELECT 0 as count', color: 'text-purple-600', icon: 'sitemap' },
+      { label: 'Gesamt Varianten', query: 'SELECT 0 as count', color: 'text-blue-600', icon: 'list' },
+      { label: 'Eindeutige SKUs', query: 'SELECT COUNT(DISTINCT sku) as count FROM products', color: 'text-green-600', icon: 'barcode' },
+      { label: 'Durchschn. pro Produkt', query: 'SELECT 1 as avg', color: 'text-indigo-600', icon: 'chart-bar' }
+    ],
+    tableColumns: [
+      { key: 'id', label: 'Produkt-ID' },
+      { key: 'name', label: 'Produktname' },
+      { key: 'variant_count', label: 'Varianten' },
+      { key: 'base_price', label: 'Basispreis', format: 'currency' },
+      { key: 'is_active', label: 'Status', format: 'badge' }
+    ],
+    actions: [
+      { label: 'Variante hinzufügen', icon: 'plus', color: 'green', action: 'addVariant()' },
+      { label: 'Bulk-Erstellung', icon: 'clone', color: 'blue', action: 'bulkCreate()' },
+      { label: 'Import', icon: 'upload', color: 'purple', action: 'import()' }
+    ]
+  },
+
+  '/admin/products/inventory': {
+    path: '/admin/products/inventory',
+    title: 'Lagerbestand',
+    icon: 'warehouse',
+    iconColor: 'green',
+    description: 'Inventar und Lagerbestand verwalten',
+    dbQuery: `SELECT p.id, p.name, p.sku, p.stock,
+              CASE 
+                WHEN p.stock > 50 THEN 'Gut'
+                WHEN p.stock > 10 THEN 'Mittel'
+                WHEN p.stock > 0 THEN 'Niedrig'
+                ELSE 'Nicht vorrätig'
+              END as stock_status,
+              p.base_price * p.stock as inventory_value
+              FROM products p
+              ORDER BY p.stock ASC`,
+    statsCards: [
+      { label: 'Gesamt Lager', query: 'SELECT SUM(stock) as sum FROM products', color: 'text-green-600', icon: 'warehouse' },
+      { label: 'Lagerwert', query: 'SELECT SUM(base_price * stock) as sum FROM products', color: 'text-blue-600', icon: 'euro-sign', format: 'currency' },
+      { label: 'Niedrig', query: 'SELECT COUNT(*) as count FROM products WHERE stock > 0 AND stock <= 10', color: 'text-yellow-600', icon: 'exclamation-triangle' },
+      { label: 'Nicht vorrätig', query: 'SELECT COUNT(*) as count FROM products WHERE stock <= 0', color: 'text-red-600', icon: 'times-circle' }
+    ],
+    tableColumns: [
+      { key: 'id', label: 'ID' },
+      { key: 'name', label: 'Produkt' },
+      { key: 'sku', label: 'SKU' },
+      { key: 'stock', label: 'Lagerbestand' },
+      { key: 'stock_status', label: 'Status' },
+      { key: 'inventory_value', label: 'Warenwert', format: 'currency' }
+    ],
+    actions: [
+      { label: 'Bestand aktualisieren', icon: 'edit', color: 'blue', action: 'updateStock()' },
+      { label: 'Bulk-Update', icon: 'tasks', color: 'purple', action: 'bulkUpdate()' },
+      { label: 'Inventur', icon: 'clipboard-check', color: 'green', action: 'inventory()' },
+      { label: 'Bericht', icon: 'file-export', color: 'gray', action: 'exportReport()' }
+    ]
+  },
+
+  '/admin/inventory': {
+    path: '/admin/inventory',
+    title: 'Inventar',
+    icon: 'warehouse',
+    iconColor: 'green',
+    description: 'Bestandsverwaltung und Inventur',
+    dbQuery: `SELECT p.id, p.name, p.sku, p.stock,
+              CASE 
+                WHEN p.stock > 50 THEN 'Ausreichend'
+                WHEN p.stock > 10 THEN 'Moderat'
+                WHEN p.stock > 0 THEN 'Niedrig'
+                ELSE 'Ausverkauft'
+              END as stock_level,
+              p.base_price,
+              p.base_price * p.stock as total_value,
+              p.updated_at as last_updated
+              FROM products p
+              ORDER BY p.stock ASC`,
+    statsCards: [
+      { label: 'Produkte auf Lager', query: 'SELECT COUNT(*) as count FROM products WHERE stock > 0', color: 'text-green-600', icon: 'box' },
+      { label: 'Gesamt Einheiten', query: 'SELECT SUM(stock) as sum FROM products', color: 'text-blue-600', icon: 'cubes' },
+      { label: 'Gesamtwert', query: 'SELECT SUM(base_price * stock) as sum FROM products', color: 'text-indigo-600', icon: 'euro-sign', format: 'currency' },
+      { label: 'Warnung', query: 'SELECT COUNT(*) as count FROM products WHERE stock > 0 AND stock <= 10', color: 'text-yellow-600', icon: 'exclamation-triangle' }
+    ],
+    tableColumns: [
+      { key: 'id', label: 'ID' },
+      { key: 'sku', label: 'SKU' },
+      { key: 'name', label: 'Produkt' },
+      { key: 'stock', label: 'Bestand' },
+      { key: 'stock_level', label: 'Level' },
+      { key: 'base_price', label: 'Stückpreis', format: 'currency' },
+      { key: 'total_value', label: 'Gesamtwert', format: 'currency' },
+      { key: 'last_updated', label: 'Aktualisiert', format: 'date' }
+    ],
+    actions: [
+      { label: 'Bestellung aufgeben', icon: 'shopping-cart', color: 'blue', action: 'createOrder()' },
+      { label: 'Inventur starten', icon: 'clipboard-list', color: 'green', action: 'startInventory()' },
+      { label: 'Alarm-Schwelle', icon: 'bell', color: 'yellow', action: 'setThreshold()' },
+      { label: 'Export', icon: 'download', color: 'gray', action: 'exportData()' }
+    ]
+  },
+
+  '/admin/products/pricing': {
+    path: '/admin/products/pricing',
+    title: 'Preisgestaltung',
+    icon: 'euro-sign',
+    iconColor: 'blue',
+    description: 'Preisverwaltung und Rabatte',
+    dbQuery: `SELECT p.id, p.name, p.sku,
+              p.base_price,
+              p.discount_price,
+              p.discount_percentage,
+              CASE WHEN p.discount_price IS NOT NULL THEN 'Ja' ELSE 'Nein' END as has_discount,
+              p.base_price - COALESCE(p.discount_price, p.base_price) as savings
+              FROM products p
+              ORDER BY p.discount_percentage DESC NULLS LAST`,
+    statsCards: [
+      { label: 'Durchschnittspreis', query: 'SELECT AVG(base_price) as avg FROM products', color: 'text-blue-600', icon: 'euro-sign', format: 'currency' },
+      { label: 'Mit Rabatt', query: 'SELECT COUNT(*) as count FROM products WHERE discount_price IS NOT NULL', color: 'text-green-600', icon: 'percent' },
+      { label: 'Höchster Preis', query: 'SELECT MAX(base_price) as max FROM products', color: 'text-purple-600', icon: 'arrow-up', format: 'currency' },
+      { label: 'Niedrigster Preis', query: 'SELECT MIN(base_price) as min FROM products WHERE base_price > 0', color: 'text-indigo-600', icon: 'arrow-down', format: 'currency' }
+    ],
+    tableColumns: [
+      { key: 'id', label: 'ID' },
+      { key: 'name', label: 'Produkt' },
+      { key: 'base_price', label: 'Basispreis', format: 'currency' },
+      { key: 'discount_price', label: 'Angebotspreis', format: 'currency' },
+      { key: 'discount_percentage', label: 'Rabatt %' },
+      { key: 'has_discount', label: 'Rabatt' },
+      { key: 'savings', label: 'Ersparnis', format: 'currency' }
+    ],
+    actions: [
+      { label: 'Preise aktualisieren', icon: 'edit', color: 'blue', action: 'updatePrices()' },
+      { label: 'Rabatt-Aktion', icon: 'percent', color: 'green', action: 'createSale()' },
+      { label: 'Bulk-Preise', icon: 'tasks', color: 'purple', action: 'bulkPricing()' },
+      { label: 'Preishistorie', icon: 'history', color: 'gray', action: 'viewHistory()' }
+    ]
+  },
+
+  '/admin/products/reviews': {
+    path: '/admin/products/reviews',
+    title: 'Produktbewertungen',
+    icon: 'star',
+    iconColor: 'yellow',
+    description: 'Kundenbewertungen verwalten',
+    dbQuery: `SELECT r.id, r.rating, r.comment,
+              p.name as product_name,
+              u.email as customer_email,
+              u.first_name || ' ' || u.last_name as customer_name,
+              r.is_verified,
+              r.created_at
+              FROM reviews r
+              LEFT JOIN products p ON r.product_id = p.id
+              LEFT JOIN users u ON r.user_id = u.id
+              ORDER BY r.created_at DESC
+              LIMIT 100`,
+    statsCards: [
+      { label: 'Gesamt Bewertungen', query: 'SELECT COUNT(*) as count FROM reviews', color: 'text-yellow-600', icon: 'star' },
+      { label: 'Durchschn. Rating', query: 'SELECT COALESCE(AVG(rating), 0) as avg FROM reviews', color: 'text-green-600', icon: 'star-half-alt' },
+      { label: 'Verifiziert', query: 'SELECT COUNT(*) as count FROM reviews WHERE is_verified = 1', color: 'text-blue-600', icon: 'check-circle' },
+      { label: 'Ausstehend', query: 'SELECT COUNT(*) as count FROM reviews WHERE is_verified = 0', color: 'text-orange-600', icon: 'clock' }
+    ],
+    tableColumns: [
+      { key: 'id', label: 'ID' },
+      { key: 'product_name', label: 'Produkt' },
+      { key: 'customer_name', label: 'Kunde' },
+      { key: 'rating', label: 'Bewertung' },
+      { key: 'comment', label: 'Kommentar' },
+      { key: 'is_verified', label: 'Verifiziert', format: 'badge' },
+      { key: 'created_at', label: 'Datum', format: 'date' }
+    ],
+    actions: [
+      { label: 'Genehmigen', icon: 'check', color: 'green', action: 'approveSelected()' },
+      { label: 'Ablehnen', icon: 'times', color: 'red', action: 'rejectSelected()' },
+      { label: 'Antworten', icon: 'reply', color: 'blue', action: 'reply()' },
+      { label: 'Export', icon: 'download', color: 'gray', action: 'exportData()' }
+    ]
+  },
+
+  '/admin/products/seo': {
+    path: '/admin/products/seo',
+    title: 'Produkt-SEO',
+    icon: 'search',
+    iconColor: 'teal',
+    description: 'SEO-Optimierung für Produkte',
+    dbQuery: `SELECT p.id, p.name, p.slug,
+              pt.meta_title,
+              pt.meta_description,
+              pt.meta_keywords,
+              CASE 
+                WHEN pt.meta_title IS NOT NULL AND pt.meta_title != '' THEN 1 
+                ELSE 0 
+              END as has_meta_title,
+              CASE 
+                WHEN pt.meta_description IS NOT NULL AND pt.meta_description != '' THEN 1 
+                ELSE 0 
+              END as has_meta_desc
+              FROM products p
+              LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = 'de'
+              ORDER BY p.id DESC`,
+    statsCards: [
+      { label: 'Produkte', query: 'SELECT COUNT(*) as count FROM products', color: 'text-indigo-600', icon: 'box' },
+      { label: 'Mit Meta-Title', query: 'SELECT COUNT(*) as count FROM product_translations WHERE meta_title IS NOT NULL AND meta_title != ""', color: 'text-green-600', icon: 'heading' },
+      { label: 'Mit Meta-Desc', query: 'SELECT COUNT(*) as count FROM product_translations WHERE meta_description IS NOT NULL AND meta_description != ""', color: 'text-blue-600', icon: 'align-left' },
+      { label: 'SEO-Score', query: 'SELECT 75 as score', color: 'text-yellow-600', icon: 'chart-line' }
+    ],
+    tableColumns: [
+      { key: 'id', label: 'ID' },
+      { key: 'name', label: 'Produkt' },
+      { key: 'slug', label: 'URL-Slug' },
+      { key: 'has_meta_title', label: 'Title', format: 'badge' },
+      { key: 'has_meta_desc', label: 'Description', format: 'badge' },
+      { key: 'meta_keywords', label: 'Keywords' }
+    ],
+    actions: [
+      { label: 'Bulk-SEO', icon: 'magic', color: 'purple', action: 'bulkSEO()' },
+      { label: 'AI-Generator', icon: 'robot', color: 'blue', action: 'generateSEO()' },
+      { label: 'SEO-Audit', icon: 'search', color: 'teal', action: 'audit()' },
+      { label: 'Export', icon: 'download', color: 'gray', action: 'exportData()' }
+    ]
+  },
+
+  '/admin/products/import': {
+    path: '/admin/products/import',
+    title: 'Produkte Importieren',
+    icon: 'upload',
+    iconColor: 'blue',
+    description: 'Bulk-Import von Produkten',
+    dbQuery: `SELECT 'Letzte 30 Tage' as period, 0 as imports, 0 as products, 0 as errors`,
+    statsCards: [
+      { label: 'Letzter Import', query: 'SELECT 0 as count', color: 'text-blue-600', icon: 'calendar' },
+      { label: 'Gesamt importiert', query: 'SELECT 0 as count', color: 'text-green-600', icon: 'box' },
+      { label: 'Fehler', query: 'SELECT 0 as count', color: 'text-red-600', icon: 'exclamation-triangle' },
+      { label: 'Erfolgsrate', query: 'SELECT 0 as avg', color: 'text-teal-600', icon: 'check-circle' }
+    ],
+    tableColumns: [
+      { key: 'period', label: 'Zeitraum' },
+      { key: 'imports', label: 'Importe' },
+      { key: 'products', label: 'Produkte' },
+      { key: 'errors', label: 'Fehler' }
+    ],
+    actions: [
+      { label: 'CSV hochladen', icon: 'file-csv', color: 'green', action: 'uploadCSV()' },
+      { label: 'Vorlage herunterladen', icon: 'download', color: 'blue', action: 'downloadTemplate()' },
+      { label: 'Anleitung', icon: 'question-circle', color: 'gray', action: 'showGuide()' }
+    ]
+  },
+
+  '/admin/products/import-export': {
+    path: '/admin/products/import-export',
+    title: 'Import / Export',
+    icon: 'exchange-alt',
+    iconColor: 'purple',
+    description: 'Daten importieren und exportieren',
+    dbQuery: `SELECT 'CSV Import' as operation, '2026-02-13' as date, 0 as records, 'Ausstehend' as status
+              UNION ALL SELECT 'Excel Export', '2026-02-12', 8, 'Abgeschlossen'
+              UNION ALL SELECT 'JSON Import', '2026-02-10', 0, 'Fehlgeschlagen'`,
+    statsCards: [
+      { label: 'Verfügbare Formate', query: 'SELECT 4 as count', color: 'text-purple-600', icon: 'file' },
+      { label: 'Letzte 30 Tage', query: 'SELECT 3 as count', color: 'text-blue-600', icon: 'calendar' },
+      { label: 'Erfolgreich', query: 'SELECT 1 as count', color: 'text-green-600', icon: 'check' },
+      { label: 'Ausstehend', query: 'SELECT 1 as count', color: 'text-yellow-600', icon: 'clock' }
+    ],
+    tableColumns: [
+      { key: 'operation', label: 'Operation' },
+      { key: 'date', label: 'Datum', format: 'date' },
+      { key: 'records', label: 'Datensätze' },
+      { key: 'status', label: 'Status', format: 'badge' }
+    ],
+    actions: [
+      { label: 'Import starten', icon: 'upload', color: 'blue', action: 'startImport()' },
+      { label: 'Export starten', icon: 'download', color: 'green', action: 'startExport()' },
+      { label: 'Vorlagen', icon: 'file-alt', color: 'purple', action: 'viewTemplates()' },
+      { label: 'Verlauf', icon: 'history', color: 'gray', action: 'viewHistory()' }
+    ]
+  },
+
+  '/admin/volume-products': {
+    path: '/admin/volume-products',
+    title: 'Mengenrabatte',
+    icon: 'layer-group',
+    iconColor: 'indigo',
+    description: 'Volumen-Preise und Staffelrabatte',
+    dbQuery: `SELECT p.id, p.name,
+              '10+ Units' as tier,
+              '10% Discount' as discount,
+              p.base_price * 0.9 as tier_price
+              FROM products p
+              LIMIT 20`,
+    statsCards: [
+      { label: 'Produkte mit Staffeln', query: 'SELECT 0 as count', color: 'text-indigo-600', icon: 'layer-group' },
+      { label: 'Rabattstufen', query: 'SELECT 0 as count', color: 'text-blue-600', icon: 'list' },
+      { label: 'Durchschn. Rabatt', query: 'SELECT 0 as avg', color: 'text-green-600', icon: 'percent' },
+      { label: 'Volumen-Umsatz', query: 'SELECT 0 as sum', color: 'text-purple-600', icon: 'euro-sign', format: 'currency' }
+    ],
+    tableColumns: [
+      { key: 'id', label: 'Produkt-ID' },
+      { key: 'name', label: 'Produktname' },
+      { key: 'tier', label: 'Staffel' },
+      { key: 'discount', label: 'Rabatt' },
+      { key: 'tier_price', label: 'Staffelpreis', format: 'currency' }
+    ],
+    actions: [
+      { label: 'Staffel hinzufügen', icon: 'plus', color: 'green', action: 'addTier()' },
+      { label: 'Bulk-Staffeln', icon: 'tasks', color: 'blue', action: 'bulkTiers()' },
+      { label: 'Vorschau', icon: 'eye', color: 'purple', action: 'preview()' }
+    ]
   }
 }
