@@ -831,7 +831,7 @@ export function HomepageModernEcommerce() {
                   <span class="text-2xl font-bold text-brand-gold">€49,90</span>
                   <span class="text-sm text-gray-400 line-through">€76,90</span>
                 </div>
-                <button class="w-full bg-brand-navy text-white py-3 rounded-lg hover:bg-brand-navy-dark transition font-semibold">
+                <button onclick="addToCart(1, 1)" class="w-full bg-brand-navy text-white py-3 rounded-lg hover:bg-brand-navy-dark transition font-semibold">
                   <i class="fas fa-shopping-cart mr-2"></i>In den Warenkorb
                 </button>
               </div>
@@ -858,7 +858,7 @@ export function HomepageModernEcommerce() {
                   <span class="text-2xl font-bold text-brand-gold">€39,90</span>
                   <span class="text-sm text-gray-400 line-through">€66,90</span>
                 </div>
-                <button class="w-full bg-brand-navy text-white py-3 rounded-lg hover:bg-brand-gold transition font-semibold">
+                <button onclick="addToCart(2, 1)" class="w-full bg-brand-navy text-white py-3 rounded-lg hover:bg-brand-gold transition font-semibold">
                   <i class="fas fa-shopping-cart mr-2"></i>In den Warenkorb
                 </button>
               </div>
@@ -885,7 +885,7 @@ export function HomepageModernEcommerce() {
                   <span class="text-2xl font-bold text-brand-gold">€29,90</span>
                   <span class="text-sm text-gray-400 line-through">€59,90</span>
                 </div>
-                <button class="w-full bg-brand-navy text-white py-3 rounded-lg hover:bg-brand-gold transition font-semibold">
+                <button onclick="addToCart(3, 1)" class="w-full bg-brand-navy text-white py-3 rounded-lg hover:bg-brand-gold transition font-semibold">
                   <i class="fas fa-shopping-cart mr-2"></i>In den Warenkorb
                 </button>
               </div>
@@ -912,7 +912,7 @@ export function HomepageModernEcommerce() {
                   <span class="text-2xl font-bold text-brand-gold">€299,90</span>
                   <span class="text-sm text-gray-400 line-through">€428,90</span>
                 </div>
-                <button class="w-full bg-brand-navy text-white py-3 rounded-lg hover:bg-brand-gold transition font-semibold">
+                <button onclick="addToCart(4, 1)" class="w-full bg-brand-navy text-white py-3 rounded-lg hover:bg-brand-gold transition font-semibold">
                   <i class="fas fa-shopping-cart mr-2"></i>In den Warenkorb
                 </button>
               </div>
