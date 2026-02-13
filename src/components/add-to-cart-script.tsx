@@ -9,8 +9,11 @@ export const AddToCartScript = () => `
   }
 
   // Add to cart function
-  async function addToCart(productId, quantity = 1) {
-    const button = event?.target
+  async function addToCart(productId, quantity = 1, event = null) {
+    // Get button from event or window.event (for onclick handlers)
+    const target = event?.target || window.event?.target
+    const button = target?.tagName === 'BUTTON' ? target : target?.closest('button')
+    
     if (button) {
       button.disabled = true
       button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Wird hinzugefügt...'
