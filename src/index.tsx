@@ -27534,6 +27534,11 @@ app.route('/api/auth', authAPI)
 import cartAPI from './api/cart-api'
 app.route('/api/cart', cartAPI)
 
+// Mount license API routes
+import licenseAPI from './api/license-api'
+app.route('/api/licenses', licenseAPI)
+app.route('/api/admin/licenses', licenseAPI)
+
 // ============================================
 // SYSTEM MONITOR API ENDPOINTS
 // ============================================
