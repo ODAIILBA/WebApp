@@ -449,7 +449,7 @@ app.get('/wishlist', (c) => {
                   \${product.discount_price ? \`<div class="text-sm text-gray-500 line-through">€\${product.discount_price.toFixed(2)}</div>\` : ''}
                 </div>
                 <div class="flex gap-2">
-                  <button onclick="addToCart(\${product.id}, '\${product.name}', \${product.price})" class="flex-1 bg-brand-navy text-white py-2 px-4 rounded-lg hover:bg-brand-navy/90 transition text-sm font-semibold">
+                  <button onclick="addToCart(\${product.id}, 1)" class="flex-1 bg-brand-navy text-white py-2 px-4 rounded-lg hover:bg-brand-navy/90 transition text-sm font-semibold">
                     <i class="fas fa-shopping-cart mr-2"></i>In den Warenkorb
                   </button>
                   <a href="/product/\${product.id}" class="bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition text-sm">

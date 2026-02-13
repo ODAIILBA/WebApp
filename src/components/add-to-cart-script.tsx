@@ -17,7 +17,7 @@ export const AddToCartScript = () => `
     }
 
     try {
-      const response = await fetch('/api/cart/add', {
+      const response = await fetch('/api/cart/items', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -71,8 +71,8 @@ export const AddToCartScript = () => `
       if (data.success) {
         const cartCount = document.querySelector('.cart-count')
         if (cartCount) {
-          cartCount.textContent = data.cart.itemCount
-          if (data.cart.itemCount > 0) {
+          cartCount.textContent = data.cart.item_count || data.cart.itemCount || 0
+          if ((data.cart.item_count || data.cart.itemCount || 0) > 0) {
             cartCount.classList.remove('hidden')
           }
         }
