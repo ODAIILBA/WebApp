@@ -226,7 +226,7 @@ function renderProductCard(product) {
           `}
         </div>
         
-        <button class="add-to-cart-btn" onclick="event.stopPropagation(); addToCart(${product.id}, '${product.name}', ${finalPrice})" style="width:100%; background:linear-gradient(135deg, #FFC107 0%, #FFD54F 100%); color:#001f3f; border:none; padding:12px 20px; border-radius:25px; font-weight:bold; font-size:14px; cursor:pointer; transition:all 0.3s;" onmouseover="this.style.background='linear-gradient(135deg, #FFD54F 0%, #FFC107 100%)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='linear-gradient(135deg, #FFC107 0%, #FFD54F 100%)'; this.style.transform='scale(1)'">
+        <button class="add-to-cart-btn" onclick="event.stopPropagation(); addToCart(${product.id}, 1)" style="width:100%; background:linear-gradient(135deg, #FFC107 0%, #FFD54F 100%); color:#001f3f; border:none; padding:12px 20px; border-radius:25px; font-weight:bold; font-size:14px; cursor:pointer; transition:all 0.3s;" onmouseover="this.style.background='linear-gradient(135deg, #FFD54F 0%, #FFC107 100%)'; this.style.transform='scale(1.05)'" onmouseout="this.style.background='linear-gradient(135deg, #FFC107 0%, #FFD54F 100%)'; this.style.transform='scale(1)'">
           <i class="fas fa-shopping-cart"></i> In den Warenkorb
         </button>
         

@@ -234,6 +234,7 @@ app.onError((error, c) => {
 // Serve static files
 app.use('/static/*', serveStatic({ root: './public' }))
 app.use('/index.html', serveStatic({ path: './index.html', root: './public' }))
+app.use('/test-cart.html', serveStatic({ path: './test-cart.html', root: './public' }))
 
 // Mount legacy API routes (auth only - product routes are defined below with DatabaseHelper)
 // Commented out to use database-based product routes instead

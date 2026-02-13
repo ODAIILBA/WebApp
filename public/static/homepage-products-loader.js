@@ -157,7 +157,7 @@ class HomepageProductsLoader {
             ${priceDisplay}
             
             <button 
-              onclick="addToCart('${product.slug}', '${product.name}', ${product.discount_price || product.base_price}); event.preventDefault(); event.stopPropagation();"
+              onclick="addToCart(${product.id}, 1); event.preventDefault(); event.stopPropagation();"
               class="w-full bg-gold hover:bg-gold-light text-white font-bold py-3 px-6 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 hover-lift">
               <i class="fas fa-shopping-cart"></i>
               In den Warenkorb
