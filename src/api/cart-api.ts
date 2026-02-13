@@ -23,9 +23,14 @@ cartAPI.get('/', async (c) => {
     const userId = c.get('user')?.id
     const sessionId = c.req.header('X-Session-ID') || `session_${Date.now()}`
 
+    console.log('[Cart API] Getting cart - userId:', userId, 'sessionId:', sessionId)
+
     const result = await cartService.getOrCreateCart(userId, sessionId)
 
+    console.log('[Cart API] Result:', JSON.stringify(result, null, 2))
+
     if (!result.success) {
+      console.error('[Cart API] Failed to get cart:', result.error)
       return c.json({ success: false, error: result.error }, 400)
     }
 
@@ -34,7 +39,7 @@ cartAPI.get('/', async (c) => {
       cart: result.cart
     })
   } catch (error: any) {
-    console.error('Get cart endpoint error:', error)
+    console.error('[Cart API] Get cart endpoint error:', error)
     return c.json({ success: false, error: error.message }, 500)
   }
 })

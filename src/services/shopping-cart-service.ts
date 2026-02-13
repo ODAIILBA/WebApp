@@ -53,6 +53,8 @@ export class ShoppingCartService {
    */
   async getOrCreateCart(userId?: number, sessionId?: string): Promise<{ success: boolean; cart?: Cart; error?: string }> {
     try {
+      console.log('[CartService] getOrCreateCart - userId:', userId, 'sessionId:', sessionId)
+      
       if (!userId && !sessionId) {
         return { success: false, error: 'User ID or Session ID is required' }
       }
@@ -61,6 +63,7 @@ export class ShoppingCartService {
       let cart: any
       
       if (userId) {
+        console.log('[CartService] Looking for cart by userId:', userId)
         cart = await this.db.prepare(`
           SELECT * FROM shopping_carts 
           WHERE user_id = ? AND status = 'active'
@@ -68,6 +71,7 @@ export class ShoppingCartService {
           LIMIT 1
         `).bind(userId).first()
       } else if (sessionId) {
+        console.log('[CartService] Looking for cart by sessionId:', sessionId)
         cart = await this.db.prepare(`
           SELECT * FROM shopping_carts 
           WHERE session_id = ? AND status = 'active'
@@ -78,10 +82,13 @@ export class ShoppingCartService {
 
       // Create new cart if none exists
       if (!cart) {
+        console.log('[CartService] Creating new cart')
         const result = await this.db.prepare(`
           INSERT INTO shopping_carts (user_id, session_id, status)
           VALUES (?, ?, 'active')
         `).bind(userId || null, sessionId || null).run()
+
+        console.log('[CartService] Cart created with ID:', result.meta.last_row_id)
 
         cart = await this.db.prepare(`
           SELECT * FROM shopping_carts WHERE id = ?
@@ -89,15 +96,21 @@ export class ShoppingCartService {
       }
 
       if (!cart) {
+        console.error('[CartService] Failed to retrieve cart after creation')
         return { success: false, error: 'Failed to create cart' }
       }
 
+      console.log('[CartService] Cart found/created:', cart.id)
+
       // Get cart items
       const items = await this.getCartItems(cart.id)
+      console.log('[CartService] Cart items:', items.length)
       
       // Calculate totals
       const subtotal = items.reduce((sum, item) => sum + parseFloat(item.subtotal.toString()), 0)
       const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
+
+      console.log('[CartService] Cart totals - subtotal:', subtotal, 'itemCount:', itemCount)
 
       return {
         success: true,
@@ -110,7 +123,7 @@ export class ShoppingCartService {
         }
       }
     } catch (error: any) {
-      console.error('Get or create cart error:', error)
+      console.error('[CartService] Get or create cart error:', error)
       return { success: false, error: error.message || 'Failed to fetch cart' }
     }
   }
@@ -159,7 +172,7 @@ export class ShoppingCartService {
 
       // Get product details
       const product = await this.db.prepare(`
-        SELECT id, sku, name, image_url, base_price, discount_price, stock_quantity, is_active
+        SELECT id, sku, name, image_url, base_price, discount_price, stock, is_active
         FROM products
         WHERE id = ?
       `).bind(data.product_id).first() as any
@@ -173,8 +186,8 @@ export class ShoppingCartService {
       }
 
       // Check stock
-      if (product.stock_quantity < data.quantity) {
-        return { success: false, error: `Only ${product.stock_quantity} items available in stock` }
+      if (product.stock < data.quantity) {
+        return { success: false, error: `Only ${product.stock} items available in stock` }
       }
 
       // Calculate prices
@@ -191,8 +204,8 @@ export class ShoppingCartService {
         const newQuantity = existingItem.quantity + data.quantity
         
         // Check stock for new quantity
-        if (product.stock_quantity < newQuantity) {
-          return { success: false, error: `Only ${product.stock_quantity} items available in stock` }
+        if (product.stock < newQuantity) {
+          return { success: false, error: `Only ${product.stock} items available in stock` }
         }
 
         const newSubtotal = price * newQuantity
@@ -261,7 +274,7 @@ export class ShoppingCartService {
 
       // Get cart item
       const item = await this.db.prepare(`
-        SELECT ci.*, p.stock_quantity
+        SELECT ci.*, p.stock
         FROM cart_items ci
         JOIN products p ON ci.product_id = p.id
         WHERE ci.id = ? AND ci.cart_id = ?
@@ -272,8 +285,8 @@ export class ShoppingCartService {
       }
 
       // Check stock
-      if (item.stock_quantity < data.quantity) {
-        return { success: false, error: `Only ${item.stock_quantity} items available in stock` }
+      if (item.stock < data.quantity) {
+        return { success: false, error: `Only ${item.stock} items available in stock` }
       }
 
       // Calculate new subtotal

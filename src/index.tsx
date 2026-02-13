@@ -69,7 +69,7 @@ import {
 } from './utils/helpers'
 import { AuthService, hashPassword, verifyPassword, generateSecureToken } from './lib/auth'
 import { EmailService } from './lib/email'
-import { setupCartRoutes } from './routes/cart'
+// import { setupCartRoutes } from './routes/cart' // OLD - Replaced by cart-api.ts
 import { setupReviewRoutes } from './routes/reviews'
 import { setupReviewRoutes } from './routes/reviews'
 
@@ -262,7 +262,7 @@ app.use('*', async (c, next) => {
 // ============================================
 
 // Setup shopping cart routes
-setupCartRoutes(app)
+// setupCartRoutes(app) // OLD - Replaced by cart-api.ts (mounted at /api/cart)
 
 // Setup product review routes  
 setupReviewRoutes(app)
