@@ -23953,6 +23953,919 @@ const adminPageConfigs: Record<string, any> = {
 */
 
 // ============================================
+// THEME ENGINE - ENTERPRISE-GRADE THEME MANAGEMENT
+// ============================================
+
+// GET /admin/themes - Theme Management Interface
+app.get('/admin/themes', async (c) => {
+  const { env } = c;
+  
+  try {
+    // Fetch all themes with their configurations
+    const themes = await env.DB.prepare(`
+      SELECT t.*, 
+             (SELECT COUNT(*) FROM theme_assignments WHERE theme_id = t.id AND is_active = 1) as assignment_count
+      FROM themes t
+      ORDER BY t.is_default DESC, t.is_active DESC, t.created_at DESC
+    `).all();
+
+    // Fetch active theme
+    const activeTheme = await env.DB.prepare(`
+      SELECT * FROM themes WHERE is_active = 1 LIMIT 1
+    `).first();
+
+    // Fetch theme presets
+    const presets = await env.DB.prepare(`
+      SELECT * FROM theme_presets ORDER BY is_system DESC, created_at DESC
+    `).all();
+
+    // Fetch active theme config if exists
+    let activeConfig = {
+      colors: {},
+      typography: {},
+      layout: {},
+      components: {}
+    };
+
+    if (activeTheme) {
+      const configs = await env.DB.prepare(`
+        SELECT config_type, config_data FROM theme_configs WHERE theme_id = ?
+      `).bind(activeTheme.id).all();
+
+      configs.results.forEach((config: any) => {
+        try {
+          activeConfig[config.config_type as keyof typeof activeConfig] = JSON.parse(config.config_data);
+        } catch (e) {
+          console.error('Error parsing config:', e);
+        }
+      });
+    }
+
+    return c.html(`
+      <!DOCTYPE html>
+      <html lang="de">
+      <head>
+        <meta charset="UTF-8"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>Theme Engine - Admin - SOFTWAREKING24</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/>
+        <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+        <style>
+          :root {
+            --primary-color: ${activeConfig.colors.primary || '#3b82f6'};
+            --secondary-color: ${activeConfig.colors.secondary || '#8b5cf6'};
+            --accent-color: ${activeConfig.colors.accent || '#10b981'};
+            --background-color: ${activeConfig.colors.background || '#ffffff'};
+            --text-color: ${activeConfig.colors.text || '#111827'};
+          }
+          
+          .theme-card {
+            transition: all 0.3s ease;
+          }
+          
+          .theme-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+          }
+          
+          .color-picker-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+            cursor: pointer;
+            transition: transform 0.2s;
+          }
+          
+          .color-picker-preview:hover {
+            transform: scale(1.1);
+          }
+          
+          .preview-frame {
+            transition: all 0.3s ease;
+          }
+          
+          .tab-button {
+            padding: 12px 24px;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+          }
+          
+          .tab-button.active {
+            border-bottom-color: var(--primary-color);
+            color: var(--primary-color);
+          }
+          
+          .settings-section {
+            display: none;
+          }
+          
+          .settings-section.active {
+            display: block;
+          }
+        </style>
+      </head>
+      <body class="bg-gray-50">
+        ${AdminSidebarAdvanced('/admin/themes')}
+        
+        <div class="ml-64 p-8">
+          <!-- Header -->
+          <div class="mb-8">
+            <div class="flex justify-between items-start">
+              <div>
+                <h1 class="text-3xl font-bold text-gray-800 flex items-center gap-3">
+                  <i class="fas fa-palette text-purple-600"></i>
+                  Theme Engine
+                </h1>
+                <p class="text-gray-600 mt-2">Enterprise-grade theme customization and management</p>
+              </div>
+              
+              <div class="flex gap-3">
+                <button onclick="saveTheme()" class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition flex items-center gap-2">
+                  <i class="fas fa-save"></i>
+                  Save Changes
+                </button>
+                <button onclick="showPreview()" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition flex items-center gap-2">
+                  <i class="fas fa-eye"></i>
+                  Live Preview
+                </button>
+                <button onclick="exportTheme()" class="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition flex items-center gap-2">
+                  <i class="fas fa-download"></i>
+                  Export
+                </button>
+              </div>
+            </div>
+            
+            <!-- Stats -->
+            <div class="grid grid-cols-4 gap-6 mt-6">
+              <div class="bg-white p-6 rounded-xl shadow-sm">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-sm text-gray-600">Total Themes</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1">${themes.results?.length || 0}</p>
+                  </div>
+                  <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-palette text-purple-600 text-xl"></i>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="bg-white p-6 rounded-xl shadow-sm">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-sm text-gray-600">Active Theme</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1">${activeTheme?.name || 'None'}</p>
+                  </div>
+                  <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-check-circle text-green-600 text-xl"></i>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="bg-white p-6 rounded-xl shadow-sm">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-sm text-gray-600">Presets</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1">${presets.results?.length || 0}</p>
+                  </div>
+                  <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-swatchbook text-blue-600 text-xl"></i>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="bg-white p-6 rounded-xl shadow-sm">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <p class="text-sm text-gray-600">Assignments</p>
+                    <p class="text-2xl font-bold text-gray-800 mt-1">${activeTheme?.assignment_count || 0}</p>
+                  </div>
+                  <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <i class="fas fa-link text-orange-600 text-xl"></i>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Main Content - Split View -->
+          <div class="grid grid-cols-2 gap-8">
+            <!-- Left Panel - Settings -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+              <div class="bg-gradient-to-r from-purple-600 to-blue-600 p-6">
+                <h2 class="text-xl font-bold text-white">Theme Customization</h2>
+                <p class="text-purple-100 mt-1">Configure your theme settings</p>
+              </div>
+              
+              <!-- Tabs -->
+              <div class="border-b border-gray-200 px-6">
+                <div class="flex gap-4">
+                  <button class="tab-button active" onclick="switchTab('colors')">
+                    <i class="fas fa-palette mr-2"></i>Colors
+                  </button>
+                  <button class="tab-button" onclick="switchTab('typography')">
+                    <i class="fas fa-font mr-2"></i>Typography
+                  </button>
+                  <button class="tab-button" onclick="switchTab('layout')">
+                    <i class="fas fa-th-large mr-2"></i>Layout
+                  </button>
+                  <button class="tab-button" onclick="switchTab('components')">
+                    <i class="fas fa-cube mr-2"></i>Components
+                  </button>
+                  <button class="tab-button" onclick="switchTab('presets')">
+                    <i class="fas fa-star mr-2"></i>Presets
+                  </button>
+                </div>
+              </div>
+              
+              <div class="p-6 max-h-[800px] overflow-y-auto">
+                <!-- Colors Section -->
+                <div id="colors-section" class="settings-section active">
+                  <h3 class="text-lg font-semibold mb-4">Global Color Management</h3>
+                  
+                  <!-- Primary Colors -->
+                  <div class="space-y-4">
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div class="flex items-center gap-4">
+                        <input type="color" id="primaryColor" value="${activeConfig.colors.primary || '#3b82f6'}" 
+                               class="color-picker-preview" onchange="updateColor('primary', this.value)"/>
+                        <div>
+                          <label class="block font-medium text-gray-700">Primary Color</label>
+                          <span class="text-sm text-gray-500" id="primaryColorValue">${activeConfig.colors.primary || '#3b82f6'}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div class="flex items-center gap-4">
+                        <input type="color" id="secondaryColor" value="${activeConfig.colors.secondary || '#8b5cf6'}" 
+                               class="color-picker-preview" onchange="updateColor('secondary', this.value)"/>
+                        <div>
+                          <label class="block font-medium text-gray-700">Secondary Color</label>
+                          <span class="text-sm text-gray-500" id="secondaryColorValue">${activeConfig.colors.secondary || '#8b5cf6'}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div class="flex items-center gap-4">
+                        <input type="color" id="accentColor" value="${activeConfig.colors.accent || '#10b981'}" 
+                               class="color-picker-preview" onchange="updateColor('accent', this.value)"/>
+                        <div>
+                          <label class="block font-medium text-gray-700">Accent Color</label>
+                          <span class="text-sm text-gray-500" id="accentColorValue">${activeConfig.colors.accent || '#10b981'}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div class="flex items-center gap-4">
+                        <input type="color" id="backgroundColor" value="${activeConfig.colors.background || '#ffffff'}" 
+                               class="color-picker-preview" onchange="updateColor('background', this.value)"/>
+                        <div>
+                          <label class="block font-medium text-gray-700">Background Color</label>
+                          <span class="text-sm text-gray-500" id="backgroundColorValue">${activeConfig.colors.background || '#ffffff'}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div class="flex items-center gap-4">
+                        <input type="color" id="textColor" value="${activeConfig.colors.text || '#111827'}" 
+                               class="color-picker-preview" onchange="updateColor('text', this.value)"/>
+                        <div>
+                          <label class="block font-medium text-gray-700">Text Color</label>
+                          <span class="text-sm text-gray-500" id="textColorValue">${activeConfig.colors.text || '#111827'}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="mt-6 border-t pt-6">
+                    <h4 class="font-semibold mb-4">Status Colors</h4>
+                    <div class="grid grid-cols-3 gap-4">
+                      <div class="text-center">
+                        <input type="color" id="successColor" value="${activeConfig.colors.success || '#10b981'}" 
+                               class="color-picker-preview mx-auto" onchange="updateColor('success', this.value)"/>
+                        <label class="block text-sm mt-2">Success</label>
+                      </div>
+                      <div class="text-center">
+                        <input type="color" id="warningColor" value="${activeConfig.colors.warning || '#f59e0b'}" 
+                               class="color-picker-preview mx-auto" onchange="updateColor('warning', this.value)"/>
+                        <label class="block text-sm mt-2">Warning</label>
+                      </div>
+                      <div class="text-center">
+                        <input type="color" id="errorColor" value="${activeConfig.colors.error || '#ef4444'}" 
+                               class="color-picker-preview mx-auto" onchange="updateColor('error', this.value)"/>
+                        <label class="block text-sm mt-2">Error</label>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Dark Mode Toggle -->
+                  <div class="mt-6 border-t pt-6">
+                    <h4 class="font-semibold mb-4">Theme Mode</h4>
+                    <div class="flex gap-4">
+                      <button onclick="setThemeMode('light')" class="flex-1 py-3 border-2 rounded-lg hover:border-purple-600 transition">
+                        <i class="fas fa-sun text-yellow-500 mb-2"></i>
+                        <div class="text-sm font-medium">Light</div>
+                      </button>
+                      <button onclick="setThemeMode('dark')" class="flex-1 py-3 border-2 rounded-lg hover:border-purple-600 transition">
+                        <i class="fas fa-moon text-blue-500 mb-2"></i>
+                        <div class="text-sm font-medium">Dark</div>
+                      </button>
+                      <button onclick="setThemeMode('auto')" class="flex-1 py-3 border-2 rounded-lg hover:border-purple-600 transition">
+                        <i class="fas fa-adjust text-gray-500 mb-2"></i>
+                        <div class="text-sm font-medium">Auto</div>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Typography Section -->
+                <div id="typography-section" class="settings-section">
+                  <h3 class="text-lg font-semibold mb-4">Typography Settings</h3>
+                  
+                  <div class="space-y-6">
+                    <div>
+                      <label class="block font-medium text-gray-700 mb-2">Heading Font</label>
+                      <select id="headingFont" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-500" 
+                              onchange="updateTypography('headingFont', this.value)">
+                        <option value="Inter" ${activeConfig.typography.headingFont === 'Inter' ? 'selected' : ''}>Inter</option>
+                        <option value="Poppins">Poppins</option>
+                        <option value="Roboto">Roboto</option>
+                        <option value="Open Sans">Open Sans</option>
+                        <option value="Montserrat">Montserrat</option>
+                        <option value="Playfair Display">Playfair Display</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label class="block font-medium text-gray-700 mb-2">Body Font</label>
+                      <select id="bodyFont" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                              onchange="updateTypography('bodyFont', this.value)">
+                        <option value="Inter" ${activeConfig.typography.bodyFont === 'Inter' ? 'selected' : ''}>Inter</option>
+                        <option value="Poppins">Poppins</option>
+                        <option value="Roboto">Roboto</option>
+                        <option value="Open Sans">Open Sans</option>
+                        <option value="Lato">Lato</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label class="block font-medium text-gray-700 mb-2">Font Size Scale</label>
+                      <div class="flex gap-3">
+                        <button onclick="updateTypography('fontSize', 'small')" 
+                                class="flex-1 py-2 border rounded hover:border-purple-600 transition">Small</button>
+                        <button onclick="updateTypography('fontSize', 'medium')" 
+                                class="flex-1 py-2 border rounded hover:border-purple-600 transition">Medium</button>
+                        <button onclick="updateTypography('fontSize', 'large')" 
+                                class="flex-1 py-2 border rounded hover:border-purple-600 transition">Large</button>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label class="block font-medium text-gray-700 mb-2">Font Weight</label>
+                      <input type="range" min="300" max="700" step="100" value="400" 
+                             class="w-full" onchange="updateTypography('fontWeight', this.value)"/>
+                      <div class="flex justify-between text-sm text-gray-600 mt-1">
+                        <span>Light</span>
+                        <span>Normal</span>
+                        <span>Bold</span>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label class="block font-medium text-gray-700 mb-2">Letter Spacing</label>
+                      <select class="w-full p-3 border rounded-lg" onchange="updateTypography('letterSpacing', this.value)">
+                        <option value="tight">Tight</option>
+                        <option value="normal" selected>Normal</option>
+                        <option value="wide">Wide</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Layout Section -->
+                <div id="layout-section" class="settings-section">
+                  <h3 class="text-lg font-semibold mb-4">Layout Configuration</h3>
+                  
+                  <div class="space-y-6">
+                    <div>
+                      <label class="block font-medium text-gray-700 mb-2">Layout Mode</label>
+                      <div class="grid grid-cols-2 gap-3">
+                        <button onclick="updateLayout('layoutMode', 'full')" 
+                                class="py-3 border-2 rounded-lg hover:border-purple-600 transition">
+                          <i class="fas fa-expand-arrows-alt mb-2"></i>
+                          <div class="text-sm font-medium">Full Width</div>
+                        </button>
+                        <button onclick="updateLayout('layoutMode', 'boxed')" 
+                                class="py-3 border-2 rounded-lg hover:border-purple-600 transition">
+                          <i class="fas fa-compress-arrows-alt mb-2"></i>
+                          <div class="text-sm font-medium">Boxed</div>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label class="block font-medium text-gray-700 mb-2">Sidebar Position</label>
+                      <div class="grid grid-cols-2 gap-3">
+                        <button onclick="updateLayout('sidebarPosition', 'left')" 
+                                class="py-3 border-2 rounded-lg hover:border-purple-600 transition">Left</button>
+                        <button onclick="updateLayout('sidebarPosition', 'right')" 
+                                class="py-3 border-2 rounded-lg hover:border-purple-600 transition">Right</button>
+                      </div>
+                    </div>
+                    
+                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div>
+                        <label class="block font-medium text-gray-700">Sticky Header</label>
+                        <span class="text-sm text-gray-500">Keep header visible while scrolling</span>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" class="sr-only peer" checked 
+                               onchange="updateLayout('stickyHeader', this.checked)"/>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                      </label>
+                    </div>
+                    
+                    <div>
+                      <label class="block font-medium text-gray-700 mb-2">Border Radius</label>
+                      <div class="flex gap-3">
+                        <button onclick="updateLayout('borderRadius', 'none')" 
+                                class="flex-1 py-2 border rounded hover:border-purple-600 transition">None</button>
+                        <button onclick="updateLayout('borderRadius', 'small')" 
+                                class="flex-1 py-2 border rounded hover:border-purple-600 transition">Small</button>
+                        <button onclick="updateLayout('borderRadius', 'medium')" 
+                                class="flex-1 py-2 border rounded hover:border-purple-600 transition">Medium</button>
+                        <button onclick="updateLayout('borderRadius', 'large')" 
+                                class="flex-1 py-2 border rounded hover:border-purple-600 transition">Large</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Components Section -->
+                <div id="components-section" class="settings-section">
+                  <h3 class="text-lg font-semibold mb-4">Component Styling</h3>
+                  
+                  <div class="space-y-6">
+                    <div>
+                      <label class="block font-medium text-gray-700 mb-2">Button Style</label>
+                      <div class="grid grid-cols-3 gap-3">
+                        <button onclick="updateComponent('buttonStyle', 'rounded')" 
+                                class="py-3 border-2 rounded-lg hover:border-purple-600 transition">Rounded</button>
+                        <button onclick="updateComponent('buttonStyle', 'pill')" 
+                                class="py-3 border-2 rounded-full hover:border-purple-600 transition">Pill</button>
+                        <button onclick="updateComponent('buttonStyle', 'square')" 
+                                class="py-3 border-2 hover:border-purple-600 transition">Square</button>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label class="block font-medium text-gray-700 mb-2">Card Shadow Intensity</label>
+                      <input type="range" min="0" max="3" step="1" value="1" 
+                             class="w-full" onchange="updateComponent('cardShadow', this.value)"/>
+                      <div class="flex justify-between text-sm text-gray-600 mt-1">
+                        <span>None</span>
+                        <span>Small</span>
+                        <span>Medium</span>
+                        <span>Large</span>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label class="block font-medium text-gray-700 mb-2">Input Field Style</label>
+                      <div class="grid grid-cols-2 gap-3">
+                        <button onclick="updateComponent('inputStyle', 'outlined')" 
+                                class="py-3 border-2 rounded-lg hover:border-purple-600 transition">Outlined</button>
+                        <button onclick="updateComponent('inputStyle', 'filled')" 
+                                class="py-3 border-2 rounded-lg hover:border-purple-600 transition bg-gray-50">Filled</button>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label class="block font-medium text-gray-700 mb-2">Hover Effects</label>
+                      <select class="w-full p-3 border rounded-lg" onchange="updateComponent('hoverEffects', this.value)">
+                        <option value="none">None</option>
+                        <option value="scale" selected>Scale</option>
+                        <option value="glow">Glow</option>
+                        <option value="lift">Lift</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label class="block font-medium text-gray-700 mb-2">Transition Speed</label>
+                      <div class="flex gap-3">
+                        <button onclick="updateComponent('transitionSpeed', 'fast')" 
+                                class="flex-1 py-2 border rounded hover:border-purple-600 transition">Fast</button>
+                        <button onclick="updateComponent('transitionSpeed', 'normal')" 
+                                class="flex-1 py-2 border rounded hover:border-purple-600 transition">Normal</button>
+                        <button onclick="updateComponent('transitionSpeed', 'slow')" 
+                                class="flex-1 py-2 border rounded hover:border-purple-600 transition">Slow</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Presets Section -->
+                <div id="presets-section" class="settings-section">
+                  <h3 class="text-lg font-semibold mb-4">Theme Presets</h3>
+                  
+                  <div class="space-y-3">
+                    ${presets.results?.map((preset: any) => `
+                      <div class="theme-card p-4 border-2 rounded-lg cursor-pointer hover:border-purple-600 transition"
+                           onclick="applyPreset('${preset.id}')">
+                        <div class="flex items-center justify-between">
+                          <div>
+                            <h4 class="font-semibold">${preset.name}</h4>
+                            <span class="text-sm text-gray-500">${preset.preset_type === 'system' ? 'System Preset' : 'Custom'}</span>
+                          </div>
+                          ${preset.is_system ? '<i class="fas fa-star text-yellow-500"></i>' : ''}
+                        </div>
+                      </div>
+                    `).join('')}
+                  </div>
+                  
+                  <button onclick="saveAsPreset()" 
+                          class="w-full mt-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+                    <i class="fas fa-save mr-2"></i>
+                    Save Current as Preset
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Panel - Live Preview -->
+            <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+              <div class="bg-gray-800 p-6 flex items-center justify-between">
+                <div>
+                  <h2 class="text-xl font-bold text-white">Live Preview</h2>
+                  <p class="text-gray-400 mt-1">See changes in real-time</p>
+                </div>
+                <button onclick="refreshPreview()" 
+                        class="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition">
+                  <i class="fas fa-sync-alt"></i>
+                </button>
+              </div>
+              
+              <div id="preview-container" class="p-6 max-h-[800px] overflow-y-auto bg-gray-50">
+                <!-- Preview Content -->
+                <div class="space-y-6" id="preview-content">
+                  <!-- Header Preview -->
+                  <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="text-sm font-semibold text-gray-500 mb-3">HEADER</h3>
+                    <div class="bg-gradient-to-r from-purple-600 to-blue-600 p-4 rounded-lg">
+                      <div class="flex items-center justify-between text-white">
+                        <div class="font-bold text-lg">SOFTWAREKING24</div>
+                        <div class="flex gap-4">
+                          <a href="#" class="hover:text-purple-200">Products</a>
+                          <a href="#" class="hover:text-purple-200">About</a>
+                          <a href="#" class="hover:text-purple-200">Contact</a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Buttons Preview -->
+                  <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="text-sm font-semibold text-gray-500 mb-3">BUTTONS</h3>
+                    <div class="flex gap-3">
+                      <button class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+                        Primary Button
+                      </button>
+                      <button class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+                        Secondary Button
+                      </button>
+                      <button class="px-6 py-3 border-2 border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 transition">
+                        Outline Button
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <!-- Cards Preview -->
+                  <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="text-sm font-semibold text-gray-500 mb-3">CARDS</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                      <div class="theme-card bg-white border rounded-lg p-4 shadow">
+                        <div class="w-12 h-12 bg-purple-100 rounded-lg mb-3 flex items-center justify-center">
+                          <i class="fas fa-chart-line text-purple-600"></i>
+                        </div>
+                        <h4 class="font-semibold mb-2">Analytics</h4>
+                        <p class="text-sm text-gray-600">Track your performance</p>
+                      </div>
+                      <div class="theme-card bg-white border rounded-lg p-4 shadow">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg mb-3 flex items-center justify-center">
+                          <i class="fas fa-users text-blue-600"></i>
+                        </div>
+                        <h4 class="font-semibold mb-2">Users</h4>
+                        <p class="text-sm text-gray-600">Manage your team</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Forms Preview -->
+                  <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="text-sm font-semibold text-gray-500 mb-3">FORMS</h3>
+                    <div class="space-y-3">
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                        <input type="email" placeholder="your@email.com" 
+                               class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"/>
+                      </div>
+                      <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                        <textarea placeholder="Your message..." rows="3"
+                                  class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"></textarea>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Typography Preview -->
+                  <div class="bg-white rounded-lg shadow p-4">
+                    <h3 class="text-sm font-semibold text-gray-500 mb-3">TYPOGRAPHY</h3>
+                    <h1 class="text-3xl font-bold mb-2">Heading 1</h1>
+                    <h2 class="text-2xl font-bold mb-2">Heading 2</h2>
+                    <h3 class="text-xl font-semibold mb-2">Heading 3</h3>
+                    <p class="text-gray-600">This is body text. Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Theme Management Section -->
+          <div class="mt-8 bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-xl font-bold mb-4">Theme Management</h2>
+            
+            <div class="grid grid-cols-3 gap-6">
+              ${themes.results?.map((theme: any) => `
+                <div class="theme-card border-2 rounded-lg p-4 ${theme.is_active ? 'border-purple-600 bg-purple-50' : 'border-gray-200'}">
+                  <div class="flex items-start justify-between mb-3">
+                    <div>
+                      <h3 class="font-semibold">${theme.name}</h3>
+                      <p class="text-sm text-gray-500">${theme.description || 'No description'}</p>
+                    </div>
+                    ${theme.is_active ? '<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-xs font-semibold">Active</span>' : ''}
+                  </div>
+                  
+                  <div class="flex gap-2 mt-4">
+                    ${!theme.is_active ? `<button onclick="activateTheme(${theme.id})" 
+                            class="flex-1 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition text-sm">
+                      Activate
+                    </button>` : ''}
+                    <button onclick="editTheme(${theme.id})" 
+                            class="flex-1 py-2 border border-gray-300 rounded hover:bg-gray-50 transition text-sm">
+                      Edit
+                    </button>
+                    <button onclick="duplicateTheme(${theme.id})" 
+                            class="py-2 px-3 border border-gray-300 rounded hover:bg-gray-50 transition text-sm">
+                      <i class="fas fa-copy"></i>
+                    </button>
+                  </div>
+                </div>
+              `).join('')}
+              
+              <!-- Create New Theme Card -->
+              <div class="theme-card border-2 border-dashed border-gray-300 rounded-lg p-4 flex flex-col items-center justify-center cursor-pointer hover:border-purple-600 hover:bg-purple-50 transition"
+                   onclick="createNewTheme()">
+                <i class="fas fa-plus-circle text-4xl text-gray-400 mb-3"></i>
+                <span class="font-semibold text-gray-600">Create New Theme</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <script>
+          // Current theme configuration
+          let currentConfig = {
+            colors: ${JSON.stringify(activeConfig.colors)},
+            typography: ${JSON.stringify(activeConfig.typography)},
+            layout: ${JSON.stringify(activeConfig.layout)},
+            components: ${JSON.stringify(activeConfig.components)}
+          };
+          
+          // Switch tabs
+          function switchTab(tab) {
+            // Hide all sections
+            document.querySelectorAll('.settings-section').forEach(section => {
+              section.classList.remove('active');
+            });
+            
+            // Remove active from all buttons
+            document.querySelectorAll('.tab-button').forEach(button => {
+              button.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(tab + '-section').classList.add('active');
+            event.target.closest('.tab-button').classList.add('active');
+          }
+          
+          // Update color
+          function updateColor(colorName, value) {
+            currentConfig.colors[colorName] = value;
+            document.getElementById(colorName + 'ColorValue').textContent = value;
+            document.documentElement.style.setProperty('--' + colorName.toLowerCase() + '-color', value);
+            updatePreview();
+          }
+          
+          // Update typography
+          function updateTypography(property, value) {
+            currentConfig.typography[property] = value;
+            updatePreview();
+          }
+          
+          // Update layout
+          function updateLayout(property, value) {
+            currentConfig.layout[property] = value;
+            updatePreview();
+          }
+          
+          // Update component
+          function updateComponent(property, value) {
+            currentConfig.components[property] = value;
+            updatePreview();
+          }
+          
+          // Set theme mode
+          function setThemeMode(mode) {
+            console.log('Setting theme mode:', mode);
+            if (mode === 'dark') {
+              // Apply dark preset
+              applyPreset('1'); // Dark Mode preset ID
+            }
+          }
+          
+          // Update preview
+          function updatePreview() {
+            // Apply color changes to preview
+            const previewContainer = document.getElementById('preview-content');
+            if (previewContainer) {
+              // Update CSS variables
+              document.documentElement.style.setProperty('--primary-color', currentConfig.colors.primary);
+              document.documentElement.style.setProperty('--secondary-color', currentConfig.colors.secondary);
+              document.documentElement.style.setProperty('--accent-color', currentConfig.colors.accent);
+              
+              console.log('Preview updated with config:', currentConfig);
+            }
+          }
+          
+          // Save theme
+          async function saveTheme() {
+            try {
+              const response = await axios.post('/api/theme/save', currentConfig);
+              if (response.data.success) {
+                alert('Theme saved successfully!');
+                location.reload();
+              }
+            } catch (error) {
+              console.error('Error saving theme:', error);
+              alert('Error saving theme');
+            }
+          }
+          
+          // Apply preset
+          async function applyPreset(presetId) {
+            try {
+              const response = await axios.get(\`/api/theme/preset/\${presetId}\`);
+              if (response.data.success) {
+                const preset = JSON.parse(response.data.preset.config_json);
+                
+                // Merge preset colors into current config
+                if (preset.colors) {
+                  Object.assign(currentConfig.colors, preset.colors);
+                  
+                  // Update UI color pickers
+                  Object.keys(preset.colors).forEach(colorName => {
+                    const input = document.getElementById(colorName + 'Color');
+                    if (input) {
+                      input.value = preset.colors[colorName];
+                      const valueSpan = document.getElementById(colorName + 'ColorValue');
+                      if (valueSpan) valueSpan.textContent = preset.colors[colorName];
+                    }
+                  });
+                }
+                
+                updatePreview();
+                alert('Preset applied! Don\\'t forget to save.');
+              }
+            } catch (error) {
+              console.error('Error applying preset:', error);
+              alert('Error applying preset');
+            }
+          }
+          
+          // Save as preset
+          async function saveAsPreset() {
+            const name = prompt('Enter preset name:');
+            if (!name) return;
+            
+            try {
+              const response = await axios.post('/api/theme/preset/create', {
+                name: name,
+                config: currentConfig
+              });
+              
+              if (response.data.success) {
+                alert('Preset saved successfully!');
+                location.reload();
+              }
+            } catch (error) {
+              console.error('Error saving preset:', error);
+              alert('Error saving preset');
+            }
+          }
+          
+          // Export theme
+          function exportTheme() {
+            const dataStr = JSON.stringify(currentConfig, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = 'theme-export.json';
+            link.click();
+          }
+          
+          // Show preview
+          function showPreview() {
+            window.open('/', '_blank');
+          }
+          
+          // Refresh preview
+          function refreshPreview() {
+            updatePreview();
+            alert('Preview refreshed!');
+          }
+          
+          // Activate theme
+          async function activateTheme(themeId) {
+            if (confirm('Activate this theme?')) {
+              try {
+                const response = await axios.post('/api/theme/activate', { themeId });
+                if (response.data.success) {
+                  location.reload();
+                }
+              } catch (error) {
+                console.error('Error activating theme:', error);
+                alert('Error activating theme');
+              }
+            }
+          }
+          
+          // Edit theme
+          function editTheme(themeId) {
+            // TODO: Load theme configuration
+            alert('Edit theme ' + themeId);
+          }
+          
+          // Duplicate theme
+          async function duplicateTheme(themeId) {
+            const name = prompt('Enter new theme name:');
+            if (!name) return;
+            
+            try {
+              const response = await axios.post('/api/theme/duplicate', { themeId, name });
+              if (response.data.success) {
+                location.reload();
+              }
+            } catch (error) {
+              console.error('Error duplicating theme:', error);
+              alert('Error duplicating theme');
+            }
+          }
+          
+          // Create new theme
+          function createNewTheme() {
+            const name = prompt('Enter theme name:');
+            if (!name) return;
+            
+            const slug = name.toLowerCase().replace(/\\s+/g, '-');
+            
+            axios.post('/api/theme/create', { name, slug })
+              .then(response => {
+                if (response.data.success) {
+                  location.reload();
+                }
+              })
+              .catch(error => {
+                console.error('Error creating theme:', error);
+                alert('Error creating theme');
+              });
+          }
+        </script>
+      </body>
+      </html>
+    `);
+  } catch (error) {
+    console.error('Error loading theme engine:', error);
+    return c.html(`<h1>Error loading theme engine</h1><pre>${error.message}</pre>`, 500);
+  }
+});
+
+// ============================================
 // SMART DYNAMIC ROUTE HANDLER FOR ALL 44 ADMIN PAGES
 // ============================================
 
@@ -27136,6 +28049,408 @@ app.get('/api/admin/firewall/stats', async (c) => {
     return c.json({ success: false, error: error.message }, 500)
   }
 })
+
+
+// ============================================
+// THEME ENGINE API ENDPOINTS
+// ============================================
+
+// Save theme configuration
+app.post('/api/theme/save', async (c) => {
+  try {
+    const { env } = c;
+    const config = await c.req.json();
+    
+    // Get active theme
+    const activeTheme = await env.DB.prepare(`
+      SELECT id FROM themes WHERE is_active = 1 LIMIT 1
+    `).first();
+    
+    if (!activeTheme) {
+      return c.json({ success: false, error: 'No active theme found' }, 404);
+    }
+    
+    // Update theme configurations
+    const configTypes = ['colors', 'typography', 'layout', 'components'];
+    
+    for (const type of configTypes) {
+      if (config[type]) {
+        // Check if config exists
+        const existing = await env.DB.prepare(`
+          SELECT id FROM theme_configs WHERE theme_id = ? AND config_type = ?
+        `).bind(activeTheme.id, type).first();
+        
+        if (existing) {
+          // Update
+          await env.DB.prepare(`
+            UPDATE theme_configs 
+            SET config_data = ?, updated_at = CURRENT_TIMESTAMP
+            WHERE theme_id = ? AND config_type = ?
+          `).bind(JSON.stringify(config[type]), activeTheme.id, type).run();
+        } else {
+          // Insert
+          await env.DB.prepare(`
+            INSERT INTO theme_configs (theme_id, config_type, config_data)
+            VALUES (?, ?, ?)
+          `).bind(activeTheme.id, type, JSON.stringify(config[type])).run();
+        }
+      }
+    }
+    
+    // Log change
+    await env.DB.prepare(`
+      INSERT INTO theme_history (theme_id, changed_by, change_type, new_config, change_notes)
+      VALUES (?, 1, 'updated', ?, 'Theme configuration updated')
+    `).bind(activeTheme.id, JSON.stringify(config)).run();
+    
+    return c.json({ success: true, message: 'Theme saved successfully' });
+  } catch (error: any) {
+    console.error('Error saving theme:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get preset
+app.get('/api/theme/preset/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    const preset = await env.DB.prepare(`
+      SELECT * FROM theme_presets WHERE id = ?
+    `).bind(id).first();
+    
+    if (!preset) {
+      return c.json({ success: false, error: 'Preset not found' }, 404);
+    }
+    
+    return c.json({ success: true, preset });
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Create preset
+app.post('/api/theme/preset/create', async (c) => {
+  try {
+    const { env } = c;
+    const { name, config } = await c.req.json();
+    
+    const result = await env.DB.prepare(`
+      INSERT INTO theme_presets (name, preset_type, config_json, created_by)
+      VALUES (?, 'custom', ?, 1)
+    `).bind(name, JSON.stringify(config)).run();
+    
+    return c.json({ success: true, id: result.meta.last_row_id });
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Activate theme
+app.post('/api/theme/activate', async (c) => {
+  try {
+    const { env } = c;
+    const { themeId } = await c.req.json();
+    
+    // Deactivate all themes
+    await env.DB.prepare(`
+      UPDATE themes SET is_active = 0
+    `).run();
+    
+    // Activate selected theme
+    await env.DB.prepare(`
+      UPDATE themes SET is_active = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?
+    `).bind(themeId).run();
+    
+    // Log change
+    await env.DB.prepare(`
+      INSERT INTO theme_history (theme_id, changed_by, change_type, change_notes)
+      VALUES (?, 1, 'activated', 'Theme activated')
+    `).bind(themeId).run();
+    
+    return c.json({ success: true, message: 'Theme activated successfully' });
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Duplicate theme
+app.post('/api/theme/duplicate', async (c) => {
+  try {
+    const { env } = c;
+    const { themeId, name } = await c.req.json();
+    
+    // Get original theme
+    const original = await env.DB.prepare(`
+      SELECT * FROM themes WHERE id = ?
+    `).bind(themeId).first();
+    
+    if (!original) {
+      return c.json({ success: false, error: 'Theme not found' }, 404);
+    }
+    
+    const slug = name.toLowerCase().replace(/\s+/g, '-');
+    
+    // Create new theme
+    const result = await env.DB.prepare(`
+      INSERT INTO themes (name, slug, description, created_by)
+      VALUES (?, ?, ?, 1)
+    `).bind(name, slug, `Duplicate of ${original.name}`).run();
+    
+    const newThemeId = result.meta.last_row_id;
+    
+    // Copy configurations
+    const configs = await env.DB.prepare(`
+      SELECT config_type, config_data FROM theme_configs WHERE theme_id = ?
+    `).bind(themeId).all();
+    
+    for (const config of configs.results) {
+      await env.DB.prepare(`
+        INSERT INTO theme_configs (theme_id, config_type, config_data)
+        VALUES (?, ?, ?)
+      `).bind(newThemeId, config.config_type, config.config_data).run();
+    }
+    
+    return c.json({ success: true, id: newThemeId, message: 'Theme duplicated successfully' });
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Create new theme
+app.post('/api/theme/create', async (c) => {
+  try {
+    const { env } = c;
+    const { name, slug } = await c.req.json();
+    
+    const result = await env.DB.prepare(`
+      INSERT INTO themes (name, slug, description, created_by)
+      VALUES (?, ?, 'New theme', 1)
+    `).bind(name, slug).run();
+    
+    const themeId = result.meta.last_row_id;
+    
+    // Initialize with default configurations
+    const defaultColors = {
+      primary: '#3b82f6',
+      secondary: '#8b5cf6',
+      accent: '#10b981',
+      background: '#ffffff',
+      surface: '#f9fafb',
+      text: '#111827',
+      textSecondary: '#6b7280',
+      success: '#10b981',
+      warning: '#f59e0b',
+      error: '#ef4444',
+      border: '#e5e7eb'
+    };
+    
+    await env.DB.prepare(`
+      INSERT INTO theme_configs (theme_id, config_type, config_data)
+      VALUES (?, 'colors', ?)
+    `).bind(themeId, JSON.stringify(defaultColors)).run();
+    
+    return c.json({ success: true, id: themeId, message: 'Theme created successfully' });
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get active theme configuration for frontend
+app.get('/api/theme/active', async (c) => {
+  try {
+    const { env } = c;
+    
+    // Get active theme
+    const activeTheme = await env.DB.prepare(`
+      SELECT * FROM themes WHERE is_active = 1 LIMIT 1
+    `).first();
+    
+    if (!activeTheme) {
+      return c.json({ success: false, error: 'No active theme' }, 404);
+    }
+    
+    // Get theme configurations
+    const configs = await env.DB.prepare(`
+      SELECT config_type, config_data FROM theme_configs WHERE theme_id = ?
+    `).bind(activeTheme.id).all();
+    
+    const themeConfig: any = {
+      id: activeTheme.id,
+      name: activeTheme.name,
+      slug: activeTheme.slug
+    };
+    
+    configs.results.forEach((config: any) => {
+      try {
+        themeConfig[config.config_type] = JSON.parse(config.config_data);
+      } catch (e) {
+        console.error('Error parsing config:', e);
+      }
+    });
+    
+    return c.json({ success: true, theme: themeConfig });
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Serve dynamic theme CSS
+app.get('/theme.css', async (c) => {
+  try {
+    const { env } = c;
+    
+    // Get active theme
+    const activeTheme = await env.DB.prepare(`
+      SELECT * FROM themes WHERE is_active = 1 LIMIT 1
+    `).first();
+    
+    if (!activeTheme) {
+      return c.text('/* No active theme */', 200, {
+        'Content-Type': 'text/css',
+        'Cache-Control': 'public, max-age=300'
+      });
+    }
+    
+    // Get theme configurations
+    const configs = await env.DB.prepare(`
+      SELECT config_type, config_data FROM theme_configs WHERE theme_id = ?
+    `).bind(activeTheme.id).all();
+    
+    const themeConfig: any = {};
+    configs.results.forEach((config: any) => {
+      try {
+        themeConfig[config.config_type] = JSON.parse(config.config_data);
+      } catch (e) {
+        console.error('Error parsing config:', e);
+      }
+    });
+    
+    // Generate CSS
+    const colors = themeConfig.colors || {};
+    const typography = themeConfig.typography || {};
+    const layout = themeConfig.layout || {};
+    const components = themeConfig.components || {};
+    
+    const css = `
+:root {
+  /* Colors */
+  --primary-color: ${colors.primary || '#3b82f6'};
+  --secondary-color: ${colors.secondary || '#8b5cf6'};
+  --accent-color: ${colors.accent || '#10b981'};
+  --background-color: ${colors.background || '#ffffff'};
+  --surface-color: ${colors.surface || '#f9fafb'};
+  --text-color: ${colors.text || '#111827'};
+  --text-secondary-color: ${colors.textSecondary || '#6b7280'};
+  --success-color: ${colors.success || '#10b981'};
+  --warning-color: ${colors.warning || '#f59e0b'};
+  --error-color: ${colors.error || '#ef4444'};
+  --border-color: ${colors.border || '#e5e7eb'};
+  
+  /* Typography */
+  --heading-font: ${typography.headingFont || 'Inter'}, sans-serif;
+  --body-font: ${typography.bodyFont || 'Inter'}, sans-serif;
+  --font-size-base: ${typography.fontSize === 'small' ? '14px' : typography.fontSize === 'large' ? '18px' : '16px'};
+  --font-weight-normal: ${typography.fontWeight || '400'};
+  --letter-spacing: ${typography.letterSpacing === 'tight' ? '-0.025em' : typography.letterSpacing === 'wide' ? '0.05em' : 'normal'};
+  --line-height: ${typography.lineHeight || '1.5'};
+  
+  /* Layout */
+  --layout-mode: ${layout.layoutMode || 'full'};
+  --content-width: ${layout.contentWidth || '1280px'};
+  --border-radius-sm: ${layout.borderRadius === 'none' ? '0' : layout.borderRadius === 'small' ? '4px' : layout.borderRadius === 'large' ? '16px' : '8px'};
+  --border-radius-md: ${layout.borderRadius === 'none' ? '0' : layout.borderRadius === 'small' ? '6px' : layout.borderRadius === 'large' ? '20px' : '12px'};
+  --border-radius-lg: ${layout.borderRadius === 'none' ? '0' : layout.borderRadius === 'small' ? '8px' : layout.borderRadius === 'large' ? '24px' : '16px'};
+  
+  /* Components */
+  --button-radius: ${components.buttonStyle === 'square' ? '0' : components.buttonStyle === 'pill' ? '9999px' : 'var(--border-radius-md)'};
+  --card-shadow: ${components.cardShadow === '0' ? 'none' : components.cardShadow === '1' ? '0 1px 3px rgba(0,0,0,0.1)' : components.cardShadow === '3' ? '0 10px 15px rgba(0,0,0,0.1)' : '0 4px 6px rgba(0,0,0,0.1)'};
+  --transition-speed: ${components.transitionSpeed === 'fast' ? '150ms' : components.transitionSpeed === 'slow' ? '500ms' : '300ms'};
+}
+
+/* Apply theme styles */
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  font-family: var(--body-font);
+  font-size: var(--font-size-base);
+  line-height: var(--line-height);
+  letter-spacing: var(--letter-spacing);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--heading-font);
+  font-weight: var(--font-weight-normal);
+}
+
+/* Primary elements */
+.btn-primary, button.primary {
+  background-color: var(--primary-color) !important;
+  border-radius: var(--button-radius);
+  transition: all var(--transition-speed);
+}
+
+.btn-primary:hover, button.primary:hover {
+  filter: brightness(0.9);
+  transform: ${components.hoverEffects === 'scale' ? 'scale(1.05)' : components.hoverEffects === 'lift' ? 'translateY(-2px)' : 'none'};
+}
+
+/* Cards */
+.card {
+  background-color: var(--surface-color);
+  border-radius: var(--border-radius-lg);
+  box-shadow: var(--card-shadow);
+  border: 1px solid var(--border-color);
+}
+
+/* Inputs */
+input, textarea, select {
+  border-radius: var(--border-radius-sm);
+  border: ${components.inputStyle === 'filled' ? 'none' : '1px solid var(--border-color)'};
+  background-color: ${components.inputStyle === 'filled' ? 'var(--surface-color)' : 'transparent'};
+  font-family: var(--body-font);
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Links */
+a {
+  color: var(--primary-color);
+  transition: color var(--transition-speed);
+}
+
+a:hover {
+  color: var(--secondary-color);
+}
+
+/* Container */
+${layout.layoutMode === 'boxed' ? '.container { max-width: var(--content-width); margin: 0 auto; padding: 0 2rem; }' : ''}
+
+/* Status colors */
+.text-success { color: var(--success-color); }
+.text-warning { color: var(--warning-color); }
+.text-error { color: var(--error-color); }
+.bg-success { background-color: var(--success-color); }
+.bg-warning { background-color: var(--warning-color); }
+.bg-error { background-color: var(--error-color); }
+`;
+    
+    return c.text(css, 200, {
+      'Content-Type': 'text/css',
+      'Cache-Control': 'public, max-age=300'
+    });
+  } catch (error: any) {
+    console.error('Error generating theme CSS:', error);
+    return c.text('/* Error generating theme CSS */', 500, {
+      'Content-Type': 'text/css'
+    });
+  }
+});
 
 
 // Enhanced Firewall Admin Page (overrides dynamic handler)
