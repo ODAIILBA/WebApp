@@ -27539,6 +27539,10 @@ import licenseAPI from './api/license-api'
 app.route('/api/licenses', licenseAPI)
 app.route('/api/admin/licenses', licenseAPI)
 
+// Mount order API routes
+import orderAPI from './api/order-api'
+app.route('/api/orders', orderAPI)
+
 // ============================================
 // SYSTEM MONITOR API ENDPOINTS
 // ============================================
