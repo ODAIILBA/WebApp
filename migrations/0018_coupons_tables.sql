@@ -40,7 +40,7 @@ CREATE INDEX IF NOT EXISTS idx_coupon_usage_user_id ON coupon_usage(user_id);
 CREATE INDEX IF NOT EXISTS idx_coupon_usage_order_id ON coupon_usage(order_id);
 
 -- Sample data
-INSERT OR IGNORE INTO coupons (code, description, discount_type, discount_value, minimum_order_value, usage_limit, is_active, expires_at) VALUES
+INSERT OR IGNORE INTO coupons (code, description, discount_type, discount_value, min_purchase_amount, usage_limit, is_active, valid_until) VALUES
 ('WELCOME10', '10% Rabatt für Neukunden', 'percentage', 10.00, 50.00, 100, 1, datetime('now', '+30 days')),
 ('SAVE20', '20 EUR Rabatt ab 100 EUR', 'fixed', 20.00, 100.00, 50, 1, datetime('now', '+14 days')),
 ('WINTER2026', '15% Winter Sale', 'percentage', 15.00, 0, NULL, 1, datetime('now', '+60 days'));
