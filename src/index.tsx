@@ -17581,7 +17581,7 @@ app.get('/admin/security/blocked-ips', async (c) => {
         }
       ];
 
-      var stats: any = {
+      const stats: any = {
         total_blocked: 3,
         auto_blocks: 2,
         manual_blocks: 1,

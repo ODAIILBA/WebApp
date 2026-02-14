@@ -479,6 +479,7 @@ export const AdminHomepageSections: FC = () => {
             <div class="flex items-center justify-between bg-white p-3 rounded border border-gray-200">
               <div class="flex items-center gap-3 flex-1">
                 <img src="\${product.image_url || 'https://via.placeholder.com/40'}" 
+                     alt="\${product.name}" 
                      class="w-10 h-10 object-cover rounded" />
                 <div class="flex-1">
                   <div class="font-medium text-sm">\${product.name}</div>
@@ -522,6 +523,7 @@ export const AdminHomepageSections: FC = () => {
             <div class="flex items-center justify-between bg-gray-50 p-3 rounded hover:bg-gray-100 transition">
               <div class="flex items-center gap-3 flex-1">
                 <img src="\${product.image_url || 'https://via.placeholder.com/40'}" 
+                     alt="\${product.name}" 
                      class="w-10 h-10 object-cover rounded" />
                 <div class="flex-1">
                   <div class="font-medium text-sm">\${product.name}</div>

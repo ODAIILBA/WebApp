@@ -210,7 +210,7 @@ export const AdminSliders: FC = () => {
               </td>
               <td>
                 <div class="w-24 h-16 rounded overflow-hidden" style="background-color: \${slider.background_color}">
-                  \${slider.image_url ? \`<img src="\${slider.image_url}" class="w-full h-full object-cover" />\` : ''}
+                  \${slider.image_url ? \`<img src="\${slider.image_url}" alt="\${slider.title || 'Slider image'}" class="w-full h-full object-cover" />\` : ''}
                 </div>
               </td>
               <td>
