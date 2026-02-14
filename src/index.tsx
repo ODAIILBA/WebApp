@@ -7957,35 +7957,31 @@ app.get('/api/products/search/autocomplete', async (c) => {
       SELECT DISTINCT
         p.id,
         p.slug,
-        pt.name,
+        p.name,
         p.base_price,
         p.discount_price,
-        ct.name as category_name,
+        p.category as category_name,
         b.name as brand_name,
-        pi.image_url
+        p.image_url
       FROM products p
-      
-      LEFT JOIN categories c ON p.category_id = c.id
-      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language = ?
       LEFT JOIN brands b ON p.brand_id = b.id
-      LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
       WHERE p.is_active = 1
-        AND (pt.name LIKE ? OR pt.short_description LIKE ? OR p.sku LIKE ? OR b.name LIKE ?)
+        AND (p.name LIKE ? OR p.short_description LIKE ? OR p.sku LIKE ? OR b.name LIKE ?)
       ORDER BY 
         CASE 
-          WHEN pt.name LIKE ? THEN 1
-          WHEN pt.name LIKE ? THEN 2
+          WHEN p.name LIKE ? THEN 1
+          WHEN p.name LIKE ? THEN 2
           ELSE 3
         END,
         p.is_bestseller DESC,
-        p.rating_average DESC
+        p.rating DESC
       LIMIT ?
     `
 
     const searchTerm = `%${query}%`
     const startsWith = `${query}%`
     const result = await c.env.DB.prepare(searchQuery)
-      .bind(language, language, searchTerm, searchTerm, searchTerm, searchTerm, startsWith, searchTerm, limit)
+      .bind(searchTerm, searchTerm, searchTerm, searchTerm, startsWith, searchTerm, limit)
       .all()
 
     return c.json({ 
