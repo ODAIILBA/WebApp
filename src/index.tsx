@@ -7069,25 +7069,24 @@ app.post('/api/admin/categories', async (c) => {
     const db = c.get('db') as DatabaseHelper
     const body = await c.req.json()
 
-    if (!body.slug) {
-      return c.json({ success: false, error: 'Missing slug' }, 400)
+    if (!body.slug || !body.name) {
+      return c.json({ success: false, error: 'Missing required fields: slug and name' }, 400)
     }
 
     const result = await db.db.prepare(`
-      INSERT INTO categories (slug, parent_id, icon, sort_order, is_active)
-      VALUES (?, ?, ?, ?, ?)
-    `).bind(body.slug, body.parent_id || null, body.icon || null, body.sort_order || 0, body.is_active !== undefined ? body.is_active : 1).run()
+      INSERT INTO categories (name, slug, description, parent_id, icon, sort_order, is_active)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      body.name,
+      body.slug,
+      body.description || null,
+      body.parent_id || null,
+      body.icon || null,
+      body.sort_order || 0,
+      body.is_active !== undefined ? body.is_active : 1
+    ).run()
 
     const categoryId = result.meta.last_row_id
-
-    // Add translations
-    if (body.name) {
-      const language = body.language || 'de'
-      await db.db.prepare(`
-        INSERT INTO category_translations (category_id, language, name, description)
-        VALUES (?, ?, ?, ?)
-      `).bind(categoryId, language, body.name, body.description || '').run()
-    }
 
     return c.json({ success: true, data: { id: categoryId }, message: 'Category created successfully' })
   } catch (error: any) {
@@ -7110,7 +7109,7 @@ app.put('/api/admin/categories/:id', async (c) => {
     const updates: string[] = []
     const values: any[] = []
 
-    const allowedFields = ['slug', 'parent_id', 'icon', 'sort_order', 'is_active']
+    const allowedFields = ['name', 'slug', 'description', 'parent_id', 'icon', 'sort_order', 'is_active']
     allowedFields.forEach(field => {
       if (body[field] !== undefined) {
         updates.push(`${field} = ?`)
@@ -7122,20 +7121,6 @@ app.put('/api/admin/categories/:id', async (c) => {
       updates.push('updated_at = CURRENT_TIMESTAMP')
       values.push(categoryId)
       await db.db.prepare(`UPDATE categories SET ${updates.join(', ')} WHERE id = ?`).bind(...values).run()
-    }
-
-    // Update translation if name provided
-    if (body.name) {
-      const language = body.language || 'de'
-      const translation = await db.db.prepare('SELECT id FROM category_translations WHERE category_id = ? AND language = ?').bind(categoryId, language).first()
-      
-      if (translation) {
-        await db.db.prepare(`UPDATE category_translations SET name = ?, description = ? WHERE category_id = ? AND language = ?`)
-          .bind(body.name, body.description || '', categoryId, language).run()
-      } else {
-        await db.db.prepare(`INSERT INTO category_translations (category_id, language, name, description) VALUES (?, ?, ?, ?)`)
-          .bind(categoryId, language, body.name, body.description || '').run()
-      }
     }
 
     return c.json({ success: true, message: 'Category updated successfully' })
