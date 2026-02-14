@@ -180,18 +180,30 @@ export class DatabaseHelper {
 
     const products = await this.db.prepare(`
       SELECT 
-        p.*,
-        pt.name, pt.short_description,
+        p.id,
+        p.slug,
+        p.sku,
+        p.base_price,
+        p.base_price as price,
+        p.discount_price,
+        p.discount_percentage,
+        p.stock,
+        p.image_url,
+        p.is_featured,
+        p.is_bestseller,
+        p.is_new,
+        p.rating,
+        p.review_count,
+        COALESCE(pt.name, p.name) as name,
+        COALESCE(pt.short_description, p.short_description) as short_description,
         ct.name as category_name,
-        b.name as brand_name,
-        pi.image_url, pi.alt_text
+        b.name as brand_name
       FROM products p
       LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = ?
       LEFT JOIN categories c ON p.category_id = c.id
       LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language_code = ?
       LEFT JOIN brands b ON p.brand_id = b.id
-      LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
-      WHERE c.slug = ?
+      WHERE c.slug = ? AND p.is_active = 1
       ORDER BY p.created_at DESC
       LIMIT ? OFFSET ?
     `).bind(language, language, categorySlug, limit, offset).all();
