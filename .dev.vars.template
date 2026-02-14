@@ -1,90 +1,69 @@
-# ============================================
-# SOFTWAREKING24 - ENVIRONMENT VARIABLES
-# ============================================
-# Copy this file to .dev.vars and fill in real values
-# NEVER commit .dev.vars to git!
+# =============================================================================
+# SoftwareKing24 - Environment Variables Template
+# =============================================================================
+# Copy this file to .dev.vars and fill in your actual values
+# NEVER commit .dev.vars to git (it's in .gitignore)
+# =============================================================================
 
-# ============================================
-# DATABASE
-# ============================================
-# Get this from: npx wrangler d1 create webapp-production
-DATABASE_ID=your-d1-database-id-here
+# -----------------------------------------------------------------------------
+# 1. CLOUDFLARE API TOKEN
+# -----------------------------------------------------------------------------
+# Where to get: https://dash.cloudflare.com/profile/api-tokens
+# Click "Create Token" → Use "Edit Cloudflare Workers" template
+# Or create custom token with permissions:
+#   - D1: Edit
+#   - Workers Scripts: Edit
+#   - Pages: Edit
+#   - Account Settings: Read
+# -----------------------------------------------------------------------------
+CLOUDFLARE_API_TOKEN=your_cloudflare_api_token_here
 
-# ============================================
-# AUTHENTICATION & SECURITY
-# ============================================
-# Generate with: openssl rand -hex 32
-JWT_SECRET=generate-a-secure-random-64-character-hex-string-here
-SESSION_EXPIRE_HOURS=24
-BCRYPT_ROUNDS=10
-
-# ============================================
-# PAYMENT GATEWAYS
-# ============================================
-
-# Stripe (https://dashboard.stripe.com/apikeys)
-STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key_here
+# -----------------------------------------------------------------------------
+# 2. STRIPE PAYMENT KEYS
+# -----------------------------------------------------------------------------
+# Where to get: https://dashboard.stripe.com/test/apikeys
+# For production: https://dashboard.stripe.com/apikeys
+# -----------------------------------------------------------------------------
+# Test Keys (for development)
 STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key_here
-STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key_here
 
-# PayPal (https://developer.paypal.com)
-PAYPAL_CLIENT_ID=your_paypal_client_id_here
-PAYPAL_CLIENT_SECRET=your_paypal_client_secret_here
-PAYPAL_MODE=sandbox
-# Use 'live' for production
+# Webhook Secret (from Stripe Dashboard → Webhooks)
+# Local webhook URL: http://localhost:3000/api/payments/stripe/webhook
+# Production webhook URL: https://your-domain.com/api/payments/stripe/webhook
+STRIPE_WEBHOOK_SECRET=whsec_your_stripe_webhook_secret_here
 
-# ============================================
-# EMAIL SERVICE
-# ============================================
-
-# SendGrid (https://app.sendgrid.com/settings/api_keys)
+# -----------------------------------------------------------------------------
+# 3. SENDGRID EMAIL API
+# -----------------------------------------------------------------------------
+# Where to get: https://app.sendgrid.com/settings/api_keys
+# Click "Create API Key" → Full Access
+# Don't forget to verify your sender email!
+# -----------------------------------------------------------------------------
 SENDGRID_API_KEY=SG.your_sendgrid_api_key_here
-FROM_EMAIL=noreply@softwareking24.de
-FROM_NAME=SoftwareKing24
+SENDGRID_FROM_EMAIL=noreply@your-domain.com
+SENDGRID_FROM_NAME=SoftwareKing24
 
-# Alternative: Mailgun
-# MAILGUN_API_KEY=your_mailgun_api_key_here
-# MAILGUN_DOMAIN=mg.softwareking24.de
+# -----------------------------------------------------------------------------
+# 4. SECURITY SECRETS (Generate random 32-byte strings)
+# -----------------------------------------------------------------------------
+# Generate with: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+# Or use: openssl rand -hex 32
+# -----------------------------------------------------------------------------
+JWT_SECRET=your_32_byte_random_jwt_secret_here
+CSRF_SECRET=your_32_byte_random_csrf_secret_here
 
-# ============================================
-# APPLICATION SETTINGS
-# ============================================
-ENVIRONMENT=development
-BASE_URL=http://localhost:3000
-SITE_NAME=SoftwareKing24
-SUPPORT_EMAIL=support@softwareking24.de
+# -----------------------------------------------------------------------------
+# 5. APPLICATION SETTINGS
+# -----------------------------------------------------------------------------
+NODE_ENV=development
+APP_URL=http://localhost:3000
+PORT=3000
 
-# ============================================
-# LICENSE SETTINGS
-# ============================================
-LICENSE_PREFIX=SK24
-LICENSE_LENGTH=20
-MAX_ACTIVATIONS_PER_LICENSE=1
+# -----------------------------------------------------------------------------
+# 6. OPTIONAL: PAYPAL INTEGRATION (if needed)
+# -----------------------------------------------------------------------------
+# PAYPAL_CLIENT_ID=your_paypal_client_id_here
+# PAYPAL_CLIENT_SECRET=your_paypal_client_secret_here
+# PAYPAL_MODE=sandbox  # or 'live' for production
 
-# ============================================
-# SECURITY SETTINGS
-# ============================================
-# Generate with: openssl rand -hex 32
-CSRF_SECRET=generate-a-secure-random-64-character-hex-string-for-csrf
-
-# Rate limiting (requests per minute)
-RATE_LIMIT_LOGIN=5
-RATE_LIMIT_API=100
-RATE_LIMIT_ADMIN=50
-
-# CSRF token expiry (seconds)
-CSRF_TOKEN_EXPIRY=3600
-
-# ============================================
-# OPTIONAL: THIRD-PARTY INTEGRATIONS
-# ============================================
-
-# Google Analytics
-# GA_TRACKING_ID=G-XXXXXXXXXX
-
-# Google reCAPTCHA
-# RECAPTCHA_SITE_KEY=your_site_key_here
-# RECAPTCHA_SECRET_KEY=your_secret_key_here
-
-# Sentry (Error Tracking)
-# SENTRY_DSN=https://xxx@xxx.ingest.sentry.io/xxx

@@ -629,5 +629,6 @@ export function AdminCustomersFunctional() {
         }
     </script>
 </body>
-</html>\`;
+</html>
+  `;
 }

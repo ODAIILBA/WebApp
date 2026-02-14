@@ -707,7 +707,7 @@ export const StaticSectionRenderers = {
                             {icon: 'fas fa-server', title: 'Server', color: '#5E5E5E', link: '/produkte?category=Server'},
                             {icon: 'fas fa-shield-virus', title: 'Antivirus', color: '#00A4EF', link: '/produkte?category=Antivirus'},
                             {icon: 'fas fa-drafting-compass', title: 'CAD', color: '#0696D7', link: '/produkte?category=CAD'},
-                            {icon: 'fas fa-ellipsis-h', title: 'Mehr', color: #667eea', link: '/produkte'}
+                            {icon: 'fas fa-ellipsis-h', title: 'Mehr', color: '#667eea', link: '/produkte'}
                         ].map(cat => `
                             <a href="${cat.link}" style="background: white; padding: 35px; border-radius: 15px; text-align: center; text-decoration: none; transition: all 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.08); display: block;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 30px rgba(0,0,0,0.15)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.08)'">
                                 <div style="width: 80px; height: 80px; border-radius: 50%; background: ${cat.color}; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; box-shadow: 0 8px 20px rgba(0,0,0,0.15);">

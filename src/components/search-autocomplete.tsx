@@ -319,7 +319,14 @@ export const SearchAutocomplete = () => {
             if (!query) return escapeHtml(text);
             
             const escapedText = escapeHtml(text);
-            const regex = new RegExp(\`(\${query.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')})\`, 'gi');
+            // Escape special regex characters - simple string split/join approach
+            const escapedQuery = query.split('').map(char => {
+              if ('.*+?^${}()|[]\\\\'.includes(char)) {
+                return '\\\\' + char;
+              }
+              return char;
+            }).join('');
+            const regex = new RegExp('(' + escapedQuery + ')', 'gi');
             return escapedText.replace(regex, '<span class="search-highlight">$1</span>');
           }
 
