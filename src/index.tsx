@@ -7889,18 +7889,28 @@ app.get('/api/products/new', async (c) => {
   }
 })
 
-// Get single product by ID (for cart operations)
+// Get single product by ID (for cart operations) - Direct DB query without translations
 app.get('/api/products/id/:id', async (c) => {
   try {
-    const db = c.get('db') as DatabaseHelper
-    const language = c.get('language') || 'en'
     const productId = parseInt(c.req.param('id'))
 
     if (isNaN(productId)) {
       return c.json({ success: false, error: 'Invalid product ID' }, 400)
     }
 
-    const product = await db.getProductById(productId, language)
+    // Query directly from products table without translations
+    const product = await c.env.DB.prepare(`
+      SELECT 
+        p.*,
+        b.name as brand_name,
+        b.logo_url as brand_logo,
+        c.name as category_name
+      FROM products p
+      LEFT JOIN brands b ON p.brand_id = b.id
+      LEFT JOIN categories c ON p.category_id = c.id
+      WHERE p.id = ?
+      LIMIT 1
+    `).bind(productId).first()
 
     if (!product) {
       return c.json({ success: false, error: 'Product not found' }, 404)
@@ -7908,29 +7918,51 @@ app.get('/api/products/id/:id', async (c) => {
 
     return c.json({ success: true, data: product })
   } catch (error) {
+    console.error('Error fetching product by ID:', error)
     return c.json({ success: false, error: 'Failed to fetch product' }, 500)
   }
 })
 
 app.get('/api/products/:slug', async (c) => {
   try {
-    const db = c.get('db') as DatabaseHelper
-    const language = c.get('language') || 'en'
     const slugOrId = c.req.param('slug')
 
     // Check if it's a numeric ID
     const numericId = parseInt(slugOrId)
     if (!isNaN(numericId) && numericId.toString() === slugOrId) {
-      // It's a numeric ID
-      const product = await db.getProductById(numericId, language)
+      // It's a numeric ID - query directly
+      const product = await c.env.DB.prepare(`
+        SELECT 
+          p.*,
+          b.name as brand_name,
+          b.logo_url as brand_logo,
+          c.name as category_name
+        FROM products p
+        LEFT JOIN brands b ON p.brand_id = b.id
+        LEFT JOIN categories c ON p.category_id = c.id
+        WHERE p.id = ?
+        LIMIT 1
+      `).bind(numericId).first()
+      
       if (!product) {
         return c.json({ success: false, error: 'Product not found' }, 404)
       }
       return c.json({ success: true, data: product })
     }
 
-    // It's a slug
-    const product = await db.getProductBySlug(slugOrId, language)
+    // It's a slug - query by slug
+    const product = await c.env.DB.prepare(`
+      SELECT 
+        p.*,
+        b.name as brand_name,
+        b.logo_url as brand_logo,
+        c.name as category_name
+      FROM products p
+      LEFT JOIN brands b ON p.brand_id = b.id
+      LEFT JOIN categories c ON p.category_id = c.id
+      WHERE p.slug = ?
+      LIMIT 1
+    `).bind(slugOrId).first()
 
     if (!product) {
       return c.json({ success: false, error: 'Product not found' }, 404)
@@ -7938,6 +7970,7 @@ app.get('/api/products/:slug', async (c) => {
 
     return c.json({ success: true, data: product })
   } catch (error) {
+    console.error('Error fetching product by slug/ID:', error)
     return c.json({ success: false, error: 'Failed to fetch product' }, 500)
   }
 })
