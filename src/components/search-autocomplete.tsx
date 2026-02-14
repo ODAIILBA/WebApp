@@ -319,9 +319,10 @@ export const SearchAutocomplete = () => {
             if (!query) return escapeHtml(text);
             
             const escapedText = escapeHtml(text);
-            // Escape special regex characters - simple string split/join approach
+            // Escape special regex characters using array
+            const specialChars = ['.', '*', '+', '?', '^', '$', '{', '}', '(', ')', '|', '[', ']', '\\\\'];
             const escapedQuery = query.split('').map(char => {
-              if ('.*+?^${}()|[]\\\\'.includes(char)) {
+              if (specialChars.includes(char)) {
                 return '\\\\' + char;
               }
               return char;
