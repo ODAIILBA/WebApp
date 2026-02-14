@@ -7849,42 +7849,99 @@ app.get('/api/admin/contact-messages/stats', async (c) => {
 
 app.get('/api/products/featured', async (c) => {
   try {
-    const db = c.get('db') as DatabaseHelper
-    const language = c.get('language') || 'en'
     const limit = parseInt(c.req.query('limit') || '8')
 
-    const products = await db.getFeaturedProducts(language, limit)
+    // Direct D1 query for featured products
+    const result = await c.env.DB.prepare(`
+      SELECT 
+        p.id,
+        p.name,
+        p.slug,
+        p.price,
+        p.discount_price,
+        p.discount_percentage,
+        p.short_description,
+        p.sku,
+        p.image_url,
+        p.is_featured,
+        c.name as category_name,
+        c.slug as category_slug
+      FROM products p
+      LEFT JOIN categories c ON p.category_id = c.id
+      WHERE p.is_active = 1 AND p.is_featured = 1
+      ORDER BY p.created_at DESC
+      LIMIT ?
+    `).bind(limit).all()
 
-    return c.json({ success: true, data: products })
+    return c.json({ success: true, data: result.results })
   } catch (error) {
+    console.error('Featured products error:', error)
     return c.json({ success: false, error: 'Failed to fetch featured products' }, 500)
   }
 })
 
 app.get('/api/products/bestsellers', async (c) => {
   try {
-    const db = c.get('db') as DatabaseHelper
-    const language = c.get('language') || 'en'
     const limit = parseInt(c.req.query('limit') || '6')
 
-    const products = await db.getBestsellerProducts(language, limit)
+    // Direct D1 query for bestseller products
+    const result = await c.env.DB.prepare(`
+      SELECT 
+        p.id,
+        p.name,
+        p.slug,
+        p.price,
+        p.discount_price,
+        p.discount_percentage,
+        p.short_description,
+        p.sku,
+        p.image_url,
+        p.is_bestseller,
+        c.name as category_name,
+        c.slug as category_slug
+      FROM products p
+      LEFT JOIN categories c ON p.category_id = c.id
+      WHERE p.is_active = 1 AND p.is_bestseller = 1
+      ORDER BY p.created_at DESC
+      LIMIT ?
+    `).bind(limit).all()
 
-    return c.json({ success: true, data: products })
+    return c.json({ success: true, data: result.results })
   } catch (error) {
+    console.error('Bestseller products error:', error)
     return c.json({ success: false, error: 'Failed to fetch bestseller products' }, 500)
   }
 })
 
 app.get('/api/products/new', async (c) => {
   try {
-    const db = c.get('db') as DatabaseHelper
-    const language = c.get('language') || 'en'
     const limit = parseInt(c.req.query('limit') || '6')
 
-    const products = await db.getNewProducts(language, limit)
+    // Direct D1 query for new products
+    const result = await c.env.DB.prepare(`
+      SELECT 
+        p.id,
+        p.name,
+        p.slug,
+        p.price,
+        p.discount_price,
+        p.discount_percentage,
+        p.short_description,
+        p.sku,
+        p.image_url,
+        p.is_new,
+        c.name as category_name,
+        c.slug as category_slug
+      FROM products p
+      LEFT JOIN categories c ON p.category_id = c.id
+      WHERE p.is_active = 1 AND p.is_new = 1
+      ORDER BY p.created_at DESC
+      LIMIT ?
+    `).bind(limit).all()
 
-    return c.json({ success: true, data: products })
+    return c.json({ success: true, data: result.results })
   } catch (error) {
+    console.error('New products error:', error)
     return c.json({ success: false, error: 'Failed to fetch new products' }, 500)
   }
 })
