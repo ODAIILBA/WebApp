@@ -1023,7 +1023,6 @@ export const Checkout: FC = () => {
               newsletter: document.getElementById('newsletter-checkbox').checked
             };
             
-            console.log('Placing order:', orderData);
             
             // Simulate payment redirect
             alert('Bestellung wird verarbeitet...\\n\\nSie würden jetzt zur Zahlungsseite weitergeleitet.\\n\\nGesamtbetrag: ' + formatPrice(cart.total));

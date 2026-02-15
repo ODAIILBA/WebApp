@@ -39,7 +39,6 @@ export class EmailService {
         params.priority || 5
       ).run()
 
-      console.log(`Email queued for ${params.to_email}: ${params.subject}`)
       return result.meta.last_row_id
     } catch (error) {
       console.error('Error queuing email:', error)
@@ -278,10 +277,6 @@ export class EmailService {
 
       // TODO: Integrate with actual email service (SendGrid, Mailgun, Resend, etc.)
       // For now, just log it
-      console.log(`\n📧 EMAIL WOULD BE SENT:`)
-      console.log(`   To: ${email.to_email}`)
-      console.log(`   Subject: ${email.subject}`)
-      console.log(`   Priority: ${email.priority}`)
 
       // Mark as sent
       await this.db.prepare(`
@@ -290,7 +285,6 @@ export class EmailService {
         WHERE id = ?
       `).bind(email.id).run()
 
-      console.log(`   ✅ Marked as sent\n`)
     } catch (error: any) {
       console.error('Error sending email:', error)
       

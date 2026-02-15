@@ -378,7 +378,6 @@ export const AdminReports: FC = () => {
         
         function updateReports() {
           const range = document.getElementById('report-range').value;
-          console.log('Updating reports for range:', range);
           // In production, fetch new data based on range
           updateMetrics();
         }

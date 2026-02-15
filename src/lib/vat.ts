@@ -157,7 +157,6 @@ export class VATValidator {
       */
 
       // Mock validation for development
-      console.log(`[VAT Validation] Validating ${countryCode}${number} (MOCK)`)
       
       return {
         valid: true,

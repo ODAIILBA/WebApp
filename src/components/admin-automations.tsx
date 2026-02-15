@@ -625,10 +625,8 @@ export function AdminAutomations() {
             const card = this.closest('.automation-card');
             if (this.checked) {
               card.style.opacity = '1';
-              console.log('Automation activated');
             } else {
               card.style.opacity = '0.6';
-              console.log('Automation deactivated');
             }
           });
         });

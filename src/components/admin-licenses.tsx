@@ -206,7 +206,6 @@ export const AdminLicenses: FC = () => {
         
         function revokeKey(id) {
           if (confirm('Are you sure you want to revoke this license key?')) {
-            console.log('Revoke key:', id);
           }
         }
         

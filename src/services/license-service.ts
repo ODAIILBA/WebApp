@@ -54,7 +54,6 @@ export class LicenseService {
     ipAddress?: string
   ): Promise<{ success: boolean; license?: License; error?: string }> {
     try {
-      console.log('[LicenseService] Inserting license:', data.license_key.substring(0, 10) + '...')
 
       // Validate product exists
       const product = await this.db.prepare(`
@@ -128,7 +127,6 @@ export class LicenseService {
     error?: string 
   }> {
     try {
-      console.log('[LicenseService] Validating license:', licenseKey.substring(0, 10) + '...')
 
       const license = await this.db.prepare(`
         SELECT * FROM license_keys WHERE license_key = ?
@@ -182,7 +180,6 @@ export class LicenseService {
     userAgent?: string
   ): Promise<{ success: boolean; license?: License; activation?: any; error?: string }> {
     try {
-      console.log('[LicenseService] Activating license:', data.license_key.substring(0, 10) + '...')
 
       // First validate the license
       const validation = await this.validateLicense(data.license_key)
@@ -271,7 +268,6 @@ export class LicenseService {
     ipAddress?: string
   ): Promise<{ success: boolean; licenses?: License[]; error?: string }> {
     try {
-      console.log('[LicenseService] Assigning licenses to order:', orderId, 'product:', productId, 'qty:', quantity)
 
       // Find available licenses for this product
       const availableLicenses = await this.db.prepare(`

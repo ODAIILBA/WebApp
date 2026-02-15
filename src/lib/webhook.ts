@@ -260,7 +260,6 @@ export async function retryWebhook<T>(
           maxDelay
         )
         
-        console.log(`Webhook retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms`)
         await new Promise(resolve => setTimeout(resolve, delay))
       }
     }

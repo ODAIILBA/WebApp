@@ -2512,7 +2512,6 @@ export const HomepagePrestaShopEnhanced = () => {
                                 });
                             }
                         });
-                        console.log('✅ Custom JS loaded:', response.data.length, 'scripts');
                     }
                 })
                 .catch(err => console.error('Custom JS load error:', err));

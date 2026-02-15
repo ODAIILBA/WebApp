@@ -866,7 +866,6 @@ export const ProductsPageModern = () => {
                 const success = await window.cartManager.addToCart(productId, 1, 'single');
                 if (success) {
                   // Success notification is shown by cartManager itself
-                  console.log('Product added to cart:', productId);
                 }
               } else {
                 showNotification('Cart manager not initialized', 'error');

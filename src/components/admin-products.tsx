@@ -126,7 +126,6 @@ export const AdminProducts: FC = () => {
         function deleteProduct(id) {
           if (confirm('Are you sure you want to delete this product?')) {
             // Delete logic here
-            console.log('Delete product:', id);
           }
         }
         

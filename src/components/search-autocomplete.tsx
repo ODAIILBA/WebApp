@@ -172,7 +172,6 @@ export const SearchAutocomplete = () => {
             const searchDropdown = document.getElementById('search-dropdown');
             
             if (!searchInput || !searchDropdown) {
-              console.log('Search elements not found, retrying...');
               setTimeout(initSearch, 500);
               return;
             }

@@ -319,7 +319,6 @@ export const AdminDashboard: FC = () => {
             
             // For demo purposes, show placeholder data
             if (!token) {
-              console.log('Admin viewing in demo mode - no authentication');
               // Show demo data
               document.getElementById('stat-revenue').textContent = '€12,450.00';
               document.getElementById('stat-orders').textContent = '234';

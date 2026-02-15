@@ -23,11 +23,9 @@ cartAPI.get('/', async (c) => {
     const userId = c.get('user')?.id
     const sessionId = c.req.header('X-Session-ID') || `session_${Date.now()}`
 
-    console.log('[Cart API] Getting cart - userId:', userId, 'sessionId:', sessionId)
 
     const result = await cartService.getOrCreateCart(userId, sessionId)
 
-    console.log('[Cart API] Result:', JSON.stringify(result, null, 2))
 
     if (!result.success) {
       console.error('[Cart API] Failed to get cart:', result.error)

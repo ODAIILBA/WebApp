@@ -284,7 +284,6 @@ export function AdminCustomJS() {
                                 <span class="text-xs text-gray-500 ml-2">(ohne &lt;script&gt; Tags)</span>
                             </label>
                             <textarea id="js-code" class="code-editor w-full" rows="15" placeholder="// Ihr JavaScript Code hier...
-console.log('Hello World!');"></textarea>
                         </div>
 
                         <!-- Template Buttons -->
@@ -356,7 +355,7 @@ console.log('Hello World!');"></textarea>
                                 <li>• <strong>DOMReady:</strong> Wartet auf HTML-Parsing</li>
                                 <li>• <strong>Load:</strong> Wartet auf alle Ressourcen</li>
                                 <li>• Keine &lt;script&gt; Tags nötig</li>
-                                <li>• console.log() für Debugging verwenden</li>
+                                <li>•  für Debugging verwenden</li>
                             </ul>
                         </div>
                     </div>
@@ -384,7 +383,6 @@ console.log('Hello World!');"></textarea>
   function gtag(){dataLayer.push(arguments);}
   gtag('js', new Date());
   gtag('config', 'GA_MEASUREMENT_ID');
-  console.log('✅ Google Analytics initialized');
 })();\`,
             notification: \`// Toast Notification System
 window.showNotification = function(message, type = 'success') {
@@ -401,7 +399,6 @@ window.showNotification = function(message, type = 'success') {
   document.body.appendChild(toast);
   
   setTimeout(() => toast.remove(), 3000);
-  console.log('✅ Notification shown:', message);
 };\`,
             modal: \`// Simple Modal System
 window.openModal = function(title, content) {
@@ -417,7 +414,6 @@ window.openModal = function(title, content) {
     </div>
   \\\`;
   document.body.appendChild(modal);
-  console.log('✅ Modal opened:', title);
 };\`,
             scroll: \`// Smooth Scroll to Top
 document.addEventListener('DOMContentLoaded', function() {
@@ -431,7 +427,6 @@ document.addEventListener('DOMContentLoaded', function() {
     scrollBtn.classList.toggle('hidden', window.scrollY < 300);
   });
   
-  console.log('✅ Scroll to top button initialized');
 });\`,
             form: \`// Form Validation Helper
 document.addEventListener('DOMContentLoaded', function() {
@@ -458,7 +453,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
   
-  console.log('✅ Form validation initialized for', forms.length, 'forms');
 });\`
         };
 

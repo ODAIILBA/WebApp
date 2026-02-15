@@ -240,7 +240,6 @@ export class SettingsManagerService {
       case 'monitoring':
         if (key === 'auto_refresh_enabled') {
           // Could trigger/stop monitoring service
-          console.log(`Auto-refresh ${value ? 'enabled' : 'disabled'}`)
         }
         break
 
@@ -271,7 +270,6 @@ export class SettingsManagerService {
         SET is_active = ?
       `).bind(enabled ? 1 : 0).run()
 
-      console.log(`Firewall ${enabled ? 'enabled' : 'disabled'}`)
     } catch (error) {
       console.error('Failed to toggle firewall:', error)
     }

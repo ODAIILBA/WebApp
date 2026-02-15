@@ -244,8 +244,6 @@ api.post('/checkout', async (c) => {
       })
       */
 
-      console.log('Order confirmation email would be sent to:', orderData.customer.email)
-      console.log('Licenses generated:', allLicenses)
     } catch (emailError) {
       console.error('Email sending failed:', emailError)
       // Don't fail the order if email fails

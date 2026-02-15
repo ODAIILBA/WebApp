@@ -634,7 +634,6 @@ export const AdminDelivery: FC = () => {
         
         function filterQueue() {
           const filter = document.getElementById('queue-filter').value;
-          console.log('Filtering queue:', filter);
         }
         
         function viewDelivery(orderId) {

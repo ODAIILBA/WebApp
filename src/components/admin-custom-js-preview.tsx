@@ -307,40 +307,28 @@ export function AdminCustomJSPreview(jsData: any) {
 
         // Add default event listeners for testing
         document.getElementById('test-btn-1')?.addEventListener('click', function() {
-            console.log('✅ Test Button 1 clicked!');
         });
 
         document.getElementById('test-btn-2')?.addEventListener('click', function() {
-            console.log('✅ Test Button 2 clicked!');
         });
 
         document.getElementById('test-btn-3')?.addEventListener('click', function() {
-            console.log('✅ Test Button 3 clicked!');
         });
 
         document.getElementById('test-form')?.addEventListener('submit', function(e) {
             e.preventDefault();
-            console.log('📝 Form submitted!');
             const inputValue = document.getElementById('test-input').value;
             if (inputValue) {
-                console.log('Input value:', inputValue);
             }
         });
 
         document.getElementById('hover-zone')?.addEventListener('mouseenter', function() {
-            console.log('👆 Hover zone entered');
         });
 
         document.getElementById('hover-zone')?.addEventListener('click', function() {
-            console.log('🖱️ Hover zone clicked');
         });
 
         // Log preview start
-        console.log('🎯 JS Preview Mode Active');
-        console.log('Script Name: ${jsName}');
-        console.log('Placement: ${placement}');
-        console.log('Execution Type: ${executionType}');
-        console.log('Custom JS Applied:', ${jsCode ? 'Yes' : 'No'});
     </script>
 </body>
 </html>`

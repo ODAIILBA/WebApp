@@ -218,7 +218,6 @@ export class WooCommerceImporter {
     let failed = 0;
     const errors: string[] = [];
 
-    console.log(`Starting import of ${products.length} products...`);
 
     for (let i = 0; i < products.length; i++) {
       const wcProduct = products[i];

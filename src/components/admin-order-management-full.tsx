@@ -542,7 +542,6 @@ export const AdminOrderManagement: FC = () => {
         }
         
         function filterOrders() {
-          console.log('Filtering orders...');
           // Implement filtering logic
         }
         

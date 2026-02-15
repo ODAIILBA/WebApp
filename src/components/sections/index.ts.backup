@@ -1,0 +1,7 @@
+export { FAQSection } from './faq-section'
+export { BekanntAusSection } from './bekannt-aus-section'
+export { B2BSection } from './b2b-section'
+export { PartnerLogosSection } from './partner-logos-section'
+export { ProcessStepsSection } from './process-steps-section'
+export { CategoryGridSection } from './category-grid-section'
+export { NewsletterSection } from './newsletter-section'

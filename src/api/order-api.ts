@@ -30,7 +30,6 @@ orderAPI.post('/', async (c) => {
     } = await c.req.json()
 
     // Validate required fields
-    console.log('[Order API] Received data:', { cart_id, email, first_name, last_name, billing_address, billing_city, billing_postal_code, payment_method })
     
     if (!cart_id) {
       return c.json({ success: false, error: 'Cart ID is required' }, 400)

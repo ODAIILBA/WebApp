@@ -119,7 +119,6 @@ export class OrderService {
     ipAddress?: string
   ): Promise<{ success: boolean; order?: Order; error?: string }> {
     try {
-      console.log('[OrderService] Creating order from cart:', cartId)
 
       // 1. Get cart and validate
       const cart = await this.cartService.getCartById(cartId)
@@ -266,7 +265,6 @@ export class OrderService {
     ipAddress?: string
   ): Promise<{ success: boolean; order?: Order; licenses?: any[]; error?: string }> {
     try {
-      console.log('[OrderService] Processing payment for order:', orderId)
 
       // 1. Get order
       const order = await this.getOrderById(orderId)

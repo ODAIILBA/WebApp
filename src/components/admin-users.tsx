@@ -276,7 +276,6 @@ export function AdminUsers() {
         function toggleAdmin(id, isActive) {
             if (confirm(\`Möchten Sie diesen Admin \${isActive ? 'deaktivieren' : 'aktivieren'}?\`)) {
                 // API call to toggle admin status
-                console.log('Toggle admin', id, !isActive);
             }
         }
 

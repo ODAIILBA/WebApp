@@ -414,7 +414,6 @@ export const ProductsPage = () => {
                 const success = await window.cartManager.addToCart(productId, 1, 'single');
                 if (success) {
                   // Success notification is shown by cartManager itself
-                  console.log('Product added to cart:', productId);
                 }
               } else {
                 alert('Cart manager not initialized');

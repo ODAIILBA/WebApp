@@ -638,7 +638,6 @@ export const AdminAnalytics: FC = () => {
         
         function updateAllMetrics() {
           const range = document.getElementById('date-range').value;
-          console.log('Updating metrics for range:', range);
           // Reload all data
         }
         
@@ -652,7 +651,6 @@ export const AdminAnalytics: FC = () => {
         
         function updateSalesChart() {
           const period = document.getElementById('sales-chart-period').value;
-          console.log('Updating sales chart for period:', period);
         }
         
         // Initialize on load

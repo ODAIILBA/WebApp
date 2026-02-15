@@ -22,7 +22,6 @@ export async function cleanupExpiredSessions(db: D1Database): Promise<number> {
     const deletedCount = result.meta.changes || 0
     
     if (deletedCount > 0) {
-      console.log(`Cleaned up ${deletedCount} expired sessions`)
     }
     
     return deletedCount
@@ -61,7 +60,6 @@ export async function cleanupAbandonedOrders(db: D1Database): Promise<number> {
     const cancelledCount = result.meta.changes || 0
     
     if (cancelledCount > 0) {
-      console.log(`Cancelled ${cancelledCount} abandoned orders`)
       
       // Log audit event
       const auditLogger = new AuditLogger(db)
@@ -94,7 +92,6 @@ export async function cleanupRateLimits(db: D1Database): Promise<number> {
     const deletedCount = result.meta.changes || 0
     
     if (deletedCount > 0) {
-      console.log(`Cleaned up ${deletedCount} old rate limit records`)
     }
     
     return deletedCount
@@ -119,7 +116,6 @@ export async function cleanupOldAuditLogs(db: D1Database): Promise<number> {
     const deletedCount = result.meta.changes || 0
     
     if (deletedCount > 0) {
-      console.log(`Archived ${deletedCount} old audit log entries`)
     }
     
     return deletedCount
@@ -138,7 +134,6 @@ export async function optimizeDatabase(db: D1Database): Promise<void> {
     // Analyze tables for query optimization
     await db.prepare('ANALYZE').run()
     
-    console.log('Database optimization completed')
   } catch (error) {
     console.error('Database optimization error:', error)
     throw error
@@ -170,10 +165,8 @@ export async function checkLowStockProducts(db: D1Database): Promise<void> {
     `).all()
     
     if (lowStockProducts.results && lowStockProducts.results.length > 0) {
-      console.log(`⚠️  Low stock alert: ${lowStockProducts.results.length} products`)
       
       for (const product of lowStockProducts.results) {
-        console.log(`  - ${product.name} (${product.sku}): ${product.available_keys} keys remaining`)
       }
       
       // In production, send email/slack notification to admins
@@ -208,7 +201,6 @@ export async function handleScheduledTasks(
   const db = env.DB
   const cron = event.cron || 'unknown'
   
-  console.log(`Running scheduled task: ${cron}`)
   
   try {
     // Every 15 minutes: cleanup sessions and rate limits
@@ -234,7 +226,6 @@ export async function handleScheduledTasks(
       await optimizeDatabase(db)
     }
     
-    console.log('Scheduled tasks completed successfully')
   } catch (error) {
     console.error('Scheduled task error:', error)
     throw error
@@ -245,7 +236,6 @@ export async function handleScheduledTasks(
  * Manual trigger for testing
  */
 export async function runAllMaintenanceTasks(db: D1Database): Promise<void> {
-  console.log('Running all maintenance tasks...')
   
   const sessions = await cleanupExpiredSessions(db)
   const orders = await cleanupAbandonedOrders(db)
@@ -256,7 +246,6 @@ export async function runAllMaintenanceTasks(db: D1Database): Promise<void> {
   await checkLowStockProducts(db)
   await optimizeDatabase(db)
   
-  console.log('Maintenance summary:', {
     sessions_cleaned: sessions,
     orders_cancelled: orders,
     rate_limits_cleaned: rateLimits,

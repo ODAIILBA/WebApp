@@ -387,9 +387,6 @@ export function AdminCustomCSSPreview(cssData: any) {
         });
 
         // Log preview info
-        console.log('🎨 CSS Preview Mode Active');
-        console.log('CSS Name: ${cssName}');
-        console.log('Custom CSS Applied:', ${cssCode ? 'Yes' : 'No'});
     </script>
 </body>
 </html>`

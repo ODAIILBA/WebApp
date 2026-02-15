@@ -134,7 +134,6 @@ export function ModernPreviewPage() {
                 container.innerHTML += render3DEnterpriseSection();
             }
             
-            console.log('✅ Modern 3D Preview sections loaded successfully!');
         });
     </script>
 </body>

@@ -3057,7 +3057,6 @@ app.post('/api/auth/change-password', requireAuth, async (c) => {
         c.req.header('CF-Connecting-IP') || 'unknown'
       ).run()
     } catch (auditError) {
-      console.log('Audit log skipped (table not created yet)')
     }
 
     return c.json({
@@ -10107,7 +10106,6 @@ async function sendCertificateEmail(
   customerName: string
 ): Promise<{ success: boolean; message?: string; error?: string }> {
   try {
-    console.log(`[Email] Sending certificate to ${customerEmail}`)
     
     // Email template in German
     const emailSubject = `Ihre Lizenz-Zertifikate von SoftwareKing24`
@@ -10169,10 +10167,6 @@ async function sendCertificateEmail(
     
     // TODO: Integrate with actual email service (SendGrid, Mailgun, etc.)
     // For now, just log the email that would be sent
-    console.log('[Email] Would send certificate email:')
-    console.log('  To:', customerEmail)
-    console.log('  Subject:', emailSubject)
-    console.log('  Certificate:', certificateData.certificate_number)
     
     // In production, you would call your email service here:
     // await emailService.send({
@@ -10201,7 +10195,6 @@ async function sendCertificateEmail(
 
 async function autogenerateCertificate(db: any, orderId: number, orderStatus: string) {
   try {
-    console.log(`[Certificate] Checking auto-generation for order ${orderId}, status: ${orderStatus}`)
     
     // Get certificate settings
     const settings = await db.prepare(`
@@ -10209,7 +10202,6 @@ async function autogenerateCertificate(db: any, orderId: number, orderStatus: st
     `).first()
     
     if (!settings) {
-      console.log('[Certificate] No settings found, skipping')
       return
     }
     
@@ -10221,7 +10213,6 @@ async function autogenerateCertificate(db: any, orderId: number, orderStatus: st
     )
     
     if (!shouldGenerate) {
-      console.log('[Certificate] Auto-generation not enabled for status: ' + orderStatus)
       return
     }
     
@@ -10231,7 +10222,6 @@ async function autogenerateCertificate(db: any, orderId: number, orderStatus: st
     `).bind(orderId).first()
     
     if (existing) {
-      console.log('[Certificate] Certificate already exists for order ' + orderId)
       return
     }
     
@@ -10244,7 +10234,6 @@ async function autogenerateCertificate(db: any, orderId: number, orderStatus: st
     `).bind(orderId).first()
     
     if (!order) {
-      console.log('[Certificate] Order ' + orderId + ' not found')
       return
     }
     
@@ -10260,7 +10249,6 @@ async function autogenerateCertificate(db: any, orderId: number, orderStatus: st
     `).bind(orderId).all()
     
     if (!items.results || items.results.length === 0) {
-      console.log('[Certificate] No items found for order ' + orderId)
       return
     }
     
@@ -10281,7 +10269,6 @@ async function autogenerateCertificate(db: any, orderId: number, orderStatus: st
     // Check if brand is enabled
     const enabledBrands = settings.enabled_brands ? JSON.parse(settings.enabled_brands) : []
     if (!enabledBrands.includes(brand)) {
-      console.log('[Certificate] Brand ' + brand + ' not enabled for auto-generation')
       return
     }
     
@@ -10324,7 +10311,6 @@ async function autogenerateCertificate(db: any, orderId: number, orderStatus: st
     ).run()
     
     const certificateId = insertResult.meta?.last_row_id
-    console.log(`[Certificate] Generated certificate ${certNumber} for order ${orderId} (ID: ${certificateId})`)
     
     // Auto-email if enabled
     if (settings.auto_email_customer && order.email) {
@@ -10349,9 +10335,7 @@ async function autogenerateCertificate(db: any, orderId: number, orderStatus: st
             SET sent_at = CURRENT_TIMESTAMP, status = 'sent'
             WHERE id = ?
           `).bind(certificateId).run()
-          console.log(`[Certificate] Auto-emailed certificate ${certNumber} to ${order.email}`)
         } else {
-          console.log(`[Certificate] Failed to auto-email: ${emailResult.error || 'Unknown error'}`)
         }
       } catch (error) {
         console.error('[Certificate] Error auto-emailing certificate:', error)
@@ -10398,7 +10382,6 @@ app.get('/api/marketing/performance', async (c) => {
       }
     } catch (apiError) {
       // Fallback: Return simulated data if API fails
-      console.log('[Marketing] PageSpeed API unavailable, using local metrics')
       return c.json({
         success: true,
         data: {
@@ -10920,7 +10903,6 @@ async function applyCouponToOrder(
       UPDATE coupons SET current_uses = current_uses + 1 WHERE id = ?
     `).bind(coupon.id).run()
     
-    console.log(`[Coupon] Applied ${couponCode} to order ${orderId}, discount: €${discountAmount}`)
   } catch (error) {
     console.error('[Coupon] Error applying to order:', error)
   }
@@ -12091,7 +12073,6 @@ app.get('/admin/attributes', async (c) => {
   try {
     attributes = await env.DB.prepare(`SELECT pa.*, COUNT(DISTINCT pav.id) as value_count FROM product_attributes pa LEFT JOIN product_attribute_values pav ON pav.attribute_id = pa.id GROUP BY pa.id ORDER BY pa.name ASC`).all();
   } catch (e) {
-    console.log('Product attributes table not yet created');
   }
   return c.html(<html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Attribute - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/></head><body class="bg-gray-50"><div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/attributes')}} /><div style="margin-left: 280px; padding: 2rem;"><div class="mb-6 flex justify-between items-center"><div><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-tags mr-3 text-green-600"></i>Attribute & Varianten</h1><p class="text-gray-600">Produktattribute verwalten (Größe, Farbe, etc.)</p></div><button class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg"><i class="fas fa-plus mr-2"></i>Neues Attribut</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Attribute</p><p class="text-2xl font-bold">{attributes.results?.length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Aktive Attribute</p><p class="text-2xl font-bold text-green-600">{attributes.results?.filter((a: any) => a.is_active === 1).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Werte</p><p class="text-2xl font-bold text-blue-600">{attributes.results?.reduce((sum: number, a: any) => sum + (a.value_count || 0), 0) || 0}</p></div></div><div class="bg-white rounded-lg shadow"><div class="p-6 border-b"><h2 class="text-xl font-semibold">Alle Attribute</h2></div><table class="w-full"><thead class="bg-gray-50 border-b"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Typ</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Werte</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th></tr></thead><tbody>{attributes.results && attributes.results.length > 0 ? attributes.results.map((attr: any) => (<tr class="hover:bg-gray-50 border-b"><td class="px-6 py-4"><div class="flex items-center"><i class="fas fa-tag text-green-500 mr-3"></i><div><div class="font-medium">{attr.name}</div><div class="text-sm text-gray-500">{attr.code}</div></div></div></td><td class="px-6 py-4 text-sm text-gray-600">{attr.input_type || 'select'}</td><td class="px-6 py-4"><span class="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-full">{attr.value_count || 0}</span></td><td class="px-6 py-4">{attr.is_active === 1 ? <span class="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full">Aktiv</span> : <span class="px-3 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Inaktiv</span>}</td><td class="px-6 py-4"><button class="text-blue-600 mr-3"><i class="fas fa-edit"></i></button><button class="text-red-600"><i class="fas fa-trash"></i></button></td></tr>)) : (<tr><td colspan="5" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-tags text-6xl mb-4 text-gray-300"></i><p class="text-lg mb-4">Keine Attribute gefunden</p><button class="bg-green-600 text-white px-6 py-2 rounded-lg">Erstes Attribut erstellen</button></td></tr>)}</tbody></table></div></div></body></html>);
 });
@@ -12103,7 +12084,6 @@ app.get('/admin/bundles', async (c) => {
   try {
     bundles = await env.DB.prepare(`SELECT pb.*, COUNT(DISTINCT bp.id) as item_count FROM product_bundles pb LEFT JOIN bundle_products bp ON bp.bundle_id = pb.id GROUP BY pb.id ORDER BY pb.created_at DESC`).all();
   } catch (e) {
-    console.log('Bundles table not yet created');
   }
   return c.html(<html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Bundles - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/></head><body class="bg-gray-50"><div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/bundles')}} /><div style="margin-left: 280px; padding: 2rem;"><div class="mb-6 flex justify-between items-center"><div><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-boxes mr-3 text-orange-600"></i>Produkt-Bundles</h1><p class="text-gray-600">Produktpakete verwalten</p></div><button class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg"><i class="fas fa-plus mr-2"></i>Neues Bundle</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Bundles</p><p class="text-2xl font-bold">{bundles.results?.length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Aktive Bundles</p><p class="text-2xl font-bold text-green-600">{bundles.results?.filter((b: any) => b.is_active === 1).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Ø Produkte pro Bundle</p><p class="text-2xl font-bold text-blue-600">{bundles.results?.length > 0 ? Math.round(bundles.results.reduce((sum: number, b: any) => sum + (b.item_count || 0), 0) / bundles.results.length) : 0}</p></div></div><div class="bg-white rounded-lg shadow"><div class="p-6 border-b"><h2 class="text-xl font-semibold">Alle Bundles</h2></div><table class="w-full"><thead class="bg-gray-50 border-b"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produkte</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Preis</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th></tr></thead><tbody>{bundles.results && bundles.results.length > 0 ? bundles.results.map((bundle: any) => (<tr class="hover:bg-gray-50 border-b"><td class="px-6 py-4"><div class="flex items-center"><i class="fas fa-box text-orange-500 mr-3"></i><div><div class="font-medium">{bundle.name}</div><div class="text-sm text-gray-500">{bundle.description?.substring(0, 40)}...</div></div></div></td><td class="px-6 py-4"><span class="px-3 py-1 text-sm bg-blue-100 text-blue-800 rounded-full">{bundle.item_count || 0} Produkte</span></td><td class="px-6 py-4 font-semibold text-gray-900">{bundle.price ? `€${parseFloat(bundle.price).toFixed(2)}` : 'N/A'}</td><td class="px-6 py-4">{bundle.is_active === 1 ? <span class="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full">Aktiv</span> : <span class="px-3 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Inaktiv</span>}</td><td class="px-6 py-4"><button class="text-blue-600 mr-3"><i class="fas fa-edit"></i></button><button class="text-red-600"><i class="fas fa-trash"></i></button></td></tr>)) : (<tr><td colspan="5" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-boxes text-6xl mb-4 text-gray-300"></i><p class="text-lg mb-4">Keine Bundles gefunden</p><button class="bg-orange-600 text-white px-6 py-2 rounded-lg">Erstes Bundle erstellen</button></td></tr>)}</tbody></table></div></div></body></html>);
 });
@@ -12115,7 +12095,6 @@ app.get('/admin/volume-products', async (c) => {
   try {
     volumePricing = await env.DB.prepare(`SELECT vp.*, p.name as product_name FROM volume_pricing vp LEFT JOIN products p ON p.id = vp.product_id ORDER BY vp.min_quantity ASC`).all();
   } catch (e) {
-    console.log('Volume pricing table not yet created');
   }
   return c.html(<html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Volumenprodukte - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/></head><body class="bg-gray-50"><div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/volume-products')}} /><div style="margin-left: 280px; padding: 2rem;"><div class="mb-6 flex justify-between items-center"><div><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-layer-group mr-3 text-indigo-600"></i>Volumenprodukte</h1><p class="text-gray-600">Mengenrabatte und Volumenlizenzen verwalten</p></div><button class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg"><i class="fas fa-plus mr-2"></i>Neue Preisstufe</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Preisstufen</p><p class="text-2xl font-bold">{volumePricing.results?.length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Aktive Regeln</p><p class="text-2xl font-bold text-green-600">{volumePricing.results?.filter((v: any) => v.is_active === 1).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Produkte mit Rabatten</p><p class="text-2xl font-bold text-blue-600">{new Set(volumePricing.results?.map((v: any) => v.product_id)).size || 0}</p></div></div><div class="bg-white rounded-lg shadow"><div class="p-6 border-b"><h2 class="text-xl font-semibold">Alle Volumen-Preisstufen</h2></div><table class="w-full"><thead class="bg-gray-50 border-b"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produkt</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Min. Menge</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Max. Menge</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Preis</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rabatt</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th></tr></thead><tbody>{volumePricing.results && volumePricing.results.length > 0 ? volumePricing.results.map((vol: any) => (<tr class="hover:bg-gray-50 border-b"><td class="px-6 py-4"><div class="font-medium">{vol.product_name || `Produkt #${vol.product_id}`}</div></td><td class="px-6 py-4 text-sm text-gray-600">{vol.min_quantity}</td><td class="px-6 py-4 text-sm text-gray-600">{vol.max_quantity || '∞'}</td><td class="px-6 py-4 font-semibold text-gray-900">{vol.price ? `€${parseFloat(vol.price).toFixed(2)}` : 'N/A'}</td><td class="px-6 py-4"><span class="px-3 py-1 text-sm bg-green-100 text-green-800 rounded-full">{vol.discount_percentage ? `${vol.discount_percentage}%` : '-'}</span></td><td class="px-6 py-4"><button class="text-blue-600 mr-3"><i class="fas fa-edit"></i></button><button class="text-red-600"><i class="fas fa-trash"></i></button></td></tr>)) : (<tr><td colspan="6" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-layer-group text-6xl mb-4 text-gray-300"></i><p class="text-lg mb-4">Keine Volumen-Preisstufen gefunden</p><button class="bg-indigo-600 text-white px-6 py-2 rounded-lg">Erste Preisstufe erstellen</button></td></tr>)}</tbody></table></div></div></body></html>);
 });
@@ -12127,7 +12106,6 @@ app.get('/admin/inventory', async (c) => {
   try {
     inventory = await env.DB.prepare(`SELECT p.id, p.name, p.sku, pv.sku as variant_sku, pv.stock_quantity, pv.reserved_quantity, pv.low_stock_threshold FROM products p LEFT JOIN product_variants pv ON pv.product_id = p.id WHERE pv.id IS NOT NULL ORDER BY pv.stock_quantity ASC LIMIT 100`).all();
   } catch (e) {
-    console.log('Inventory/product_variants table not yet fully configured');
   }
   return c.html(<html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Lager - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/></head><body class="bg-gray-50"><div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/inventory')}} /><div style="margin-left: 280px; padding: 2rem;"><div class="mb-6 flex justify-between items-center"><div><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-warehouse mr-3 text-cyan-600"></i>Lager & Verfügbarkeit</h1><p class="text-gray-600">Bestandsverwaltung und Lagerbewegungen</p></div><button class="bg-cyan-600 hover:bg-cyan-700 text-white px-6 py-3 rounded-lg"><i class="fas fa-plus mr-2"></i>Bestand hinzufügen</button></div><div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Artikel</p><p class="text-2xl font-bold">{inventory.results?.length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Niedriger Bestand</p><p class="text-2xl font-bold text-orange-600">{inventory.results?.filter((i: any) => i.stock_quantity <= (i.low_stock_threshold || 10)).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Ausverkauft</p><p class="text-2xl font-bold text-red-600">{inventory.results?.filter((i: any) => i.stock_quantity === 0).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Auf Lager</p><p class="text-2xl font-bold text-green-600">{inventory.results?.filter((i: any) => i.stock_quantity > 0).length || 0}</p></div></div><div class="bg-white rounded-lg shadow"><div class="p-6 border-b"><h2 class="text-xl font-semibold">Lagerbestand</h2></div><table class="w-full"><thead class="bg-gray-50 border-b"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produkt</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SKU</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bestand</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Reserviert</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Verfügbar</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th></tr></thead><tbody>{inventory.results && inventory.results.length > 0 ? inventory.results.map((item: any) => {const available = (item.stock_quantity || 0) - (item.reserved_quantity || 0); const isLowStock = item.stock_quantity <= (item.low_stock_threshold || 10); const isOutOfStock = item.stock_quantity === 0; return (<tr class="hover:bg-gray-50 border-b"><td class="px-6 py-4"><div class="font-medium">{item.name}</div></td><td class="px-6 py-4 text-sm text-gray-600">{item.variant_sku || item.sku || 'N/A'}</td><td class="px-6 py-4 font-semibold">{item.stock_quantity || 0}</td><td class="px-6 py-4 text-sm text-gray-600">{item.reserved_quantity || 0}</td><td class="px-6 py-4 font-semibold text-green-600">{available}</td><td class="px-6 py-4">{isOutOfStock ? <span class="px-3 py-1 text-xs bg-red-100 text-red-800 rounded-full">Ausverkauft</span> : isLowStock ? <span class="px-3 py-1 text-xs bg-orange-100 text-orange-800 rounded-full">Niedriger Bestand</span> : <span class="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full">Auf Lager</span>}</td><td class="px-6 py-4"><button class="text-blue-600 mr-3"><i class="fas fa-edit"></i></button><button class="text-gray-600"><i class="fas fa-history"></i></button></td></tr>);}) : (<tr><td colspan="7" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-warehouse text-6xl mb-4 text-gray-300"></i><p class="text-lg mb-4">Kein Lagerbestand gefunden</p><button class="bg-cyan-600 text-white px-6 py-2 rounded-lg">Ersten Artikel hinzufügen</button></td></tr>)}</tbody></table></div></div></body></html>);
 });
@@ -12139,7 +12117,6 @@ app.get('/admin/products/seo', async (c) => {
   try {
     products = await env.DB.prepare(`SELECT id, name, slug, seo_title, seo_description, seo_keywords, is_active FROM products ORDER BY name ASC LIMIT 100`).all();
   } catch (e) {
-    console.log('Products SEO columns may not exist');
   }
   return c.html(<html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Produkt SEO - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/></head><body class="bg-gray-50"><div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/products/seo')}} /><div style="margin-left: 280px; padding: 2rem;"><div class="mb-6 flex justify-between items-center"><div><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-search mr-3 text-pink-600"></i>Produkt-SEO</h1><p class="text-gray-600">SEO-Metadaten für Produkte verwalten</p></div><button class="bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-lg"><i class="fas fa-magic mr-2"></i>Bulk SEO</button></div><div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Produkte</p><p class="text-2xl font-bold">{products.results?.length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Mit SEO-Titel</p><p class="text-2xl font-bold text-green-600">{products.results?.filter((p: any) => p.seo_title).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Mit Description</p><p class="text-2xl font-bold text-blue-600">{products.results?.filter((p: any) => p.seo_description).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Mit Keywords</p><p class="text-2xl font-bold text-purple-600">{products.results?.filter((p: any) => p.seo_keywords).length || 0}</p></div></div><div class="bg-white rounded-lg shadow"><div class="p-6 border-b"><h2 class="text-xl font-semibold">Produkt SEO-Übersicht</h2></div><table class="w-full"><thead class="bg-gray-50 border-b"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produkt</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SEO-Titel</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Meta Description</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th></tr></thead><tbody>{products.results && products.results.length > 0 ? products.results.map((prod: any) => {const hasSeo = prod.seo_title && prod.seo_description; return (<tr class="hover:bg-gray-50 border-b"><td class="px-6 py-4"><div><div class="font-medium">{prod.name}</div><div class="text-sm text-gray-500">/{prod.slug}</div></div></td><td class="px-6 py-4"><div class="text-sm">{prod.seo_title ? <span class="text-gray-900">{prod.seo_title.substring(0, 40)}...</span> : <span class="text-gray-400 italic">Nicht gesetzt</span>}</div></td><td class="px-6 py-4"><div class="text-sm">{prod.seo_description ? <span class="text-gray-900">{prod.seo_description.substring(0, 50)}...</span> : <span class="text-gray-400 italic">Nicht gesetzt</span>}</div></td><td class="px-6 py-4">{hasSeo ? <span class="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full"><i class="fas fa-check-circle mr-1"></i>Optimiert</span> : <span class="px-3 py-1 text-xs bg-orange-100 text-orange-800 rounded-full"><i class="fas fa-exclamation-triangle mr-1"></i>Unvollständig</span>}</td><td class="px-6 py-4"><button class="text-blue-600 mr-3"><i class="fas fa-edit"></i></button><button class="text-gray-600"><i class="fas fa-chart-line"></i></button></td></tr>);}) : (<tr><td colspan="5" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-search text-6xl mb-4 text-gray-300"></i><p class="text-lg mb-4">Keine Produkte gefunden</p></td></tr>)}</tbody></table></div></div></body></html>);
 });
@@ -12248,7 +12225,6 @@ app.post('/api/admin/import/woocommerce', async (c) => {
     const importer = new WooCommerceImporter(env.DB);
     
     const result = await importer.importProducts(csvContent, language, (current, total, productName) => {
-      console.log(`Importing ${current}/${total}: ${productName}`);
     });
 
     return c.json({
@@ -12597,7 +12573,6 @@ app.get('/api/init-db', async (c) => {
       }
     } catch (e) {
       // Table doesn't exist, create all tables
-      console.log('Creating database schema...')
       
       // Create all tables - simplified schema
       const createQueries = [
@@ -12986,7 +12961,6 @@ app.post('/api/payments/stripe/webhook', async (c) => {
     
     // Check for duplicate processing (idempotency)
     if (isWebhookProcessed(eventId)) {
-      console.log('Webhook already processed:', eventId)
       return c.json({ received: true, duplicate: true })
     }
     
@@ -13255,7 +13229,6 @@ app.post('/api/payments/paypal/capture', async (c) => {
     const { paypal_order_id } = body
 
     // In production, capture payment via PayPal API
-    console.log('Capturing PayPal payment:', paypal_order_id)
 
     return c.json({
       success: true,
@@ -13305,7 +13278,6 @@ app.post('/api/payments/paypal/webhook', async (c) => {
     
     // Check for duplicate processing
     if (isWebhookProcessed(eventId)) {
-      console.log('PayPal webhook already processed:', eventId)
       return c.json({ received: true, duplicate: true })
     }
     
@@ -13459,7 +13431,6 @@ app.post('/api/contact', async (c) => {
     }
 
     // In production, send email via SendGrid/Resend or save to database
-    console.log('Contact form submission:', { name, email, subject, orderNumber })
 
     // Mock success response
     return c.json({ 
@@ -13938,30 +13909,26 @@ app.get('/api/admin/dashboard/stats', async (c) => {
   try {
     const db = c.get('db') as DatabaseHelper
     
-    console.log('Dashboard stats: Starting query...')
     
     // Count all orders
     const ordersResult = await db.db.prepare(`SELECT COUNT(*) as count FROM orders`).first()
-    console.log('Orders result:', ordersResult)
     const ordersToday = Number(ordersResult?.count) || 0
     
     // Revenue today
     const revenueResult = await db.db.prepare(`
       SELECT COALESCE(SUM(total), 0) as revenue FROM orders
     `).first()
-    console.log('Revenue result:', revenueResult)
     const revenueToday = Number(revenueResult?.revenue) || 0
     
     // Available licenses (table not in schema - disabled for now)
     // const licensesResult = await db.db.prepare(`
     //   SELECT COUNT(*) as available FROM license_keys WHERE status = 'available'
     // `).first()
-    // console.log('Licenses result:', licensesResult)
+    // 
     const availableLicenses = 0 // TODO: Add license_keys table to schema
     
     // Total customers
     const customersResult = await db.db.prepare(`SELECT COUNT(*) as total FROM users`).first()
-    console.log('Customers result:', customersResult)
     const totalCustomers = Number(customersResult?.total) || 0
     
     const response = {
@@ -13976,7 +13943,6 @@ app.get('/api/admin/dashboard/stats', async (c) => {
       }
     }
     
-    console.log('Dashboard stats response:', response)
     return c.json(response)
   } catch (error) {
     console.error('Error fetching dashboard stats:', error)
@@ -14308,7 +14274,6 @@ app.post('/api/admin/settings/test-smtp', async (c) => {
     // or an external email service like SendGrid/Mailgun
     
     // For now, simulate success (you'll need to implement actual SMTP logic)
-    console.log('SMTP Test Configuration:', {
       host: smtp_host,
       port: smtp_port,
       user: smtp_username,
@@ -17278,7 +17243,6 @@ app.get('/admin/security/firewall', async (c) => {
       }
     } catch (dbError) {
       // Tables don't exist yet, use sample data
-      console.log('Firewall tables not yet created, using sample data')
       
       rules.results = [
         {
@@ -17546,7 +17510,6 @@ app.get('/admin/security/blocked-ips', async (c) => {
       }
     } catch (dbError) {
       // Tables don't exist yet, use sample data
-      console.log('Blocked IPs tables not yet created, using sample data')
       
       blockedIps.results = [
         {
@@ -17771,7 +17734,6 @@ app.get('/admin/security/login-protection', async (c) => {
         settings = await env.DB.prepare(`SELECT * FROM login_protection_settings WHERE id = 1`).first() as any
       }
     } catch (dbError) {
-      console.log('Login protection settings table not yet created, using sample data')
       settings = {
         max_attempts: 5,
         lockout_duration: 30,
@@ -18516,7 +18478,6 @@ app.get('/admin/security/2fa', async (c) => {
         `).first() as any
       }
     } catch (dbError) {
-      console.log('2FA tables not yet created, using sample data')
       
       twoFaUsers.results = [
         {
@@ -18723,7 +18684,6 @@ app.get('/admin/security/file-protection', async (c) => {
         `).first() as any
       }
     } catch (dbError) {
-      console.log('File scans tables not yet created, using sample data')
       
       scans.results = [
         {
@@ -19094,7 +19054,6 @@ app.get('/admin/security/email-security', async (c) => {
         settings = await env.DB.prepare(`SELECT * FROM email_security_settings WHERE id = 1`).first() as any
       }
     } catch (dbError) {
-      console.log('Email security settings table not yet created, using sample data')
       settings = {
         spf_enabled: 1,
         spf_status: 'valid',
@@ -24484,7 +24443,6 @@ app.get('/admin/themes', async (c) => {
           
           // Set theme mode
           function setThemeMode(mode) {
-            console.log('Setting theme mode:', mode);
             if (mode === 'dark') {
               // Apply dark preset
               applyPreset('1'); // Dark Mode preset ID
@@ -24501,7 +24459,6 @@ app.get('/admin/themes', async (c) => {
               document.documentElement.style.setProperty('--secondary-color', currentConfig.colors.secondary);
               document.documentElement.style.setProperty('--accent-color', currentConfig.colors.accent);
               
-              console.log('Preview updated with config:', currentConfig);
             }
           }
           

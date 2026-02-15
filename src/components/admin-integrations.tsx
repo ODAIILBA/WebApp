@@ -413,7 +413,6 @@ export function AdminIntegrations() {
 
         <script>
             function toggleIntegration(name) {
-                console.log(\`Toggle integration: \${name}\`);
                 alert(\`Integration "\${name}" wurde \${event.target.checked ? 'aktiviert' : 'deaktiviert'}\`);
             }
 

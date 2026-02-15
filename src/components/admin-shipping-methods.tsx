@@ -502,7 +502,6 @@ export function AdminShippingMethods() {
             }
 
             function toggleMethod(id) {
-                console.log(\`Toggle shipping method: \${id}\`);
                 alert(\`Versandmethode "\${id}" wurde \${event.target.checked ? 'aktiviert' : 'deaktiviert'}\`);
             }
 

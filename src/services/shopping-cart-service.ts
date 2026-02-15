@@ -53,7 +53,6 @@ export class ShoppingCartService {
    */
   async getOrCreateCart(userId?: number, sessionId?: string): Promise<{ success: boolean; cart?: Cart; error?: string }> {
     try {
-      console.log('[CartService] getOrCreateCart - userId:', userId, 'sessionId:', sessionId)
       
       if (!userId && !sessionId) {
         return { success: false, error: 'User ID or Session ID is required' }
@@ -63,7 +62,6 @@ export class ShoppingCartService {
       let cart: any
       
       if (userId) {
-        console.log('[CartService] Looking for cart by userId:', userId)
         cart = await this.db.prepare(`
           SELECT * FROM shopping_carts 
           WHERE user_id = ? AND status = 'active'
@@ -71,7 +69,6 @@ export class ShoppingCartService {
           LIMIT 1
         `).bind(userId).first()
       } else if (sessionId) {
-        console.log('[CartService] Looking for cart by sessionId:', sessionId)
         cart = await this.db.prepare(`
           SELECT * FROM shopping_carts 
           WHERE session_id = ? AND status = 'active'
@@ -82,13 +79,11 @@ export class ShoppingCartService {
 
       // Create new cart if none exists
       if (!cart) {
-        console.log('[CartService] Creating new cart')
         const result = await this.db.prepare(`
           INSERT INTO shopping_carts (user_id, session_id, status)
           VALUES (?, ?, 'active')
         `).bind(userId || null, sessionId || null).run()
 
-        console.log('[CartService] Cart created with ID:', result.meta.last_row_id)
 
         cart = await this.db.prepare(`
           SELECT * FROM shopping_carts WHERE id = ?
@@ -100,17 +95,14 @@ export class ShoppingCartService {
         return { success: false, error: 'Failed to create cart' }
       }
 
-      console.log('[CartService] Cart found/created:', cart.id)
 
       // Get cart items
       const items = await this.getCartItems(cart.id)
-      console.log('[CartService] Cart items:', items.length)
       
       // Calculate totals
       const subtotal = items.reduce((sum, item) => sum + parseFloat(item.subtotal.toString()), 0)
       const itemCount = items.reduce((sum, item) => sum + item.quantity, 0)
 
-      console.log('[CartService] Cart totals - subtotal:', subtotal, 'itemCount:', itemCount)
 
       return {
         success: true,
