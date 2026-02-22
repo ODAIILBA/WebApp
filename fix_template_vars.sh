@@ -1,0 +1,133 @@
+#!/bin/bash
+
+# Define page metadata
+declare -A titles=(
+    ["admin-api-management"]="API Management"
+    ["admin-data-migration"]="Data Migration"
+    ["admin-system-logs"]="System Logs"
+    ["admin-performance-monitor"]="Performance Monitor"
+    ["admin-database-manager"]="Database Manager"
+    ["admin-file-manager"]="File Manager"
+    ["admin-cdn-management"]="CDN Management"
+    ["admin-cache-management"]="Cache Management"
+    ["admin-queue-management"]="Queue Management"
+    ["admin-rate-limiting"]="Rate Limiting"
+    ["admin-load-balancer"]="Load Balancer"
+    ["admin-security-audit"]="Security Audit"
+    ["admin-compliance"]="Compliance"
+    ["admin-multi-tenant"]="Multi-Tenant"
+    ["admin-white-label"]="White Label"
+    ["admin-api-gateway"]="API Gateway"
+    ["admin-service-mesh"]="Service Mesh"
+    ["admin-container-orchestration"]="Container Orchestration"
+    ["admin-infrastructure-code"]="Infrastructure as Code"
+    ["admin-cicd-pipeline"]="CI/CD Pipeline"
+    ["admin-monitoring-stack"]="Monitoring Stack"
+    ["admin-log-aggregation"]="Log Aggregation"
+    ["admin-distributed-tracing"]="Distributed Tracing"
+    ["admin-feature-flags"]="Feature Flags"
+    ["admin-ab-testing"]="A/B Testing"
+    ["admin-machine-learning"]="Machine Learning"
+    ["admin-data-warehouse"]="Data Warehouse"
+    ["admin-business-intelligence"]="Business Intelligence"
+    ["admin-advanced-search"]="Advanced Search"
+    ["admin-graphql-api"]="GraphQL API"
+    ["admin-websocket-manager"]="WebSocket Manager"
+)
+
+declare -A icons=(
+    ["admin-api-management"]="fa-plug"
+    ["admin-data-migration"]="fa-database"
+    ["admin-system-logs"]="fa-file-alt"
+    ["admin-performance-monitor"]="fa-tachometer-alt"
+    ["admin-database-manager"]="fa-server"
+    ["admin-file-manager"]="fa-folder-open"
+    ["admin-cdn-management"]="fa-cloud"
+    ["admin-cache-management"]="fa-memory"
+    ["admin-queue-management"]="fa-tasks"
+    ["admin-rate-limiting"]="fa-stopwatch"
+    ["admin-load-balancer"]="fa-balance-scale"
+    ["admin-security-audit"]="fa-user-shield"
+    ["admin-compliance"]="fa-check-circle"
+    ["admin-multi-tenant"]="fa-users-cog"
+    ["admin-white-label"]="fa-paint-brush"
+    ["admin-api-gateway"]="fa-door-open"
+    ["admin-service-mesh"]="fa-network-wired"
+    ["admin-container-orchestration"]="fa-cubes"
+    ["admin-infrastructure-code"]="fa-code"
+    ["admin-cicd-pipeline"]="fa-sync-alt"
+    ["admin-monitoring-stack"]="fa-chart-area"
+    ["admin-log-aggregation"]="fa-stream"
+    ["admin-distributed-tracing"]="fa-route"
+    ["admin-feature-flags"]="fa-flag"
+    ["admin-ab-testing"]="fa-flask"
+    ["admin-machine-learning"]="fa-brain"
+    ["admin-data-warehouse"]="fa-warehouse"
+    ["admin-business-intelligence"]="fa-chart-pie"
+    ["admin-advanced-search"]="fa-search-plus"
+    ["admin-graphql-api"]="fa-project-diagram"
+    ["admin-websocket-manager"]="fa-bolt"
+)
+
+declare -A descriptions=(
+    ["admin-api-management"]="Manage API keys, endpoints, and rate limits"
+    ["admin-data-migration"]="Migrate data between systems and versions"
+    ["admin-system-logs"]="View and analyze system logs"
+    ["admin-performance-monitor"]="Real-time system performance monitoring"
+    ["admin-database-manager"]="Direct database management and queries"
+    ["admin-file-manager"]="Browse and manage server files"
+    ["admin-cdn-management"]="Configure CDN and edge caching"
+    ["admin-cache-management"]="Manage application cache layers"
+    ["admin-queue-management"]="Monitor and manage job queues"
+    ["admin-rate-limiting"]="Configure API rate limits and throttling"
+    ["admin-load-balancer"]="Load balancing configuration"
+    ["admin-security-audit"]="Security scanning and audit reports"
+    ["admin-compliance"]="GDPR, CCPA compliance management"
+    ["admin-multi-tenant"]="Multi-tenant configuration"
+    ["admin-white-label"]="White-label branding options"
+    ["admin-api-gateway"]="API gateway and routing configuration"
+    ["admin-service-mesh"]="Microservices mesh management"
+    ["admin-container-orchestration"]="Docker and Kubernetes management"
+    ["admin-infrastructure-code"]="IaC templates and deployment"
+    ["admin-cicd-pipeline"]="Continuous integration and deployment"
+    ["admin-monitoring-stack"]="Full-stack monitoring dashboard"
+    ["admin-log-aggregation"]="Centralized log collection and analysis"
+    ["admin-distributed-tracing"]="End-to-end request tracing"
+    ["admin-feature-flags"]="Feature toggle and A/B testing"
+    ["admin-ab-testing"]="Experiment management and analysis"
+    ["admin-machine-learning"]="ML models and predictions"
+    ["admin-data-warehouse"]="Data warehouse configuration"
+    ["admin-business-intelligence"]="BI dashboards and reports"
+    ["admin-advanced-search"]="Elasticsearch advanced search"
+    ["admin-graphql-api"]="GraphQL schema and playground"
+    ["admin-websocket-manager"]="Real-time WebSocket management"
+)
+
+echo "Fixing template variables..."
+
+for filename in "${!titles[@]}"; do
+    filepath="src/components/${filename}.tsx"
+    title="${titles[$filename]}"
+    icon="${icons[$filename]}"
+    description="${descriptions[$filename]}"
+    route="/admin/${filename#admin-}"
+    
+    if [ ! -f "$filepath" ]; then
+        echo "⚠️  File not found: $filepath"
+        continue
+    fi
+    
+    # Replace all template variables
+    sed -i "s|\${title}|${title}|g" "$filepath"
+    sed -i "s|\${icon}|${icon}|g" "$filepath"
+    sed -i "s|\${description}|${description}|g" "$filepath"
+    sed -i "s|\${route}|${route}|g" "$filepath"
+    
+    # Fix the escaped template for AdminSidebarAdvanced
+    sed -i "s|\\\\\\${AdminSidebarAdvanced('\${route}')}|\${AdminSidebarAdvanced('${route}')}|g" "$filepath"
+    
+    echo "✅  Fixed $filepath"
+done
+
+echo ""
+echo "✅ All template variables fixed!"
