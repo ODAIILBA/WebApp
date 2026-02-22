@@ -336,5 +336,5 @@ The following static content is **intentional and does NOT need to be dynamic**:
 
 **Report Generated:** 2026-02-14  
 **Test Environment:** Development (localhost:3000)  
-**Production URL:** https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai  
+**Production URL:** https://webapp.pages.dev  
 **Documentation:** `/home/user/webapp/DYNAMIC_PLATFORM_REPORT.md`

@@ -26,7 +26,7 @@ Reduced repository clutter significantly by removing:
 
 ### Removed Content
 ✅ **Sandbox Development URLs** - Removed all temporary development links:
-- ❌ `https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai`
+- ❌ `https://webapp.pages.dev`
 - ❌ All sub-URLs (admin, products, API endpoints)
 - ❌ "Latest Updates (2026-02-13)" section
 

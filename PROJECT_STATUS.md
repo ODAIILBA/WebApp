@@ -99,20 +99,20 @@
 ## 🌐 Access URLs
 
 ### Sandbox Environment
-- **Base URL:** https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai
-- **System Monitor:** https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/system-status
-- **API Endpoint:** https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/api/admin/system/monitor
+- **Base URL:** https://webapp.pages.dev
+- **System Monitor:** https://webapp.pages.dev/admin/system-status
+- **API Endpoint:** https://webapp.pages.dev/api/admin/system/monitor
 
 ### Test Commands
 ```bash
 # Test API
-curl https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/api/admin/system/monitor | jq
+curl https://webapp.pages.dev/api/admin/system/monitor | jq
 
 # Export logs
-curl https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/api/admin/system/activity-log/export > logs.csv
+curl https://webapp.pages.dev/api/admin/system/activity-log/export > logs.csv
 
 # Get settings
-curl https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/api/admin/settings/monitoring | jq
+curl https://webapp.pages.dev/api/admin/settings/monitoring | jq
 ```
 
 ---
@@ -373,7 +373,7 @@ webapp/
 
 ### Sandbox Environment
 - **Status:** ✅ Running
-- **URL:** https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai
+- **URL:** https://webapp.pages.dev
 - **PM2:** Online (PID 8436)
 - **Database:** D1 Local (webapp-production)
 - **Migrations:** 7/7 applied

@@ -133,12 +133,12 @@ All admin pages now use the centralized configuration system:
 
 ## 🌐 Live URLs
 
-- **Base Admin**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin
-- **Dashboard**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/dashboard
-- **Security**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/security
-- **Users**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/users
-- **Analytics**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/analytics
-- **Firewall**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/firewall
+- **Base Admin**: https://webapp.pages.dev/admin
+- **Dashboard**: https://webapp.pages.dev/admin/dashboard
+- **Security**: https://webapp.pages.dev/admin/security
+- **Users**: https://webapp.pages.dev/admin/users
+- **Analytics**: https://webapp.pages.dev/admin/analytics
+- **Firewall**: https://webapp.pages.dev/admin/firewall
 
 ## 📝 Git History
 

@@ -201,7 +201,7 @@ webapp/
 ## 💾 Deployment Information
 
 ### Sandbox URL
-**Production**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai
+**Production**: https://webapp.pages.dev
 
 ### Key Paths
 - Admin Panel: `/admin`

@@ -152,7 +152,7 @@ public/static/system-monitor.js (8.5 KB)
 ### 🔗 ACCESS URL
 
 ```
-https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/system-status
+https://webapp.pages.dev/admin/system-status
 ```
 
 ### 📊 FEATURE COMPARISON

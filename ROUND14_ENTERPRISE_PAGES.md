@@ -83,15 +83,15 @@ import { AdminWorkflowAutomation } from './components/admin-workflow-automation'
   - Full admin sidebar integration
 
 ### 🔗 Live Preview URLs
-Base URL: `https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai`
+Base URL: `https://webapp.pages.dev`
 
 **Test some pages:**
-- https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/form-editor
-- https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/workflow-automation
-- https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/api-management
-- https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/security-audit
-- https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/machine-learning
-- https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/graphql-api
+- https://webapp.pages.dev/admin/form-editor
+- https://webapp.pages.dev/admin/workflow-automation
+- https://webapp.pages.dev/admin/api-management
+- https://webapp.pages.dev/admin/security-audit
+- https://webapp.pages.dev/admin/machine-learning
+- https://webapp.pages.dev/admin/graphql-api
 
 ## Technical Details
 

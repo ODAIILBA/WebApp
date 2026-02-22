@@ -227,6 +227,6 @@ c3c10f0 Fix Add to Cart: Frontend now uses Backend API
 **Solution**: Fixed both product loaders to use correct `addToCart(product.id, 1)` call  
 **Result**: Button now works perfectly with full database persistence
 
-**Test URL**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai
+**Test URL**: https://webapp.pages.dev
 
 **Try it**: Click any "In den Warenkorb" button on the homepage → Item added to cart ✅

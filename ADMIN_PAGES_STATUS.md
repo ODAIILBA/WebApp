@@ -140,28 +140,28 @@ Examples:
 ### Test Fully Implemented Pages:
 ```bash
 # Product Management (Full CRUD)
-curl https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/products
+curl https://webapp.pages.dev/admin/products
 
 # Category Management
-curl https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/categories
+curl https://webapp.pages.dev/admin/categories
 
 # Analytics Dashboard
-curl https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/analytics
+curl https://webapp.pages.dev/admin/analytics
 
 # Customer Management
-curl https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/customers
+curl https://webapp.pages.dev/admin/customers
 ```
 
 ### Test Config-Based Pages:
 ```bash
 # Order Status Pages
-curl https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/orders/pending
-curl https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/shipping-status
+curl https://webapp.pages.dev/admin/orders/pending
+curl https://webapp.pages.dev/admin/shipping-status
 ```
 
 ### Test Placeholder (should show "Coming Soon"):
 ```bash
-curl https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/undefined-route
+curl https://webapp.pages.dev/admin/undefined-route
 ```
 
 ## 🚀 Recommendation

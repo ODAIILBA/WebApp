@@ -312,7 +312,7 @@ All initial "failures" were false positives from test script limitations.
 ## Access URLs
 
 - **Local Development**: http://localhost:3000
-- **Sandbox Preview**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai
+- **Sandbox Preview**: https://webapp.pages.dev
 - **Admin Panel**: http://localhost:3000/admin/categories
 - **Production**: (Pending deployment)
 

@@ -110,9 +110,9 @@ webapp/
 **Commits**: 518
 
 ### Live Demo
-**Application**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai  
-**Admin Panel**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin  
-**API**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/api
+**Application**: https://webapp.pages.dev  
+**Admin Panel**: https://webapp.pages.dev/admin  
+**API**: https://webapp.pages.dev/api
 
 ### Backups
 - **Round 13**: https://www.genspark.ai/api/files/s/9qa7bXXL

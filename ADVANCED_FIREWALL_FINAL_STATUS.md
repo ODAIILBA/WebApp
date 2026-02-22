@@ -176,7 +176,7 @@ FIREWALL_ADVANCED_IMPLEMENTATION_SUMMARY.md (6.5 KB)
 
 #### Main Page
 ```
-https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/firewall/advanced
+https://webapp.pages.dev/admin/firewall/advanced
 ```
 **Note**: Currently accessible via direct URL. Generic /admin/* handler needs route priority fix.
 

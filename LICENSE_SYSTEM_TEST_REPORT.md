@@ -223,9 +223,9 @@ Created → Available → Assigned → Activated → Used
 
 ## 🔗 Useful Links
 
-**Admin Interface**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/licenses
+**Admin Interface**: https://webapp.pages.dev/admin/licenses
 
-**API Base**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/api
+**API Base**: https://webapp.pages.dev/api
 
 ## 💡 Recommendations
 

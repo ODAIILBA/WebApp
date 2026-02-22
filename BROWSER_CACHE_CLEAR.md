@@ -164,5 +164,5 @@ Die Kategorieverwaltung sollte jetzt vollständig funktionieren:
 
 **Live Demo:**
 ```
-https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/categories
+https://webapp.pages.dev/admin/categories
 ```

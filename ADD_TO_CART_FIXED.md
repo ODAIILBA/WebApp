@@ -167,7 +167,7 @@ curl -X POST http://localhost:3000/api/cart/items \
 - Item count: 1
 
 ### Frontend Test Page
-**URL**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/test-cart.html
+**URL**: https://webapp.pages.dev/test-cart.html
 
 **Features**:
 - Displays product grid (first 6 products)
@@ -316,7 +316,7 @@ function getSessionId() {
 ## 🧪 Live Test URLs
 
 ### Test Page
-**URL**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/test-cart.html
+**URL**: https://webapp.pages.dev/test-cart.html
 
 **Features**:
 - Product grid with prices
@@ -326,7 +326,7 @@ function getSessionId() {
 - Success/error notifications
 
 ### API Endpoints
-**Base URL**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai
+**Base URL**: https://webapp.pages.dev
 
 **Endpoints**:
 - `POST /api/cart/items` - Add item
@@ -380,4 +380,4 @@ b91af5c Fix CSRF config & Order Processing: Complete E-Commerce Backend
 **Solution**: Integrated frontend with backend API  
 **Result**: Fully functional cart system with database persistence
 
-**Test it now**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/test-cart.html
+**Test it now**: https://webapp.pages.dev/test-cart.html

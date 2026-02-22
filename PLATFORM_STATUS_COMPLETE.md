@@ -91,7 +91,7 @@
 ## 🌐 Access URLs
 
 - **Local**: http://localhost:3000
-- **Sandbox**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai
+- **Sandbox**: https://webapp.pages.dev
 - **Admin Panel**: http://localhost:3000/admin/categories
 
 ---

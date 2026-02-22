@@ -2101,6 +2101,7 @@ export function ShopHomepagePremium() {
 
           <div class="border-t border-gray-200 pt-8 text-center text-gray-600">
             <p>&copy; 2026 SOFTWAREKING24. Alle Rechte vorbehalten.</p>
+            <p class="text-sm mt-2">Entwickelt von <strong>ODAI ILBA</strong> | <strong>TargoNIX</strong></p>
           </div>
         </div>
       </footer>

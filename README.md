@@ -643,7 +643,15 @@ Proprietary - All rights reserved
 
 ---
 
-## 👨‍💻 Support
+## 👨‍💻 Developer
+
+**Developed by:** ODAI ILBA  
+**Company:** TargoNIX  
+**Technology Stack:** Hono + TypeScript + Cloudflare Workers/Pages
+
+---
+
+## 📞 Support
 
 For questions or issues:
 - Check [DEPLOYMENT_CHECKLIST.md](./DEPLOYMENT_CHECKLIST.md)
@@ -652,6 +660,6 @@ For questions or issues:
 
 ---
 
-**Built with ❤️ using Hono + TypeScript + Cloudflare**
+**© 2026 TargoNIX - Professional E-Commerce Solutions**
 
-*Last Updated: 2026-01-28*
+*Last Updated: 2026-02-22*

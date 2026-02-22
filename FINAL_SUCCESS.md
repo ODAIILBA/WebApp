@@ -207,7 +207,7 @@ e5b6812 Document 'In den Warenkorb' button fix
 ## 🚀 Production Ready
 
 ### Live URL
-https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai
+https://webapp.pages.dev
 
 ### Features Working
 ✅ Add to cart  

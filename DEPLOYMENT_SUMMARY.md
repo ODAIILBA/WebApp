@@ -64,16 +64,16 @@
 ## 🌐 Online Preview Links
 
 ### 🔗 Main Application
-**URL**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai
+**URL**: https://webapp.pages.dev
 
 **Key Pages**:
-- Homepage: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/
-- Products: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/products
-- Admin Panel: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/categories
-- Product Detail: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/product/[id]
+- Homepage: https://webapp.pages.dev/
+- Products: https://webapp.pages.dev/products
+- Admin Panel: https://webapp.pages.dev/admin/categories
+- Product Detail: https://webapp.pages.dev/product/[id]
 
 ### 🔌 API Endpoints
-**Base URL**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/api
+**Base URL**: https://webapp.pages.dev/api
 
 **Working Endpoints** (13/13):
 - GET /api/products - List all products
@@ -89,10 +89,10 @@
 - GET /api/admin/* - Admin endpoints (13 total)
 
 ### 📱 Test Pages
-- Cart Test: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/test-cart.html
-- Products Test: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/test-products.html
-- Debug Page: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/debug.html
-- Language Demo: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/language-demo.html
+- Cart Test: https://webapp.pages.dev/test-cart.html
+- Products Test: https://webapp.pages.dev/test-products.html
+- Debug Page: https://webapp.pages.dev/debug.html
+- Language Demo: https://webapp.pages.dev/language-demo.html
 
 ## 📦 Project Backups
 
@@ -342,9 +342,9 @@ curl http://localhost:3000/api/products
 - **Admin**: http://localhost:3000/admin/categories
 
 ### Online Preview
-- **App**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai
-- **API**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/api
-- **Admin**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin
+- **App**: https://webapp.pages.dev
+- **API**: https://webapp.pages.dev/api
+- **Admin**: https://webapp.pages.dev/admin
 
 ### Project Files
 - **Location**: `/home/user/webapp`

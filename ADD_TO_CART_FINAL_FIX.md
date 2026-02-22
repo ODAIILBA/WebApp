@@ -107,7 +107,7 @@ Response:
 
 ## 🌐 Test URL
 
-**Live Demo:** https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/
+**Live Demo:** https://webapp.pages.dev/
 
 **Test Steps:**
 1. Open homepage

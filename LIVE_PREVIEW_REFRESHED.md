@@ -7,21 +7,21 @@ The live preview has been successfully refreshed with the latest code from GitHu
 ## 🔗 **Updated Live URLs**
 
 ### Main Application
-**Homepage**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai
+**Homepage**: https://webapp.pages.dev
 
 ### Admin Panel  
-**Dashboard**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin  
-**Products**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/products  
-**Categories**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/categories  
-**Orders**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/orders  
-**Customers**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/customers  
-**Analytics**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/analytics  
-**Licenses**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/licenses
+**Dashboard**: https://webapp.pages.dev/admin  
+**Products**: https://webapp.pages.dev/admin/products  
+**Categories**: https://webapp.pages.dev/admin/categories  
+**Orders**: https://webapp.pages.dev/admin/orders  
+**Customers**: https://webapp.pages.dev/admin/customers  
+**Analytics**: https://webapp.pages.dev/admin/analytics  
+**Licenses**: https://webapp.pages.dev/admin/licenses
 
 ### API Endpoints
-**Products API**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/api/products  
-**Categories API**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/api/categories  
-**Brands API**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/api/brands
+**Products API**: https://webapp.pages.dev/api/products  
+**Categories API**: https://webapp.pages.dev/api/categories  
+**Brands API**: https://webapp.pages.dev/api/brands
 
 ## 📊 What's Updated
 
@@ -109,10 +109,10 @@ The live preview has been successfully refreshed with the latest code from GitHu
 
 Click these to test the refreshed preview:
 
-1. **Homepage**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai
-2. **Products Page**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/products
-3. **Admin Dashboard**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin
-4. **Product API**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/api/products
+1. **Homepage**: https://webapp.pages.dev
+2. **Products Page**: https://webapp.pages.dev/products
+3. **Admin Dashboard**: https://webapp.pages.dev/admin
+4. **Product API**: https://webapp.pages.dev/api/products
 
 ## 📦 Database Status
 

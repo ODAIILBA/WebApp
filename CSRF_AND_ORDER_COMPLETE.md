@@ -239,19 +239,19 @@ const result = await orderService.createOrder(cart_id, orderData, user?.id, ipAd
 
 ## 📝 Test URL
 
-**Production**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai  
-**API Base**: `https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/api`  
+**Production**: https://webapp.pages.dev  
+**API Base**: `https://webapp.pages.dev/api`  
 
 ### Example API Calls
 ```bash
 # 1. Add to cart
-curl -X POST https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/api/cart/items \
+curl -X POST https://webapp.pages.dev/api/cart/items \
   -H "Content-Type: application/json" \
   -H "X-Session-ID: your-session-id" \
   -d '{"product_id": 1, "quantity": 2}'
 
 # 2. Create order
-curl -X POST https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/api/orders \
+curl -X POST https://webapp.pages.dev/api/orders \
   -H "Content-Type: application/json" \
   -d '{ "cart_id": 1, "email": "customer@example.com", ... }'
 ```

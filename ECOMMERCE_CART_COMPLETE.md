@@ -155,6 +155,6 @@ Now that cart is complete, implement order creation:
 ---
 
 **Shopping Cart**: ✅ **PRODUCTION READY**  
-**Test URL**: https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai  
+**Test URL**: https://webapp.pages.dev  
 **API Base**: `/api/cart`  
 **Last Tested**: 2026-02-13 22:37 UTC – All tests passing ✅

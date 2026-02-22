@@ -116,7 +116,7 @@ SELECT * FROM categories WHERE id = 8;
 **Admin Panel:**
 ```
 http://localhost:3000/admin/categories
-https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai/admin/categories
+https://webapp.pages.dev/admin/categories
 ```
 
 ### 📝 Verwendung

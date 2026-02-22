@@ -128,7 +128,7 @@ The **SoftwareKing24** e-commerce platform is **100% dynamic**, fully functional
 
 ### Development
 - **Local:** http://localhost:3000
-- **Sandbox:** https://3000-iajr1uzogojd35ozgn244-ea026bf9.sandbox.novita.ai
+- **Sandbox:** https://webapp.pages.dev
 
 ### API Endpoints
 - **Products:** `/api/products`
