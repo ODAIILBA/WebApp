@@ -95,6 +95,8 @@ import { AdminWebsocketManager } from './components/admin-websocket-manager'
 import { AdminUserSecurity } from './components/admin-user-security'
 import { AdminPerformanceSettings } from './components/admin-performance-settings'
 import { AdminShopSettings } from './components/admin-shop-settings'
+import { AdminLanguageManager } from './components/admin-language-manager'
+import { LanguageSwitcher } from './components/language-switcher'
 
 import { 
   formatPrice, 
@@ -23643,6 +23645,200 @@ app.post('/api/shop/email/test', async (c) => {
       message: 'Test email sent successfully' 
     });
   } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Language Manager Page
+app.get('/admin/languages', (c) => {
+  const html = AdminLanguageManager()
+  return c.html(html)
+})
+
+// ============================================
+// LANGUAGE MANAGEMENT API ENDPOINTS
+// ============================================
+
+// Get all languages
+app.get('/api/languages', async (c) => {
+  try {
+    const { env } = c;
+    
+    const result = await env.DB.prepare(`
+      SELECT * FROM languages ORDER BY is_default DESC, sort_order ASC, name ASC
+    `).all();
+    
+    return c.json({ success: true, languages: result.results || [] });
+  } catch (error: any) {
+    console.error('Error loading languages:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get active languages only
+app.get('/api/languages/active', async (c) => {
+  try {
+    const { env } = c;
+    
+    const result = await env.DB.prepare(`
+      SELECT * FROM languages WHERE is_active = 1 ORDER BY is_default DESC, sort_order ASC, name ASC
+    `).all();
+    
+    return c.json({ success: true, languages: result.results || [] });
+  } catch (error: any) {
+    console.error('Error loading active languages:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Add new language
+app.post('/api/languages', async (c) => {
+  try {
+    const { env } = c;
+    const { code, name, native_name, flag_emoji } = await c.req.json();
+    
+    // Check if language already exists
+    const existing = await env.DB.prepare(`
+      SELECT * FROM languages WHERE code = ?
+    `).bind(code).first();
+    
+    if (existing) {
+      return c.json({ success: false, error: 'Sprache existiert bereits' }, 400);
+    }
+    
+    // Insert new language
+    await env.DB.prepare(`
+      INSERT INTO languages (code, name, native_name, flag_emoji, is_active, is_default)
+      VALUES (?, ?, ?, ?, 1, 0)
+    `).bind(code, name, native_name, flag_emoji || '').run();
+    
+    return c.json({ success: true, message: 'Sprache hinzugefügt' });
+  } catch (error: any) {
+    console.error('Error adding language:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Toggle language active status
+app.post('/api/languages/:code/toggle', async (c) => {
+  try {
+    const { env } = c;
+    const code = c.req.param('code');
+    const { is_active } = await c.req.json();
+    
+    await env.DB.prepare(`
+      UPDATE languages SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE code = ?
+    `).bind(is_active, code).run();
+    
+    return c.json({ success: true, message: 'Status aktualisiert' });
+  } catch (error: any) {
+    console.error('Error toggling language:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Set default language
+app.post('/api/languages/:code/set-default', async (c) => {
+  try {
+    const { env } = c;
+    const code = c.req.param('code');
+    
+    // Remove default from all languages
+    await env.DB.prepare(`UPDATE languages SET is_default = 0`).run();
+    
+    // Set new default
+    await env.DB.prepare(`
+      UPDATE languages SET is_default = 1, is_active = 1, updated_at = CURRENT_TIMESTAMP WHERE code = ?
+    `).bind(code).run();
+    
+    return c.json({ success: true, message: 'Standard-Sprache gesetzt' });
+  } catch (error: any) {
+    console.error('Error setting default language:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Delete language
+app.delete('/api/languages/:code', async (c) => {
+  try {
+    const { env } = c;
+    const code = c.req.param('code');
+    
+    // Check if it's the default language
+    const lang = await env.DB.prepare(`SELECT * FROM languages WHERE code = ?`).bind(code).first();
+    
+    if (lang && lang.is_default) {
+      return c.json({ success: false, error: 'Standard-Sprache kann nicht gelöscht werden' }, 400);
+    }
+    
+    // Delete language (translations will be deleted automatically via CASCADE)
+    await env.DB.prepare(`DELETE FROM languages WHERE code = ?`).bind(code).run();
+    
+    return c.json({ success: true, message: 'Sprache gelöscht' });
+  } catch (error: any) {
+    console.error('Error deleting language:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Initialize default languages
+app.post('/api/languages/initialize', async (c) => {
+  try {
+    const { env } = c;
+    
+    const defaultLanguages = [
+      { code: 'de', name: 'German', native_name: 'Deutsch', flag_emoji: '🇩🇪', is_default: 1 },
+      { code: 'en', name: 'English', native_name: 'English', flag_emoji: '🇬🇧', is_default: 0 },
+      { code: 'fr', name: 'French', native_name: 'Français', flag_emoji: '🇫🇷', is_default: 0 },
+      { code: 'es', name: 'Spanish', native_name: 'Español', flag_emoji: '🇪🇸', is_default: 0 },
+      { code: 'it', name: 'Italian', native_name: 'Italiano', flag_emoji: '🇮🇹', is_default: 0 },
+      { code: 'pt', name: 'Portuguese', native_name: 'Português', flag_emoji: '🇵🇹', is_default: 0 }
+    ];
+    
+    for (const lang of defaultLanguages) {
+      // Check if already exists
+      const existing = await env.DB.prepare(`SELECT * FROM languages WHERE code = ?`).bind(lang.code).first();
+      
+      if (!existing) {
+        await env.DB.prepare(`
+          INSERT INTO languages (code, name, native_name, flag_emoji, is_active, is_default)
+          VALUES (?, ?, ?, ?, 1, ?)
+        `).bind(lang.code, lang.name, lang.native_name, lang.flag_emoji, lang.is_default).run();
+      }
+    }
+    
+    return c.json({ success: true, message: 'Standard-Sprachen initialisiert' });
+  } catch (error: any) {
+    console.error('Error initializing languages:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get translations count
+app.get('/api/translations/count', async (c) => {
+  try {
+    const { env } = c;
+    
+    const result = await env.DB.prepare(`SELECT COUNT(*) as count FROM translations`).first();
+    
+    return c.json({ success: true, count: result?.count || 0 });
+  } catch (error: any) {
+    console.error('Error counting translations:', error);
+    return c.json({ success: true, count: 0 });
+  }
+});
+
+// Save user language preference
+app.post('/api/user/language', async (c) => {
+  try {
+    const { language_code } = await c.req.json();
+    
+    // In a real app, save to user session/database
+    // For now, just return success (client saves to localStorage)
+    
+    return c.json({ success: true, message: 'Sprache gespeichert' });
+  } catch (error: any) {
+    console.error('Error saving user language:', error);
     return c.json({ success: false, error: error.message }, 500);
   }
 });

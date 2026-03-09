@@ -1,3 +1,5 @@
+import { LanguageSwitcher } from './language-switcher';
+
 export function AdminSidebarAdvanced(currentPath: string = '/admin') {
   // Comprehensive hierarchical menu structure
   const menuStructure = [
@@ -368,6 +370,9 @@ export function AdminSidebarAdvanced(currentPath: string = '/admin') {
       <nav class="sidebar-nav" id="sidebar-nav-container">
         ${generateMenuHTML(menuStructure)}
       </nav>
+
+      <!-- Language Switcher -->
+      ${LanguageSwitcher('de')}
 
       <div class="sidebar-footer">
         <div class="user-info">

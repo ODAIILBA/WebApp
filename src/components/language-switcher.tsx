@@ -1,100 +1,190 @@
 // Language Switcher Component
-import type { FC } from 'hono/jsx'
-import { SUPPORTED_LANGUAGES, DEFAULT_LANGUAGE, type Language } from '../lib/i18n'
-
-interface LanguageSwitcherProps {
-  currentLang?: Language
-  currentPath?: string
-}
-
-export const LanguageSwitcher: FC<LanguageSwitcherProps> = ({ 
-  currentLang = DEFAULT_LANGUAGE, 
-  currentPath = '/' 
-}) => {
-  const languages = [
-    { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-    { code: 'en', name: 'English', flag: '🇬🇧' },
-  ];
-
-  return (
-    <div class="language-switcher relative group">
-      {/* Current Language Button */}
-      <button class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition-colors">
-        <span class="text-xl">{currentLang === 'de' ? '🇩🇪' : '🇬🇧'}</span>
-        <span class="font-medium text-gray-700">{currentLang === 'de' ? 'DE' : 'EN'}</span>
-        <i class="fas fa-chevron-down text-xs text-gray-500"></i>
-      </button>
-
-      {/* Dropdown Menu */}
-      <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-        {languages.map(lang => (
-          <a
-            href={getLanguageUrl(currentPath, lang.code as Language)}
-            class={`flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors first:rounded-t-lg last:rounded-b-lg ${
-              currentLang === lang.code ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
-            }`}
-          >
-            <span class="text-2xl">{lang.flag}</span>
-            <span class="font-medium">{lang.name}</span>
-            {currentLang === lang.code && (
-              <i class="fas fa-check ml-auto text-blue-600"></i>
-            )}
-          </a>
-        ))}
+export function LanguageSwitcher(currentLang = 'de') {
+  return `
+    <div class="language-switcher-container" style="padding: 1rem; border-top: 1px solid #e5e7eb; margin-top: auto;">
+      <div class="language-switcher" onclick="toggleLanguageDropdown(event)">
+        <div class="current-language" style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 0.5rem; border-radius: 6px; background: #f3f4f6; transition: background 0.3s;">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span class="current-flag" id="currentLangFlag" style="font-size: 1.5rem;">🇩🇪</span>
+            <span class="current-lang-name" id="currentLangName" style="font-weight: 600;">Deutsch</span>
+          </div>
+          <i class="fas fa-chevron-down" style="font-size: 0.75rem; color: #6b7280;"></i>
+        </div>
+        
+        <div id="languageDropdown" class="language-dropdown" style="display: none; position: absolute; bottom: 100%; left: 0; right: 0; background: white; border-radius: 8px; box-shadow: 0 -4px 12px rgba(0,0,0,0.15); max-height: 300px; overflow-y: auto; margin-bottom: 0.5rem; z-index: 9999;">
+          <div class="dropdown-header" style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb; font-weight: 600; color: #374151;">
+            <i class="fas fa-language mr-2"></i>Sprache wählen
+          </div>
+          <div id="languageOptions" style="padding: 0.5rem;">
+            <!-- Languages will be loaded here -->
+            <div style="padding: 1rem; text-align: center; color: #9ca3af;">
+              Lade Sprachen...
+            </div>
+          </div>
+        </div>
       </div>
+    </div>
 
-      <style dangerouslySetInnerHTML={{__html: `
-        .language-switcher:hover .group-hover\\:opacity-100 {
-          opacity: 1;
-          visibility: visible;
+    <style>
+      .language-option {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        cursor: pointer;
+        border-radius: 6px;
+        transition: all 0.2s;
+      }
+      
+      .language-option:hover {
+        background: #eff6ff;
+      }
+      
+      .language-option.active {
+        background: #dbeafe;
+        border-left: 3px solid #3b82f6;
+      }
+      
+      .language-option .flag {
+        font-size: 1.5rem;
+      }
+      
+      .language-option .name {
+        font-weight: 500;
+        color: #374151;
+      }
+      
+      .language-option .code {
+        margin-left: auto;
+        font-size: 0.75rem;
+        color: #9ca3af;
+        text-transform: uppercase;
+      }
+      
+      .language-switcher-container {
+        position: sticky;
+        bottom: 0;
+        background: white;
+      }
+    </style>
+
+    <script>
+      // Language Switcher Functions
+      let availableLanguages = [];
+      let currentLanguage = '${currentLang}';
+      
+      // Toggle Language Dropdown
+      function toggleLanguageDropdown(event) {
+        event.stopPropagation();
+        const dropdown = document.getElementById('languageDropdown');
+        const isVisible = dropdown.style.display !== 'none';
+        
+        if (isVisible) {
+          dropdown.style.display = 'none';
+        } else {
+          dropdown.style.display = 'block';
+          loadAvailableLanguages();
         }
-      `}} />
-    </div>
-  )
-}
-
-// Helper function to generate language-specific URLs
-function getLanguageUrl(path: string, targetLang: Language): string {
-  // Remove existing language prefix
-  const cleanPath = path.replace(/^\/(en|de)(\/|$)/, '/');
-  
-  // Add language prefix for non-default language
-  if (targetLang !== DEFAULT_LANGUAGE) {
-    return `/${targetLang}${cleanPath === '/' ? '' : cleanPath}`;
-  }
-  
-  return cleanPath;
-}
-
-// Mobile Language Switcher
-export const MobileLanguageSwitcher: FC<LanguageSwitcherProps> = ({ 
-  currentLang = DEFAULT_LANGUAGE, 
-  currentPath = '/' 
-}) => {
-  const languages = [
-    { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-    { code: 'en', name: 'English', flag: '🇬🇧' },
-  ];
-
-  return (
-    <div class="mobile-language-switcher border-t border-gray-200 pt-4 mt-4">
-      <p class="text-xs text-gray-500 uppercase font-semibold mb-3 px-4">Sprache / Language</p>
-      <div class="space-y-1">
-        {languages.map(lang => (
-          <a
-            href={getLanguageUrl(currentPath, lang.code as Language)}
-            class={`flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors ${
-              currentLang === lang.code ? 'bg-blue-50 text-blue-700' : 'text-gray-700'
-            }`}
-          >
-            <span class="text-2xl">{lang.flag}</span>
-            <span class="font-medium">{lang.name}</span>
-            {currentLang === lang.code && (
-              <i class="fas fa-check ml-auto text-blue-600"></i>
-            )}
-          </a>
-        ))}
-      </div>
-    </div>
-  )
+      }
+      
+      // Close dropdown when clicking outside
+      document.addEventListener('click', function(event) {
+        const dropdown = document.getElementById('languageDropdown');
+        const switcher = document.querySelector('.language-switcher');
+        
+        if (dropdown && !switcher.contains(event.target)) {
+          dropdown.style.display = 'none';
+        }
+      });
+      
+      // Load Available Languages
+      async function loadAvailableLanguages() {
+        try {
+          const response = await axios.get('/api/languages/active');
+          availableLanguages = response.data.languages || [];
+          renderLanguageOptions();
+        } catch (error) {
+          console.error('Error loading languages:', error);
+          document.getElementById('languageOptions').innerHTML = '<div style="padding: 1rem; text-align: center; color: #ef4444;">Fehler beim Laden</div>';
+        }
+      }
+      
+      // Render Language Options
+      function renderLanguageOptions() {
+        const container = document.getElementById('languageOptions');
+        
+        if (availableLanguages.length === 0) {
+          container.innerHTML = '<div style="padding: 1rem; text-align: center; color: #9ca3af;">Keine Sprachen verfügbar</div>';
+          return;
+        }
+        
+        container.innerHTML = availableLanguages.map(lang => \`
+          <div class="language-option \${lang.code === currentLanguage ? 'active' : ''}" onclick="changeLanguage('\${lang.code}', '\${lang.flag_emoji}', '\${lang.native_name}')">
+            <span class="flag">\${lang.flag_emoji || '🏳️'}</span>
+            <span class="name">\${lang.native_name}</span>
+            <span class="code">\${lang.code}</span>
+          </div>
+        \`).join('');
+      }
+      
+      // Change Language
+      async function changeLanguage(code, flag, name) {
+        try {
+          // Save to localStorage
+          localStorage.setItem('selectedLanguage', code);
+          
+          // Save to backend
+          await axios.post('/api/user/language', { language_code: code });
+          
+          // Update UI
+          document.getElementById('currentLangFlag').textContent = flag;
+          document.getElementById('currentLangName').textContent = name;
+          currentLanguage = code;
+          
+          // Close dropdown
+          document.getElementById('languageDropdown').style.display = 'none';
+          
+          // Show notification
+          if (typeof showToast === 'function') {
+            showToast(\`Sprache geändert zu \${name}\`, 'success');
+          }
+          
+          // Reload page to apply language
+          setTimeout(() => {
+            window.location.reload();
+          }, 500);
+        } catch (error) {
+          console.error('Error changing language:', error);
+          if (typeof showToast === 'function') {
+            showToast('Fehler beim Ändern der Sprache', 'error');
+          }
+        }
+      }
+      
+      // Load Current Language on Init
+      async function loadCurrentLanguage() {
+        try {
+          const savedLang = localStorage.getItem('selectedLanguage') || 'de';
+          const response = await axios.get('/api/languages/active');
+          const languages = response.data.languages || [];
+          const lang = languages.find(l => l.code === savedLang) || languages.find(l => l.is_default) || languages[0];
+          
+          if (lang) {
+            document.getElementById('currentLangFlag').textContent = lang.flag_emoji || '🇩🇪';
+            document.getElementById('currentLangName').textContent = lang.native_name;
+            currentLanguage = lang.code;
+          }
+        } catch (error) {
+          console.error('Error loading current language:', error);
+        }
+      }
+      
+      // Initialize on page load
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', loadCurrentLanguage);
+      } else {
+        loadCurrentLanguage();
+      }
+    </script>
+  `;
 }
