@@ -97,6 +97,7 @@ import { AdminPerformanceSettings } from './components/admin-performance-setting
 import { AdminShopSettings } from './components/admin-shop-settings'
 import { AdminLanguageManager } from './components/admin-language-manager'
 import { LanguageSwitcher } from './components/language-switcher'
+import { translations, t, getTranslations } from './lib/translations'
 
 import { 
   formatPrice, 
@@ -23839,6 +23840,29 @@ app.post('/api/user/language', async (c) => {
     return c.json({ success: true, message: 'Sprache gespeichert' });
   } catch (error: any) {
     console.error('Error saving user language:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get translations for a specific language
+app.get('/api/translations/:lang', async (c) => {
+  try {
+    const lang = c.req.param('lang') || 'de';
+    const trans = getTranslations(lang);
+    
+    return c.json({ success: true, translations: trans, language: lang });
+  } catch (error: any) {
+    console.error('Error loading translations:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get all available translations
+app.get('/api/translations', async (c) => {
+  try {
+    return c.json({ success: true, translations });
+  } catch (error: any) {
+    console.error('Error loading all translations:', error);
     return c.json({ success: false, error: error.message }, 500);
   }
 });
