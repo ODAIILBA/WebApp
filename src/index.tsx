@@ -93,6 +93,7 @@ import { AdminAdvancedSearch } from './components/admin-advanced-search'
 import { AdminGraphqlApi } from './components/admin-graphql-api'
 import { AdminWebsocketManager } from './components/admin-websocket-manager'
 import { AdminUserSecurity } from './components/admin-user-security'
+import { AdminPerformanceSettings } from './components/admin-performance-settings'
 
 import { 
   formatPrice, 
@@ -23485,6 +23486,12 @@ app.get('/admin/websocket-manager', (c) => {
 // User Security Management
 app.get('/admin/user-security', (c) => {
   const html = AdminUserSecurity()
+  return c.html(html)
+})
+
+// Performance Settings
+app.get('/admin/settings/performance', (c) => {
+  const html = AdminPerformanceSettings()
   return c.html(html)
 })
 
