@@ -24634,6 +24634,304 @@ app.get('/api/coupons/stats/dashboard', async (c) => {
   }
 });
 
+// ============================================
+// REPORTS & ANALYTICS API ENDPOINTS
+// ============================================
+
+// Get reports dashboard
+app.get('/api/reports/dashboard', async (c) => {
+  try {
+    const { env } = c;
+    const { range = 'month' } = c.req.query();
+    
+    // Calculate date range
+    let dateFilter = '';
+    const now = new Date();
+    let startDate = new Date();
+    
+    switch(range) {
+      case 'today':
+        startDate.setHours(0, 0, 0, 0);
+        break;
+      case 'week':
+        startDate.setDate(now.getDate() - 7);
+        break;
+      case 'month':
+        startDate.setDate(now.getDate() - 30);
+        break;
+      case 'year':
+        startDate.setFullYear(now.getFullYear() - 1);
+        break;
+    }
+    
+    dateFilter = `WHERE created_at >= '${startDate.toISOString()}'`;
+    
+    // Get key metrics
+    const [revenue, orders, products, customers] = await Promise.all([
+      env.DB.prepare(`SELECT COALESCE(SUM(total_amount), 0) as total FROM orders ${dateFilter}`).first(),
+      env.DB.prepare(`SELECT COUNT(*) as count FROM orders ${dateFilter}`).first(),
+      env.DB.prepare(`SELECT COALESCE(SUM(quantity), 0) as total FROM order_items oi JOIN orders o ON oi.order_id = o.id ${dateFilter.replace('created_at', 'o.created_at')}`).first(),
+      env.DB.prepare(`SELECT COUNT(DISTINCT customer_email) as count FROM orders ${dateFilter}`).first()
+    ]);
+    
+    // Get previous period for comparison
+    const prevStartDate = new Date(startDate);
+    const daysDiff = Math.ceil((now.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    prevStartDate.setDate(prevStartDate.getDate() - daysDiff);
+    const prevDateFilter = `WHERE created_at >= '${prevStartDate.toISOString()}' AND created_at < '${startDate.toISOString()}'`;
+    
+    const prevRevenue = await env.DB.prepare(`SELECT COALESCE(SUM(total_amount), 0) as total FROM orders ${prevDateFilter}`).first();
+    
+    const revenueChange = prevRevenue.total > 0 ? (((revenue.total - prevRevenue.total) / prevRevenue.total) * 100).toFixed(1) : 0;
+    
+    return c.json({
+      success: true,
+      stats: {
+        total_revenue: revenue.total || 0,
+        total_orders: orders.count || 0,
+        products_sold: products.total || 0,
+        new_customers: customers.count || 0,
+        revenue_change: revenueChange
+      }
+    });
+  } catch (error: any) {
+    console.error('Error fetching reports dashboard:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get revenue over time
+app.get('/api/reports/revenue-timeline', async (c) => {
+  try {
+    const { env } = c;
+    const { range = 'month' } = c.req.query();
+    
+    let groupBy = '';
+    let dateFormat = '';
+    
+    if (range === 'today' || range === 'week') {
+      groupBy = 'DATE(created_at)';
+      dateFormat = '%Y-%m-%d';
+    } else if (range === 'month') {
+      groupBy = 'DATE(created_at)';
+      dateFormat = '%Y-%m-%d';
+    } else {
+      groupBy = 'strftime("%Y-%m", created_at)';
+      dateFormat = '%Y-%m';
+    }
+    
+    const result = await env.DB.prepare(`
+      SELECT 
+        strftime('${dateFormat}', created_at) as date,
+        COALESCE(SUM(total_amount), 0) as revenue,
+        COUNT(*) as orders
+      FROM orders
+      WHERE created_at >= datetime('now', '-${range === 'year' ? '365' : range === 'month' ? '30' : range === 'week' ? '7' : '1'} days')
+      GROUP BY ${groupBy}
+      ORDER BY date ASC
+    `).all();
+    
+    return c.json({ success: true, data: result.results || [] });
+  } catch (error: any) {
+    console.error('Error fetching revenue timeline:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get sales by category
+app.get('/api/reports/sales-by-category', async (c) => {
+  try {
+    const { env } = c;
+    const { range = 'month' } = c.req.query();
+    
+    const days = range === 'year' ? 365 : range === 'month' ? 30 : range === 'week' ? 7 : 1;
+    
+    const result = await env.DB.prepare(`
+      SELECT 
+        c.name as category,
+        COUNT(DISTINCT oi.order_id) as orders,
+        COALESCE(SUM(oi.quantity), 0) as quantity,
+        COALESCE(SUM(oi.price * oi.quantity), 0) as revenue
+      FROM order_items oi
+      JOIN products p ON oi.product_id = p.id
+      LEFT JOIN product_categories pc ON p.id = pc.product_id
+      LEFT JOIN categories c ON pc.category_id = c.id
+      JOIN orders o ON oi.order_id = o.id
+      WHERE o.created_at >= datetime('now', '-${days} days')
+      GROUP BY c.id, c.name
+      ORDER BY revenue DESC
+      LIMIT 10
+    `).all();
+    
+    return c.json({ success: true, data: result.results || [] });
+  } catch (error: any) {
+    console.error('Error fetching sales by category:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get top products
+app.get('/api/reports/top-products', async (c) => {
+  try {
+    const { env } = c;
+    const { range = 'month', limit = 10 } = c.req.query();
+    
+    const days = range === 'year' ? 365 : range === 'month' ? 30 : range === 'week' ? 7 : 1;
+    
+    const result = await env.DB.prepare(`
+      SELECT 
+        p.id,
+        p.name,
+        p.sku,
+        COALESCE(SUM(oi.quantity), 0) as quantity_sold,
+        COALESCE(SUM(oi.price * oi.quantity), 0) as revenue,
+        COUNT(DISTINCT oi.order_id) as orders_count
+      FROM order_items oi
+      JOIN products p ON oi.product_id = p.id
+      JOIN orders o ON oi.order_id = o.id
+      WHERE o.created_at >= datetime('now', '-${days} days')
+      GROUP BY p.id
+      ORDER BY quantity_sold DESC
+      LIMIT ?
+    `).bind(parseInt(limit)).all();
+    
+    return c.json({ success: true, data: result.results || [] });
+  } catch (error: any) {
+    console.error('Error fetching top products:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get order status breakdown
+app.get('/api/reports/order-status', async (c) => {
+  try {
+    const { env } = c;
+    const { range = 'month' } = c.req.query();
+    
+    const days = range === 'year' ? 365 : range === 'month' ? 30 : range === 'week' ? 7 : 1;
+    
+    const result = await env.DB.prepare(`
+      SELECT 
+        status,
+        COUNT(*) as count,
+        COALESCE(SUM(total_amount), 0) as total_amount
+      FROM orders
+      WHERE created_at >= datetime('now', '-${days} days')
+      GROUP BY status
+      ORDER BY count DESC
+    `).all();
+    
+    return c.json({ success: true, data: result.results || [] });
+  } catch (error: any) {
+    console.error('Error fetching order status:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get customer statistics
+app.get('/api/reports/customers', async (c) => {
+  try {
+    const { env } = c;
+    const { range = 'month' } = c.req.query();
+    
+    const days = range === 'year' ? 365 : range === 'month' ? 30 : range === 'week' ? 7 : 1;
+    
+    const [topCustomers, newCustomers, repeatRate] = await Promise.all([
+      env.DB.prepare(`
+        SELECT 
+          customer_email,
+          customer_name,
+          COUNT(*) as order_count,
+          COALESCE(SUM(total_amount), 0) as total_spent
+        FROM orders
+        WHERE created_at >= datetime('now', '-${days} days')
+        GROUP BY customer_email
+        ORDER BY total_spent DESC
+        LIMIT 10
+      `).all(),
+      env.DB.prepare(`
+        SELECT COUNT(DISTINCT customer_email) as count
+        FROM orders
+        WHERE created_at >= datetime('now', '-${days} days')
+      `).first(),
+      env.DB.prepare(`
+        SELECT 
+          COUNT(DISTINCT customer_email) as total,
+          COUNT(DISTINCT CASE WHEN order_count > 1 THEN customer_email END) as repeat
+        FROM (
+          SELECT customer_email, COUNT(*) as order_count
+          FROM orders
+          WHERE created_at >= datetime('now', '-${days} days')
+          GROUP BY customer_email
+        )
+      `).first()
+    ]);
+    
+    const repeatCustomerRate = repeatRate.total > 0 ? ((repeatRate.repeat / repeatRate.total) * 100).toFixed(1) : 0;
+    
+    return c.json({
+      success: true,
+      data: {
+        top_customers: topCustomers.results || [],
+        new_customers: newCustomers.count || 0,
+        repeat_customer_rate: repeatCustomerRate
+      }
+    });
+  } catch (error: any) {
+    console.error('Error fetching customer statistics:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Export reports
+app.get('/api/reports/export', async (c) => {
+  try {
+    const { env } = c;
+    const { range = 'month', format = 'json' } = c.req.query();
+    
+    const days = range === 'year' ? 365 : range === 'month' ? 30 : range === 'week' ? 7 : 1;
+    
+    const orders = await env.DB.prepare(`
+      SELECT 
+        o.*,
+        GROUP_CONCAT(oi.product_name || ' x' || oi.quantity) as items
+      FROM orders o
+      LEFT JOIN order_items oi ON o.id = oi.order_id
+      WHERE o.created_at >= datetime('now', '-${days} days')
+      GROUP BY o.id
+      ORDER BY o.created_at DESC
+    `).all();
+    
+    if (format === 'csv') {
+      // Convert to CSV
+      const headers = ['Order ID', 'Customer', 'Email', 'Total', 'Status', 'Date', 'Items'];
+      const rows = (orders.results || []).map((o: any) => [
+        o.id,
+        o.customer_name,
+        o.customer_email,
+        o.total_amount,
+        o.status,
+        o.created_at,
+        o.items
+      ]);
+      
+      const csv = [headers, ...rows].map(row => row.join(',')).join('\\n');
+      
+      return new Response(csv, {
+        headers: {
+          'Content-Type': 'text/csv',
+          'Content-Disposition': \`attachment; filename="reports-\${range}.csv"\`
+        }
+      });
+    }
+    
+    return c.json({ success: true, data: orders.results || [] });
+  } catch (error: any) {
+    console.error('Error exporting reports:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
 // END ENTERPRISE FEATURE ROUTES
 
 // ============================================
