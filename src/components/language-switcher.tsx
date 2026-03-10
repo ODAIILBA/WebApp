@@ -1,24 +1,18 @@
-// Language Switcher Component
+// Language Switcher Component - Compact Design
 export function LanguageSwitcher(currentLang = 'de') {
   return `
-    <div class="language-switcher-container" style="padding: 1rem; border-top: 1px solid #e5e7eb; margin-top: auto;">
+    <div class="language-switcher-container">
       <div class="language-switcher" onclick="toggleLanguageDropdown(event)">
-        <div class="current-language" style="display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 0.5rem; border-radius: 6px; background: #f3f4f6; transition: background 0.3s;">
-          <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <span class="current-flag" id="currentLangFlag" style="font-size: 1.5rem;">🇩🇪</span>
-            <span class="current-lang-name" id="currentLangName" style="font-weight: 600;">Deutsch</span>
-          </div>
-          <i class="fas fa-chevron-down" style="font-size: 0.75rem; color: #6b7280;"></i>
-        </div>
+        <button class="lang-btn" title="Change Language">
+          <span class="current-flag" id="currentLangFlag">🇩🇪</span>
+          <span class="current-code" id="currentLangCode">DE</span>
+          <i class="fas fa-chevron-down lang-arrow"></i>
+        </button>
         
-        <div id="languageDropdown" class="language-dropdown" style="display: none; position: absolute; bottom: 100%; left: 0; right: 0; background: white; border-radius: 8px; box-shadow: 0 -4px 12px rgba(0,0,0,0.15); max-height: 300px; overflow-y: auto; margin-bottom: 0.5rem; z-index: 9999;">
-          <div class="dropdown-header" style="padding: 0.75rem; border-bottom: 1px solid #e5e7eb; font-weight: 600; color: #374151;">
-            <i class="fas fa-language mr-2"></i>Sprache wählen
-          </div>
-          <div id="languageOptions" style="padding: 0.5rem;">
-            <!-- Languages will be loaded here -->
-            <div style="padding: 1rem; text-align: center; color: #9ca3af;">
-              Lade Sprachen...
+        <div id="languageDropdown" class="language-dropdown">
+          <div id="languageOptions" class="lang-options">
+            <div class="loading-lang">
+              <i class="fas fa-spinner fa-spin"></i> Loading...
             </div>
           </div>
         </div>
@@ -26,45 +20,142 @@ export function LanguageSwitcher(currentLang = 'de') {
     </div>
 
     <style>
+      .language-switcher-container {
+        position: sticky;
+        bottom: 0;
+        background: white;
+        padding: 0.5rem 1rem;
+        border-top: 1px solid #e5e7eb;
+      }
+      
+      .language-switcher {
+        position: relative;
+      }
+      
+      .lang-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: 100%;
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        background: #f9fafb;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 0.875rem;
+      }
+      
+      .lang-btn:hover {
+        background: #f3f4f6;
+        border-color: #9ca3af;
+      }
+      
+      .current-flag {
+        font-size: 1.25rem;
+        line-height: 1;
+      }
+      
+      .current-code {
+        font-weight: 600;
+        color: #374151;
+        font-size: 0.875rem;
+      }
+      
+      .lang-arrow {
+        margin-left: auto;
+        font-size: 0.75rem;
+        color: #6b7280;
+        transition: transform 0.2s;
+      }
+      
+      .language-switcher.open .lang-arrow {
+        transform: rotate(180deg);
+      }
+      
+      .language-dropdown {
+        display: none;
+        position: absolute;
+        bottom: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 1px solid #e5e7eb;
+        border-radius: 8px;
+        box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+        margin-bottom: 0.5rem;
+        z-index: 9999;
+        max-height: 250px;
+        overflow-y: auto;
+      }
+      
+      .language-dropdown.show {
+        display: block;
+      }
+      
+      .lang-options {
+        padding: 0.25rem;
+      }
+      
       .language-option {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
-        padding: 0.75rem;
+        gap: 0.5rem;
+        padding: 0.5rem 0.75rem;
         cursor: pointer;
-        border-radius: 6px;
-        transition: all 0.2s;
+        border-radius: 4px;
+        transition: all 0.15s;
+        font-size: 0.875rem;
       }
       
       .language-option:hover {
-        background: #eff6ff;
+        background: #f3f4f6;
       }
       
       .language-option.active {
         background: #dbeafe;
-        border-left: 3px solid #3b82f6;
+        font-weight: 600;
       }
       
       .language-option .flag {
-        font-size: 1.5rem;
+        font-size: 1.25rem;
+        line-height: 1;
       }
       
       .language-option .name {
-        font-weight: 500;
+        flex: 1;
         color: #374151;
       }
       
       .language-option .code {
-        margin-left: auto;
         font-size: 0.75rem;
         color: #9ca3af;
         text-transform: uppercase;
       }
       
-      .language-switcher-container {
-        position: sticky;
-        bottom: 0;
-        background: white;
+      .loading-lang {
+        padding: 1rem;
+        text-align: center;
+        color: #9ca3af;
+        font-size: 0.875rem;
+      }
+      
+      /* Scrollbar styling */
+      .language-dropdown::-webkit-scrollbar {
+        width: 6px;
+      }
+      
+      .language-dropdown::-webkit-scrollbar-track {
+        background: #f9fafb;
+      }
+      
+      .language-dropdown::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 3px;
+      }
+      
+      .language-dropdown::-webkit-scrollbar-thumb:hover {
+        background: #9ca3af;
       }
     </style>
 
@@ -77,12 +168,15 @@ export function LanguageSwitcher(currentLang = 'de') {
       function toggleLanguageDropdown(event) {
         event.stopPropagation();
         const dropdown = document.getElementById('languageDropdown');
-        const isVisible = dropdown.style.display !== 'none';
+        const switcher = document.querySelector('.language-switcher');
+        const isVisible = dropdown.classList.contains('show');
         
         if (isVisible) {
-          dropdown.style.display = 'none';
+          dropdown.classList.remove('show');
+          switcher.classList.remove('open');
         } else {
-          dropdown.style.display = 'block';
+          dropdown.classList.add('show');
+          switcher.classList.add('open');
           loadAvailableLanguages();
         }
       }
@@ -92,8 +186,9 @@ export function LanguageSwitcher(currentLang = 'de') {
         const dropdown = document.getElementById('languageDropdown');
         const switcher = document.querySelector('.language-switcher');
         
-        if (dropdown && !switcher.contains(event.target)) {
-          dropdown.style.display = 'none';
+        if (dropdown && switcher && !switcher.contains(event.target)) {
+          dropdown.classList.remove('show');
+          switcher.classList.remove('open');
         }
       });
       
@@ -105,7 +200,7 @@ export function LanguageSwitcher(currentLang = 'de') {
           renderLanguageOptions();
         } catch (error) {
           console.error('Error loading languages:', error);
-          document.getElementById('languageOptions').innerHTML = '<div style="padding: 1rem; text-align: center; color: #ef4444;">Fehler beim Laden</div>';
+          document.getElementById('languageOptions').innerHTML = '<div class="loading-lang" style="color: #ef4444;"><i class="fas fa-exclamation-circle"></i> Error</div>';
         }
       }
       
@@ -114,12 +209,13 @@ export function LanguageSwitcher(currentLang = 'de') {
         const container = document.getElementById('languageOptions');
         
         if (availableLanguages.length === 0) {
-          container.innerHTML = '<div style="padding: 1rem; text-align: center; color: #9ca3af;">Keine Sprachen verfügbar</div>';
+          container.innerHTML = '<div class="loading-lang">No languages</div>';
           return;
         }
         
         container.innerHTML = availableLanguages.map(lang => \`
-          <div class="language-option \${lang.code === currentLanguage ? 'active' : ''}" onclick="changeLanguage('\${lang.code}', '\${lang.flag_emoji}', '\${lang.native_name}')">
+          <div class="language-option \${lang.code === currentLanguage ? 'active' : ''}" 
+               onclick="changeLanguage('\${lang.code}', '\${lang.flag_emoji}', '\${lang.native_name}')">
             <span class="flag">\${lang.flag_emoji || '🏳️'}</span>
             <span class="name">\${lang.native_name}</span>
             <span class="code">\${lang.code}</span>
@@ -139,29 +235,29 @@ export function LanguageSwitcher(currentLang = 'de') {
           // Load translations for the new language
           const translationsResponse = await axios.get(\`/api/translations/\${code}\`);
           if (translationsResponse.data.success) {
-            // Store translations in localStorage
             localStorage.setItem('translations', JSON.stringify(translationsResponse.data.translations));
             localStorage.setItem('currentLanguage', code);
           }
           
           // Update UI
           document.getElementById('currentLangFlag').textContent = flag;
-          document.getElementById('currentLangName').textContent = name;
+          document.getElementById('currentLangCode').textContent = code.toUpperCase();
           currentLanguage = code;
           
           // Close dropdown
-          document.getElementById('languageDropdown').style.display = 'none';
+          const dropdown = document.getElementById('languageDropdown');
+          const switcher = document.querySelector('.language-switcher');
+          dropdown.classList.remove('show');
+          switcher.classList.remove('open');
           
           // Show notification
           const messages = {
-            de: 'Sprache geändert zu',
-            en: 'Language changed to',
-            fr: 'Langue changée en',
-            es: 'Idioma cambiado a',
-            it: 'Lingua cambiata in',
-            pt: 'Idioma alterado para'
+            de: 'Sprache geändert',
+            en: 'Language changed',
+            fr: 'Langue changée',
+            es: 'Idioma cambiado'
           };
-          const message = \`\${messages[code] || messages.de} \${name}\`;
+          const message = messages[code] || messages.de;
           
           if (typeof showToast === 'function') {
             showToast(message, 'success');
@@ -170,29 +266,20 @@ export function LanguageSwitcher(currentLang = 'de') {
           // Apply translations immediately
           applyTranslations(translationsResponse.data.translations);
           
-          // Reload page after short delay to fully apply language
+          // Reload page after short delay
           setTimeout(() => {
             window.location.reload();
-          }, 800);
+          }, 600);
         } catch (error) {
           console.error('Error changing language:', error);
-          const errorMessages = {
-            de: 'Fehler beim Ändern der Sprache',
-            en: 'Error changing language',
-            fr: 'Erreur lors du changement de langue',
-            es: 'Error al cambiar el idioma',
-            it: 'Errore durante il cambio lingua',
-            pt: 'Erro ao alterar idioma'
-          };
           if (typeof showToast === 'function') {
-            showToast(errorMessages[currentLanguage] || errorMessages.de, 'error');
+            showToast('Error changing language', 'error');
           }
         }
       }
       
       // Apply translations to current page
       function applyTranslations(translations) {
-        // Translate all elements with data-i18n attribute
         document.querySelectorAll('[data-i18n]').forEach(element => {
           const key = element.getAttribute('data-i18n');
           if (translations[key]) {
@@ -200,7 +287,6 @@ export function LanguageSwitcher(currentLang = 'de') {
           }
         });
         
-        // Translate placeholders
         document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
           const key = element.getAttribute('data-i18n-placeholder');
           if (translations[key]) {
@@ -208,7 +294,6 @@ export function LanguageSwitcher(currentLang = 'de') {
           }
         });
         
-        // Translate titles
         document.querySelectorAll('[data-i18n-title]').forEach(element => {
           const key = element.getAttribute('data-i18n-title');
           if (translations[key]) {
@@ -227,8 +312,6 @@ export function LanguageSwitcher(currentLang = 'de') {
           if (translationsResponse.data.success) {
             localStorage.setItem('translations', JSON.stringify(translationsResponse.data.translations));
             localStorage.setItem('currentLanguage', savedLang);
-            
-            // Apply translations to current page
             applyTranslations(translationsResponse.data.translations);
           }
           
@@ -239,7 +322,7 @@ export function LanguageSwitcher(currentLang = 'de') {
           
           if (lang) {
             document.getElementById('currentLangFlag').textContent = lang.flag_emoji || '🇩🇪';
-            document.getElementById('currentLangName').textContent = lang.native_name;
+            document.getElementById('currentLangCode').textContent = lang.code.toUpperCase();
             currentLanguage = lang.code;
           }
         } catch (error) {
