@@ -35,3 +35,18 @@ lerna-debug.log*
 # Core dumps
 core
 core.*
+
+# Test/debug files (prevent future clutter)
+*.sh
+!setup.sh
+public/debug.html
+public/test-*.html
+*_BANNER.txt
+*_STATUS.txt
+*_SUMMARY.txt
+
+# Temporary files
+*.tmp
+*.backup
+*.bak
+*.old
