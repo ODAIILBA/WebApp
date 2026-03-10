@@ -24322,6 +24322,318 @@ app.post('/api/email/send-test', async (c) => {
   }
 });
 
+// ============================================
+// COUPONS API ENDPOINTS
+// ============================================
+
+// Get all coupons
+app.get('/api/coupons', async (c) => {
+  try {
+    const { env } = c;
+    const result = await env.DB.prepare(`
+      SELECT 
+        c.*,
+        COUNT(DISTINCT cu.id) as total_uses,
+        COALESCE(SUM(cu.discount_amount), 0) as total_discount_given
+      FROM coupons c
+      LEFT JOIN coupon_usage cu ON c.id = cu.coupon_id
+      GROUP BY c.id
+      ORDER BY c.created_at DESC
+    `).all();
+    
+    return c.json({ success: true, coupons: result.results || [] });
+  } catch (error: any) {
+    console.error('Error fetching coupons:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get single coupon
+app.get('/api/coupons/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    const coupon = await env.DB.prepare(`
+      SELECT c.*, COUNT(DISTINCT cu.id) as total_uses
+      FROM coupons c
+      LEFT JOIN coupon_usage cu ON c.id = cu.coupon_id
+      WHERE c.id = ?
+      GROUP BY c.id
+    `).bind(id).first();
+    
+    if (!coupon) {
+      return c.json({ success: false, error: 'Coupon not found' }, 404);
+    }
+    
+    return c.json({ success: true, coupon });
+  } catch (error: any) {
+    console.error('Error fetching coupon:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Validate coupon
+app.post('/api/coupons/validate', async (c) => {
+  try {
+    const { env } = c;
+    const { code, order_amount, user_id, customer_email } = await c.req.json();
+    
+    // Get coupon
+    const coupon = await env.DB.prepare(`
+      SELECT * FROM coupons WHERE code = ? AND is_active = 1
+    `).bind(code.toUpperCase()).first();
+    
+    if (!coupon) {
+      return c.json({ success: false, error: 'Invalid coupon code' }, 404);
+    }
+    
+    // Check if expired
+    if (coupon.valid_until) {
+      const now = new Date();
+      const validUntil = new Date(coupon.valid_until);
+      if (now > validUntil) {
+        return c.json({ success: false, error: 'Coupon has expired' }, 400);
+      }
+    }
+    
+    // Check minimum order amount
+    if (order_amount < coupon.minimum_order_amount) {
+      return c.json({ 
+        success: false, 
+        error: `Minimum order amount is €${coupon.minimum_order_amount}` 
+      }, 400);
+    }
+    
+    // Check usage limit
+    if (coupon.usage_limit && coupon.times_used >= coupon.usage_limit) {
+      return c.json({ success: false, error: 'Coupon usage limit reached' }, 400);
+    }
+    
+    // Check per-customer usage
+    if (user_id || customer_email) {
+      const usageCount = await env.DB.prepare(`
+        SELECT COUNT(*) as count FROM coupon_usage 
+        WHERE coupon_id = ? AND (user_id = ? OR customer_email = ?)
+      `).bind(coupon.id, user_id || null, customer_email || null).first();
+      
+      if (usageCount.count >= coupon.usage_per_customer) {
+        return c.json({ success: false, error: 'You have already used this coupon' }, 400);
+      }
+    }
+    
+    // Calculate discount
+    let discount_amount = 0;
+    if (coupon.discount_type === 'percentage') {
+      discount_amount = (order_amount * coupon.discount_value) / 100;
+      if (coupon.maximum_discount_amount) {
+        discount_amount = Math.min(discount_amount, coupon.maximum_discount_amount);
+      }
+    } else if (coupon.discount_type === 'fixed_amount') {
+      discount_amount = coupon.discount_value;
+    }
+    
+    return c.json({ 
+      success: true, 
+      coupon: {
+        id: coupon.id,
+        code: coupon.code,
+        description: coupon.description,
+        discount_type: coupon.discount_type,
+        discount_value: coupon.discount_value,
+        discount_amount: discount_amount.toFixed(2)
+      }
+    });
+  } catch (error: any) {
+    console.error('Error validating coupon:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Create new coupon
+app.post('/api/coupons', async (c) => {
+  try {
+    const { env } = c;
+    const data = await c.req.json();
+    
+    const result = await env.DB.prepare(`
+      INSERT INTO coupons (
+        code, description, discount_type, discount_value, 
+        minimum_order_amount, maximum_discount_amount, usage_limit, 
+        usage_per_customer, valid_from, valid_until, is_active,
+        applicable_products, applicable_categories, 
+        excluded_products, excluded_categories, minimum_items
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      data.code.toUpperCase(),
+      data.description || null,
+      data.discount_type,
+      data.discount_value,
+      data.minimum_order_amount || 0,
+      data.maximum_discount_amount || null,
+      data.usage_limit || null,
+      data.usage_per_customer || 1,
+      data.valid_from || null,
+      data.valid_until || null,
+      data.is_active !== undefined ? data.is_active : 1,
+      data.applicable_products ? JSON.stringify(data.applicable_products) : null,
+      data.applicable_categories ? JSON.stringify(data.applicable_categories) : null,
+      data.excluded_products ? JSON.stringify(data.excluded_products) : null,
+      data.excluded_categories ? JSON.stringify(data.excluded_categories) : null,
+      data.minimum_items || 1
+    ).run();
+    
+    return c.json({ 
+      success: true, 
+      coupon_id: result.meta.last_row_id,
+      message: 'Coupon created successfully' 
+    });
+  } catch (error: any) {
+    console.error('Error creating coupon:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Update coupon
+app.put('/api/coupons/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    const data = await c.req.json();
+    
+    await env.DB.prepare(`
+      UPDATE coupons SET
+        code = ?,
+        description = ?,
+        discount_type = ?,
+        discount_value = ?,
+        minimum_order_amount = ?,
+        maximum_discount_amount = ?,
+        usage_limit = ?,
+        usage_per_customer = ?,
+        valid_from = ?,
+        valid_until = ?,
+        is_active = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(
+      data.code.toUpperCase(),
+      data.description,
+      data.discount_type,
+      data.discount_value,
+      data.minimum_order_amount,
+      data.maximum_discount_amount,
+      data.usage_limit,
+      data.usage_per_customer,
+      data.valid_from,
+      data.valid_until,
+      data.is_active,
+      id
+    ).run();
+    
+    return c.json({ success: true, message: 'Coupon updated successfully' });
+  } catch (error: any) {
+    console.error('Error updating coupon:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Delete coupon
+app.delete('/api/coupons/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    await env.DB.prepare(`DELETE FROM coupons WHERE id = ?`).bind(id).run();
+    
+    return c.json({ success: true, message: 'Coupon deleted successfully' });
+  } catch (error: any) {
+    console.error('Error deleting coupon:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Toggle coupon active status
+app.post('/api/coupons/:id/toggle', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    await env.DB.prepare(`
+      UPDATE coupons SET is_active = NOT is_active WHERE id = ?
+    `).bind(id).run();
+    
+    return c.json({ success: true, message: 'Coupon status toggled' });
+  } catch (error: any) {
+    console.error('Error toggling coupon:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get coupon usage history
+app.get('/api/coupons/:id/usage', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    const result = await env.DB.prepare(`
+      SELECT 
+        cu.*,
+        o.order_number
+      FROM coupon_usage cu
+      LEFT JOIN orders o ON cu.order_id = o.id
+      WHERE cu.coupon_id = ?
+      ORDER BY cu.used_at DESC
+    `).bind(id).all();
+    
+    return c.json({ success: true, usage: result.results || [] });
+  } catch (error: any) {
+    console.error('Error fetching coupon usage:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get coupon statistics
+app.get('/api/coupons/stats/dashboard', async (c) => {
+  try {
+    const { env } = c;
+    
+    const [totalCoupons, activeCoupons, totalUses, totalDiscounts] = await Promise.all([
+      env.DB.prepare('SELECT COUNT(*) as count FROM coupons').first(),
+      env.DB.prepare('SELECT COUNT(*) as count FROM coupons WHERE is_active = 1').first(),
+      env.DB.prepare('SELECT COUNT(*) as count FROM coupon_usage').first(),
+      env.DB.prepare('SELECT COALESCE(SUM(discount_amount), 0) as total FROM coupon_usage').first()
+    ]);
+    
+    const topCoupons = await env.DB.prepare(`
+      SELECT 
+        c.code,
+        c.description,
+        COUNT(cu.id) as uses,
+        COALESCE(SUM(cu.discount_amount), 0) as total_discount
+      FROM coupons c
+      LEFT JOIN coupon_usage cu ON c.id = cu.coupon_id
+      GROUP BY c.id
+      ORDER BY uses DESC
+      LIMIT 5
+    `).all();
+    
+    return c.json({ 
+      success: true, 
+      stats: {
+        total_coupons: totalCoupons.count || 0,
+        active_coupons: activeCoupons.count || 0,
+        total_uses: totalUses.count || 0,
+        total_discounts: totalDiscounts.total || 0,
+        top_coupons: topCoupons.results || []
+      }
+    });
+  } catch (error: any) {
+    console.error('Error fetching coupon stats:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
 // END ENTERPRISE FEATURE ROUTES
 
 // ============================================
