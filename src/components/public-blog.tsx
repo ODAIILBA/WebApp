@@ -1,7 +1,7 @@
 // Public Blog Listing Page
 import { LanguageSwitcher } from './language-switcher'
 
-export function PublicBlog(posts: any[], categories: any[], currentCategory?: string) {
+export function PublicBlog(posts: any[], categories: any[], currentCategory?: string, basePath: string = '/blog') {
   const categoryName = categories.find(c => c.slug === currentCategory)?.name || 'Alle Beiträge';
   
   return `
@@ -97,11 +97,11 @@ export function PublicBlog(posts: any[], categories: any[], currentCategory?: st
         <div class="bg-white border-b">
             <div class="max-w-6xl mx-auto px-6 py-4">
                 <div class="flex flex-wrap gap-2">
-                    <a href="/de/news" class="category-pill ${!currentCategory ? 'active' : ''}">
+                    <a href="${basePath}" class="category-pill ${!currentCategory ? 'active' : ''}">>
                         <i class="fas fa-th mr-1"></i>Alle Beiträge
                     </a>
                     ${categories.map(cat => `
-                        <a href="/de/news/category/${cat.slug}" class="category-pill ${currentCategory === cat.slug ? 'active' : ''}">
+                        <a href="${basePath}/category/${cat.slug}" class="category-pill ${currentCategory === cat.slug ? 'active' : ''}">>
                             ${cat.name}
                         </a>
                     `).join('')}
@@ -120,7 +120,7 @@ export function PublicBlog(posts: any[], categories: any[], currentCategory?: st
                 <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                     ${posts.map(post => `
                         <article class="blog-card">
-                            <a href="/de/news/${post.slug}">
+                            <a href="${basePath}/${post.slug}">>
                                 ${post.featured_image ? `
                                     <img src="${post.featured_image}" alt="${post.title}" class="featured-image">
                                 ` : `
@@ -138,7 +138,7 @@ export function PublicBlog(posts: any[], categories: any[], currentCategory?: st
                                     ` : ''}
                                     ${post.is_ai_generated ? '<span class="badge-ai"><i class="fas fa-robot mr-1"></i>AI</span>' : ''}
                                 </div>
-                                <a href="/de/news/${post.slug}">
+                                <a href="${basePath}/${post.slug}">>
                                     <h2 class="text-xl font-bold mb-3 hover:text-blue-600 transition" style="color: var(--navy-dark);">
                                         ${post.title}
                                     </h2>
@@ -156,7 +156,7 @@ export function PublicBlog(posts: any[], categories: any[], currentCategory?: st
                                         ${post.view_count || 0} Aufrufe
                                     </span>
                                 </div>
-                                <a href="/de/news/${post.slug}" class="mt-4 inline-block text-blue-600 font-semibold hover:text-blue-700">
+                                <a href="${basePath}/${post.slug}"> class="mt-4 inline-block text-blue-600 font-semibold hover:text-blue-700">
                                     Weiterlesen <i class="fas fa-arrow-right ml-1"></i>
                                 </a>
                             </div>
@@ -175,7 +175,7 @@ export function PublicBlog(posts: any[], categories: any[], currentCategory?: st
                     <span class="mx-2">•</span>
                     <a href="/products" class="text-blue-600 hover:underline">Produkte</a>
                     <span class="mx-2">•</span>
-                    <a href="/de/news" class="text-blue-600 hover:underline">Blog</a>
+                    <a href="${basePath}" class="text-blue-600 hover:underline">Blog</a>
                 </div>
             </div>
         </footer>

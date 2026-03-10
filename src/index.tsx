@@ -11755,6 +11755,145 @@ app.get('/de/news/:slug', async (c) => {
   }
 })
 
+// Language-agnostic blog routes (redirects to /de/news for now)
+app.get('/blog', async (c) => {
+  try {
+    const { env } = c;
+    const { category } = c.req.query();
+    
+    let query = `
+      SELECT p.*, c.name as category_name, c.slug as category_slug,
+        GROUP_CONCAT(t.name) as tags
+      FROM blog_posts p
+      LEFT JOIN blog_categories c ON p.category_id = c.id
+      LEFT JOIN blog_post_tags pt ON p.id = pt.post_id
+      LEFT JOIN blog_tags t ON pt.tag_id = t.id
+      WHERE p.status = 'published'
+    `;
+    
+    if (category) {
+      query += ` AND c.slug = '${category}'`;
+    }
+    
+    query += ` GROUP BY p.id ORDER BY p.published_at DESC LIMIT 20`;
+    
+    const posts = await env.DB.prepare(query).all();
+    const categories = await env.DB.prepare('SELECT * FROM blog_categories WHERE is_active = 1 ORDER BY sort_order').all();
+    
+    const html = PublicBlog(posts.results || [], categories.results || [], category);
+    return c.html(html);
+  } catch (error: any) {
+    return c.html(`<h1>Error loading blog: ${error.message}</h1>`, 500);
+  }
+})
+
+app.get('/blog/:slug', async (c) => {
+  try {
+    const { env } = c;
+    const slug = c.req.param('slug');
+    
+    // Get post with category and tags
+    const post = await env.DB.prepare(`
+      SELECT p.*, c.name as category_name, c.slug as category_slug,
+        GROUP_CONCAT(t.name) as tags
+      FROM blog_posts p
+      LEFT JOIN blog_categories c ON p.category_id = c.id
+      LEFT JOIN blog_post_tags pt ON p.id = pt.post_id
+      LEFT JOIN blog_tags t ON pt.tag_id = t.id
+      WHERE p.slug = ? AND p.status = 'published'
+      GROUP BY p.id
+    `).bind(slug).first();
+    
+    if (!post) {
+      return c.html('<h1>Post not found</h1>', 404);
+    }
+    
+    // Increment view count
+    await env.DB.prepare('UPDATE blog_posts SET view_count = view_count + 1 WHERE id = ?').bind(post.id).run();
+    
+    // Get related posts (same category, excluding current)
+    const relatedPosts = await env.DB.prepare(`
+      SELECT p.*, c.name as category_name
+      FROM blog_posts p
+      LEFT JOIN blog_categories c ON p.category_id = c.id
+      WHERE p.category_id = ? AND p.id != ? AND p.status = 'published'
+      ORDER BY p.published_at DESC
+      LIMIT 3
+    `).bind(post.category_id, post.id).all();
+    
+    // Return single post view
+    const html = `
+      <!DOCTYPE html>
+      <html lang="de">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>${post.meta_title || post.title} - SOFTWAREKING24</title>
+        <meta name="description" content="${post.meta_description || post.excerpt}">
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
+      </head>
+      <body class="bg-gray-50">
+        <div class="max-w-4xl mx-auto px-4 py-8">
+          <a href="/blog" class="text-blue-600 hover:underline mb-4 inline-block">
+            <i class="fas fa-arrow-left mr-2"></i>Zurück zur Übersicht
+          </a>
+          
+          <article class="bg-white rounded-lg shadow-lg p-8">
+            <div class="mb-4">
+              <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                ${post.category_name}
+              </span>
+            </div>
+            
+            <h1 class="text-4xl font-bold mb-4">${post.title}</h1>
+            
+            <div class="flex items-center gap-4 text-gray-600 mb-6">
+              <span><i class="far fa-calendar mr-2"></i>${new Date(post.published_at).toLocaleDateString('de-DE')}</span>
+              <span><i class="far fa-eye mr-2"></i>${post.view_count + 1} Aufrufe</span>
+              ${post.is_ai_generated ? '<span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs"><i class="fas fa-robot mr-1"></i>KI-generiert</span>' : ''}
+            </div>
+            
+            <div class="prose max-w-none">
+              ${post.content}
+            </div>
+            
+            ${post.tags ? `
+              <div class="mt-8 pt-6 border-t">
+                <h3 class="font-bold mb-3">Tags:</h3>
+                <div class="flex flex-wrap gap-2">
+                  ${post.tags.split(',').map((tag: string) => `
+                    <span class="bg-gray-100 px-3 py-1 rounded-full text-sm">${tag.trim()}</span>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+            
+            ${relatedPosts.results && relatedPosts.results.length > 0 ? `
+              <div class="mt-8 pt-6 border-t">
+                <h3 class="font-bold text-xl mb-4">Weitere Artikel</h3>
+                <div class="grid gap-4">
+                  ${relatedPosts.results.map((related: any) => `
+                    <a href="/blog/${related.slug}" class="block p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition">
+                      <h4 class="font-semibold mb-2">${related.title}</h4>
+                      <p class="text-sm text-gray-600">${related.excerpt}</p>
+                    </a>
+                  `).join('')}
+                </div>
+              </div>
+            ` : ''}
+          </article>
+        </div>
+      </body>
+      </html>
+    `;
+    
+    return c.html(html);
+  } catch (error: any) {
+    return c.html(`<h1>Error loading post: ${error.message}</h1>`, 500);
+  }
+})
+
 // Tax Settings Management
 app.get('/admin/tax-settings', (c) => {
   const html = AdminTaxSettings()
