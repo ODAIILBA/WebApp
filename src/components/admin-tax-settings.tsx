@@ -1,508 +1,657 @@
-export function AdminTaxSettings() {
-  return `
-    <!DOCTYPE html>
-    <html lang="de">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Steuereinstellungen - Admin - SOFTWAREKING24</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
-        <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
-        <style>
-            :root {
-                --navy-dark: #132C46;
-                --gold: #D9A50B;
-            }
-            body {
-                background: #f8fafc;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            }
-            .stat-card {
-                background: white;
-                border-radius: 12px;
-                padding: 1.5rem;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-                transition: all 0.3s;
-            }
-            .stat-card:hover {
-                box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-                transform: translateY(-2px);
-            }
-            .tax-rule-card {
-                background: white;
-                border-radius: 12px;
-                padding: 1.5rem;
-                border-left: 4px solid var(--gold);
-                transition: all 0.2s;
-            }
-            .tax-rule-card:hover {
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            }
-            .form-group {
-                margin-bottom: 1.5rem;
-            }
-            .form-label {
-                display: block;
-                font-weight: 600;
-                margin-bottom: 0.5rem;
-                color: var(--navy-dark);
-            }
-            .form-input, .form-select {
-                width: 100%;
-                padding: 0.75rem;
-                border: 2px solid #e5e7eb;
-                border-radius: 8px;
-                font-size: 1rem;
-                transition: all 0.2s;
-            }
-            .form-input:focus, .form-select:focus {
-                outline: none;
-                border-color: var(--gold);
-            }
-            .btn-primary {
-                background: var(--navy-dark);
-                color: white;
-                padding: 0.75rem 1.5rem;
-                border-radius: 8px;
-                font-weight: 600;
-                transition: all 0.2s;
-            }
-            .btn-primary:hover {
-                background: #0f1f33;
-                transform: translateY(-1px);
-            }
-            .btn-success {
-                background: #10b981;
-                color: white;
-                padding: 0.5rem 1rem;
-                border-radius: 6px;
-                font-size: 0.875rem;
-            }
-            .btn-danger {
-                background: #ef4444;
-                color: white;
-                padding: 0.5rem 1rem;
-                border-radius: 6px;
-                font-size: 0.875rem;
-            }
-            .badge {
-                padding: 0.25rem 0.75rem;
-                border-radius: 12px;
-                font-size: 0.75rem;
-                font-weight: 600;
-            }
-            .badge-success { background: #d1fae5; color: #065f46; }
-            .badge-warning { background: #fef3c7; color: #92400e; }
-            .badge-inactive { background: #f3f4f6; color: #6b7280; }
-            .tab-button {
-                padding: 0.75rem 1.5rem;
-                border-bottom: 3px solid transparent;
-                font-weight: 600;
-                transition: all 0.2s;
-                color: #6b7280;
-            }
-            .tab-button.active {
-                color: var(--navy-dark);
-                border-bottom-color: var(--gold);
-            }
-            .tab-content {
-                display: none;
-            }
-            .tab-content.active {
-                display: block;
-            }
-        </style>
-    </head>
-    <body>
-        ${AdminSidebarAdvanced('/admin/tax-settings')}
-        
-        <div class="ml-80 p-8">
-            <div class="max-w-7xl mx-auto">
-                <!-- Header -->
-                <div class="flex justify-between items-center mb-8">
-                    <div>
-                        <h1 class="text-3xl font-bold" style="color: var(--navy-dark);">
-                            <i class="fas fa-percentage mr-3"></i>Steuereinstellungen
-                        </h1>
-                        <p class="text-gray-600 mt-2">Verwalten Sie Steuersätze und Steuerregeln für verschiedene Regionen</p>
-                    </div>
-                    <button onclick="addTaxRule()" class="btn-primary">
-                        <i class="fas fa-plus mr-2"></i>Neue Steuerregel
-                    </button>
-                </div>
+import type { FC } from 'hono/jsx'
 
-                <!-- Stats Cards -->
-                <div class="grid grid-cols-4 gap-6 mb-8">
-                    <div class="stat-card">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-600 text-sm">Aktive Regeln</p>
-                                <p class="text-3xl font-bold mt-1" style="color: var(--navy-dark);">8</p>
-                            </div>
-                            <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: rgba(19, 44, 70, 0.1);">
-                                <i class="fas fa-file-invoice text-xl" style="color: var(--navy-dark);"></i>
-                            </div>
-                        </div>
-                    </div>
+export const AdminTaxSettings: FC = () => {
+  return (
+    <div class="admin-tax">
+      <div class="admin-header">
+        <h2><i class="fas fa-percent"></i> Steuereinstellungen</h2>
+      </div>
 
-                    <div class="stat-card">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-600 text-sm">Standard MwSt</p>
-                                <p class="text-3xl font-bold mt-1" style="color: var(--navy-dark);">19%</p>
-                            </div>
-                            <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: rgba(217, 165, 11, 0.1);">
-                                <i class="fas fa-percentage text-xl" style="color: var(--gold);"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-600 text-sm">Länder</p>
-                                <p class="text-3xl font-bold mt-1" style="color: var(--navy-dark);">12</p>
-                            </div>
-                            <div class="w-12 h-12 rounded-full flex items-center justify-center bg-green-100">
-                                <i class="fas fa-globe text-xl text-green-600"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-600 text-sm">Steuereinnahmen (30d)</p>
-                                <p class="text-2xl font-bold mt-1" style="color: var(--navy-dark);">€12,456</p>
-                            </div>
-                            <div class="w-12 h-12 rounded-full flex items-center justify-center bg-blue-100">
-                                <i class="fas fa-euro-sign text-xl text-blue-600"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tabs -->
-                <div class="stat-card mb-8">
-                    <div class="flex border-b mb-6">
-                        <button class="tab-button active" onclick="switchTab('tax-rules')">
-                            <i class="fas fa-list mr-2"></i>Steuerregeln
-                        </button>
-                        <button class="tab-button" onclick="switchTab('eu-rules')">
-                            <i class="fas fa-flag mr-2"></i>EU-Regeln
-                        </button>
-                        <button class="tab-button" onclick="switchTab('exemptions')">
-                            <i class="fas fa-ban mr-2"></i>Befreiungen
-                        </button>
-                        <button class="tab-button" onclick="switchTab('reports')">
-                            <i class="fas fa-chart-bar mr-2"></i>Berichte
-                        </button>
-                    </div>
-
-                    <!-- Tax Rules Tab -->
-                    <div id="tax-rules" class="tab-content active">
-                        <div class="space-y-4">
-                            <div class="tax-rule-card">
-                                <div class="flex items-start justify-between">
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-3 mb-2">
-                                            <h3 class="font-bold text-lg">Deutschland - Standard MwSt</h3>
-                                            <span class="badge badge-success">Aktiv</span>
-                                        </div>
-                                        <div class="grid grid-cols-2 gap-4 text-sm">
-                                            <p><span class="text-gray-600">Steuersatz:</span> <strong>19%</strong></p>
-                                            <p><span class="text-gray-600">Land:</span> <strong>Deutschland (DE)</strong></p>
-                                            <p><span class="text-gray-600">Typ:</span> <strong>MwSt</strong></p>
-                                            <p><span class="text-gray-600">Priorität:</span> <strong>1</strong></p>
-                                        </div>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <button onclick="editTaxRule(1)" class="btn-success">
-                                            <i class="fas fa-edit mr-1"></i>Bearbeiten
-                                        </button>
-                                        <button onclick="deleteTaxRule(1)" class="btn-danger">
-                                            <i class="fas fa-trash mr-1"></i>Löschen
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="tax-rule-card">
-                                <div class="flex items-start justify-between">
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-3 mb-2">
-                                            <h3 class="font-bold text-lg">Deutschland - Reduzierte MwSt</h3>
-                                            <span class="badge badge-success">Aktiv</span>
-                                        </div>
-                                        <div class="grid grid-cols-2 gap-4 text-sm">
-                                            <p><span class="text-gray-600">Steuersatz:</span> <strong>7%</strong></p>
-                                            <p><span class="text-gray-600">Land:</span> <strong>Deutschland (DE)</strong></p>
-                                            <p><span class="text-gray-600">Typ:</span> <strong>MwSt (Reduziert)</strong></p>
-                                            <p><span class="text-gray-600">Priorität:</span> <strong>2</strong></p>
-                                        </div>
-                                        <p class="text-sm text-gray-600 mt-2">
-                                            <i class="fas fa-info-circle mr-1"></i>
-                                            Für Bücher, Zeitschriften, Lebensmittel, etc.
-                                        </p>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <button onclick="editTaxRule(2)" class="btn-success">
-                                            <i class="fas fa-edit mr-1"></i>Bearbeiten
-                                        </button>
-                                        <button onclick="deleteTaxRule(2)" class="btn-danger">
-                                            <i class="fas fa-trash mr-1"></i>Löschen
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="tax-rule-card">
-                                <div class="flex items-start justify-between">
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-3 mb-2">
-                                            <h3 class="font-bold text-lg">Österreich - Standard MwSt</h3>
-                                            <span class="badge badge-success">Aktiv</span>
-                                        </div>
-                                        <div class="grid grid-cols-2 gap-4 text-sm">
-                                            <p><span class="text-gray-600">Steuersatz:</span> <strong>20%</strong></p>
-                                            <p><span class="text-gray-600">Land:</span> <strong>Österreich (AT)</strong></p>
-                                            <p><span class="text-gray-600">Typ:</span> <strong>MwSt</strong></p>
-                                            <p><span class="text-gray-600">Priorität:</span> <strong>1</strong></p>
-                                        </div>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <button onclick="editTaxRule(3)" class="btn-success">
-                                            <i class="fas fa-edit mr-1"></i>Bearbeiten
-                                        </button>
-                                        <button onclick="deleteTaxRule(3)" class="btn-danger">
-                                            <i class="fas fa-trash mr-1"></i>Löschen
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="tax-rule-card">
-                                <div class="flex items-start justify-between">
-                                    <div class="flex-1">
-                                        <div class="flex items-center gap-3 mb-2">
-                                            <h3 class="font-bold text-lg">Schweiz - MwSt</h3>
-                                            <span class="badge badge-success">Aktiv</span>
-                                        </div>
-                                        <div class="grid grid-cols-2 gap-4 text-sm">
-                                            <p><span class="text-gray-600">Steuersatz:</span> <strong>7.7%</strong></p>
-                                            <p><span class="text-gray-600">Land:</span> <strong>Schweiz (CH)</strong></p>
-                                            <p><span class="text-gray-600">Typ:</span> <strong>MwSt</strong></p>
-                                            <p><span class="text-gray-600">Priorität:</span> <strong>1</strong></p>
-                                        </div>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <button onclick="editTaxRule(4)" class="btn-success">
-                                            <i class="fas fa-edit mr-1"></i>Bearbeiten
-                                        </button>
-                                        <button onclick="deleteTaxRule(4)" class="btn-danger">
-                                            <i class="fas fa-trash mr-1"></i>Löschen
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- EU Rules Tab -->
-                    <div id="eu-rules" class="tab-content">
-                        <div class="space-y-6">
-                            <div class="p-4 bg-blue-50 rounded-lg border border-blue-200">
-                                <h3 class="font-bold text-lg mb-2" style="color: var(--navy-dark);">
-                                    <i class="fas fa-info-circle mr-2"></i>EU-weite MwSt-Regeln
-                                </h3>
-                                <p class="text-gray-700">
-                                    Für Verkäufe innerhalb der EU gelten besondere Regelungen. Ab einem Schwellenwert von €10,000 
-                                    muss die MwSt des Bestimmungslandes angewandt werden.
-                                </p>
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="form-group">
-                                    <label class="form-label">OSS-Registrierung (One Stop Shop)</label>
-                                    <select class="form-select">
-                                        <option>Aktiv</option>
-                                        <option>Inaktiv</option>
-                                    </select>
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label">Schwellenwert</label>
-                                    <input type="text" class="form-input" value="€10,000" />
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label">Umsatz aktuelles Jahr</label>
-                                    <input type="text" class="form-input" value="€7,845" readonly />
-                                </div>
-
-                                <div class="form-group">
-                                    <label class="form-label">Verbleibend bis Schwellenwert</label>
-                                    <input type="text" class="form-input" value="€2,155" readonly />
-                                </div>
-                            </div>
-
-                            <button class="btn-primary">
-                                <i class="fas fa-save mr-2"></i>Einstellungen speichern
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Exemptions Tab -->
-                    <div id="exemptions" class="tab-content">
-                        <div class="space-y-4">
-                            <p class="text-gray-600">
-                                Definieren Sie Steuerbefreiungen für bestimmte Produkte, Kunden oder Regionen.
-                            </p>
-
-                            <div class="tax-rule-card">
-                                <div class="flex items-start justify-between">
-                                    <div>
-                                        <h3 class="font-bold text-lg mb-2">B2B-Verkäufe innerhalb EU</h3>
-                                        <p class="text-sm text-gray-600">
-                                            <i class="fas fa-tag mr-1"></i>
-                                            Steuerbefreiung für Verkäufe an Unternehmen mit gültiger USt-IdNr.
-                                        </p>
-                                        <p class="text-sm mt-2">
-                                            <span class="badge badge-success">Aktiv</span>
-                                        </p>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <button onclick="editExemption(1)" class="btn-success">
-                                            <i class="fas fa-edit mr-1"></i>Bearbeiten
-                                        </button>
-                                        <button onclick="deleteExemption(1)" class="btn-danger">
-                                            <i class="fas fa-trash mr-1"></i>Löschen
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="tax-rule-card">
-                                <div class="flex items-start justify-between">
-                                    <div>
-                                        <h3 class="font-bold text-lg mb-2">Digitale Produkte - Nicht-EU</h3>
-                                        <p class="text-sm text-gray-600">
-                                            <i class="fas fa-tag mr-1"></i>
-                                            Keine MwSt für Verkäufe digitaler Produkte außerhalb der EU
-                                        </p>
-                                        <p class="text-sm mt-2">
-                                            <span class="badge badge-success">Aktiv</span>
-                                        </p>
-                                    </div>
-                                    <div class="flex gap-2">
-                                        <button onclick="editExemption(2)" class="btn-success">
-                                            <i class="fas fa-edit mr-1"></i>Bearbeiten
-                                        </button>
-                                        <button onclick="deleteExemption(2)" class="btn-danger">
-                                            <i class="fas fa-trash mr-1"></i>Löschen
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <button onclick="addExemption()" class="btn-primary">
-                                <i class="fas fa-plus mr-2"></i>Neue Befreiung
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Reports Tab -->
-                    <div id="reports" class="tab-content">
-                        <div class="space-y-6">
-                            <div class="grid grid-cols-3 gap-6">
-                                <div class="stat-card">
-                                    <p class="text-gray-600 text-sm mb-1">Steuereinnahmen (Monat)</p>
-                                    <p class="text-3xl font-bold" style="color: var(--navy-dark);">€12,456</p>
-                                    <p class="text-sm text-green-600 mt-1">
-                                        <i class="fas fa-arrow-up mr-1"></i>+12.5% vs. Vormonat
-                                    </p>
-                                </div>
-
-                                <div class="stat-card">
-                                    <p class="text-gray-600 text-sm mb-1">Durchschn. Steuersatz</p>
-                                    <p class="text-3xl font-bold" style="color: var(--navy-dark);">18.2%</p>
-                                    <p class="text-sm text-gray-600 mt-1">
-                                        <i class="fas fa-equals mr-1"></i>Unverändert
-                                    </p>
-                                </div>
-
-                                <div class="stat-card">
-                                    <p class="text-gray-600 text-sm mb-1">Transaktionen</p>
-                                    <p class="text-3xl font-bold" style="color: var(--navy-dark);">1,234</p>
-                                    <p class="text-sm text-green-600 mt-1">
-                                        <i class="fas fa-arrow-up mr-1"></i>+8.3% vs. Vormonat
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div class="flex gap-4">
-                                <button class="btn-primary">
-                                    <i class="fas fa-download mr-2"></i>Monatsbericht exportieren
-                                </button>
-                                <button class="btn-primary">
-                                    <i class="fas fa-file-pdf mr-2"></i>UVA erstellen
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+      {/* Tax Rates Section */}
+      <div class="admin-card">
+        <div class="card-header">
+          <h3><i class="fas fa-calculator"></i> Steuersätze</h3>
+          <button class="btn-primary" onclick="openAddRateModal()">
+            <i class="fas fa-plus"></i> Neuer Steuersatz
+          </button>
         </div>
+        
+        <div class="table-responsive">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Land</th>
+                <th>Satz (%)</th>
+                <th>Priorität</th>
+                <th>Status</th>
+                <th>Aktionen</th>
+              </tr>
+            </thead>
+            <tbody id="rates-tbody">
+              <tr>
+                <td colspan="6" style="text-align: center; padding: 40px;">
+                  <i class="fas fa-spinner fa-spin"></i> Lade Steuersätze...
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-        <script>
-            function switchTab(tabName) {
-                // Hide all tabs
-                document.querySelectorAll('.tab-content').forEach(tab => {
-                    tab.classList.remove('active');
-                });
-                
-                // Remove active from all buttons
-                document.querySelectorAll('.tab-button').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                
-                // Show selected tab
-                document.getElementById(tabName).classList.add('active');
-                event.target.classList.add('active');
-            }
+      {/* Tax Classes Section */}
+      <div class="admin-card">
+        <div class="card-header">
+          <h3><i class="fas fa-tags"></i> Steuerklassen</h3>
+          <button class="btn-secondary" onclick="openAddClassModal()">
+            <i class="fas fa-plus"></i> Neue Klasse
+          </button>
+        </div>
+        
+        <div class="classes-grid" id="classes-grid">
+          <div style="text-align: center; padding: 40px;">
+            <i class="fas fa-spinner fa-spin"></i> Lade Steuerklassen...
+          </div>
+        </div>
+      </div>
 
-            function addTaxRule() {
-                alert('Neue Steuerregel hinzufügen...');
-            }
+      {/* Global Settings Section */}
+      <div class="admin-card">
+        <h3><i class="fas fa-cog"></i> Globale Einstellungen</h3>
+        
+        <form id="settings-form">
+          <div class="settings-grid">
+            <div class="setting-item">
+              <label class="setting-label">Preise inkl. Steuern</label>
+              <select id="prices-include-tax" class="form-control">
+                <option value="true">Ja</option>
+                <option value="false">Nein</option>
+              </select>
+            </div>
+            
+            <div class="setting-item">
+              <label class="setting-label">Steuern berechnen basierend auf</label>
+              <select id="tax-based-on" class="form-control">
+                <option value="shipping">Lieferadresse</option>
+                <option value="billing">Rechnungsadresse</option>
+                <option value="shop">Shop-Standort</option>
+              </select>
+            </div>
+            
+            <div class="setting-item">
+              <label class="setting-label">Preisanzeige im Shop</label>
+              <select id="display-prices-shop" class="form-control">
+                <option value="including">Inkl. MwSt.</option>
+                <option value="excluding">Exkl. MwSt.</option>
+              </select>
+            </div>
+            
+            <div class="setting-item">
+              <label class="setting-label">Preisanzeige im Checkout</label>
+              <select id="display-prices-checkout" class="form-control">
+                <option value="including">Inkl. MwSt.</option>
+                <option value="excluding">Exkl. MwSt.</option>
+              </select>
+            </div>
+            
+            <div class="setting-item">
+              <label class="setting-label">MwSt.-Zwischensumme anzeigen</label>
+              <select id="display-tax-subtotal" class="form-control">
+                <option value="true">Ja</option>
+                <option value="false">Nein</option>
+              </select>
+            </div>
+            
+            <div class="setting-item">
+              <label class="setting-label">Steuern auf Zwischensumme runden</label>
+              <select id="round-tax-subtotal" class="form-control">
+                <option value="true">Ja</option>
+                <option value="false">Nein</option>
+              </select>
+            </div>
+          </div>
+          
+          <div style="margin-top: 20px;">
+            <button type="submit" class="btn-primary">
+              <i class="fas fa-save"></i> Einstellungen speichern
+            </button>
+          </div>
+        </form>
+      </div>
 
-            function editTaxRule(id) {
-                alert(\`Steuerregel \${id} bearbeiten...\`);
-            }
+      {/* Add/Edit Rate Modal */}
+      <div id="rate-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3><i class="fas fa-plus"></i> <span id="rate-modal-title">Neuer Steuersatz</span></h3>
+            <button class="modal-close" onclick="closeRateModal()">&times;</button>
+          </div>
+          <div class="modal-body">
+            <form id="rate-form">
+              <input type="hidden" id="rate-id" />
+              
+              <div class="form-group">
+                <label>Name *</label>
+                <input type="text" id="rate-name" class="form-control" required />
+              </div>
+              
+              <div class="form-group">
+                <label>Code *</label>
+                <input type="text" id="rate-code" class="form-control" required />
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Steuersatz (%) *</label>
+                  <input type="number" id="rate-rate" class="form-control" step="0.01" required />
+                </div>
+                <div class="form-group">
+                  <label>Priorität</label>
+                  <input type="number" id="rate-priority" class="form-control" value="1" />
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Land (ISO Code) *</label>
+                  <input type="text" id="rate-country" class="form-control" maxlength="2" required />
+                </div>
+                <div class="form-group">
+                  <label>Bundesland/State</label>
+                  <input type="text" id="rate-state" class="form-control" />
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label>PLZ</label>
+                  <input type="text" id="rate-zip" class="form-control" />
+                </div>
+                <div class="form-group">
+                  <label>Stadt</label>
+                  <input type="text" id="rate-city" class="form-control" />
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="rate-compound" />
+                  Zusammengesetzte Steuer (Steuer auf Steuer)
+                </label>
+              </div>
+              
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="rate-active" checked />
+                  Aktiv
+                </label>
+              </div>
+              
+              <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeRateModal()">Abbrechen</button>
+                <button type="submit" class="btn-primary">Speichern</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
 
-            function deleteTaxRule(id) {
-                if (confirm('Möchten Sie diese Steuerregel wirklich löschen?')) {
-                    alert(\`Steuerregel \${id} gelöscht\`);
-                }
-            }
+      {/* Add/Edit Class Modal */}
+      <div id="class-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3><i class="fas fa-plus"></i> <span id="class-modal-title">Neue Steuerklasse</span></h3>
+            <button class="modal-close" onclick="closeClassModal()">&times;</button>
+          </div>
+          <div class="modal-body">
+            <form id="class-form">
+              <input type="hidden" id="class-id" />
+              
+              <div class="form-group">
+                <label>Name *</label>
+                <input type="text" id="class-name" class="form-control" required />
+              </div>
+              
+              <div class="form-group">
+                <label>Beschreibung</label>
+                <textarea id="class-description" class="form-control" rows="2"></textarea>
+              </div>
+              
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="class-default" />
+                  Als Standard markieren
+                </label>
+              </div>
+              
+              <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeClassModal()">Abbrechen</button>
+                <button type="submit" class="btn-primary">Speichern</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
 
-            function addExemption() {
-                alert('Neue Steuerbefreiung hinzufügen...');
-            }
+      <style>{`
+        .admin-tax {
+          padding: 20px;
+        }
+        .card-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 20px;
+        }
+        .card-header h3 {
+          margin: 0;
+          color: #1a2a4e;
+        }
+        .classes-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+          gap: 15px;
+        }
+        .class-card {
+          background: #f8f9fa;
+          border-radius: 8px;
+          padding: 20px;
+          border-left: 4px solid #1a2a4e;
+          transition: all 0.2s;
+        }
+        .class-card:hover {
+          box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+          transform: translateY(-2px);
+        }
+        .class-card.default {
+          border-left-color: #d4af37;
+          background: #fffbf0;
+        }
+        .class-title {
+          font-size: 18px;
+          font-weight: 600;
+          color: #1a2a4e;
+          margin-bottom: 8px;
+        }
+        .class-description {
+          font-size: 14px;
+          color: #666;
+          margin-bottom: 15px;
+          line-height: 1.4;
+        }
+        .class-actions {
+          display: flex;
+          gap: 10px;
+        }
+        .class-actions button {
+          flex: 1;
+          padding: 6px;
+        }
+        .settings-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+          gap: 20px;
+          margin-top: 20px;
+        }
+        .setting-item {
+          background: #f8f9fa;
+          padding: 15px;
+          border-radius: 8px;
+        }
+        .setting-label {
+          display: block;
+          font-weight: 600;
+          color: #1a2a4e;
+          margin-bottom: 8px;
+        }
+        .form-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 15px;
+        }
+        @media (max-width: 768px) {
+          .settings-grid {
+            grid-template-columns: 1fr;
+          }
+          .form-row {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
 
-            function editExemption(id) {
-                alert(\`Steuerbefreiung \${id} bearbeiten...\`);
-            }
+      <script dangerouslySetInnerHTML={{ __html: `
+        let ratesData = [];
+        let classesData = [];
+        let settingsData = {};
 
-            function deleteExemption(id) {
-                if (confirm('Möchten Sie diese Steuerbefreiung wirklich löschen?')) {
-                    alert(\`Steuerbefreiung \${id} gelöscht\`);
-                }
+        // Load all data
+        async function loadAllData() {
+          await Promise.all([loadRates(), loadClasses(), loadSettings()]);
+        }
+
+        // Load tax rates
+        async function loadRates() {
+          try {
+            const response = await fetch('/api/tax/rates');
+            const data = await response.json();
+            if (data.success) {
+              ratesData = data.rates;
+              renderRates();
             }
-        </script>
-    </body>
-    </html>
-  `.trim();
+          } catch (error) {
+            console.error('Error loading rates:', error);
+          }
+        }
+
+        function renderRates() {
+          const tbody = document.getElementById('rates-tbody');
+          if (ratesData.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; padding: 40px;">Keine Steuersätze vorhanden</td></tr>';
+            return;
+          }
+          
+          tbody.innerHTML = ratesData.map(r => \`
+            <tr>
+              <td><strong>\${r.name}</strong></td>
+              <td>\${r.country_code}\${r.state_code ? ' / ' + r.state_code : ''}\${r.city ? ', ' + r.city : ''}</td>
+              <td><strong>\${r.rate}%</strong></td>
+              <td>\${r.priority}</td>
+              <td>
+                <span class="status-badge status-\${r.is_active ? 'active' : 'inactive'}">
+                  \${r.is_active ? 'Aktiv' : 'Inaktiv'}
+                </span>
+              </td>
+              <td>
+                <button class="action-btn btn-toggle" onclick="toggleRate(\${r.id})" title="Status ändern">
+                  <i class="fas fa-\${r.is_active ? 'check' : 'times'}"></i>
+                </button>
+                <button class="action-btn btn-edit" onclick="editRate(\${r.id})" title="Bearbeiten">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="action-btn btn-delete" onclick="deleteRate(\${r.id})" title="Löschen">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </td>
+            </tr>
+          \`).join('');
+        }
+
+        // Load tax classes
+        async function loadClasses() {
+          try {
+            const response = await fetch('/api/tax/classes');
+            const data = await response.json();
+            if (data.success) {
+              classesData = data.classes;
+              renderClasses();
+            }
+          } catch (error) {
+            console.error('Error loading classes:', error);
+          }
+        }
+
+        function renderClasses() {
+          const grid = document.getElementById('classes-grid');
+          if (classesData.length === 0) {
+            grid.innerHTML = '<div style="text-align: center; padding: 40px;">Keine Steuerklassen vorhanden</div>';
+            return;
+          }
+          
+          grid.innerHTML = classesData.map(c => \`
+            <div class="class-card \${c.is_default ? 'default' : ''}">
+              <div class="class-title">
+                \${c.name}
+                \${c.is_default ? '<i class="fas fa-star" style="color: #d4af37; font-size: 14px; margin-left: 5px;"></i>' : ''}
+              </div>
+              \${c.description ? \`<div class="class-description">\${c.description}</div>\` : ''}
+              <div class="class-actions">
+                <button class="action-btn btn-edit" onclick="editClass(\${c.id})" title="Bearbeiten">
+                  <i class="fas fa-edit"></i> Bearbeiten
+                </button>
+                \${!c.is_default ? \`
+                  <button class="action-btn btn-delete" onclick="deleteClass(\${c.id})" title="Löschen">
+                    <i class="fas fa-trash"></i> Löschen
+                  </button>
+                \` : ''}
+              </div>
+            </div>
+          \`).join('');
+        }
+
+        // Load settings
+        async function loadSettings() {
+          try {
+            const response = await fetch('/api/tax/settings');
+            const data = await response.json();
+            if (data.success) {
+              settingsData = data.settings;
+              renderSettings();
+            }
+          } catch (error) {
+            console.error('Error loading settings:', error);
+          }
+        }
+
+        function renderSettings() {
+          document.getElementById('prices-include-tax').value = settingsData.prices_include_tax || 'true';
+          document.getElementById('tax-based-on').value = settingsData.tax_based_on || 'shipping';
+          document.getElementById('display-prices-shop').value = settingsData.display_prices_in_shop || 'including';
+          document.getElementById('display-prices-checkout').value = settingsData.display_prices_during_checkout || 'including';
+          document.getElementById('display-tax-subtotal').value = settingsData.display_tax_subtotal || 'true';
+          document.getElementById('round-tax-subtotal').value = settingsData.round_tax_at_subtotal || 'false';
+        }
+
+        // Rate CRUD
+        function openAddRateModal() {
+          document.getElementById('rate-modal-title').textContent = 'Neuer Steuersatz';
+          document.getElementById('rate-form').reset();
+          document.getElementById('rate-id').value = '';
+          document.getElementById('rate-modal').style.display = 'block';
+        }
+
+        function closeRateModal() {
+          document.getElementById('rate-modal').style.display = 'none';
+        }
+
+        function editRate(id) {
+          const rate = ratesData.find(r => r.id === id);
+          if (!rate) return;
+          
+          document.getElementById('rate-modal-title').textContent = 'Steuersatz bearbeiten';
+          document.getElementById('rate-id').value = rate.id;
+          document.getElementById('rate-name').value = rate.name;
+          document.getElementById('rate-code').value = rate.code;
+          document.getElementById('rate-rate').value = rate.rate;
+          document.getElementById('rate-priority').value = rate.priority;
+          document.getElementById('rate-country').value = rate.country_code;
+          document.getElementById('rate-state').value = rate.state_code || '';
+          document.getElementById('rate-zip').value = rate.zip_code || '';
+          document.getElementById('rate-city').value = rate.city || '';
+          document.getElementById('rate-compound').checked = rate.is_compound === 1;
+          document.getElementById('rate-active').checked = rate.is_active === 1;
+          document.getElementById('rate-modal').style.display = 'block';
+        }
+
+        document.getElementById('rate-form').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const id = document.getElementById('rate-id').value;
+          const data = {
+            name: document.getElementById('rate-name').value,
+            code: document.getElementById('rate-code').value,
+            rate: parseFloat(document.getElementById('rate-rate').value),
+            priority: parseInt(document.getElementById('rate-priority').value),
+            country_code: document.getElementById('rate-country').value.toUpperCase(),
+            state_code: document.getElementById('rate-state').value || null,
+            zip_code: document.getElementById('rate-zip').value || null,
+            city: document.getElementById('rate-city').value || null,
+            is_compound: document.getElementById('rate-compound').checked,
+            is_active: document.getElementById('rate-active').checked
+          };
+          
+          try {
+            const url = id ? \`/api/tax/rates/\${id}\` : '/api/tax/rates';
+            const method = id ? 'PUT' : 'POST';
+            const response = await fetch(url, {
+              method,
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            if (result.success) {
+              showToast(id ? 'Steuersatz aktualisiert' : 'Steuersatz erstellt', 'success');
+              closeRateModal();
+              loadRates();
+            } else {
+              showToast(result.error || 'Fehler beim Speichern', 'error');
+            }
+          } catch (error) {
+            console.error('Error saving rate:', error);
+            showToast('Fehler beim Speichern', 'error');
+          }
+        });
+
+        async function toggleRate(id) {
+          try {
+            const response = await fetch(\`/api/tax/rates/\${id}/toggle\`, { method: 'PATCH' });
+            const result = await response.json();
+            if (result.success) {
+              showToast('Status geändert', 'success');
+              loadRates();
+            }
+          } catch (error) {
+            console.error('Error toggling rate:', error);
+            showToast('Fehler beim Ändern', 'error');
+          }
+        }
+
+        async function deleteRate(id) {
+          if (!confirm('Steuersatz wirklich löschen?')) return;
+          
+          try {
+            const response = await fetch(\`/api/tax/rates/\${id}\`, { method: 'DELETE' });
+            const result = await response.json();
+            if (result.success) {
+              showToast('Steuersatz gelöscht', 'success');
+              loadRates();
+            }
+          } catch (error) {
+            console.error('Error deleting rate:', error);
+            showToast('Fehler beim Löschen', 'error');
+          }
+        }
+
+        // Class CRUD
+        function openAddClassModal() {
+          document.getElementById('class-modal-title').textContent = 'Neue Steuerklasse';
+          document.getElementById('class-form').reset();
+          document.getElementById('class-id').value = '';
+          document.getElementById('class-modal').style.display = 'block';
+        }
+
+        function closeClassModal() {
+          document.getElementById('class-modal').style.display = 'none';
+        }
+
+        function editClass(id) {
+          const cls = classesData.find(c => c.id === id);
+          if (!cls) return;
+          
+          document.getElementById('class-modal-title').textContent = 'Steuerklasse bearbeiten';
+          document.getElementById('class-id').value = cls.id;
+          document.getElementById('class-name').value = cls.name;
+          document.getElementById('class-description').value = cls.description || '';
+          document.getElementById('class-default').checked = cls.is_default === 1;
+          document.getElementById('class-modal').style.display = 'block';
+        }
+
+        document.getElementById('class-form').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const id = document.getElementById('class-id').value;
+          const data = {
+            name: document.getElementById('class-name').value,
+            description: document.getElementById('class-description').value,
+            is_default: document.getElementById('class-default').checked
+          };
+          
+          try {
+            const url = id ? \`/api/tax/classes/\${id}\` : '/api/tax/classes';
+            const method = id ? 'PUT' : 'POST';
+            const response = await fetch(url, {
+              method,
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            if (result.success) {
+              showToast(id ? 'Steuerklasse aktualisiert' : 'Steuerklasse erstellt', 'success');
+              closeClassModal();
+              loadClasses();
+            } else {
+              showToast(result.error || 'Fehler beim Speichern', 'error');
+            }
+          } catch (error) {
+            console.error('Error saving class:', error);
+            showToast('Fehler beim Speichern', 'error');
+          }
+        });
+
+        async function deleteClass(id) {
+          if (!confirm('Steuerklasse wirklich löschen?')) return;
+          
+          try {
+            const response = await fetch(\`/api/tax/classes/\${id}\`, { method: 'DELETE' });
+            const result = await response.json();
+            if (result.success) {
+              showToast('Steuerklasse gelöscht', 'success');
+              loadClasses();
+            }
+          } catch (error) {
+            console.error('Error deleting class:', error);
+            showToast('Fehler beim Löschen', 'error');
+          }
+        }
+
+        // Save settings
+        document.getElementById('settings-form').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          
+          const settings = {
+            prices_include_tax: document.getElementById('prices-include-tax').value,
+            tax_based_on: document.getElementById('tax-based-on').value,
+            display_prices_in_shop: document.getElementById('display-prices-shop').value,
+            display_prices_during_checkout: document.getElementById('display-prices-checkout').value,
+            display_tax_subtotal: document.getElementById('display-tax-subtotal').value,
+            round_tax_at_subtotal: document.getElementById('round-tax-subtotal').value
+          };
+          
+          try {
+            const promises = Object.entries(settings).map(([key, value]) =>
+              fetch(\`/api/tax/settings/\${key}\`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ value })
+              })
+            );
+            
+            await Promise.all(promises);
+            showToast('Einstellungen gespeichert', 'success');
+          } catch (error) {
+            console.error('Error saving settings:', error);
+            showToast('Fehler beim Speichern', 'error');
+          }
+        });
+
+        function showToast(message, type = 'info') {
+          if (window.showToast) {
+            window.showToast(message, type);
+          } else {
+            alert(message);
+          }
+        }
+
+        // Initialize
+        loadAllData();
+      ` }} ></script>
+    </div>
+  )
 }
-
-import { AdminSidebarAdvanced } from './admin-sidebar-advanced';

@@ -25475,6 +25475,302 @@ app.post('/api/shipping-methods/available', async (c) => {
   }
 });
 
+// ============================================
+// TAX SETTINGS API ROUTES
+// ============================================
+
+// Get all tax rates
+app.get('/api/tax/rates', async (c) => {
+  try {
+    const { env } = c;
+    const activeOnly = c.req.query('active') === 'true';
+    
+    let query = 'SELECT * FROM tax_rates';
+    if (activeOnly) {
+      query += ' WHERE is_active = 1';
+    }
+    query += ' ORDER BY country_code, priority, name';
+    
+    const rates = await env.DB.prepare(query).all();
+    
+    return c.json({ success: true, rates: rates.results || [] });
+  } catch (error: any) {
+    console.error('Error fetching tax rates:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get tax rate by ID
+app.get('/api/tax/rates/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    const rate = await env.DB.prepare('SELECT * FROM tax_rates WHERE id = ?').bind(id).first();
+    
+    if (!rate) {
+      return c.json({ success: false, error: 'Tax rate not found' }, 404);
+    }
+    
+    return c.json({ success: true, rate });
+  } catch (error: any) {
+    console.error('Error fetching tax rate:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Create tax rate
+app.post('/api/tax/rates', async (c) => {
+  try {
+    const { env } = c;
+    const data = await c.req.json();
+    
+    const result = await env.DB.prepare(\`
+      INSERT INTO tax_rates (
+        name, code, rate, country_code, state_code, zip_code, city,
+        is_compound, priority, is_active
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    \`).bind(
+      data.name,
+      data.code,
+      data.rate,
+      data.country_code,
+      data.state_code || null,
+      data.zip_code || null,
+      data.city || null,
+      data.is_compound ? 1 : 0,
+      data.priority || 1,
+      data.is_active !== false ? 1 : 0
+    ).run();
+    
+    return c.json({ success: true, id: result.meta.last_row_id });
+  } catch (error: any) {
+    console.error('Error creating tax rate:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Update tax rate
+app.put('/api/tax/rates/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    const data = await c.req.json();
+    
+    await env.DB.prepare(\`
+      UPDATE tax_rates 
+      SET name = ?, code = ?, rate = ?, country_code = ?, state_code = ?,
+          zip_code = ?, city = ?, is_compound = ?, priority = ?, is_active = ?,
+          updated_at = datetime('now')
+      WHERE id = ?
+    \`).bind(
+      data.name,
+      data.code,
+      data.rate,
+      data.country_code,
+      data.state_code || null,
+      data.zip_code || null,
+      data.city || null,
+      data.is_compound ? 1 : 0,
+      data.priority || 1,
+      data.is_active !== false ? 1 : 0,
+      id
+    ).run();
+    
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('Error updating tax rate:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Delete tax rate
+app.delete('/api/tax/rates/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    await env.DB.prepare('DELETE FROM tax_rates WHERE id = ?').bind(id).run();
+    
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('Error deleting tax rate:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Toggle tax rate active status
+app.patch('/api/tax/rates/:id/toggle', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    await env.DB.prepare(\`
+      UPDATE tax_rates 
+      SET is_active = NOT is_active,
+          updated_at = datetime('now')
+      WHERE id = ?
+    \`).bind(id).run();
+    
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('Error toggling tax rate:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get tax classes
+app.get('/api/tax/classes', async (c) => {
+  try {
+    const { env } = c;
+    
+    const classes = await env.DB.prepare('SELECT * FROM tax_classes ORDER BY name').all();
+    
+    return c.json({ success: true, classes: classes.results || [] });
+  } catch (error: any) {
+    console.error('Error fetching tax classes:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Create tax class
+app.post('/api/tax/classes', async (c) => {
+  try {
+    const { env } = c;
+    const data = await c.req.json();
+    
+    const result = await env.DB.prepare(\`
+      INSERT INTO tax_classes (name, description, is_default)
+      VALUES (?, ?, ?)
+    \`).bind(data.name, data.description || '', data.is_default ? 1 : 0).run();
+    
+    return c.json({ success: true, id: result.meta.last_row_id });
+  } catch (error: any) {
+    console.error('Error creating tax class:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Update tax class
+app.put('/api/tax/classes/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    const data = await c.req.json();
+    
+    await env.DB.prepare(\`
+      UPDATE tax_classes 
+      SET name = ?, description = ?, is_default = ?
+      WHERE id = ?
+    \`).bind(data.name, data.description || '', data.is_default ? 1 : 0, id).run();
+    
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('Error updating tax class:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Delete tax class
+app.delete('/api/tax/classes/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    await env.DB.prepare('DELETE FROM tax_classes WHERE id = ?').bind(id).run();
+    
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('Error deleting tax class:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get tax settings
+app.get('/api/tax/settings', async (c) => {
+  try {
+    const { env } = c;
+    
+    const settings = await env.DB.prepare('SELECT * FROM tax_settings').all();
+    
+    const settingsObj: Record<string, string> = {};
+    for (const setting of (settings.results || [])) {
+      settingsObj[setting.key] = setting.value;
+    }
+    
+    return c.json({ success: true, settings: settingsObj });
+  } catch (error: any) {
+    console.error('Error fetching tax settings:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Update tax setting
+app.put('/api/tax/settings/:key', async (c) => {
+  try {
+    const { env } = c;
+    const key = c.req.param('key');
+    const { value } = await c.req.json();
+    
+    await env.DB.prepare(\`
+      INSERT OR REPLACE INTO tax_settings (key, value, updated_at)
+      VALUES (?, ?, datetime('now'))
+    \`).bind(key, value).run();
+    
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('Error updating tax setting:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Calculate tax for order
+app.post('/api/tax/calculate', async (c) => {
+  try {
+    const { env } = c;
+    const { amount, country, state, zip, tax_class_id } = await c.req.json();
+    
+    // Find applicable tax rate
+    let query = \`
+      SELECT tr.* FROM tax_rates tr
+      WHERE tr.is_active = 1 AND tr.country_code = ?
+    \`;
+    
+    const params = [country];
+    
+    if (state) {
+      query += \` AND (tr.state_code IS NULL OR tr.state_code = ?)\`;
+      params.push(state);
+    }
+    if (zip) {
+      query += \` AND (tr.zip_code IS NULL OR tr.zip_code = ?)\`;
+      params.push(zip);
+    }
+    
+    query += \` ORDER BY priority DESC, rate DESC LIMIT 1\`;
+    
+    const rate = await env.DB.prepare(query).bind(...params).first();
+    
+    if (!rate) {
+      return c.json({ success: true, tax: 0, rate: 0, total: amount });
+    }
+    
+    const taxAmount = amount * (rate.rate / 100);
+    const total = amount + taxAmount;
+    
+    return c.json({ 
+      success: true, 
+      tax: parseFloat(taxAmount.toFixed(2)),
+      rate: rate.rate,
+      total: parseFloat(total.toFixed(2)),
+      rate_name: rate.name
+    });
+  } catch (error: any) {
+    console.error('Error calculating tax:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
 // END ENTERPRISE FEATURE ROUTES
 
 // ============================================
