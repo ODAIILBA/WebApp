@@ -24920,7 +24920,7 @@ app.get('/api/reports/export', async (c) => {
       return new Response(csv, {
         headers: {
           'Content-Type': 'text/csv',
-          'Content-Disposition': \`attachment; filename="reports-\${range}.csv"\`
+          'Content-Disposition': `attachment; filename="reports-${range}.csv"`
         }
       });
     }
@@ -25525,12 +25525,12 @@ app.post('/api/tax/rates', async (c) => {
     const { env } = c;
     const data = await c.req.json();
     
-    const result = await env.DB.prepare(\`
+    const result = await env.DB.prepare(`
       INSERT INTO tax_rates (
         name, code, rate, country_code, state_code, zip_code, city,
         is_compound, priority, is_active
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    \`).bind(
+    `).bind(
       data.name,
       data.code,
       data.rate,
@@ -25557,13 +25557,13 @@ app.put('/api/tax/rates/:id', async (c) => {
     const id = c.req.param('id');
     const data = await c.req.json();
     
-    await env.DB.prepare(\`
+    await env.DB.prepare(`
       UPDATE tax_rates 
       SET name = ?, code = ?, rate = ?, country_code = ?, state_code = ?,
           zip_code = ?, city = ?, is_compound = ?, priority = ?, is_active = ?,
           updated_at = datetime('now')
       WHERE id = ?
-    \`).bind(
+    `).bind(
       data.name,
       data.code,
       data.rate,
@@ -25605,12 +25605,12 @@ app.patch('/api/tax/rates/:id/toggle', async (c) => {
     const { env } = c;
     const id = c.req.param('id');
     
-    await env.DB.prepare(\`
+    await env.DB.prepare(`
       UPDATE tax_rates 
       SET is_active = NOT is_active,
           updated_at = datetime('now')
       WHERE id = ?
-    \`).bind(id).run();
+    `).bind(id).run();
     
     return c.json({ success: true });
   } catch (error: any) {
@@ -25639,10 +25639,10 @@ app.post('/api/tax/classes', async (c) => {
     const { env } = c;
     const data = await c.req.json();
     
-    const result = await env.DB.prepare(\`
+    const result = await env.DB.prepare(`
       INSERT INTO tax_classes (name, description, is_default)
       VALUES (?, ?, ?)
-    \`).bind(data.name, data.description || '', data.is_default ? 1 : 0).run();
+    `).bind(data.name, data.description || '', data.is_default ? 1 : 0).run();
     
     return c.json({ success: true, id: result.meta.last_row_id });
   } catch (error: any) {
@@ -25658,11 +25658,11 @@ app.put('/api/tax/classes/:id', async (c) => {
     const id = c.req.param('id');
     const data = await c.req.json();
     
-    await env.DB.prepare(\`
+    await env.DB.prepare(`
       UPDATE tax_classes 
       SET name = ?, description = ?, is_default = ?
       WHERE id = ?
-    \`).bind(data.name, data.description || '', data.is_default ? 1 : 0, id).run();
+    `).bind(data.name, data.description || '', data.is_default ? 1 : 0, id).run();
     
     return c.json({ success: true });
   } catch (error: any) {
@@ -25712,10 +25712,10 @@ app.put('/api/tax/settings/:key', async (c) => {
     const key = c.req.param('key');
     const { value } = await c.req.json();
     
-    await env.DB.prepare(\`
+    await env.DB.prepare(`
       INSERT OR REPLACE INTO tax_settings (key, value, updated_at)
       VALUES (?, ?, datetime('now'))
-    \`).bind(key, value).run();
+    `).bind(key, value).run();
     
     return c.json({ success: true });
   } catch (error: any) {
@@ -25731,23 +25731,23 @@ app.post('/api/tax/calculate', async (c) => {
     const { amount, country, state, zip, tax_class_id } = await c.req.json();
     
     // Find applicable tax rate
-    let query = \`
+    let query = `
       SELECT tr.* FROM tax_rates tr
       WHERE tr.is_active = 1 AND tr.country_code = ?
-    \`;
+    `;
     
     const params = [country];
     
     if (state) {
-      query += \` AND (tr.state_code IS NULL OR tr.state_code = ?)\`;
+      query += ` AND (tr.state_code IS NULL OR tr.state_code = ?)`;
       params.push(state);
     }
     if (zip) {
-      query += \` AND (tr.zip_code IS NULL OR tr.zip_code = ?)\`;
+      query += ` AND (tr.zip_code IS NULL OR tr.zip_code = ?)`;
       params.push(zip);
     }
     
-    query += \` ORDER BY priority DESC, rate DESC LIMIT 1\`;
+    query += ` ORDER BY priority DESC, rate DESC LIMIT 1`;
     
     const rate = await env.DB.prepare(query).bind(...params).first();
     
@@ -26336,7 +26336,7 @@ app.post('/api/invoices/from-order/:orderId', async (c) => {
     
     // Generate invoice number
     const invoiceCount = await env.DB.prepare('SELECT COUNT(*) as count FROM invoices').first();
-    const invoiceNumber = \`INV-\${new Date().getFullYear()}-\${String((invoiceCount?.count || 0) + 1).padStart(4, '0')}\`;
+    const invoiceNumber = `INV-${new Date().getFullYear()}-${String((invoiceCount?.count || 0) + 1).padStart(4, '0')}`;
     
     // Create invoice
     const result = await env.DB.prepare(`
@@ -26405,7 +26405,7 @@ app.get('/api/import-export/jobs', async (c) => {
     let query = 'SELECT * FROM import_export_jobs WHERE 1=1';
     
     if (type && type !== 'all') {
-      query += \` AND type = '\${type}'\`;
+      query += ` AND type = '${type}'`;
     }
     
     query += ' ORDER BY created_at DESC LIMIT 50';
@@ -26425,7 +26425,7 @@ app.post('/api/import-export/export', async (c) => {
     const { env } = c;
     const { entity } = await c.req.json();
     
-    const fileName = \`\${entity}_export_\${new Date().toISOString().split('T')[0]}.csv\`;
+    const fileName = `${entity}_export_${new Date().toISOString().split('T')[0]}.csv`;
     
     const result = await env.DB.prepare(`
       INSERT INTO import_export_jobs (
