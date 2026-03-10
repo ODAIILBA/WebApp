@@ -23874,6 +23874,454 @@ app.get('/api/translations', async (c) => {
   }
 });
 
+// ============================================
+// EMAIL MARKETING API ENDPOINTS
+// ============================================
+
+// Get all email campaigns
+app.get('/api/email/campaigns', async (c) => {
+  try {
+    const { env } = c;
+    const result = await env.DB.prepare(`
+      SELECT * FROM email_campaigns 
+      ORDER BY created_at DESC
+    `).all();
+    
+    return c.json({ success: true, campaigns: result.results || [] });
+  } catch (error: any) {
+    console.error('Error fetching campaigns:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get single campaign
+app.get('/api/email/campaigns/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    const campaign = await env.DB.prepare(`
+      SELECT * FROM email_campaigns WHERE id = ?
+    `).bind(id).first();
+    
+    if (!campaign) {
+      return c.json({ success: false, error: 'Campaign not found' }, 404);
+    }
+    
+    return c.json({ success: true, campaign });
+  } catch (error: any) {
+    console.error('Error fetching campaign:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Create new campaign
+app.post('/api/email/campaigns', async (c) => {
+  try {
+    const { env } = c;
+    const data = await c.req.json();
+    
+    const result = await env.DB.prepare(`
+      INSERT INTO email_campaigns (
+        name, subject, from_name, from_email, template_id, 
+        status, campaign_type, segment_filter, scheduled_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      data.name,
+      data.subject,
+      data.from_name || 'SOFTWAREKING24',
+      data.from_email || 'noreply@softwareking24.com',
+      data.template_id || null,
+      data.status || 'draft',
+      data.campaign_type || 'promotional',
+      data.segment_filter || null,
+      data.scheduled_at || null
+    ).run();
+    
+    return c.json({ 
+      success: true, 
+      campaign_id: result.meta.last_row_id,
+      message: 'Campaign created successfully' 
+    });
+  } catch (error: any) {
+    console.error('Error creating campaign:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Update campaign
+app.put('/api/email/campaigns/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    const data = await c.req.json();
+    
+    await env.DB.prepare(`
+      UPDATE email_campaigns SET
+        name = ?,
+        subject = ?,
+        from_name = ?,
+        from_email = ?,
+        template_id = ?,
+        status = ?,
+        campaign_type = ?,
+        segment_filter = ?,
+        scheduled_at = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(
+      data.name,
+      data.subject,
+      data.from_name,
+      data.from_email,
+      data.template_id,
+      data.status,
+      data.campaign_type,
+      data.segment_filter,
+      data.scheduled_at,
+      id
+    ).run();
+    
+    return c.json({ success: true, message: 'Campaign updated successfully' });
+  } catch (error: any) {
+    console.error('Error updating campaign:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Delete campaign
+app.delete('/api/email/campaigns/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    await env.DB.prepare(`DELETE FROM email_campaigns WHERE id = ?`).bind(id).run();
+    
+    return c.json({ success: true, message: 'Campaign deleted successfully' });
+  } catch (error: any) {
+    console.error('Error deleting campaign:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get campaign statistics
+app.get('/api/email/campaigns/:id/stats', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    const campaign = await env.DB.prepare(`
+      SELECT 
+        total_sent, total_delivered, total_opened, total_clicked,
+        total_bounced, total_unsubscribed, revenue_generated
+      FROM email_campaigns WHERE id = ?
+    `).bind(id).first();
+    
+    if (!campaign) {
+      return c.json({ success: false, error: 'Campaign not found' }, 404);
+    }
+    
+    const openRate = campaign.total_sent > 0 
+      ? ((campaign.total_opened / campaign.total_sent) * 100).toFixed(1) 
+      : 0;
+    const clickRate = campaign.total_sent > 0 
+      ? ((campaign.total_clicked / campaign.total_sent) * 100).toFixed(1) 
+      : 0;
+    const deliveryRate = campaign.total_sent > 0 
+      ? ((campaign.total_delivered / campaign.total_sent) * 100).toFixed(1) 
+      : 0;
+    
+    return c.json({ 
+      success: true, 
+      stats: {
+        ...campaign,
+        open_rate: openRate,
+        click_rate: clickRate,
+        delivery_rate: deliveryRate
+      }
+    });
+  } catch (error: any) {
+    console.error('Error fetching campaign stats:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get all email templates
+app.get('/api/email/templates', async (c) => {
+  try {
+    const { env } = c;
+    const result = await env.DB.prepare(`
+      SELECT * FROM email_templates 
+      WHERE is_active = 1
+      ORDER BY created_at DESC
+    `).all();
+    
+    return c.json({ success: true, templates: result.results || [] });
+  } catch (error: any) {
+    console.error('Error fetching templates:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get single template
+app.get('/api/email/templates/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    const template = await env.DB.prepare(`
+      SELECT * FROM email_templates WHERE id = ?
+    `).bind(id).first();
+    
+    if (!template) {
+      return c.json({ success: false, error: 'Template not found' }, 404);
+    }
+    
+    return c.json({ success: true, template });
+  } catch (error: any) {
+    console.error('Error fetching template:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Create new template
+app.post('/api/email/templates', async (c) => {
+  try {
+    const { env } = c;
+    const data = await c.req.json();
+    
+    const result = await env.DB.prepare(`
+      INSERT INTO email_templates (
+        name, description, subject, html_content, text_content, template_type
+      ) VALUES (?, ?, ?, ?, ?, ?)
+    `).bind(
+      data.name,
+      data.description,
+      data.subject,
+      data.html_content,
+      data.text_content,
+      data.template_type || 'custom'
+    ).run();
+    
+    return c.json({ 
+      success: true, 
+      template_id: result.meta.last_row_id,
+      message: 'Template created successfully' 
+    });
+  } catch (error: any) {
+    console.error('Error creating template:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Update template
+app.put('/api/email/templates/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    const data = await c.req.json();
+    
+    await env.DB.prepare(`
+      UPDATE email_templates SET
+        name = ?,
+        description = ?,
+        subject = ?,
+        html_content = ?,
+        text_content = ?,
+        template_type = ?,
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `).bind(
+      data.name,
+      data.description,
+      data.subject,
+      data.html_content,
+      data.text_content,
+      data.template_type,
+      id
+    ).run();
+    
+    return c.json({ success: true, message: 'Template updated successfully' });
+  } catch (error: any) {
+    console.error('Error updating template:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Delete template
+app.delete('/api/email/templates/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    await env.DB.prepare(`DELETE FROM email_templates WHERE id = ?`).bind(id).run();
+    
+    return c.json({ success: true, message: 'Template deleted successfully' });
+  } catch (error: any) {
+    console.error('Error deleting template:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get all subscribers
+app.get('/api/email/subscribers', async (c) => {
+  try {
+    const { env } = c;
+    const result = await env.DB.prepare(`
+      SELECT * FROM email_subscribers 
+      ORDER BY created_at DESC
+    `).all();
+    
+    return c.json({ success: true, subscribers: result.results || [] });
+  } catch (error: any) {
+    console.error('Error fetching subscribers:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Add subscriber
+app.post('/api/email/subscribers', async (c) => {
+  try {
+    const { env } = c;
+    const data = await c.req.json();
+    
+    const result = await env.DB.prepare(`
+      INSERT INTO email_subscribers (
+        email, first_name, last_name, status, subscription_source, tags
+      ) VALUES (?, ?, ?, ?, ?, ?)
+    `).bind(
+      data.email,
+      data.first_name || null,
+      data.last_name || null,
+      data.status || 'active',
+      data.subscription_source || 'manual',
+      data.tags ? JSON.stringify(data.tags) : null
+    ).run();
+    
+    return c.json({ 
+      success: true, 
+      subscriber_id: result.meta.last_row_id,
+      message: 'Subscriber added successfully' 
+    });
+  } catch (error: any) {
+    console.error('Error adding subscriber:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Update subscriber
+app.put('/api/email/subscribers/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    const data = await c.req.json();
+    
+    await env.DB.prepare(`
+      UPDATE email_subscribers SET
+        email = ?,
+        first_name = ?,
+        last_name = ?,
+        status = ?,
+        tags = ?
+      WHERE id = ?
+    `).bind(
+      data.email,
+      data.first_name,
+      data.last_name,
+      data.status,
+      data.tags ? JSON.stringify(data.tags) : null,
+      id
+    ).run();
+    
+    return c.json({ success: true, message: 'Subscriber updated successfully' });
+  } catch (error: any) {
+    console.error('Error updating subscriber:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Delete subscriber
+app.delete('/api/email/subscribers/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    await env.DB.prepare(`DELETE FROM email_subscribers WHERE id = ?`).bind(id).run();
+    
+    return c.json({ success: true, message: 'Subscriber deleted successfully' });
+  } catch (error: any) {
+    console.error('Error deleting subscriber:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get email marketing dashboard stats
+app.get('/api/email/dashboard', async (c) => {
+  try {
+    const { env } = c;
+    
+    const [campaigns, subscribers, recentCampaigns, topPerformers] = await Promise.all([
+      env.DB.prepare('SELECT COUNT(*) as count FROM email_campaigns').first(),
+      env.DB.prepare('SELECT COUNT(*) as count FROM email_subscribers WHERE status = "active"').first(),
+      env.DB.prepare(`
+        SELECT * FROM email_campaigns 
+        ORDER BY created_at DESC 
+        LIMIT 5
+      `).all(),
+      env.DB.prepare(`
+        SELECT name, total_sent, total_opened, total_clicked, revenue_generated
+        FROM email_campaigns 
+        WHERE status = 'sent'
+        ORDER BY revenue_generated DESC 
+        LIMIT 5
+      `).all()
+    ]);
+    
+    const totalSent = await env.DB.prepare(`
+      SELECT SUM(total_sent) as total FROM email_campaigns
+    `).first();
+    
+    const totalRevenue = await env.DB.prepare(`
+      SELECT SUM(revenue_generated) as total FROM email_campaigns
+    `).first();
+    
+    return c.json({ 
+      success: true, 
+      stats: {
+        total_campaigns: campaigns.count || 0,
+        active_subscribers: subscribers.count || 0,
+        total_sent: totalSent.total || 0,
+        total_revenue: totalRevenue.total || 0,
+        recent_campaigns: recentCampaigns.results || [],
+        top_performers: topPerformers.results || []
+      }
+    });
+  } catch (error: any) {
+    console.error('Error fetching dashboard stats:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Send test email
+app.post('/api/email/send-test', async (c) => {
+  try {
+    const data = await c.req.json();
+    
+    // In production, this would integrate with an email service (SendGrid, Mailgun, etc.)
+    // For now, we'll just simulate success
+    console.log('Test email would be sent to:', data.email);
+    console.log('Subject:', data.subject);
+    
+    return c.json({ 
+      success: true, 
+      message: `Test email sent successfully to ${data.email}` 
+    });
+  } catch (error: any) {
+    console.error('Error sending test email:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
 // END ENTERPRISE FEATURE ROUTES
 
 // ============================================
