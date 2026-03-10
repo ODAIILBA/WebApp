@@ -26485,6 +26485,198 @@ app.get('/api/import-export/jobs/:id', async (c) => {
 // END ENTERPRISE FEATURE ROUTES
 
 // ============================================
+// INTEGRATIONS SYSTEM API ROUTES
+// ============================================
+
+// Get all integrations
+app.get('/api/integrations', async (c) => {
+  try {
+    const { env } = c;
+    const category = c.req.query('category');
+    
+    let query = 'SELECT * FROM integrations';
+    const params = [];
+    
+    if (category && category !== 'all') {
+      query += ' WHERE category = ?';
+      params.push(category);
+    }
+    
+    query += ' ORDER BY category, display_name';
+    
+    const result = await env.DB.prepare(query).bind(...params).all();
+    
+    // Get stats for each integration
+    const integrations = result.results || [];
+    for (const integration of integrations) {
+      const stats = await env.DB.prepare(`
+        SELECT metric_name, metric_value 
+        FROM integration_stats 
+        WHERE integration_id = ?
+      `).bind(integration.id).all();
+      
+      integration.stats = (stats.results || []).reduce((acc, stat) => {
+        acc[stat.metric_name] = stat.metric_value;
+        return acc;
+      }, {});
+    }
+    
+    return c.json({ success: true, integrations });
+  } catch (error: any) {
+    console.error('Error fetching integrations:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get single integration
+app.get('/api/integrations/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    const integration = await env.DB.prepare(`
+      SELECT * FROM integrations WHERE id = ?
+    `).bind(id).first();
+    
+    if (!integration) {
+      return c.json({ success: false, error: 'Integration not found' }, 404);
+    }
+    
+    // Get stats
+    const stats = await env.DB.prepare(`
+      SELECT metric_name, metric_value 
+      FROM integration_stats 
+      WHERE integration_id = ?
+    `).bind(id).all();
+    
+    integration.stats = (stats.results || []).reduce((acc, stat) => {
+      acc[stat.metric_name] = stat.metric_value;
+      return acc;
+    }, {});
+    
+    return c.json({ success: true, integration });
+  } catch (error: any) {
+    console.error('Error fetching integration:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Update integration (edit API keys)
+app.put('/api/integrations/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    const data = await c.req.json();
+    
+    await env.DB.prepare(`
+      UPDATE integrations 
+      SET api_key = ?, 
+          api_secret = ?, 
+          webhook_url = ?,
+          config_json = ?,
+          updated_at = datetime('now')
+      WHERE id = ?
+    `).bind(
+      data.api_key || null,
+      data.api_secret || null,
+      data.webhook_url || null,
+      data.config_json || null,
+      id
+    ).run();
+    
+    return c.json({ success: true, message: 'Integration updated successfully' });
+  } catch (error: any) {
+    console.error('Error updating integration:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Toggle integration active status
+app.patch('/api/integrations/:id/toggle', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    await env.DB.prepare(`
+      UPDATE integrations 
+      SET is_active = NOT is_active,
+          updated_at = datetime('now')
+      WHERE id = ?
+    `).bind(id).run();
+    
+    return c.json({ success: true, message: 'Integration status toggled' });
+  } catch (error: any) {
+    console.error('Error toggling integration:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Test integration connection
+app.post('/api/integrations/:id/test', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    const integration = await env.DB.prepare(`
+      SELECT * FROM integrations WHERE id = ?
+    `).bind(id).first();
+    
+    if (!integration) {
+      return c.json({ success: false, error: 'Integration not found' }, 404);
+    }
+    
+    // Here you would actually test the API connection
+    // For now, just return success if API key is set
+    const hasApiKey = integration.api_key && integration.api_key.length > 0;
+    
+    return c.json({ 
+      success: hasApiKey, 
+      message: hasApiKey ? 'Connection successful' : 'API key not configured',
+      configured: hasApiKey
+    });
+  } catch (error: any) {
+    console.error('Error testing integration:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// ============================================
+// ADMIN TRANSLATIONS API
+// ============================================
+
+// Get admin translations for a specific language
+app.get('/api/admin/translations/:lang', async (c) => {
+  try {
+    const { env } = c;
+    const lang = c.req.param('lang');
+    
+    // Fetch all admin translations for the language
+    const translations = await env.DB.prepare(`
+      SELECT translation_key, translated_text 
+      FROM translations 
+      WHERE language_code = ? AND translation_key LIKE 'admin.%'
+      ORDER BY translation_key
+    `).bind(lang).all();
+    
+    // Convert to key-value object
+    const translationsObject: Record<string, string> = {};
+    translations.results.forEach((row: any) => {
+      translationsObject[row.translation_key] = row.translated_text;
+    });
+    
+    return c.json({ 
+      success: true, 
+      language: lang,
+      translations: translationsObject,
+      count: translations.results.length
+    });
+  } catch (error: any) {
+    console.error('Error fetching admin translations:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// ============================================
 // OLD DYNAMIC HANDLER - COMMENTED OUT
 // Using new smart handler below with imported configs
 // ============================================

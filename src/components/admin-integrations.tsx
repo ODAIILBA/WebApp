@@ -102,324 +102,390 @@ export function AdminIntegrations() {
             input:checked + .toggle-slider:before {
                 transform: translateX(24px);
             }
+            .modal {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.5);
+                z-index: 1000;
+                align-items: center;
+                justify-content: center;
+            }
+            .modal.active {
+                display: flex;
+            }
+            .modal-content {
+                background: white;
+                border-radius: 16px;
+                padding: 2rem;
+                max-width: 600px;
+                width: 90%;
+                max-height: 90vh;
+                overflow-y: auto;
+            }
         </style>
     </head>
     <body>
-        ${AdminSidebarAdvanced('/admin/integrations')}
+        ${AdminSidebarAdvanced()}
         
-        <div class="ml-80 p-8">
-            <div class="max-w-7xl mx-auto">
-                <!-- Header -->
-                <div class="mb-8">
-                    <h1 class="text-3xl font-bold" style="color: var(--navy-dark);">
-                        <i class="fas fa-puzzle-piece mr-3"></i>Integrationen
-                    </h1>
-                    <p class="text-gray-600 mt-2">Verbinden Sie Ihren Shop mit externen Diensten und APIs</p>
+        <div class="ml-64 p-8">
+            <!-- Header -->
+            <div class="mb-8">
+                <h1 class="text-3xl font-bold mb-2" style="color: var(--navy-dark);">
+                    <i class="fas fa-plug mr-3"></i><span data-i18n="admin.integrations.title">Integrationen</span>
+                </h1>
+                <p class="text-gray-600" data-i18n="admin.integrations.description">Verbinden Sie Drittanbieter-Services mit Ihrem Shop</p>
+            </div>
+
+            <!-- Stats -->
+            <div class="grid grid-cols-4 gap-6 mb-8">
+                <div class="stat-card">
+                    <div class="text-3xl font-bold mb-2" style="color: var(--navy-dark);" id="activeCount">-</div>
+                    <div class="text-sm text-gray-600" data-i18n="admin.integrations.active_count">Aktive Integrationen</div>
+                </div>
+                <div class="stat-card">
+                    <div class="text-3xl font-bold mb-2 text-blue-600" id="paymentCount">-</div>
+                    <div class="text-sm text-gray-600" data-i18n="admin.integrations.payment">Zahlungsanbieter</div>
+                </div>
+                <div class="stat-card">
+                    <div class="text-3xl font-bold mb-2 text-purple-600" id="emailCount">-</div>
+                    <div class="text-sm text-gray-600" data-i18n="admin.integrations.email">E-Mail Services</div>
+                </div>
+                <div class="stat-card">
+                    <div class="text-3xl font-bold mb-2 text-green-600" id="totalCount">-</div>
+                    <div class="text-sm text-gray-600" data-i18n="admin.integrations.available">Verfügbar</div>
+                </div>
+            </div>
+
+            <!-- Filter Tabs -->
+            <div class="flex gap-4 mb-6">
+                <button onclick="filterCategory('all')" class="filter-btn active px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition">
+                    <span data-i18n="admin.all">Alle</span>
+                </button>
+                <button onclick="filterCategory('payment')" class="filter-btn px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition">
+                    <i class="fas fa-credit-card mr-2"></i><span data-i18n="admin.integrations.payment">Zahlungen</span>
+                </button>
+                <button onclick="filterCategory('email')" class="filter-btn px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition">
+                    <i class="fas fa-envelope mr-2"></i><span data-i18n="admin.integrations.email">E-Mail</span>
+                </button>
+                <button onclick="filterCategory('analytics')" class="filter-btn px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition">
+                    <i class="fas fa-chart-line mr-2"></i><span data-i18n="admin.analytics">Analytics</span>
+                </button>
+                <button onclick="filterCategory('shipping')" class="filter-btn px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition">
+                    <i class="fas fa-truck mr-2"></i><span data-i18n="admin.shipping">Versand</span>
+                </button>
+                <button onclick="filterCategory('social')" class="filter-btn px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition">
+                    <i class="fas fa-share-alt mr-2"></i><span>Social Media</span>
+                </button>
+            </div>
+
+            <!-- Integrations Grid -->
+            <div id="integrationsContainer" class="grid grid-cols-2 gap-6">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Edit Integration Modal -->
+        <div id="editModal" class="modal">
+            <div class="modal-content">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold" style="color: var(--navy-dark);">
+                        <span id="modalIcon"></span>
+                        <span id="modalTitle"></span> <span data-i18n="admin.configure">konfigurieren</span>
+                    </h2>
+                    <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-times text-2xl"></i>
+                    </button>
                 </div>
 
-                <!-- Stats Cards -->
-                <div class="grid grid-cols-4 gap-6 mb-8">
-                    <div class="stat-card">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-600 text-sm">Aktive Integrationen</p>
-                                <p class="text-3xl font-bold mt-1 text-green-600">6</p>
-                            </div>
-                            <div class="w-12 h-12 rounded-full flex items-center justify-center bg-green-100">
-                                <i class="fas fa-check-circle text-xl text-green-600"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-600 text-sm">Verfügbar</p>
-                                <p class="text-3xl font-bold mt-1" style="color: var(--navy-dark);">12</p>
-                            </div>
-                            <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: rgba(19, 44, 70, 0.1);">
-                                <i class="fas fa-plug text-xl" style="color: var(--navy-dark);"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-600 text-sm">API Calls (24h)</p>
-                                <p class="text-3xl font-bold mt-1" style="color: var(--navy-dark);">1,234</p>
-                            </div>
-                            <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: rgba(217, 165, 11, 0.1);">
-                                <i class="fas fa-exchange-alt text-xl" style="color: var(--gold);"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-600 text-sm">Letzte Sync</p>
-                                <p class="text-lg font-bold mt-1" style="color: var(--navy-dark);">vor 5 Min</p>
-                            </div>
-                            <div class="w-12 h-12 rounded-full flex items-center justify-center bg-blue-100">
-                                <i class="fas fa-sync text-xl text-blue-600"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Integration Categories -->
-                <div class="space-y-8">
-                    <!-- Payment Gateways -->
+                <form id="editForm" class="space-y-4">
+                    <input type="hidden" id="editId">
+                    
                     <div>
-                        <h2 class="text-xl font-bold mb-4" style="color: var(--navy-dark);">
-                            <i class="fas fa-credit-card mr-2"></i>Zahlungsanbieter
-                        </h2>
-                        <div class="grid grid-cols-2 gap-6">
-                            <div class="integration-card active">
-                                <div class="flex items-start justify-between mb-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                                            <i class="fab fa-stripe text-2xl text-blue-600"></i>
-                                        </div>
-                                        <div>
-                                            <h3 class="font-bold text-lg">Stripe</h3>
-                                            <p class="text-sm text-gray-600">Kreditkarten & Online-Zahlungen</p>
-                                        </div>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" checked onchange="toggleIntegration('stripe')">
-                                        <span class="toggle-slider"></span>
-                                    </label>
-                                </div>
-                                <div class="space-y-2 mb-4">
-                                    <p class="text-sm"><span class="text-gray-600">Status:</span> <span class="badge badge-success">Aktiv</span></p>
-                                    <p class="text-sm"><span class="text-gray-600">API Version:</span> 2024-01-01</p>
-                                    <p class="text-sm"><span class="text-gray-600">Transaktionen (30d):</span> 1,567</p>
-                                </div>
-                                <button onclick="configureIntegration('stripe')" class="btn-primary w-full">
-                                    <i class="fas fa-cog mr-2"></i>Konfigurieren
-                                </button>
-                            </div>
-
-                            <div class="integration-card active">
-                                <div class="flex items-start justify-between mb-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                                            <i class="fab fa-paypal text-2xl text-blue-600"></i>
-                                        </div>
-                                        <div>
-                                            <h3 class="font-bold text-lg">PayPal</h3>
-                                            <p class="text-sm text-gray-600">Online-Zahlungen & Express Checkout</p>
-                                        </div>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" checked onchange="toggleIntegration('paypal')">
-                                        <span class="toggle-slider"></span>
-                                    </label>
-                                </div>
-                                <div class="space-y-2 mb-4">
-                                    <p class="text-sm"><span class="text-gray-600">Status:</span> <span class="badge badge-success">Aktiv</span></p>
-                                    <p class="text-sm"><span class="text-gray-600">API Version:</span> v2</p>
-                                    <p class="text-sm"><span class="text-gray-600">Transaktionen (30d):</span> 892</p>
-                                </div>
-                                <button onclick="configureIntegration('paypal')" class="btn-primary w-full">
-                                    <i class="fas fa-cog mr-2"></i>Konfigurieren
-                                </button>
-                            </div>
-                        </div>
+                        <label class="block text-sm font-semibold mb-2" data-i18n="admin.integrations.api_key">API Key</label>
+                        <input type="text" id="editApiKey" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Geben Sie Ihren API Key ein">
+                        <p class="text-xs text-gray-500 mt-1">Wird sicher verschlüsselt gespeichert</p>
                     </div>
 
-                    <!-- Email Services -->
                     <div>
-                        <h2 class="text-xl font-bold mb-4" style="color: var(--navy-dark);">
-                            <i class="fas fa-envelope mr-2"></i>E-Mail Marketing
-                        </h2>
-                        <div class="grid grid-cols-2 gap-6">
-                            <div class="integration-card active">
-                                <div class="flex items-start justify-between mb-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-12 h-12 rounded-lg bg-purple-100 flex items-center justify-center">
-                                            <i class="fas fa-envelope text-2xl text-purple-600"></i>
-                                        </div>
-                                        <div>
-                                            <h3 class="font-bold text-lg">Mailchimp</h3>
-                                            <p class="text-sm text-gray-600">Newsletter & Marketing Automation</p>
-                                        </div>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" checked onchange="toggleIntegration('mailchimp')">
-                                        <span class="toggle-slider"></span>
-                                    </label>
-                                </div>
-                                <div class="space-y-2 mb-4">
-                                    <p class="text-sm"><span class="text-gray-600">Status:</span> <span class="badge badge-success">Aktiv</span></p>
-                                    <p class="text-sm"><span class="text-gray-600">Abonnenten:</span> 3,456</p>
-                                    <p class="text-sm"><span class="text-gray-600">Letzte Sync:</span> vor 5 Min</p>
-                                </div>
-                                <button onclick="configureIntegration('mailchimp')" class="btn-primary w-full">
-                                    <i class="fas fa-cog mr-2"></i>Konfigurieren
-                                </button>
-                            </div>
-
-                            <div class="integration-card">
-                                <div class="flex items-start justify-between mb-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
-                                            <i class="fas fa-paper-plane text-2xl text-gray-600"></i>
-                                        </div>
-                                        <div>
-                                            <h3 class="font-bold text-lg">SendGrid</h3>
-                                            <p class="text-sm text-gray-600">Transaktions-E-Mails</p>
-                                        </div>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" onchange="toggleIntegration('sendgrid')">
-                                        <span class="toggle-slider"></span>
-                                    </label>
-                                </div>
-                                <div class="space-y-2 mb-4">
-                                    <p class="text-sm"><span class="text-gray-600">Status:</span> <span class="badge badge-inactive">Inaktiv</span></p>
-                                    <p class="text-sm text-gray-600">Nicht konfiguriert</p>
-                                </div>
-                                <button onclick="configureIntegration('sendgrid')" class="btn-primary w-full">
-                                    <i class="fas fa-plus mr-2"></i>Einrichten
-                                </button>
-                            </div>
-                        </div>
+                        <label class="block text-sm font-semibold mb-2" data-i18n="admin.integrations.api_secret">API Secret (optional)</label>
+                        <input type="password" id="editApiSecret" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="API Secret falls erforderlich">
                     </div>
 
-                    <!-- Analytics -->
                     <div>
-                        <h2 class="text-xl font-bold mb-4" style="color: var(--navy-dark);">
-                            <i class="fas fa-chart-line mr-2"></i>Analytics & Tracking
-                        </h2>
-                        <div class="grid grid-cols-2 gap-6">
-                            <div class="integration-card active">
-                                <div class="flex items-start justify-between mb-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center">
-                                            <i class="fab fa-google text-2xl text-orange-600"></i>
-                                        </div>
-                                        <div>
-                                            <h3 class="font-bold text-lg">Google Analytics</h3>
-                                            <p class="text-sm text-gray-600">Website-Tracking & Berichte</p>
-                                        </div>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" checked onchange="toggleIntegration('google-analytics')">
-                                        <span class="toggle-slider"></span>
-                                    </label>
-                                </div>
-                                <div class="space-y-2 mb-4">
-                                    <p class="text-sm"><span class="text-gray-600">Status:</span> <span class="badge badge-success">Aktiv</span></p>
-                                    <p class="text-sm"><span class="text-gray-600">Property ID:</span> GA-123456789</p>
-                                    <p class="text-sm"><span class="text-gray-600">Events (24h):</span> 1,234</p>
-                                </div>
-                                <button onclick="configureIntegration('google-analytics')" class="btn-primary w-full">
-                                    <i class="fas fa-cog mr-2"></i>Konfigurieren
-                                </button>
-                            </div>
-
-                            <div class="integration-card active">
-                                <div class="flex items-start justify-between mb-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-12 h-12 rounded-lg bg-blue-100 flex items-center justify-center">
-                                            <i class="fab fa-facebook text-2xl text-blue-600"></i>
-                                        </div>
-                                        <div>
-                                            <h3 class="font-bold text-lg">Facebook Pixel</h3>
-                                            <p class="text-sm text-gray-600">Conversion-Tracking</p>
-                                        </div>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" checked onchange="toggleIntegration('facebook-pixel')">
-                                        <span class="toggle-slider"></span>
-                                    </label>
-                                </div>
-                                <div class="space-y-2 mb-4">
-                                    <p class="text-sm"><span class="text-gray-600">Status:</span> <span class="badge badge-success">Aktiv</span></p>
-                                    <p class="text-sm"><span class="text-gray-600">Pixel ID:</span> 123456789012345</p>
-                                    <p class="text-sm"><span class="text-gray-600">Events (24h):</span> 567</p>
-                                </div>
-                                <button onclick="configureIntegration('facebook-pixel')" class="btn-primary w-full">
-                                    <i class="fas fa-cog mr-2"></i>Konfigurieren
-                                </button>
-                            </div>
-                        </div>
+                        <label class="block text-sm font-semibold mb-2" data-i18n="admin.integrations.webhook_url">Webhook URL (optional)</label>
+                        <input type="url" id="editWebhookUrl" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="https://ihre-domain.de/webhook">
                     </div>
 
-                    <!-- Shipping -->
                     <div>
-                        <h2 class="text-xl font-bold mb-4" style="color: var(--navy-dark);">
-                            <i class="fas fa-shipping-fast mr-2"></i>Versand & Logistik
-                        </h2>
-                        <div class="grid grid-cols-2 gap-6">
-                            <div class="integration-card active">
-                                <div class="flex items-start justify-between mb-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-12 h-12 rounded-lg bg-yellow-100 flex items-center justify-center">
-                                            <i class="fas fa-truck text-2xl text-yellow-600"></i>
-                                        </div>
-                                        <div>
-                                            <h3 class="font-bold text-lg">DHL</h3>
-                                            <p class="text-sm text-gray-600">Versandlabels & Tracking</p>
-                                        </div>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" checked onchange="toggleIntegration('dhl')">
-                                        <span class="toggle-slider"></span>
-                                    </label>
-                                </div>
-                                <div class="space-y-2 mb-4">
-                                    <p class="text-sm"><span class="text-gray-600">Status:</span> <span class="badge badge-success">Aktiv</span></p>
-                                    <p class="text-sm"><span class="text-gray-600">Sendungen (30d):</span> 234</p>
-                                    <p class="text-sm"><span class="text-gray-600">API Version:</span> v3</p>
-                                </div>
-                                <button onclick="configureIntegration('dhl')" class="btn-primary w-full">
-                                    <i class="fas fa-cog mr-2"></i>Konfigurieren
-                                </button>
-                            </div>
-
-                            <div class="integration-card">
-                                <div class="flex items-start justify-between mb-4">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-12 h-12 rounded-lg bg-gray-100 flex items-center justify-center">
-                                            <i class="fas fa-box text-2xl text-gray-600"></i>
-                                        </div>
-                                        <div>
-                                            <h3 class="font-bold text-lg">UPS</h3>
-                                            <p class="text-sm text-gray-600">Versandlabels & Tracking</p>
-                                        </div>
-                                    </div>
-                                    <label class="toggle-switch">
-                                        <input type="checkbox" onchange="toggleIntegration('ups')">
-                                        <span class="toggle-slider"></span>
-                                    </label>
-                                </div>
-                                <div class="space-y-2 mb-4">
-                                    <p class="text-sm"><span class="text-gray-600">Status:</span> <span class="badge badge-inactive">Inaktiv</span></p>
-                                    <p class="text-sm text-gray-600">Nicht konfiguriert</p>
-                                </div>
-                                <button onclick="configureIntegration('ups')" class="btn-primary w-full">
-                                    <i class="fas fa-plus mr-2"></i>Einrichten
-                                </button>
-                            </div>
-                        </div>
+                        <label class="block text-sm font-semibold mb-2" data-i18n="admin.integrations.additional_config">Zusätzliche Konfiguration (JSON, optional)</label>
+                        <textarea id="editConfigJson" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder='{"option": "value"}'></textarea>
                     </div>
-                </div>
+
+                    <div class="flex gap-4 pt-4">
+                        <button type="submit" class="btn-primary flex-1">
+                            <i class="fas fa-save mr-2"></i><span data-i18n="admin.save">Speichern</span>
+                        </button>
+                        <button type="button" onclick="testConnection()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                            <i class="fas fa-plug mr-2"></i><span data-i18n="admin.integrations.test_connection">Verbindung testen</span>
+                        </button>
+                        <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+                            <span data-i18n="admin.cancel">Abbrechen</span>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
 
         <script>
-            function toggleIntegration(name) {
-                alert(\`Integration "\${name}" wurde \${event.target.checked ? 'aktiviert' : 'deaktiviert'}\`);
+            let integrations = [];
+            let currentCategory = 'all';
+
+            // Load integrations on page load
+            async function loadIntegrations() {
+                try {
+                    const response = await axios.get('/api/integrations');
+                    integrations = response.data.integrations;
+                    updateStats();
+                    renderIntegrations();
+                } catch (error) {
+                    console.error('Error loading integrations:', error);
+                    alert('Fehler beim Laden der Integrationen');
+                }
             }
 
-            function configureIntegration(name) {
-                alert(\`Konfiguration für "\${name}" wird geöffnet...\`);
-                // Here you would open a modal or navigate to configuration page
+            function updateStats() {
+                const activeCount = integrations.filter(i => i.is_active).length;
+                const paymentCount = integrations.filter(i => i.category === 'payment').length;
+                const emailCount = integrations.filter(i => i.category === 'email').length;
+                
+                document.getElementById('activeCount').textContent = activeCount;
+                document.getElementById('paymentCount').textContent = paymentCount;
+                document.getElementById('emailCount').textContent = emailCount;
+                document.getElementById('totalCount').textContent = integrations.length;
             }
+
+            function filterCategory(category) {
+                currentCategory = category;
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active', 'bg-blue-600', 'text-white'));
+                event.target.classList.add('active', 'bg-blue-600', 'text-white');
+                renderIntegrations();
+            }
+
+            function renderIntegrations() {
+                const filtered = currentCategory === 'all' 
+                    ? integrations 
+                    : integrations.filter(i => i.category === currentCategory);
+
+                const container = document.getElementById('integrationsContainer');
+                container.innerHTML = filtered.map(integration => \`
+                    <div class="integration-card \${integration.is_active ? 'active' : ''}">
+                        <div class="flex items-start justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-12 h-12 rounded-lg bg-\${integration.icon_color || 'gray'}-100 flex items-center justify-center">
+                                    <i class="\${integration.icon_class} text-2xl text-\${integration.icon_color || 'gray'}-600"></i>
+                                </div>
+                                <div>
+                                    <h3 class="font-bold text-lg">\${integration.display_name}</h3>
+                                    <p class="text-sm text-gray-600">\${integration.description}</p>
+                                </div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" \${integration.is_active ? 'checked' : ''} onchange="toggleIntegration(\${integration.id})">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                        <div class="space-y-2 mb-4">
+                            <p class="text-sm">
+                                <span class="text-gray-600">Status:</span> 
+                                <span class="badge \${integration.is_active ? 'badge-success' : 'badge-inactive'}">
+                                    \${integration.is_active ? 'Aktiv' : 'Inaktiv'}
+                                </span>
+                            </p>
+                            <p class="text-sm">
+                                <span class="text-gray-600">API Key:</span> 
+                                <span class="badge \${integration.api_key ? 'badge-success' : 'badge-warning'}">
+                                    \${integration.api_key ? 'Konfiguriert' : 'Nicht konfiguriert'}
+                                </span>
+                            </p>
+                            \${Object.entries(integration.stats || {}).map(([key, value]) => \`
+                                <p class="text-sm"><span class="text-gray-600">\${formatStatName(key)}:</span> \${value}</p>
+                            \`).join('')}
+                        </div>
+                        <button onclick="configureIntegration(\${integration.id})" class="btn-primary w-full">
+                            <i class="fas fa-cog mr-2"></i>Konfigurieren
+                        </button>
+                    </div>
+                \`).join('');
+            }
+
+            function formatStatName(key) {
+                const names = {
+                    'transactions_30d': 'Transaktionen (30d)',
+                    'api_version': 'API Version',
+                    'subscribers': 'Abonnenten',
+                    'last_sync': 'Letzte Sync',
+                    'pageviews_30d': 'Pageviews (30d)',
+                    'conversion_rate': 'Conversion Rate',
+                    'shipments_30d': 'Sendungen (30d)',
+                    'avg_delivery_time': 'Ø Lieferzeit',
+                    'followers': 'Follower',
+                    'engagement_rate': 'Engagement Rate'
+                };
+                return names[key] || key;
+            }
+
+            async function toggleIntegration(id) {
+                try {
+                    await axios.patch(\`/api/integrations/\${id}/toggle\`);
+                    await loadIntegrations();
+                } catch (error) {
+                    console.error('Error toggling integration:', error);
+                    alert('Fehler beim Ändern des Status');
+                }
+            }
+
+            function configureIntegration(id) {
+                const integration = integrations.find(i => i.id === id);
+                if (!integration) return;
+
+                document.getElementById('editId').value = integration.id;
+                document.getElementById('modalTitle').textContent = integration.display_name;
+                document.getElementById('modalIcon').innerHTML = \`<i class="\${integration.icon_class} mr-2"></i>\`;
+                document.getElementById('editApiKey').value = integration.api_key || '';
+                document.getElementById('editApiSecret').value = integration.api_secret || '';
+                document.getElementById('editWebhookUrl').value = integration.webhook_url || '';
+                document.getElementById('editConfigJson').value = integration.config_json || '';
+
+                document.getElementById('editModal').classList.add('active');
+            }
+
+            function closeModal() {
+                document.getElementById('editModal').classList.remove('active');
+                document.getElementById('editForm').reset();
+            }
+
+            async function testConnection() {
+                const id = document.getElementById('editId').value;
+                try {
+                    const response = await axios.post(\`/api/integrations/\${id}/test\`);
+                    if (response.data.success) {
+                        alert('✅ Verbindung erfolgreich!');
+                    } else {
+                        alert('⚠️ ' + response.data.message);
+                    }
+                } catch (error) {
+                    console.error('Error testing connection:', error);
+                    alert('❌ Verbindung fehlgeschlagen: ' + (error.response?.data?.error || error.message));
+                }
+            }
+
+            document.getElementById('editForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const id = document.getElementById('editId').value;
+                const data = {
+                    api_key: document.getElementById('editApiKey').value,
+                    api_secret: document.getElementById('editApiSecret').value,
+                    webhook_url: document.getElementById('editWebhookUrl').value,
+                    config_json: document.getElementById('editConfigJson').value
+                };
+
+                try {
+                    await axios.put(\`/api/integrations/\${id}\`, data);
+                    alert('✅ Integration erfolgreich gespeichert!');
+                    closeModal();
+                    await loadIntegrations();
+                } catch (error) {
+                    console.error('Error saving integration:', error);
+                    alert('❌ Fehler beim Speichern: ' + (error.response?.data?.error || error.message));
+                }
+            });
+
+            // Load integrations on page load
+            loadIntegrations();
+
+            // ============================================
+            // ADMIN I18N MANAGER
+            // ============================================
+            const AdminI18n = {
+              currentLang: 'de',
+              translations: {},
+              
+              async init() {
+                this.currentLang = localStorage.getItem('language') || 'de';
+                await this.loadTranslations(this.currentLang);
+                this.applyTranslations();
+                
+                window.addEventListener('languageChanged', async (e) => {
+                  const newLang = e.detail.language;
+                  if (newLang !== this.currentLang) {
+                    this.currentLang = newLang;
+                    await this.loadTranslations(newLang);
+                    this.applyTranslations();
+                  }
+                });
+                
+                console.log(\`Admin i18n initialized for language: \${this.currentLang}\`);
+              },
+              
+              async loadTranslations(lang) {
+                try {
+                  const response = await fetch(\`/api/admin/translations/\${lang}\`);
+                  const data = await response.json();
+                  
+                  if (data.success) {
+                    this.translations = data.translations;
+                    console.log(\`Loaded \${data.count} admin translations for \${lang}\`);
+                  }
+                } catch (error) {
+                  console.error('Error loading translations:', error);
+                }
+              },
+              
+              applyTranslations() {
+                const elements = document.querySelectorAll('[data-i18n]');
+                
+                elements.forEach(element => {
+                  const key = element.getAttribute('data-i18n');
+                  const translation = this.translations[key];
+                  
+                  if (translation) {
+                    if (element.hasAttribute('placeholder')) {
+                      element.setAttribute('placeholder', translation);
+                    } else if (element.hasAttribute('title')) {
+                      element.setAttribute('title', translation);
+                    } else if (element.tagName === 'INPUT' || element.tagName === 'BUTTON') {
+                      if (element.value) {
+                        element.value = translation;
+                      } else {
+                        element.textContent = translation;
+                      }
+                    } else {
+                      element.textContent = translation;
+                    }
+                  }
+                });
+                
+                console.log(\`Applied translations to \${elements.length} elements\`);
+              },
+              
+              t(key, fallback = '') {
+                return this.translations[key] || fallback;
+              }
+            };
+
+            // Initialize i18n
+            if (document.readyState === 'loading') {
+              document.addEventListener('DOMContentLoaded', () => AdminI18n.init());
+            } else {
+              AdminI18n.init();
+            }
+            
+            window.AdminI18n = AdminI18n;
         </script>
     </body>
     </html>
