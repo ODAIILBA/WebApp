@@ -25186,6 +25186,295 @@ app.get('/api/tracking/events/recent', async (c) => {
   }
 });
 
+// ============================================
+// SHIPPING METHODS API ROUTES
+// ============================================
+
+// Get all shipping methods
+app.get('/api/shipping-methods', async (c) => {
+  try {
+    const { env } = c;
+    const activeOnly = c.req.query('active') === 'true';
+    
+    let query = 'SELECT * FROM shipping_methods';
+    if (activeOnly) {
+      query += ' WHERE is_active = 1';
+    }
+    query += ' ORDER BY sort_order, name';
+    
+    const methods = await env.DB.prepare(query).all();
+    
+    return c.json({ success: true, methods: methods.results || [] });
+  } catch (error: any) {
+    console.error('Error fetching shipping methods:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get shipping method by ID
+app.get('/api/shipping-methods/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    const method = await env.DB.prepare('SELECT * FROM shipping_methods WHERE id = ?').bind(id).first();
+    
+    if (!method) {
+      return c.json({ success: false, error: 'Shipping method not found' }, 404);
+    }
+    
+    // Get zones and rules
+    const zones = await env.DB.prepare('SELECT * FROM shipping_zones WHERE shipping_method_id = ?').bind(id).all();
+    const rules = await env.DB.prepare('SELECT * FROM shipping_rules WHERE shipping_method_id = ?').bind(id).all();
+    
+    return c.json({ 
+      success: true, 
+      method,
+      zones: zones.results || [],
+      rules: rules.results || []
+    });
+  } catch (error: any) {
+    console.error('Error fetching shipping method:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Create shipping method
+app.post('/api/shipping-methods', async (c) => {
+  try {
+    const { env } = c;
+    const data = await c.req.json();
+    
+    const result = await env.DB.prepare(`
+      INSERT INTO shipping_methods (
+        name, code, description, carrier, delivery_time,
+        base_price, free_shipping_threshold, weight_based, price_per_kg,
+        min_weight, max_weight, available_countries, is_active, is_default,
+        sort_order, icon, tracking_enabled, insurance_available, insurance_cost
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).bind(
+      data.name,
+      data.code,
+      data.description || '',
+      data.carrier || '',
+      data.delivery_time || '',
+      data.base_price || 0,
+      data.free_shipping_threshold || null,
+      data.weight_based ? 1 : 0,
+      data.price_per_kg || 0,
+      data.min_weight || 0,
+      data.max_weight || 999999,
+      data.available_countries || '["DE"]',
+      data.is_active ? 1 : 0,
+      data.is_default ? 1 : 0,
+      data.sort_order || 0,
+      data.icon || 'fas fa-box',
+      data.tracking_enabled ? 1 : 0,
+      data.insurance_available ? 1 : 0,
+      data.insurance_cost || 0
+    ).run();
+    
+    return c.json({ success: true, id: result.meta.last_row_id });
+  } catch (error: any) {
+    console.error('Error creating shipping method:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Update shipping method
+app.put('/api/shipping-methods/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    const data = await c.req.json();
+    
+    await env.DB.prepare(`
+      UPDATE shipping_methods 
+      SET name = ?, code = ?, description = ?, carrier = ?, delivery_time = ?,
+          base_price = ?, free_shipping_threshold = ?, weight_based = ?, price_per_kg = ?,
+          min_weight = ?, max_weight = ?, available_countries = ?, is_active = ?, is_default = ?,
+          sort_order = ?, icon = ?, tracking_enabled = ?, insurance_available = ?, insurance_cost = ?,
+          updated_at = datetime('now')
+      WHERE id = ?
+    `).bind(
+      data.name,
+      data.code,
+      data.description || '',
+      data.carrier || '',
+      data.delivery_time || '',
+      data.base_price || 0,
+      data.free_shipping_threshold || null,
+      data.weight_based ? 1 : 0,
+      data.price_per_kg || 0,
+      data.min_weight || 0,
+      data.max_weight || 999999,
+      data.available_countries || '["DE"]',
+      data.is_active ? 1 : 0,
+      data.is_default ? 1 : 0,
+      data.sort_order || 0,
+      data.icon || 'fas fa-box',
+      data.tracking_enabled ? 1 : 0,
+      data.insurance_available ? 1 : 0,
+      data.insurance_cost || 0,
+      id
+    ).run();
+    
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('Error updating shipping method:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Delete shipping method
+app.delete('/api/shipping-methods/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    await env.DB.prepare('DELETE FROM shipping_methods WHERE id = ?').bind(id).run();
+    
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('Error deleting shipping method:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Toggle shipping method active status
+app.patch('/api/shipping-methods/:id/toggle', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    await env.DB.prepare(`
+      UPDATE shipping_methods 
+      SET is_active = NOT is_active,
+          updated_at = datetime('now')
+      WHERE id = ?
+    `).bind(id).run();
+    
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('Error toggling shipping method:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Calculate shipping cost
+app.post('/api/shipping-methods/calculate', async (c) => {
+  try {
+    const { env } = c;
+    const { method_id, country, weight, total_price, quantity } = await c.req.json();
+    
+    const method = await env.DB.prepare('SELECT * FROM shipping_methods WHERE id = ? AND is_active = 1').bind(method_id).first();
+    
+    if (!method) {
+      return c.json({ success: false, error: 'Shipping method not found or inactive' }, 404);
+    }
+    
+    let cost = method.base_price;
+    
+    // Check free shipping threshold
+    if (method.free_shipping_threshold && total_price >= method.free_shipping_threshold) {
+      cost = 0;
+    } else {
+      // Weight-based pricing
+      if (method.weight_based && weight) {
+        cost = method.base_price + (weight * method.price_per_kg);
+      }
+      
+      // Apply rules
+      const rules = await env.DB.prepare(`
+        SELECT * FROM shipping_rules 
+        WHERE shipping_method_id = ? AND is_active = 1
+      `).bind(method_id).all();
+      
+      for (const rule of (rules.results || [])) {
+        let applies = false;
+        const value = rule.rule_type === 'weight' ? weight : rule.rule_type === 'price' ? total_price : quantity;
+        
+        if (rule.condition === 'greater_than' && value > rule.value_min) applies = true;
+        if (rule.condition === 'less_than' && value < rule.value_min) applies = true;
+        if (rule.condition === 'between' && value >= rule.value_min && value <= rule.value_max) applies = true;
+        if (rule.condition === 'equals' && value === rule.value_min) applies = true;
+        
+        if (applies) {
+          if (rule.adjustment_type === 'fixed') {
+            cost += rule.adjustment_value;
+          } else if (rule.adjustment_type === 'percentage') {
+            cost += cost * (rule.adjustment_value / 100);
+          }
+        }
+      }
+    }
+    
+    // Ensure minimum cost
+    cost = Math.max(cost, 0);
+    
+    return c.json({ 
+      success: true, 
+      cost: parseFloat(cost.toFixed(2)),
+      method: method.name,
+      delivery_time: method.delivery_time
+    });
+  } catch (error: any) {
+    console.error('Error calculating shipping cost:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get available shipping methods for checkout
+app.post('/api/shipping-methods/available', async (c) => {
+  try {
+    const { env } = c;
+    const { country, weight, total_price } = await c.req.json();
+    
+    const methods = await env.DB.prepare(`
+      SELECT * FROM shipping_methods 
+      WHERE is_active = 1
+      ORDER BY sort_order, base_price
+    `).all();
+    
+    const available = [];
+    for (const method of (methods.results || [])) {
+      // Check country availability
+      let countries = [];
+      try {
+        countries = JSON.parse(method.available_countries || '[]');
+      } catch (e) {}
+      
+      if (!countries.includes(country) && countries.length > 0) {
+        continue;
+      }
+      
+      // Check weight limits
+      if (weight && (weight < method.min_weight || weight > method.max_weight)) {
+        continue;
+      }
+      
+      // Calculate cost
+      let cost = method.base_price;
+      if (method.free_shipping_threshold && total_price >= method.free_shipping_threshold) {
+        cost = 0;
+      } else if (method.weight_based && weight) {
+        cost = method.base_price + (weight * method.price_per_kg);
+      }
+      
+      available.push({
+        ...method,
+        calculated_cost: parseFloat(cost.toFixed(2)),
+        is_free: cost === 0
+      });
+    }
+    
+    return c.json({ success: true, methods: available });
+  } catch (error: any) {
+    console.error('Error fetching available shipping methods:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
 // END ENTERPRISE FEATURE ROUTES
 
 // ============================================

@@ -1,523 +1,504 @@
-export function AdminShippingMethods() {
-  return `
-    <!DOCTYPE html>
-    <html lang="de">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Versandmethoden - Admin - SOFTWAREKING24</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet">
-        <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
-        <style>
-            :root {
-                --navy-dark: #132C46;
-                --gold: #D9A50B;
-            }
-            body {
-                background: #f8fafc;
-                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            }
-            .stat-card {
-                background: white;
-                border-radius: 12px;
-                padding: 1.5rem;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-                transition: all 0.3s;
-            }
-            .stat-card:hover {
-                box-shadow: 0 4px 16px rgba(0,0,0,0.12);
-                transform: translateY(-2px);
-            }
-            .shipping-card {
-                background: white;
-                border-radius: 12px;
-                padding: 1.5rem;
-                border-left: 4px solid var(--gold);
-                transition: all 0.2s;
-            }
-            .shipping-card:hover {
-                box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            }
-            .badge {
-                padding: 0.25rem 0.75rem;
-                border-radius: 12px;
-                font-size: 0.75rem;
-                font-weight: 600;
-            }
-            .badge-success { background: #d1fae5; color: #065f46; }
-            .badge-warning { background: #fef3c7; color: #92400e; }
-            .badge-inactive { background: #f3f4f6; color: #6b7280; }
-            .btn-primary {
-                background: var(--navy-dark);
-                color: white;
-                padding: 0.75rem 1.5rem;
-                border-radius: 8px;
-                font-weight: 600;
-                transition: all 0.2s;
-            }
-            .btn-primary:hover {
-                background: #0f1f33;
-                transform: translateY(-1px);
-            }
-            .btn-success {
-                background: #10b981;
-                color: white;
-                padding: 0.5rem 1rem;
-                border-radius: 6px;
-                font-size: 0.875rem;
-            }
-            .btn-danger {
-                background: #ef4444;
-                color: white;
-                padding: 0.5rem 1rem;
-                border-radius: 6px;
-                font-size: 0.875rem;
-            }
-            .toggle-switch {
-                position: relative;
-                width: 48px;
-                height: 24px;
-            }
-            .toggle-switch input {
-                opacity: 0;
-                width: 0;
-                height: 0;
-            }
-            .toggle-slider {
-                position: absolute;
-                cursor: pointer;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background-color: #cbd5e1;
-                transition: 0.3s;
-                border-radius: 24px;
-            }
-            .toggle-slider:before {
-                position: absolute;
-                content: "";
-                height: 18px;
-                width: 18px;
-                left: 3px;
-                bottom: 3px;
-                background-color: white;
-                transition: 0.3s;
-                border-radius: 50%;
-            }
-            input:checked + .toggle-slider {
-                background-color: #10b981;
-            }
-            input:checked + .toggle-slider:before {
-                transform: translateX(24px);
-            }
-        </style>
-    </head>
-    <body>
-        ${AdminSidebarAdvanced('/admin/shipping-methods')}
-        
-        <div class="ml-80 p-8">
-            <div class="max-w-7xl mx-auto">
-                <!-- Header -->
-                <div class="flex justify-between items-center mb-8">
-                    <div>
-                        <h1 class="text-3xl font-bold" style="color: var(--navy-dark);">
-                            <i class="fas fa-shipping-fast mr-3"></i>Versandmethoden
-                        </h1>
-                        <p class="text-gray-600 mt-2">Verwalten Sie Versandoptionen, Kosten und Lieferzeiten</p>
-                    </div>
-                    <button onclick="addShippingMethod()" class="btn-primary">
-                        <i class="fas fa-plus mr-2"></i>Neue Versandmethode
-                    </button>
-                </div>
+import type { FC } from 'hono/jsx'
 
-                <!-- Stats Cards -->
-                <div class="grid grid-cols-4 gap-6 mb-8">
-                    <div class="stat-card">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-600 text-sm">Aktive Methoden</p>
-                                <p class="text-3xl font-bold mt-1" style="color: var(--navy-dark);">6</p>
-                            </div>
-                            <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: rgba(19, 44, 70, 0.1);">
-                                <i class="fas fa-truck text-xl" style="color: var(--navy-dark);"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-600 text-sm">Sendungen (30d)</p>
-                                <p class="text-3xl font-bold mt-1" style="color: var(--navy-dark);">456</p>
-                            </div>
-                            <div class="w-12 h-12 rounded-full flex items-center justify-center" style="background: rgba(217, 165, 11, 0.1);">
-                                <i class="fas fa-box text-xl" style="color: var(--gold);"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-600 text-sm">Versandkosten (30d)</p>
-                                <p class="text-2xl font-bold mt-1" style="color: var(--navy-dark);">€2,345</p>
-                            </div>
-                            <div class="w-12 h-12 rounded-full flex items-center justify-center bg-green-100">
-                                <i class="fas fa-euro-sign text-xl text-green-600"></i>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="stat-card">
-                        <div class="flex items-center justify-between">
-                            <div>
-                                <p class="text-gray-600 text-sm">Ø Lieferzeit</p>
-                                <p class="text-3xl font-bold mt-1" style="color: var(--navy-dark);">2.3 Tage</p>
-                            </div>
-                            <div class="w-12 h-12 rounded-full flex items-center justify-center bg-blue-100">
-                                <i class="fas fa-clock text-xl text-blue-600"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Shipping Methods List -->
-                <div class="space-y-4">
-                    <!-- DHL Standard -->
-                    <div class="shipping-card">
-                        <div class="flex items-start justify-between mb-4">
-                            <div class="flex items-center gap-4 flex-1">
-                                <div class="w-16 h-16 rounded-lg bg-yellow-100 flex items-center justify-center">
-                                    <i class="fas fa-truck text-3xl text-yellow-600"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-3 mb-2">
-                                        <h3 class="font-bold text-xl">DHL Standard</h3>
-                                        <span class="badge badge-success">Aktiv</span>
-                                        <span class="badge badge-warning">Beliebt</span>
-                                    </div>
-                                    <p class="text-gray-600 mb-2">Standard-Versand innerhalb Deutschlands</p>
-                                    <div class="grid grid-cols-4 gap-4 text-sm">
-                                        <div>
-                                            <p class="text-gray-600">Preis</p>
-                                            <p class="font-bold">€4.99</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-gray-600">Kostenlos ab</p>
-                                            <p class="font-bold">€50.00</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-gray-600">Lieferzeit</p>
-                                            <p class="font-bold">2-3 Werktage</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-gray-600">Tracking</p>
-                                            <p class="font-bold text-green-600"><i class="fas fa-check mr-1"></i>Ja</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <label class="toggle-switch">
-                                    <input type="checkbox" checked onchange="toggleMethod('dhl-standard')">
-                                    <span class="toggle-slider"></span>
-                                </label>
-                                <button onclick="editMethod('dhl-standard')" class="btn-success">
-                                    <i class="fas fa-edit mr-1"></i>Bearbeiten
-                                </button>
-                                <button onclick="deleteMethod('dhl-standard')" class="btn-danger">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="flex gap-2 text-sm">
-                            <span class="px-3 py-1 bg-gray-100 rounded-full">Deutschland</span>
-                            <span class="px-3 py-1 bg-gray-100 rounded-full">Österreich</span>
-                        </div>
-                    </div>
-
-                    <!-- DHL Express -->
-                    <div class="shipping-card">
-                        <div class="flex items-start justify-between mb-4">
-                            <div class="flex items-center gap-4 flex-1">
-                                <div class="w-16 h-16 rounded-lg bg-red-100 flex items-center justify-center">
-                                    <i class="fas fa-bolt text-3xl text-red-600"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-3 mb-2">
-                                        <h3 class="font-bold text-xl">DHL Express</h3>
-                                        <span class="badge badge-success">Aktiv</span>
-                                    </div>
-                                    <p class="text-gray-600 mb-2">Express-Versand für schnelle Lieferung</p>
-                                    <div class="grid grid-cols-4 gap-4 text-sm">
-                                        <div>
-                                            <p class="text-gray-600">Preis</p>
-                                            <p class="font-bold">€9.99</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-gray-600">Kostenlos ab</p>
-                                            <p class="font-bold">€100.00</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-gray-600">Lieferzeit</p>
-                                            <p class="font-bold">1 Werktag</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-gray-600">Tracking</p>
-                                            <p class="font-bold text-green-600"><i class="fas fa-check mr-1"></i>Ja</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <label class="toggle-switch">
-                                    <input type="checkbox" checked onchange="toggleMethod('dhl-express')">
-                                    <span class="toggle-slider"></span>
-                                </label>
-                                <button onclick="editMethod('dhl-express')" class="btn-success">
-                                    <i class="fas fa-edit mr-1"></i>Bearbeiten
-                                </button>
-                                <button onclick="deleteMethod('dhl-express')" class="btn-danger">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="flex gap-2 text-sm">
-                            <span class="px-3 py-1 bg-gray-100 rounded-full">Deutschland</span>
-                        </div>
-                    </div>
-
-                    <!-- UPS Standard -->
-                    <div class="shipping-card">
-                        <div class="flex items-start justify-between mb-4">
-                            <div class="flex items-center gap-4 flex-1">
-                                <div class="w-16 h-16 rounded-lg bg-yellow-100 flex items-center justify-center">
-                                    <i class="fas fa-box text-3xl text-yellow-700"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-3 mb-2">
-                                        <h3 class="font-bold text-xl">UPS Standard</h3>
-                                        <span class="badge badge-success">Aktiv</span>
-                                    </div>
-                                    <p class="text-gray-600 mb-2">UPS Standard-Versand</p>
-                                    <div class="grid grid-cols-4 gap-4 text-sm">
-                                        <div>
-                                            <p class="text-gray-600">Preis</p>
-                                            <p class="font-bold">€5.49</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-gray-600">Kostenlos ab</p>
-                                            <p class="font-bold">€60.00</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-gray-600">Lieferzeit</p>
-                                            <p class="font-bold">2-4 Werktage</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-gray-600">Tracking</p>
-                                            <p class="font-bold text-green-600"><i class="fas fa-check mr-1"></i>Ja</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <label class="toggle-switch">
-                                    <input type="checkbox" checked onchange="toggleMethod('ups-standard')">
-                                    <span class="toggle-slider"></span>
-                                </label>
-                                <button onclick="editMethod('ups-standard')" class="btn-success">
-                                    <i class="fas fa-edit mr-1"></i>Bearbeiten
-                                </button>
-                                <button onclick="deleteMethod('ups-standard')" class="btn-danger">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="flex gap-2 text-sm">
-                            <span class="px-3 py-1 bg-gray-100 rounded-full">EU-weit</span>
-                        </div>
-                    </div>
-
-                    <!-- Hermes -->
-                    <div class="shipping-card">
-                        <div class="flex items-start justify-between mb-4">
-                            <div class="flex items-center gap-4 flex-1">
-                                <div class="w-16 h-16 rounded-lg bg-blue-100 flex items-center justify-center">
-                                    <i class="fas fa-shipping-fast text-3xl text-blue-600"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-3 mb-2">
-                                        <h3 class="font-bold text-xl">Hermes Standard</h3>
-                                        <span class="badge badge-success">Aktiv</span>
-                                    </div>
-                                    <p class="text-gray-600 mb-2">Günstiger Versand mit Hermes</p>
-                                    <div class="grid grid-cols-4 gap-4 text-sm">
-                                        <div>
-                                            <p class="text-gray-600">Preis</p>
-                                            <p class="font-bold">€3.99</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-gray-600">Kostenlos ab</p>
-                                            <p class="font-bold">€40.00</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-gray-600">Lieferzeit</p>
-                                            <p class="font-bold">3-5 Werktage</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-gray-600">Tracking</p>
-                                            <p class="font-bold text-green-600"><i class="fas fa-check mr-1"></i>Ja</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <label class="toggle-switch">
-                                    <input type="checkbox" checked onchange="toggleMethod('hermes')">
-                                    <span class="toggle-slider"></span>
-                                </label>
-                                <button onclick="editMethod('hermes')" class="btn-success">
-                                    <i class="fas fa-edit mr-1"></i>Bearbeiten
-                                </button>
-                                <button onclick="deleteMethod('hermes')" class="btn-danger">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="flex gap-2 text-sm">
-                            <span class="px-3 py-1 bg-gray-100 rounded-full">Deutschland</span>
-                        </div>
-                    </div>
-
-                    <!-- International -->
-                    <div class="shipping-card">
-                        <div class="flex items-start justify-between mb-4">
-                            <div class="flex items-center gap-4 flex-1">
-                                <div class="w-16 h-16 rounded-lg bg-purple-100 flex items-center justify-center">
-                                    <i class="fas fa-globe text-3xl text-purple-600"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-3 mb-2">
-                                        <h3 class="font-bold text-xl">DHL International</h3>
-                                        <span class="badge badge-success">Aktiv</span>
-                                    </div>
-                                    <p class="text-gray-600 mb-2">Internationaler Versand weltweit</p>
-                                    <div class="grid grid-cols-4 gap-4 text-sm">
-                                        <div>
-                                            <p class="text-gray-600">Preis</p>
-                                            <p class="font-bold">€14.99</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-gray-600">Kostenlos ab</p>
-                                            <p class="font-bold">€200.00</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-gray-600">Lieferzeit</p>
-                                            <p class="font-bold">5-10 Werktage</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-gray-600">Tracking</p>
-                                            <p class="font-bold text-green-600"><i class="fas fa-check mr-1"></i>Ja</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <label class="toggle-switch">
-                                    <input type="checkbox" checked onchange="toggleMethod('international')">
-                                    <span class="toggle-slider"></span>
-                                </label>
-                                <button onclick="editMethod('international')" class="btn-success">
-                                    <i class="fas fa-edit mr-1"></i>Bearbeiten
-                                </button>
-                                <button onclick="deleteMethod('international')" class="btn-danger">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="flex gap-2 text-sm">
-                            <span class="px-3 py-1 bg-gray-100 rounded-full">Weltweit</span>
-                        </div>
-                    </div>
-
-                    <!-- Self Pickup -->
-                    <div class="shipping-card">
-                        <div class="flex items-start justify-between mb-4">
-                            <div class="flex items-center gap-4 flex-1">
-                                <div class="w-16 h-16 rounded-lg bg-green-100 flex items-center justify-center">
-                                    <i class="fas fa-store text-3xl text-green-600"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-3 mb-2">
-                                        <h3 class="font-bold text-xl">Selbstabholung</h3>
-                                        <span class="badge badge-success">Aktiv</span>
-                                    </div>
-                                    <p class="text-gray-600 mb-2">Abholung im Ladengeschäft</p>
-                                    <div class="grid grid-cols-4 gap-4 text-sm">
-                                        <div>
-                                            <p class="text-gray-600">Preis</p>
-                                            <p class="font-bold text-green-600">Kostenlos</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-gray-600">Verfügbarkeit</p>
-                                            <p class="font-bold">Sofort</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-gray-600">Öffnungszeiten</p>
-                                            <p class="font-bold">Mo-Fr 9-18</p>
-                                        </div>
-                                        <div>
-                                            <p class="text-gray-600">Tracking</p>
-                                            <p class="font-bold text-gray-600"><i class="fas fa-times mr-1"></i>Nein</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <label class="toggle-switch">
-                                    <input type="checkbox" checked onchange="toggleMethod('self-pickup')">
-                                    <span class="toggle-slider"></span>
-                                </label>
-                                <button onclick="editMethod('self-pickup')" class="btn-success">
-                                    <i class="fas fa-edit mr-1"></i>Bearbeiten
-                                </button>
-                                <button onclick="deleteMethod('self-pickup')" class="btn-danger">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <div class="flex gap-2 text-sm">
-                            <span class="px-3 py-1 bg-gray-100 rounded-full">Lokal</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
+export const AdminShippingMethods: FC = () => {
+  return (
+    <div class="admin-shipping">
+      <div class="admin-header">
+        <h2><i class="fas fa-shipping-fast"></i> Versandmethoden</h2>
+        <div class="header-actions">
+          <button class="btn-primary" onclick="openAddMethodModal()">
+            <i class="fas fa-plus"></i> Neue Methode
+          </button>
         </div>
+      </div>
 
-        <script>
-            function addShippingMethod() {
-                alert('Neue Versandmethode hinzufügen...');
-            }
+      {/* Shipping Methods List */}
+      <div class="shipping-methods-grid" id="methods-grid">
+        <div class="loading-spinner">
+          <i class="fas fa-spinner fa-spin" style="font-size: 32px;"></i>
+          <div style="margin-top: 15px;">Lade Versandmethoden...</div>
+        </div>
+      </div>
 
-            function toggleMethod(id) {
-                alert(\`Versandmethode "\${id}" wurde \${event.target.checked ? 'aktiviert' : 'deaktiviert'}\`);
-            }
+      {/* Add/Edit Modal */}
+      <div id="method-modal" class="modal">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h3><i class="fas fa-plus"></i> <span id="modal-title">Neue Versandmethode</span></h3>
+            <button class="modal-close" onclick="closeMethodModal()">&times;</button>
+          </div>
+          <div class="modal-body">
+            <form id="method-form">
+              <input type="hidden" id="method-id" />
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Name *</label>
+                  <input type="text" id="method-name" class="form-control" required />
+                </div>
+                <div class="form-group">
+                  <label>Code *</label>
+                  <input type="text" id="method-code" class="form-control" required />
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label>Beschreibung</label>
+                <textarea id="method-description" class="form-control" rows="2"></textarea>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Versanddienstleister</label>
+                  <select id="method-carrier" class="form-control">
+                    <option value="">Bitte wählen...</option>
+                    <option value="DHL">DHL</option>
+                    <option value="DPD">DPD</option>
+                    <option value="UPS">UPS</option>
+                    <option value="FedEx">FedEx</option>
+                    <option value="Hermes">Hermes</option>
+                    <option value="GLS">GLS</option>
+                    <option value="self">Selbstabholung</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Lieferzeit</label>
+                  <input type="text" id="method-delivery-time" class="form-control" placeholder="z.B. 1-2 Werktage" />
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Grundpreis (€) *</label>
+                  <input type="number" id="method-base-price" class="form-control" step="0.01" required />
+                </div>
+                <div class="form-group">
+                  <label>Kostenloser Versand ab (€)</label>
+                  <input type="number" id="method-free-threshold" class="form-control" step="0.01" />
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="form-group">
+                  <label>Icon (FontAwesome)</label>
+                  <input type="text" id="method-icon" class="form-control" placeholder="fas fa-box" />
+                </div>
+                <div class="form-group">
+                  <label>Sortierung</label>
+                  <input type="number" id="method-sort" class="form-control" value="0" />
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="method-weight-based" />
+                  Gewichtsbasierte Preisgestaltung
+                </label>
+              </div>
+              
+              <div class="form-group" id="weight-options" style="display: none;">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label>Preis pro kg (€)</label>
+                    <input type="number" id="method-price-per-kg" class="form-control" step="0.01" value="0" />
+                  </div>
+                  <div class="form-group">
+                    <label>Min. Gewicht (kg)</label>
+                    <input type="number" id="method-min-weight" class="form-control" step="0.1" value="0" />
+                  </div>
+                  <div class="form-group">
+                    <label>Max. Gewicht (kg)</label>
+                    <input type="number" id="method-max-weight" class="form-control" step="0.1" value="999999" />
+                  </div>
+                </div>
+              </div>
+              
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="method-tracking" checked />
+                  Sendungsverfolgung aktiviert
+                </label>
+              </div>
+              
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="method-active" checked />
+                  Aktiv
+                </label>
+              </div>
+              
+              <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeMethodModal()">Abbrechen</button>
+                <button type="submit" class="btn-primary">Speichern</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
 
-            function editMethod(id) {
-                alert(\`Versandmethode "\${id}" bearbeiten...\`);
-            }
+      <style>{`
+        .admin-shipping {
+          padding: 20px;
+        }
+        .shipping-methods-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+          gap: 20px;
+          margin-top: 20px;
+        }
+        .method-card {
+          background: white;
+          border-radius: 12px;
+          padding: 20px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+          border-left: 4px solid #1a2a4e;
+          transition: all 0.2s;
+          position: relative;
+        }
+        .method-card:hover {
+          box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+          transform: translateY(-2px);
+        }
+        .method-card.inactive {
+          opacity: 0.6;
+          border-left-color: #ccc;
+        }
+        .method-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: start;
+          margin-bottom: 15px;
+        }
+        .method-icon {
+          width: 50px;
+          height: 50px;
+          border-radius: 10px;
+          background: linear-gradient(135deg, #1a2a4e, #d4af37);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-size: 24px;
+        }
+        .method-title {
+          font-size: 18px;
+          font-weight: 600;
+          color: #1a2a4e;
+          margin-bottom: 5px;
+        }
+        .method-carrier {
+          display: inline-block;
+          padding: 4px 12px;
+          background: #f3f4f6;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 600;
+          color: #666;
+          margin-bottom: 10px;
+        }
+        .method-description {
+          color: #666;
+          font-size: 14px;
+          margin-bottom: 15px;
+          line-height: 1.4;
+        }
+        .method-info {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 10px;
+          margin-bottom: 15px;
+        }
+        .info-item {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 14px;
+          color: #666;
+        }
+        .info-item i {
+          color: #d4af37;
+          width: 16px;
+        }
+        .method-price {
+          font-size: 24px;
+          font-weight: bold;
+          color: #1a2a4e;
+          margin-bottom: 10px;
+        }
+        .method-price .currency {
+          font-size: 16px;
+          color: #666;
+        }
+        .free-shipping-badge {
+          display: inline-block;
+          padding: 4px 12px;
+          background: #d1fae5;
+          color: #065f46;
+          border-radius: 12px;
+          font-size: 12px;
+          font-weight: 600;
+        }
+        .method-actions {
+          display: flex;
+          gap: 10px;
+          margin-top: 15px;
+          padding-top: 15px;
+          border-top: 1px solid #f3f4f6;
+        }
+        .method-actions button {
+          flex: 1;
+          padding: 8px;
+          border: none;
+          border-radius: 6px;
+          cursor: pointer;
+          font-size: 14px;
+          transition: all 0.2s;
+        }
+        .btn-toggle {
+          background: #f3f4f6;
+          color: #666;
+        }
+        .btn-toggle:hover {
+          background: #e5e7eb;
+        }
+        .btn-toggle.active {
+          background: #d1fae5;
+          color: #065f46;
+        }
+        .loading-spinner {
+          grid-column: 1 / -1;
+          text-align: center;
+          padding: 60px 20px;
+          color: #999;
+        }
+        .form-row {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 15px;
+        }
+        @media (max-width: 768px) {
+          .shipping-methods-grid {
+            grid-template-columns: 1fr;
+          }
+          .form-row {
+            grid-template-columns: 1fr;
+          }
+        }
+      `}</style>
 
-            function deleteMethod(id) {
-                if (confirm(\`Möchten Sie diese Versandmethode wirklich löschen?\`)) {
-                    alert(\`Versandmethode "\${id}" gelöscht\`);
-                }
+      <script dangerouslySetInnerHTML={{ __html: `
+        let methodsData = [];
+
+        // Load methods
+        async function loadMethods() {
+          try {
+            const response = await fetch('/api/shipping-methods');
+            const data = await response.json();
+            if (data.success) {
+              methodsData = data.methods;
+              renderMethods();
             }
-        </script>
-    </body>
-    </html>
-  `.trim();
+          } catch (error) {
+            console.error('Error loading methods:', error);
+            showToast('Fehler beim Laden der Versandmethoden', 'error');
+          }
+        }
+
+        function renderMethods() {
+          const grid = document.getElementById('methods-grid');
+          if (methodsData.length === 0) {
+            grid.innerHTML = '<div class="loading-spinner">Keine Versandmethoden vorhanden</div>';
+            return;
+          }
+          
+          grid.innerHTML = methodsData.map(m => \`
+            <div class="method-card \${m.is_active ? '' : 'inactive'}">
+              <div class="method-header">
+                <div style="flex: 1;">
+                  <div class="method-icon"><i class="\${m.icon || 'fas fa-box'}"></i></div>
+                </div>
+                <div style="text-align: right;">
+                  <div class="method-title">\${m.name}</div>
+                  \${m.carrier ? \`<span class="method-carrier">\${m.carrier}</span>\` : ''}
+                </div>
+              </div>
+              
+              \${m.description ? \`<div class="method-description">\${m.description}</div>\` : ''}
+              
+              <div class="method-price">
+                \${m.base_price === 0 ? 'Kostenlos' : \`€\${m.base_price.toFixed(2)}\`}
+                \${m.weight_based ? \`<span style="font-size: 14px; color: #666;"> + €\${m.price_per_kg}/kg</span>\` : ''}
+              </div>
+              
+              \${m.free_shipping_threshold ? \`
+                <div class="free-shipping-badge">
+                  <i class="fas fa-gift"></i> Kostenlos ab €\${m.free_shipping_threshold}
+                </div>
+              \` : ''}
+              
+              <div class="method-info">
+                \${m.delivery_time ? \`
+                  <div class="info-item">
+                    <i class="fas fa-clock"></i>
+                    <span>\${m.delivery_time}</span>
+                  </div>
+                \` : ''}
+                \${m.tracking_enabled ? \`
+                  <div class="info-item">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Tracking</span>
+                  </div>
+                \` : ''}
+              </div>
+              
+              <div class="method-actions">
+                <button class="btn-toggle \${m.is_active ? 'active' : ''}" onclick="toggleMethod(\${m.id})">
+                  <i class="fas fa-\${m.is_active ? 'check' : 'times'}"></i>
+                  \${m.is_active ? 'Aktiv' : 'Inaktiv'}
+                </button>
+                <button class="action-btn btn-edit" onclick="editMethod(\${m.id})" title="Bearbeiten">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="action-btn btn-delete" onclick="deleteMethod(\${m.id})" title="Löschen">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          \`).join('');
+        }
+
+        // Toggle weight-based options
+        document.getElementById('method-weight-based')?.addEventListener('change', (e) => {
+          document.getElementById('weight-options').style.display = e.target.checked ? 'block' : 'none';
+        });
+
+        // Add method
+        function openAddMethodModal() {
+          document.getElementById('modal-title').textContent = 'Neue Versandmethode';
+          document.getElementById('method-form').reset();
+          document.getElementById('method-id').value = '';
+          document.getElementById('weight-options').style.display = 'none';
+          document.getElementById('method-modal').style.display = 'block';
+        }
+
+        function closeMethodModal() {
+          document.getElementById('method-modal').style.display = 'none';
+        }
+
+        // Edit method
+        function editMethod(id) {
+          const method = methodsData.find(m => m.id === id);
+          if (!method) return;
+          
+          document.getElementById('modal-title').textContent = 'Versandmethode bearbeiten';
+          document.getElementById('method-id').value = method.id;
+          document.getElementById('method-name').value = method.name;
+          document.getElementById('method-code').value = method.code;
+          document.getElementById('method-description').value = method.description || '';
+          document.getElementById('method-carrier').value = method.carrier || '';
+          document.getElementById('method-delivery-time').value = method.delivery_time || '';
+          document.getElementById('method-base-price').value = method.base_price;
+          document.getElementById('method-free-threshold').value = method.free_shipping_threshold || '';
+          document.getElementById('method-icon').value = method.icon || '';
+          document.getElementById('method-sort').value = method.sort_order || 0;
+          document.getElementById('method-weight-based').checked = method.weight_based === 1;
+          document.getElementById('method-price-per-kg').value = method.price_per_kg || 0;
+          document.getElementById('method-min-weight').value = method.min_weight || 0;
+          document.getElementById('method-max-weight').value = method.max_weight || 999999;
+          document.getElementById('method-tracking').checked = method.tracking_enabled === 1;
+          document.getElementById('method-active').checked = method.is_active === 1;
+          document.getElementById('weight-options').style.display = method.weight_based === 1 ? 'block' : 'none';
+          document.getElementById('method-modal').style.display = 'block';
+        }
+
+        // Save method
+        document.getElementById('method-form').addEventListener('submit', async (e) => {
+          e.preventDefault();
+          const id = document.getElementById('method-id').value;
+          const data = {
+            name: document.getElementById('method-name').value,
+            code: document.getElementById('method-code').value,
+            description: document.getElementById('method-description').value,
+            carrier: document.getElementById('method-carrier').value,
+            delivery_time: document.getElementById('method-delivery-time').value,
+            base_price: parseFloat(document.getElementById('method-base-price').value),
+            free_shipping_threshold: document.getElementById('method-free-threshold').value ? parseFloat(document.getElementById('method-free-threshold').value) : null,
+            icon: document.getElementById('method-icon').value || 'fas fa-box',
+            sort_order: parseInt(document.getElementById('method-sort').value) || 0,
+            weight_based: document.getElementById('method-weight-based').checked,
+            price_per_kg: parseFloat(document.getElementById('method-price-per-kg').value) || 0,
+            min_weight: parseFloat(document.getElementById('method-min-weight').value) || 0,
+            max_weight: parseFloat(document.getElementById('method-max-weight').value) || 999999,
+            tracking_enabled: document.getElementById('method-tracking').checked,
+            is_active: document.getElementById('method-active').checked,
+            available_countries: '["DE","AT","CH"]'
+          };
+          
+          try {
+            const url = id ? \`/api/shipping-methods/\${id}\` : '/api/shipping-methods';
+            const method = id ? 'PUT' : 'POST';
+            const response = await fetch(url, {
+              method,
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            if (result.success) {
+              showToast(id ? 'Methode aktualisiert' : 'Methode erstellt', 'success');
+              closeMethodModal();
+              loadMethods();
+            } else {
+              showToast(result.error || 'Fehler beim Speichern', 'error');
+            }
+          } catch (error) {
+            console.error('Error saving method:', error);
+            showToast('Fehler beim Speichern', 'error');
+          }
+        });
+
+        // Toggle method
+        async function toggleMethod(id) {
+          try {
+            const response = await fetch(\`/api/shipping-methods/\${id}/toggle\`, { method: 'PATCH' });
+            const result = await response.json();
+            if (result.success) {
+              showToast('Status geändert', 'success');
+              loadMethods();
+            }
+          } catch (error) {
+            console.error('Error toggling method:', error);
+            showToast('Fehler beim Ändern des Status', 'error');
+          }
+        }
+
+        // Delete method
+        async function deleteMethod(id) {
+          if (!confirm('Versandmethode wirklich löschen?')) return;
+          
+          try {
+            const response = await fetch(\`/api/shipping-methods/\${id}\`, { method: 'DELETE' });
+            const result = await response.json();
+            if (result.success) {
+              showToast('Methode gelöscht', 'success');
+              loadMethods();
+            }
+          } catch (error) {
+            console.error('Error deleting method:', error);
+            showToast('Fehler beim Löschen', 'error');
+          }
+        }
+
+        function showToast(message, type = 'info') {
+          if (window.showToast) {
+            window.showToast(message, type);
+          } else {
+            alert(message);
+          }
+        }
+
+        // Initialize
+        loadMethods();
+      ` }} ></script>
+    </div>
+  )
 }
-
-import { AdminSidebarAdvanced } from './admin-sidebar-advanced';
