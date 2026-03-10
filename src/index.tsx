@@ -24932,6 +24932,260 @@ app.get('/api/reports/export', async (c) => {
   }
 });
 
+// ============================================
+// TRACKING SYSTEM API ROUTES
+// ============================================
+
+// Get tracking dashboard stats
+app.get('/api/tracking/dashboard', async (c) => {
+  try {
+    const { env } = c;
+    
+    // Get status counts
+    const stats = await env.DB.prepare(`
+      SELECT 
+        status,
+        COUNT(*) as count
+      FROM tracking_numbers
+      GROUP BY status
+    `).all();
+    
+    const statusCounts = {
+      delivered: 0,
+      in_transit: 0,
+      pending: 0,
+      failed: 0,
+      out_for_delivery: 0,
+      picked_up: 0
+    };
+    
+    stats.results?.forEach((row: any) => {
+      statusCounts[row.status as keyof typeof statusCounts] = row.count;
+    });
+    
+    return c.json({ success: true, stats: statusCounts });
+  } catch (error: any) {
+    console.error('Error fetching tracking stats:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get all tracking numbers
+app.get('/api/tracking', async (c) => {
+  try {
+    const { env } = c;
+    const status = c.req.query('status');
+    const carrier = c.req.query('carrier');
+    
+    let query = `
+      SELECT 
+        tn.*,
+        o.order_number,
+        u.email as customer_email
+      FROM tracking_numbers tn
+      LEFT JOIN orders o ON tn.order_id = o.id
+      LEFT JOIN users u ON o.user_id = u.id
+      WHERE 1=1
+    `;
+    
+    if (status && status !== 'all') {
+      query += ` AND tn.status = '${status}'`;
+    }
+    if (carrier && carrier !== 'all') {
+      query += ` AND tn.carrier = '${carrier}'`;
+    }
+    
+    query += ` ORDER BY tn.updated_at DESC LIMIT 100`;
+    
+    const trackings = await env.DB.prepare(query).all();
+    
+    return c.json({ success: true, trackings: trackings.results || [] });
+  } catch (error: any) {
+    console.error('Error fetching trackings:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get tracking by ID with events
+app.get('/api/tracking/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    const tracking = await env.DB.prepare(`
+      SELECT 
+        tn.*,
+        o.order_number,
+        o.total,
+        u.email as customer_email,
+        u.name as customer_name
+      FROM tracking_numbers tn
+      LEFT JOIN orders o ON tn.order_id = o.id
+      LEFT JOIN users u ON o.user_id = u.id
+      WHERE tn.id = ?
+    `).bind(id).first();
+    
+    if (!tracking) {
+      return c.json({ success: false, error: 'Tracking not found' }, 404);
+    }
+    
+    const events = await env.DB.prepare(`
+      SELECT * FROM tracking_events 
+      WHERE tracking_number_id = ?
+      ORDER BY event_time DESC
+    `).bind(id).all();
+    
+    return c.json({ 
+      success: true, 
+      tracking,
+      events: events.results || []
+    });
+  } catch (error: any) {
+    console.error('Error fetching tracking details:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Create new tracking number
+app.post('/api/tracking', async (c) => {
+  try {
+    const { env } = c;
+    const data = await c.req.json();
+    
+    const result = await env.DB.prepare(`
+      INSERT INTO tracking_numbers (
+        order_id, tracking_number, carrier, carrier_service, 
+        status, current_location, estimated_delivery, shipped_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    `).bind(
+      data.order_id,
+      data.tracking_number,
+      data.carrier,
+      data.carrier_service || 'standard',
+      data.status || 'pending',
+      data.current_location || '',
+      data.estimated_delivery || null
+    ).run();
+    
+    // Create initial tracking event
+    await env.DB.prepare(`
+      INSERT INTO tracking_events (
+        tracking_number_id, event_type, status, location, description, event_time
+      ) VALUES (?, 'created', 'pending', ?, 'Sendung wurde erstellt', datetime('now'))
+    `).bind(
+      result.meta.last_row_id,
+      data.current_location || 'Depot'
+    ).run();
+    
+    return c.json({ success: true, id: result.meta.last_row_id });
+  } catch (error: any) {
+    console.error('Error creating tracking:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Update tracking status
+app.put('/api/tracking/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    const data = await c.req.json();
+    
+    await env.DB.prepare(`
+      UPDATE tracking_numbers 
+      SET status = ?, 
+          current_location = ?,
+          estimated_delivery = ?,
+          actual_delivery = ?,
+          updated_at = datetime('now')
+      WHERE id = ?
+    `).bind(
+      data.status,
+      data.current_location,
+      data.estimated_delivery || null,
+      data.status === 'delivered' ? new Date().toISOString() : null,
+      id
+    ).run();
+    
+    // Add tracking event
+    await env.DB.prepare(`
+      INSERT INTO tracking_events (
+        tracking_number_id, event_type, status, location, description, event_time
+      ) VALUES (?, ?, ?, ?, ?, datetime('now'))
+    `).bind(
+      id,
+      data.status,
+      data.status,
+      data.current_location,
+      data.description || `Status geändert zu ${data.status}`
+    ).run();
+    
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('Error updating tracking:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Delete tracking
+app.delete('/api/tracking/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    await env.DB.prepare('DELETE FROM tracking_numbers WHERE id = ?').bind(id).run();
+    
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('Error deleting tracking:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get carriers
+app.get('/api/tracking/carriers', async (c) => {
+  try {
+    const { env } = c;
+    
+    const carriers = await env.DB.prepare(`
+      SELECT * FROM tracking_carriers 
+      WHERE is_active = 1
+      ORDER BY name
+    `).all();
+    
+    return c.json({ success: true, carriers: carriers.results || [] });
+  } catch (error: any) {
+    console.error('Error fetching carriers:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get recent tracking events
+app.get('/api/tracking/events/recent', async (c) => {
+  try {
+    const { env } = c;
+    const limit = c.req.query('limit') || '20';
+    
+    const events = await env.DB.prepare(`
+      SELECT 
+        te.*,
+        tn.tracking_number,
+        tn.carrier,
+        o.order_number
+      FROM tracking_events te
+      LEFT JOIN tracking_numbers tn ON te.tracking_number_id = tn.id
+      LEFT JOIN orders o ON tn.order_id = o.id
+      ORDER BY te.event_time DESC
+      LIMIT ?
+    `).bind(parseInt(limit)).all();
+    
+    return c.json({ success: true, events: events.results || [] });
+  } catch (error: any) {
+    console.error('Error fetching tracking events:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
 // END ENTERPRISE FEATURE ROUTES
 
 // ============================================
