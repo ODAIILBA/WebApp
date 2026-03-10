@@ -416,10 +416,27 @@ export function AdminIntegrations() {
               translations: {},
               
               async init() {
-                this.currentLang = localStorage.getItem('language') || 'de';
+                // Check multiple localStorage keys (for compatibility with language switcher)
+                this.currentLang = localStorage.getItem('currentLanguage') || 
+                                   localStorage.getItem('selectedLanguage') || 
+                                   localStorage.getItem('language') || 'de';
+                
                 await this.loadTranslations(this.currentLang);
                 this.applyTranslations();
                 
+                // Listen for storage changes (works across tabs)
+                window.addEventListener('storage', async (e) => {
+                  if (e.key === 'currentLanguage' || e.key === 'selectedLanguage' || e.key === 'language') {
+                    const newLang = e.newValue || 'de';
+                    if (newLang !== this.currentLang) {
+                      this.currentLang = newLang;
+                      await this.loadTranslations(newLang);
+                      this.applyTranslations();
+                    }
+                  }
+                });
+                
+                // Listen for custom language change events
                 window.addEventListener('languageChanged', async (e) => {
                   const newLang = e.detail.language;
                   if (newLang !== this.currentLang) {

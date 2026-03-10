@@ -226,8 +226,10 @@ export function LanguageSwitcher(currentLang = 'de') {
       // Change Language
       async function changeLanguage(code, flag, name) {
         try {
-          // Save to localStorage
+          // Save to localStorage (multiple keys for compatibility)
           localStorage.setItem('selectedLanguage', code);
+          localStorage.setItem('currentLanguage', code);
+          localStorage.setItem('language', code); // For admin i18n compatibility
           
           // Save to backend
           await axios.post('/api/user/language', { language_code: code });
@@ -265,6 +267,11 @@ export function LanguageSwitcher(currentLang = 'de') {
           
           // Apply translations immediately
           applyTranslations(translationsResponse.data.translations);
+          
+          // Dispatch custom event for admin panel i18n
+          window.dispatchEvent(new CustomEvent('languageChanged', { 
+            detail: { language: code, flag: flag, name: name } 
+          }));
           
           // Reload page after short delay
           setTimeout(() => {
