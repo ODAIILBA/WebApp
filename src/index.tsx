@@ -26165,6 +26165,323 @@ app.post('/api/analytics/track/event', async (c) => {
   }
 });
 
+// ============================================
+// FAQ MANAGEMENT API ROUTES
+// ============================================
+
+// Get all FAQ categories
+app.get('/api/faq/categories', async (c) => {
+  try {
+    const { env } = c;
+    const categories = await env.DB.prepare('SELECT * FROM faq_categories WHERE is_active = 1 ORDER BY sort_order').all();
+    return c.json({ success: true, categories: categories.results || [] });
+  } catch (error: any) {
+    console.error('Error fetching FAQ categories:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get FAQ items by category
+app.get('/api/faq/items', async (c) => {
+  try {
+    const { env } = c;
+    const categoryId = c.req.query('category_id');
+    
+    let query = `
+      SELECT fi.*, fc.name as category_name
+      FROM faq_items fi
+      LEFT JOIN faq_categories fc ON fi.category_id = fc.id
+      WHERE fi.is_published = 1
+    `;
+    
+    if (categoryId) {
+      query += ` AND fi.category_id = ${categoryId}`;
+    }
+    
+    query += ' ORDER BY fi.sort_order, fi.created_at DESC';
+    
+    const items = await env.DB.prepare(query).all();
+    return c.json({ success: true, items: items.results || [] });
+  } catch (error: any) {
+    console.error('Error fetching FAQ items:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Create FAQ item
+app.post('/api/faq/items', async (c) => {
+  try {
+    const { env } = c;
+    const data = await c.req.json();
+    
+    const result = await env.DB.prepare(`
+      INSERT INTO faq_items (category_id, question, answer, sort_order, is_published)
+      VALUES (?, ?, ?, ?, ?)
+    `).bind(data.category_id, data.question, data.answer, data.sort_order || 0, data.is_published ? 1 : 0).run();
+    
+    return c.json({ success: true, id: result.meta.last_row_id });
+  } catch (error: any) {
+    console.error('Error creating FAQ item:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Update FAQ item
+app.put('/api/faq/items/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    const data = await c.req.json();
+    
+    await env.DB.prepare(`
+      UPDATE faq_items 
+      SET category_id = ?, question = ?, answer = ?, sort_order = ?, is_published = ?, updated_at = datetime('now')
+      WHERE id = ?
+    `).bind(data.category_id, data.question, data.answer, data.sort_order || 0, data.is_published ? 1 : 0, id).run();
+    
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('Error updating FAQ item:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Delete FAQ item
+app.delete('/api/faq/items/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    await env.DB.prepare('DELETE FROM faq_items WHERE id = ?').bind(id).run();
+    
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('Error deleting FAQ item:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// ============================================
+// INVOICES API ROUTES
+// ============================================
+
+// Get all invoices
+app.get('/api/invoices', async (c) => {
+  try {
+    const { env } = c;
+    const status = c.req.query('status');
+    
+    let query = `
+      SELECT i.*, u.email as customer_email, u.name as customer_name
+      FROM invoices i
+      LEFT JOIN users u ON i.user_id = u.id
+      WHERE 1=1
+    `;
+    
+    if (status && status !== 'all') {
+      query += ` AND i.status = '${status}'`;
+    }
+    
+    query += ' ORDER BY i.created_at DESC LIMIT 100';
+    
+    const invoices = await env.DB.prepare(query).all();
+    
+    return c.json({ success: true, invoices: invoices.results || [] });
+  } catch (error: any) {
+    console.error('Error fetching invoices:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get invoice by ID with items
+app.get('/api/invoices/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    const invoice = await env.DB.prepare(`
+      SELECT i.*, u.email as customer_email, u.name as customer_name, u.address
+      FROM invoices i
+      LEFT JOIN users u ON i.user_id = u.id
+      WHERE i.id = ?
+    `).bind(id).first();
+    
+    if (!invoice) {
+      return c.json({ success: false, error: 'Invoice not found' }, 404);
+    }
+    
+    const items = await env.DB.prepare(`
+      SELECT * FROM invoice_items WHERE invoice_id = ?
+    `).bind(id).all();
+    
+    return c.json({ success: true, invoice, items: items.results || [] });
+  } catch (error: any) {
+    console.error('Error fetching invoice:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Create invoice from order
+app.post('/api/invoices/from-order/:orderId', async (c) => {
+  try {
+    const { env } = c;
+    const orderId = c.req.param('orderId');
+    
+    // Get order details
+    const order = await env.DB.prepare('SELECT * FROM orders WHERE id = ?').bind(orderId).first();
+    
+    if (!order) {
+      return c.json({ success: false, error: 'Order not found' }, 404);
+    }
+    
+    // Generate invoice number
+    const invoiceCount = await env.DB.prepare('SELECT COUNT(*) as count FROM invoices').first();
+    const invoiceNumber = \`INV-\${new Date().getFullYear()}-\${String((invoiceCount?.count || 0) + 1).padStart(4, '0')}\`;
+    
+    // Create invoice
+    const result = await env.DB.prepare(`
+      INSERT INTO invoices (
+        invoice_number, order_id, user_id, invoice_date, due_date, status,
+        subtotal, tax_amount, discount_amount, shipping_amount, total, currency
+      ) VALUES (?, ?, ?, date('now'), date('now', '+30 days'), 'draft', ?, ?, ?, ?, ?, 'EUR')
+    `).bind(
+      invoiceNumber, orderId, order.user_id,
+      order.subtotal || 0, order.tax || 0, order.discount || 0,
+      order.shipping_cost || 0, order.total
+    ).run();
+    
+    return c.json({ success: true, id: result.meta.last_row_id, invoice_number: invoiceNumber });
+  } catch (error: any) {
+    console.error('Error creating invoice:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Update invoice status
+app.patch('/api/invoices/:id/status', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    const { status } = await c.req.json();
+    
+    await env.DB.prepare(`
+      UPDATE invoices 
+      SET status = ?, updated_at = datetime('now')
+      WHERE id = ?
+    `).bind(status, id).run();
+    
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('Error updating invoice status:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Delete invoice
+app.delete('/api/invoices/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    await env.DB.prepare('DELETE FROM invoices WHERE id = ?').bind(id).run();
+    
+    return c.json({ success: true });
+  } catch (error: any) {
+    console.error('Error deleting invoice:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// ============================================
+// IMPORT/EXPORT API ROUTES
+// ============================================
+
+// Get all import/export jobs
+app.get('/api/import-export/jobs', async (c) => {
+  try {
+    const { env } = c;
+    const type = c.req.query('type');
+    
+    let query = 'SELECT * FROM import_export_jobs WHERE 1=1';
+    
+    if (type && type !== 'all') {
+      query += \` AND type = '\${type}'\`;
+    }
+    
+    query += ' ORDER BY created_at DESC LIMIT 50';
+    
+    const jobs = await env.DB.prepare(query).all();
+    
+    return c.json({ success: true, jobs: jobs.results || [] });
+  } catch (error: any) {
+    console.error('Error fetching jobs:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Create export job
+app.post('/api/import-export/export', async (c) => {
+  try {
+    const { env } = c;
+    const { entity } = await c.req.json();
+    
+    const fileName = \`\${entity}_export_\${new Date().toISOString().split('T')[0]}.csv\`;
+    
+    const result = await env.DB.prepare(`
+      INSERT INTO import_export_jobs (
+        type, entity, status, file_name, created_by
+      ) VALUES ('export', ?, 'pending', ?, 1)
+    `).bind(entity, fileName).run();
+    
+    // In real implementation, trigger background job here
+    
+    return c.json({ success: true, id: result.meta.last_row_id });
+  } catch (error: any) {
+    console.error('Error creating export job:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Create import job
+app.post('/api/import-export/import', async (c) => {
+  try {
+    const { env } = c;
+    const { entity, file_name, file_url } = await c.req.json();
+    
+    const result = await env.DB.prepare(`
+      INSERT INTO import_export_jobs (
+        type, entity, status, file_name, file_url, created_by
+      ) VALUES ('import', ?, 'pending', ?, ?, 1)
+    `).bind(entity, file_name, file_url).run();
+    
+    // In real implementation, trigger background job here
+    
+    return c.json({ success: true, id: result.meta.last_row_id });
+  } catch (error: any) {
+    console.error('Error creating import job:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Get job status
+app.get('/api/import-export/jobs/:id', async (c) => {
+  try {
+    const { env } = c;
+    const id = c.req.param('id');
+    
+    const job = await env.DB.prepare('SELECT * FROM import_export_jobs WHERE id = ?').bind(id).first();
+    
+    if (!job) {
+      return c.json({ success: false, error: 'Job not found' }, 404);
+    }
+    
+    return c.json({ success: true, job });
+  } catch (error: any) {
+    console.error('Error fetching job:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
 // END ENTERPRISE FEATURE ROUTES
 
 // ============================================
