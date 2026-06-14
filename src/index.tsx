@@ -4429,7 +4429,7 @@ app.post('/api/admin/cms-pages/:id/publish', async (c) => {
 app.get('/api/admin/faq/categories', async (c) => {
   try {
     const categories = await c.env.DB.prepare(`
-      SELECT * FROM faq_categories ORDER BY display_order ASC
+      SELECT * FROM faq_categories ORDER BY sort_order ASC
     `).all()
     
     return c.json({ success: true, categories: categories.results })
@@ -4465,7 +4465,7 @@ app.post('/api/admin/faq/categories', async (c) => {
     const { name, slug, description, icon, display_order, is_active } = body
     
     const result = await c.env.DB.prepare(`
-      INSERT INTO faq_categories (name, slug, description, icon, display_order, is_active)
+      INSERT INTO faq_categories (name, slug, description, icon, sort_order, is_active)
       VALUES (?, ?, ?, ?, ?, ?)
     `).bind(name, slug, description || null, icon || null, display_order || 0, is_active ? 1 : 0).run()
     
@@ -4485,7 +4485,7 @@ app.put('/api/admin/faq/categories/:id', async (c) => {
     
     await c.env.DB.prepare(`
       UPDATE faq_categories 
-      SET name = ?, slug = ?, description = ?, icon = ?, display_order = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+      SET name = ?, slug = ?, description = ?, icon = ?, sort_order = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).bind(name, slug, description || null, icon || null, display_order || 0, is_active ? 1 : 0, id).run()
     
@@ -4517,7 +4517,7 @@ app.delete('/api/admin/faq/categories/:id', async (c) => {
 app.get('/api/admin/faq/items', async (c) => {
   try {
     const faqs = await c.env.DB.prepare(`
-      SELECT * FROM faq_items ORDER BY display_order ASC
+      SELECT * FROM faq_items ORDER BY sort_order ASC
     `).all()
     
     return c.json({ success: true, faqs: faqs.results })
@@ -4553,7 +4553,7 @@ app.post('/api/admin/faq/items', async (c) => {
     const { category_id, question, answer, tags, display_order, is_featured, is_active } = body
     
     const result = await c.env.DB.prepare(`
-      INSERT INTO faq_items (category_id, question, answer, tags, display_order, is_featured, is_active)
+      INSERT INTO faq_items (category_id, question, answer, tags, sort_order, is_featured, is_published)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `).bind(
       category_id,
@@ -4581,7 +4581,7 @@ app.put('/api/admin/faq/items/:id', async (c) => {
     
     await c.env.DB.prepare(`
       UPDATE faq_items 
-      SET category_id = ?, question = ?, answer = ?, tags = ?, display_order = ?, is_featured = ?, is_active = ?, updated_at = CURRENT_TIMESTAMP
+      SET category_id = ?, question = ?, answer = ?, tags = ?, sort_order = ?, is_featured = ?, is_published = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).bind(
       category_id,
@@ -4625,7 +4625,7 @@ app.get('/api/admin/faq/stats', async (c) => {
     `).first()
     
     const faqsCount = await c.env.DB.prepare(`
-      SELECT COUNT(*) as count FROM faq_items WHERE is_active = 1
+      SELECT COUNT(*) as count FROM faq_items WHERE is_published = 1
     `).first()
     
     const viewsSum = await c.env.DB.prepare(`
@@ -6816,16 +6816,14 @@ app.get('/api/admin/users', async (c) => {
     const result = await env.DB.prepare(`
       SELECT 
         au.id,
-        au.user_id,
+        au.username,
+        au.email,
+        au.full_name,
         au.role,
         au.is_active,
-        au.last_login_at as last_login,
-        au.created_at,
-        u.email,
-        u.first_name,
-        u.last_name
+        au.last_login,
+        au.created_at
       FROM admin_users au
-      LEFT JOIN users u ON au.user_id = u.id
       ORDER BY au.created_at DESC
     `).all();
 
@@ -10540,9 +10538,9 @@ app.get('/api/admin/coupons', async (c) => {
     const params: any[] = []
     
     if (status === 'active') {
-      sql += ` AND c.is_active = 1 AND (c.expires_at IS NULL OR c.expires_at > datetime('now'))`
+      sql += ` AND c.is_active = 1 AND (c.valid_until IS NULL OR c.valid_until > datetime('now'))`
     } else if (status === 'expired') {
-      sql += ` AND c.expires_at < datetime('now')`
+      sql += ` AND c.valid_until < datetime('now')`
     } else if (status === 'inactive') {
       sql += ` AND c.is_active = 0`
     }
@@ -10576,11 +10574,11 @@ app.get('/api/admin/coupons/stats', async (c) => {
     const stats = await db.db.prepare(`
       SELECT 
         COUNT(*) as total,
-        SUM(CASE WHEN is_active = 1 AND (expires_at IS NULL OR expires_at > datetime('now')) THEN 1 ELSE 0 END) as active,
-        SUM(CASE WHEN expires_at < datetime('now') THEN 1 ELSE 0 END) as expired,
+        SUM(CASE WHEN is_active = 1 AND (valid_until IS NULL OR valid_until > datetime('now')) THEN 1 ELSE 0 END) as active,
+        SUM(CASE WHEN valid_until < datetime('now') THEN 1 ELSE 0 END) as expired,
         SUM(CASE WHEN is_active = 0 THEN 1 ELSE 0 END) as inactive,
-        (SELECT COUNT(*) FROM coupon_usage) as total_uses,
-        (SELECT SUM(discount_amount) FROM coupon_usage) as total_discount_given
+        SUM(usage_count) as total_uses,
+        0 as total_discount_given
       FROM coupons
     `).first()
     
@@ -10652,6 +10650,9 @@ app.post('/api/admin/coupons', async (c) => {
       return c.json({ success: false, error: 'Coupon code already exists' }, 400)
     }
     
+    // Normalize discount_type: fixed_amount → fixed (DB constraint uses 'fixed')
+    if (body.discount_type === 'fixed_amount') body.discount_type = 'fixed'
+
     // Validate discount value
     if (body.discount_type === 'percentage' && (body.discount_value < 0 || body.discount_value > 100)) {
       return c.json({ success: false, error: 'Percentage must be between 0 and 100' }, 400)
@@ -10665,9 +10666,9 @@ app.post('/api/admin/coupons', async (c) => {
     const result = await db.db.prepare(`
       INSERT INTO coupons (
         code, description, discount_type, discount_value,
-        starts_at, expires_at, max_uses, max_uses_per_customer,
-        minimum_order_value, applicable_products, excluded_products,
-        applicable_categories, excluded_categories, applicable_customers,
+        valid_from, valid_until, usage_limit, usage_per_customer,
+        minimum_order_amount, applicable_products, excluded_products,
+        applicable_categories, excluded_categories, customer_restrictions,
         first_order_only, is_stackable, is_active, created_at, updated_at
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
     `).bind(
@@ -10729,27 +10730,27 @@ app.put('/api/admin/coupons/:id', async (c) => {
     }
     
     if (body.starts_at !== undefined) {
-      updates.push('starts_at = ?')
+      updates.push('valid_from = ?')
       params.push(body.starts_at)
     }
     
     if (body.expires_at !== undefined) {
-      updates.push('expires_at = ?')
+      updates.push('valid_until = ?')
       params.push(body.expires_at)
     }
     
     if (body.max_uses !== undefined) {
-      updates.push('max_uses = ?')
+      updates.push('usage_limit = ?')
       params.push(body.max_uses)
     }
     
     if (body.max_uses_per_customer !== undefined) {
-      updates.push('max_uses_per_customer = ?')
+      updates.push('usage_per_customer = ?')
       params.push(body.max_uses_per_customer)
     }
     
     if (body.minimum_order_value !== undefined) {
-      updates.push('minimum_order_value = ?')
+      updates.push('minimum_order_amount = ?')
       params.push(body.minimum_order_value)
     }
     
@@ -10826,34 +10827,34 @@ app.post('/api/coupons/validate', async (c) => {
     }
     
     // Check if started
-    if (coupon.starts_at && new Date(coupon.starts_at) > new Date()) {
+    if (coupon.valid_from && new Date(coupon.valid_from as string) > new Date()) {
       return c.json({ success: false, error: 'Coupon is not yet active' }, 400)
     }
     
     // Check if expired
-    if (coupon.expires_at && new Date(coupon.expires_at) < new Date()) {
+    if (coupon.valid_until && new Date(coupon.valid_until as string) < new Date()) {
       return c.json({ success: false, error: 'Coupon has expired' }, 400)
     }
     
     // Check max uses
-    if (coupon.max_uses) {
+    if (coupon.usage_limit) {
       const uses = await db.db.prepare(`
         SELECT COUNT(*) as count FROM coupon_usage WHERE coupon_id = ?
       `).bind(coupon.id).first()
       
-      if (uses && uses.count >= coupon.max_uses) {
+      if (uses && uses.count >= coupon.usage_limit) {
         return c.json({ success: false, error: 'Coupon usage limit reached' }, 400)
       }
     }
     
     // Check customer usage limit
-    if (customer_email && coupon.max_uses_per_customer) {
+    if (customer_email && coupon.usage_per_customer) {
       const customerUses = await db.db.prepare(`
         SELECT COUNT(*) as count FROM coupon_usage 
         WHERE coupon_id = ? AND customer_email = ?
       `).bind(coupon.id, customer_email).first()
       
-      if (customerUses && customerUses.count >= coupon.max_uses_per_customer) {
+      if (customerUses && customerUses.count >= coupon.usage_per_customer) {
         return c.json({ 
           success: false, 
           error: 'You have already used this coupon the maximum number of times' 
@@ -10862,10 +10863,10 @@ app.post('/api/coupons/validate', async (c) => {
     }
     
     // Check minimum order value
-    if (coupon.minimum_order_value && cart_total < coupon.minimum_order_value) {
+    if (coupon.minimum_order_amount && cart_total < coupon.minimum_order_amount) {
       return c.json({ 
         success: false, 
-        error: `Minimum order value of €${coupon.minimum_order_value} required` 
+        error: `Minimum order value of €${coupon.minimum_order_amount} required` 
       }, 400)
     }
     
@@ -14620,7 +14621,7 @@ app.get('/api/admin/email-templates', async (c) => {
     
     const templates = await db.db.prepare(`
       SELECT * FROM email_templates 
-      ORDER BY template_name
+      ORDER BY name
     `).all()
     
     return c.json({ success: true, data: templates.results })
@@ -14723,7 +14724,7 @@ app.get('/api/admin/cookies/stats', async (c) => {
     
     const total = await db.db.prepare(`SELECT COUNT(*) as count FROM cookie_settings`).first()
     const enabled = await db.db.prepare(`SELECT COUNT(*) as count FROM cookie_settings WHERE is_enabled = 1`).first()
-    const consents = await db.db.prepare(`SELECT COUNT(*) as count FROM cookie_consents`).first()
+    const consents = await db.db.prepare(`SELECT COUNT(*) as count FROM cookie_consent`).first()
     
     const acceptanceRate = consents?.count > 0 
       ? Math.round((consents.count / (consents.count + 1)) * 100) 

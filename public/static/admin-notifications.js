@@ -10,14 +10,20 @@ class AdminNotificationSystem {
   }
 
   init() {
-    // Create notification container if it doesn't exist
-    if (!document.getElementById('admin-notifications')) {
-      this.container = document.createElement('div');
-      this.container.id = 'admin-notifications';
-      this.container.className = 'fixed top-4 right-4 z-50 space-y-2';
-      document.body.appendChild(this.container);
+    const doInit = () => {
+      if (!document.getElementById('admin-notifications')) {
+        this.container = document.createElement('div');
+        this.container.id = 'admin-notifications';
+        this.container.className = 'fixed top-4 right-4 z-50 space-y-2';
+        (document.body || document.documentElement).appendChild(this.container);
+      } else {
+        this.container = document.getElementById('admin-notifications');
+      }
+    };
+    if (document.body) {
+      doInit();
     } else {
-      this.container = document.getElementById('admin-notifications');
+      document.addEventListener('DOMContentLoaded', doInit);
     }
   }
 
