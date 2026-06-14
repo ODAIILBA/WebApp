@@ -302,8 +302,8 @@ export const AdminContactMessages = () => {
 
             if (data.success) {
               renderMessages(data.data);
-              updateStats(data.stats);
-              updatePagination(data.pagination);
+              if (data.stats) updateStats(data.stats);
+              if (data.pagination) updatePagination(data.pagination);
             }
           } catch (error) {
             console.error('Error loading messages:', error);
@@ -341,7 +341,7 @@ export const AdminContactMessages = () => {
                 </span>
               </td>
               <td class="px-6 py-4">
-                <div class="font-semibold text-navy-dark">\${msg.first_name} \${msg.last_name}</div>
+                <div class="font-semibold text-navy-dark">\${msg.name || msg.first_name + ' ' + msg.last_name}</div>
                 <div class="text-sm text-gray-500">\${msg.email}</div>
               </td>
               <td class="px-6 py-4">
@@ -378,7 +378,7 @@ export const AdminContactMessages = () => {
                   <div class="grid grid-cols-2 gap-4">
                     <div>
                       <label class="text-sm font-semibold text-gray-600">Von</label>
-                      <p class="text-lg font-bold text-navy-dark">\${msg.first_name} \${msg.last_name}</p>
+                      <p class="text-lg font-bold text-navy-dark">\${msg.name || (msg.first_name + ' ' + msg.last_name)}</p>
                     </div>
                     <div>
                       <label class="text-sm font-semibold text-gray-600">E-Mail</label>

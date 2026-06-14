@@ -227,30 +227,30 @@ export function AdminOrdersFunctional() {
 
         async function loadStats() {
             try {
-                const response = await AdminUtils.get('/api/admin/dashboard/stats');
+                const response = await AdminUtils.get('/api/admin/orders/stats');
                 if (response.success && response.data) {
                     const stats = [
                         {
                             title: 'Alle Bestellungen',
-                            value: response.data.orders?.total || 0,
+                            value: response.data.total || 0,
                             icon: 'fa-shopping-cart',
                             color: 'blue'
                         },
                         {
                             title: 'Ausstehend',
-                            value: response.data.orders?.pending || 0,
+                            value: response.data.pending || 0,
                             icon: 'fa-clock',
                             color: 'yellow'
                         },
                         {
                             title: 'In Bearbeitung',
-                            value: response.data.orders?.processing || 0,
+                            value: response.data.processing || 0,
                             icon: 'fa-cog',
                             color: 'purple'
                         },
                         {
                             title: 'Gesamtumsatz',
-                            value: AdminUtils.formatCurrency(response.data.orders?.total_revenue || 0),
+                            value: AdminUtils.formatCurrency(response.data.total_revenue || 0),
                             icon: 'fa-euro-sign',
                             color: 'green'
                         }

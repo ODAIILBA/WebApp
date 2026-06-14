@@ -165,19 +165,17 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
     icon: 'search',
     iconColor: 'teal',
     description: 'Suchmaschinenoptimierung und Meta-Tags',
-    dbQuery: `SELECT p.id, p.slug,
-              pt.name,
-              COALESCE(pt.meta_title, '') as meta_title,
-              COALESCE(pt.meta_description, '') as meta_description,
-              COALESCE(pt.meta_keywords, '') as meta_keywords
+    dbQuery: `SELECT p.id, p.slug, p.name,
+              COALESCE(p.meta_title, '') as meta_title,
+              COALESCE(p.meta_description, '') as meta_description,
+              p.is_active
               FROM products p
-              LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = 'de'
               ORDER BY p.id DESC
               LIMIT 50`,
     statsCards: [
       { label: 'Produkte', query: 'SELECT COUNT(*) as count FROM products', color: 'text-blue-600', icon: 'box' },
-      { label: 'Mit Meta-Title', query: 'SELECT COUNT(*) as count FROM product_translations WHERE meta_title IS NOT NULL AND meta_title != ""', color: 'text-green-600', icon: 'check' },
-      { label: 'Ohne Meta-Description', query: 'SELECT COUNT(*) as count FROM product_translations WHERE meta_description IS NULL OR meta_description = ""', color: 'text-red-600', icon: 'exclamation-triangle' }
+      { label: 'Mit Meta-Title', query: 'SELECT COUNT(*) as count FROM products WHERE meta_title IS NOT NULL AND meta_title != ""', color: 'text-green-600', icon: 'check' },
+      { label: 'Ohne Meta-Description', query: 'SELECT COUNT(*) as count FROM products WHERE meta_description IS NULL OR meta_description = ""', color: 'text-red-600', icon: 'exclamation-triangle' }
     ],
     tableColumns: [
       { key: 'name', label: 'Produkt' },
@@ -568,15 +566,20 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
     icon: 'envelope',
     iconColor: 'blue',
     description: 'Newsletter-Abonnenten und Kampagnen',
+    dbQuery: `SELECT id, email, first_name || ' ' || COALESCE(last_name,'') as name,
+               status, source, confirmed_at as subscribed_at, created_at
+               FROM newsletter_subscribers ORDER BY created_at DESC LIMIT 100`,
     statsCards: [
-      { label: 'Abonnenten', color: 'text-blue-600', icon: 'users' },
-      { label: 'Versandt', color: 'text-green-600', icon: 'paper-plane' },
-      { label: 'Öffnungsrate', color: 'text-purple-600', icon: 'chart-line', format: 'percentage' }
+      { label: 'Abonnenten', query: 'SELECT COUNT(*) as count FROM newsletter_subscribers WHERE status = "subscribed"', color: 'text-blue-600', icon: 'users' },
+      { label: 'Versandt', query: 'SELECT COUNT(*) as count FROM newsletter_subscribers', color: 'text-green-600', icon: 'paper-plane' },
+      { label: 'Öffnungsrate', query: 'SELECT COUNT(*) as count FROM newsletter_subscribers WHERE status = "unsubscribed"', color: 'text-purple-600', icon: 'chart-line', format: 'percentage' }
     ],
     tableColumns: [
       { key: 'email', label: 'E-Mail', format: 'email' },
+      { key: 'name', label: 'Name' },
       { key: 'status', label: 'Status', format: 'badge' },
-      { key: 'subscribed_at', label: 'Angemeldet', format: 'date' }
+      { key: 'source', label: 'Quelle' },
+      { key: 'subscribed_at', label: 'Bestätigt', format: 'date' }
     ],
     actions: [
       { label: 'Newsletter senden', icon: 'paper-plane', color: 'blue', action: 'addNew()' },
@@ -690,9 +693,9 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
               ORDER BY o.created_at DESC
               LIMIT 100`,
     statsCards: [
-      { label: 'Zahlungen', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "paid"', color: 'text-green-600', icon: 'check-circle' },
+      { label: 'Zahlungen', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "completed"', color: 'text-green-600', icon: 'check-circle' },
       { label: 'Ausstehend', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "pending"', color: 'text-yellow-600', icon: 'clock' },
-      { label: 'Gesamt Betrag', query: 'SELECT SUM(total) as sum FROM orders WHERE payment_status = "paid"', color: 'text-green-600', icon: 'euro-sign', format: 'currency' }
+      { label: 'Gesamt Betrag', query: 'SELECT SUM(total) as sum FROM orders WHERE payment_status = "completed"', color: 'text-green-600', icon: 'euro-sign', format: 'currency' }
     ],
     tableColumns: [
       { key: 'order_number', label: 'Bestellung' },
@@ -726,7 +729,7 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
               LIMIT 50`,
     statsCards: [
       { label: 'Aktive Anbieter', query: 'SELECT COUNT(DISTINCT payment_method) as count FROM orders WHERE payment_method IS NOT NULL', color: 'text-green-600', icon: 'check-circle' },
-      { label: 'Transaktionen', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "paid"', color: 'text-blue-600', icon: 'exchange-alt' }
+      { label: 'Transaktionen', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "completed"', color: 'text-blue-600', icon: 'exchange-alt' }
     ],
     tableColumns: [
       { key: 'name', label: 'Anbieter' },
@@ -1103,7 +1106,7 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
     statsCards: [
       { label: 'Verdächtige', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "failed"', color: 'text-red-600', icon: 'exclamation-triangle' },
       { label: 'Zu prüfen', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "pending"', color: 'text-orange-600', icon: 'clock' },
-      { label: 'Geprüft', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "paid"', color: 'text-green-600', icon: 'check-circle' }
+      { label: 'Geprüft', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "completed"', color: 'text-green-600', icon: 'check-circle' }
     ],
     tableColumns: [
       { key: 'order_number', label: 'Bestellung' },
@@ -1339,9 +1342,16 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
     icon: 'user-tag',
     iconColor: 'purple',
     description: 'Benutzerrollen und Zugriffsrechte',
+    dbQuery: `SELECT r.name as role_name, r.display_name, r.description, r.permissions,
+               r.is_system,
+               COUNT(u.id) as users_count
+               FROM roles r
+               LEFT JOIN users u ON u.role = r.name
+               GROUP BY r.id, r.name, r.display_name, r.description, r.permissions, r.is_system
+               ORDER BY r.id ASC`,
     statsCards: [
-      { label: 'Rollen', color: 'text-purple-600', icon: 'user-tag' },
-      { label: 'Benutzern zugewiesen', color: 'text-blue-600', icon: 'users' }
+      { label: 'Rollen', query: 'SELECT COUNT(*) as count FROM roles', color: 'text-purple-600', icon: 'user-tag' },
+      { label: 'Benutzern zugewiesen', query: 'SELECT COUNT(*) as count FROM users', color: 'text-blue-600', icon: 'users' }
     ],
     tableColumns: [
       { key: 'role_name', label: 'Rolle' },
@@ -1360,9 +1370,13 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
     icon: 'key',
     iconColor: 'yellow',
     description: 'Detaillierte Berechtigungsverwaltung',
+    dbQuery: `SELECT r.name as permission_name, r.display_name, r.description,
+               'System' as module,
+               CASE r.is_system WHEN 1 THEN 'System-Rolle' ELSE 'Benutzerdefiniert' END as roles
+               FROM roles r ORDER BY r.id ASC`,
     statsCards: [
-      { label: 'Berechtigungen', color: 'text-yellow-600', icon: 'key' },
-      { label: 'Gruppen', color: 'text-blue-600', icon: 'layer-group' }
+      { label: 'Berechtigungen', query: 'SELECT COUNT(*) as count FROM roles', color: 'text-yellow-600', icon: 'key' },
+      { label: 'Gruppen', query: 'SELECT COUNT(*) as count FROM roles WHERE is_system = 1', color: 'text-blue-600', icon: 'layer-group' }
     ],
     tableColumns: [
       { key: 'permission_name', label: 'Berechtigung' },
@@ -1618,7 +1632,7 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
       { key: 'user_name', label: 'Kunde' },
       { key: 'rating', label: 'Bewertung' },
       { key: 'title', label: 'Titel' },
-      { key: 'content', label: 'Kommentar' },
+      { key: 'comment', label: 'Kommentar' },
       { key: 'is_approved', label: 'Status', format: 'badge' },
       { key: 'created_at', label: 'Datum', format: 'date' }
     ],
@@ -3788,8 +3802,8 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
               GROUP BY payment_method
               ORDER BY revenue DESC LIMIT 50`,
     statsCards: [
-      { label: 'Bezahlte Bestellungen', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "paid"', color: 'text-red-600', icon: 'bullseye' },
-      { label: 'Umsatz gesamt', query: 'SELECT SUM(total) as sum FROM orders WHERE payment_status = "paid"', color: 'text-green-600', icon: 'euro-sign', format: 'currency' }
+      { label: 'Bezahlte Bestellungen', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "completed"', color: 'text-red-600', icon: 'bullseye' },
+      { label: 'Umsatz gesamt', query: 'SELECT SUM(total) as sum FROM orders WHERE payment_status = "completed"', color: 'text-green-600', icon: 'euro-sign', format: 'currency' }
     ],
     tableColumns: [
       { key: 'channel', label: 'Kanal' },
@@ -3867,8 +3881,8 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
               FROM orders GROUP BY payment_status ORDER BY conversions DESC`,
     statsCards: [
       { label: 'Bestellungen', query: 'SELECT COUNT(*) as count FROM orders', color: 'text-purple-600', icon: 'flask' },
-      { label: 'Conversions', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "paid"', color: 'text-green-600', icon: 'check' },
-      { label: 'Ø Bestellwert', query: 'SELECT ROUND(AVG(total), 2) as count FROM orders WHERE payment_status = "paid"', color: 'text-blue-600', icon: 'euro-sign' }
+      { label: 'Conversions', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "completed"', color: 'text-green-600', icon: 'check' },
+      { label: 'Ø Bestellwert', query: 'SELECT ROUND(AVG(total), 2) as count FROM orders WHERE payment_status = "completed"', color: 'text-blue-600', icon: 'euro-sign' }
     ],
     tableColumns: [
       { key: 'variant', label: 'Variante' },
@@ -3897,7 +3911,7 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
               ORDER BY revenue DESC LIMIT 50`,
     statsCards: [
       { label: 'Affiliate-Bestellungen', query: 'SELECT COUNT(*) as count FROM orders WHERE campaign_code IS NOT NULL', color: 'text-green-600', icon: 'handshake' },
-      { label: 'Affiliate-Umsatz', query: 'SELECT SUM(total) as sum FROM orders WHERE campaign_code IS NOT NULL AND payment_status = "paid"', color: 'text-blue-600', icon: 'euro-sign', format: 'currency' }
+      { label: 'Affiliate-Umsatz', query: 'SELECT SUM(total) as sum FROM orders WHERE campaign_code IS NOT NULL AND payment_status = "completed"', color: 'text-blue-600', icon: 'euro-sign', format: 'currency' }
     ],
     tableColumns: [
       { key: 'affiliate_code', label: 'Affiliate-Code' },
@@ -3953,7 +3967,7 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
     statsCards: [
       { label: 'Produkte', query: 'SELECT COUNT(*) as count FROM products', color: 'text-blue-600', icon: 'box' },
       { label: 'Verkaufte Einheiten', query: 'SELECT SUM(quantity) as count FROM order_items', color: 'text-green-600', icon: 'shopping-bag' },
-      { label: 'Umsatz', query: 'SELECT SUM(oi.price * oi.quantity) as sum FROM order_items oi JOIN orders o ON oi.order_id = o.id WHERE o.payment_status = "paid"', color: 'text-purple-600', icon: 'euro-sign', format: 'currency' }
+      { label: 'Umsatz', query: 'SELECT SUM(oi.price * oi.quantity) as sum FROM order_items oi JOIN orders o ON oi.order_id = o.id WHERE o.payment_status = "completed"', color: 'text-purple-600', icon: 'euro-sign', format: 'currency' }
     ],
     tableColumns: [
       { key: 'name', label: 'Produkt' },
@@ -3982,10 +3996,10 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
               GROUP BY payment_status, payment_method
               ORDER BY count DESC`,
     statsCards: [
-      { label: 'Abgeschlossen', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "paid"', color: 'text-green-600', icon: 'check-circle' },
+      { label: 'Abgeschlossen', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "completed"', color: 'text-green-600', icon: 'check-circle' },
       { label: 'Ausstehend', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "pending"', color: 'text-orange-600', icon: 'clock' },
       { label: 'Abgebrochen', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "cancelled"', color: 'text-red-600', icon: 'times-circle' },
-      { label: 'Ø Bestellwert', query: 'SELECT ROUND(AVG(total), 2) as count FROM orders WHERE payment_status = "paid"', color: 'text-blue-600', icon: 'euro-sign' }
+      { label: 'Ø Bestellwert', query: 'SELECT ROUND(AVG(total), 2) as count FROM orders WHERE payment_status = "completed"', color: 'text-blue-600', icon: 'euro-sign' }
     ],
     tableColumns: [
       { key: 'status', label: 'Status', format: 'badge' },
@@ -4018,7 +4032,7 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
               LIMIT 50`,
     statsCards: [
       { label: 'Kampagnen', query: 'SELECT COUNT(DISTINCT campaign_code) as count FROM orders WHERE campaign_code IS NOT NULL', color: 'text-blue-600', icon: 'bullhorn' },
-      { label: 'Kampagnen-Umsatz', query: 'SELECT SUM(total) as sum FROM orders WHERE campaign_code IS NOT NULL AND payment_status = "paid"', color: 'text-green-600', icon: 'euro-sign', format: 'currency' },
+      { label: 'Kampagnen-Umsatz', query: 'SELECT SUM(total) as sum FROM orders WHERE campaign_code IS NOT NULL AND payment_status = "completed"', color: 'text-green-600', icon: 'euro-sign', format: 'currency' },
       { label: 'Aktive Coupons', query: 'SELECT COUNT(*) as count FROM coupons WHERE is_active = 1', color: 'text-orange-600', icon: 'ticket-alt' }
     ],
     tableColumns: [
@@ -4077,8 +4091,8 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
               LIMIT 50`,
     statsCards: [
       { label: 'Länder', query: 'SELECT COUNT(DISTINCT country) as count FROM orders WHERE country IS NOT NULL', color: 'text-blue-600', icon: 'globe' },
-      { label: 'EU-Bestellungen', query: 'SELECT COUNT(*) as count FROM orders WHERE country IN ("DE","AT","CH","FR","NL","IT","ES","PL","BE","CZ","SE","DK","FI","PT","GR","HU","RO","BG","SK","HR","SI","EE","LV","LT","LU","MT","CY","IE") AND payment_status = "paid"', color: 'text-indigo-600', icon: 'flag' },
-      { label: 'International', query: 'SELECT COUNT(*) as count FROM orders WHERE country NOT IN ("DE","AT","CH") AND country IS NOT NULL AND payment_status = "paid"', color: 'text-orange-600', icon: 'plane' }
+      { label: 'EU-Bestellungen', query: 'SELECT COUNT(*) as count FROM orders WHERE country IN ("DE","AT","CH","FR","NL","IT","ES","PL","BE","CZ","SE","DK","FI","PT","GR","HU","RO","BG","SK","HR","SI","EE","LV","LT","LU","MT","CY","IE") AND payment_status = "completed"', color: 'text-indigo-600', icon: 'flag' },
+      { label: 'International', query: 'SELECT COUNT(*) as count FROM orders WHERE country NOT IN ("DE","AT","CH") AND country IS NOT NULL AND payment_status = "completed"', color: 'text-orange-600', icon: 'plane' }
     ],
     tableColumns: [
       { key: 'country', label: 'Land' },
@@ -4107,8 +4121,8 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
               ORDER BY count DESC`,
     statsCards: [
       { label: 'Bestellungen (Events)', query: 'SELECT COUNT(*) as count FROM orders', color: 'text-purple-600', icon: 'flag-checkered' },
-      { label: 'Erfolgreiche Käufe', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "paid"', color: 'text-green-600', icon: 'check' },
-      { label: 'Gesamtwert', query: 'SELECT SUM(total) as sum FROM orders WHERE payment_status = "paid"', color: 'text-blue-600', icon: 'euro-sign', format: 'currency' }
+      { label: 'Erfolgreiche Käufe', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "completed"', color: 'text-green-600', icon: 'check' },
+      { label: 'Gesamtwert', query: 'SELECT SUM(total) as sum FROM orders WHERE payment_status = "completed"', color: 'text-blue-600', icon: 'euro-sign', format: 'currency' }
     ],
     tableColumns: [
       { key: 'event_type', label: 'Ereignis' },
@@ -4139,8 +4153,8 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
               ORDER BY month DESC
               LIMIT 24`,
     statsCards: [
-      { label: 'Umsatz gesamt', query: 'SELECT SUM(total) as sum FROM orders WHERE payment_status = "paid"', color: 'text-green-600', icon: 'euro-sign', format: 'currency' },
-      { label: 'Bestellungen', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "paid"', color: 'text-blue-600', icon: 'list' },
+      { label: 'Umsatz gesamt', query: 'SELECT SUM(total) as sum FROM orders WHERE payment_status = "completed"', color: 'text-green-600', icon: 'euro-sign', format: 'currency' },
+      { label: 'Bestellungen', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "completed"', color: 'text-blue-600', icon: 'list' },
       { label: 'Kunden', query: 'SELECT COUNT(*) as count FROM users', color: 'text-purple-600', icon: 'users' }
     ],
     tableColumns: [

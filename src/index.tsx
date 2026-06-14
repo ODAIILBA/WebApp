@@ -4864,69 +4864,30 @@ app.post('/api/analytics/track', async (c) => {
 // Overview Dashboard
 app.get('/api/analytics/overview', async (c) => {
   try {
-    // Get date range (default: today)
     const today = new Date().toISOString().split('T')[0]
 
-    // Total visitors today
-    const visitorsToday = await c.env.DB.prepare(`
-      SELECT COUNT(DISTINCT visitor_id) as count
-      FROM analytics_page_views
-      WHERE DATE(created_at) = ?
-    `).bind(today).first()
+    const [pageViewsToday, pageViewsYesterday, revenueToday, ordersToday, topPages] = await Promise.all([
+      c.env.DB.prepare(`SELECT COUNT(*) as count FROM analytics_page_views WHERE DATE(created_at) = ?`).bind(today).first(),
+      c.env.DB.prepare(`SELECT COUNT(*) as count FROM analytics_page_views WHERE DATE(created_at) = DATE('now', '-1 day')`).first(),
+      c.env.DB.prepare(`SELECT COALESCE(SUM(total), 0) as total FROM orders WHERE DATE(created_at) = ? AND payment_status = 'completed'`).bind(today).first(),
+      c.env.DB.prepare(`SELECT COUNT(*) as count FROM orders WHERE DATE(created_at) = ?`).bind(today).first(),
+      c.env.DB.prepare(`SELECT page_url, COUNT(*) as views FROM analytics_page_views WHERE DATE(created_at) = ? GROUP BY page_url ORDER BY views DESC LIMIT 10`).bind(today).all(),
+    ])
 
-    // Total page views today
-    const pageViewsToday = await c.env.DB.prepare(`
-      SELECT COUNT(*) as count
-      FROM analytics_page_views
-      WHERE DATE(created_at) = ?
-    `).bind(today).first()
-
-    // Total revenue today
-    const revenueToday = await c.env.DB.prepare(`
-      SELECT SUM(revenue) as total
-      FROM analytics_conversions
-      WHERE DATE(created_at) = ? AND conversion_type = 'purchase'
-    `).bind(today).first()
-
-    // Total conversions today
-    const conversionsToday = await c.env.DB.prepare(`
-      SELECT COUNT(*) as count
-      FROM analytics_conversions
-      WHERE DATE(created_at) = ?
-    `).bind(today).first()
-
-    // Real-time active users
-    const activeUsers = await c.env.DB.prepare(`
-      SELECT COUNT(DISTINCT visitor_id) as count
-      FROM analytics_realtime
-      WHERE datetime(last_ping) > datetime('now', '-5 minutes')
-    `).first()
-
-    // Top pages today
-    const topPages = await c.env.DB.prepare(`
-      SELECT page_url, page_title, COUNT(*) as views
-      FROM analytics_page_views
-      WHERE DATE(created_at) = ?
-      GROUP BY page_url, page_title
-      ORDER BY views DESC
-      LIMIT 10
-    `).bind(today).all()
-
-    // Conversion rate
-    const conversionRate = visitorsToday.count > 0 
-      ? ((conversionsToday.count / visitorsToday.count) * 100).toFixed(2)
-      : 0
+    const views = (pageViewsToday as any)?.count || 0
+    const viewsYest = (pageViewsYesterday as any)?.count || 1
+    const conversionRate = views > 0 ? (((ordersToday as any)?.count || 0) / views * 100).toFixed(2) : '0.00'
 
     return c.json({
       success: true,
       data: {
-        visitors: visitorsToday.count || 0,
-        pageViews: pageViewsToday.count || 0,
-        revenue: revenueToday.total || 0,
-        conversions: conversionsToday.count || 0,
+        visitors: views,
+        pageViews: views,
+        revenue: (revenueToday as any)?.total || 0,
+        conversions: (ordersToday as any)?.count || 0,
         conversionRate: parseFloat(conversionRate),
-        activeUsers: activeUsers.count || 0,
-        topPages: topPages.results
+        activeUsers: 0,
+        topPages: topPages.results || []
       }
     })
   } catch (error) {
@@ -4939,49 +4900,38 @@ app.get('/api/analytics/overview', async (c) => {
 app.get('/api/analytics/visitors', async (c) => {
   try {
     const days = parseInt(c.req.query('days') || '30')
-    
-    // Visitors over time
-    const visitorsOverTime = await c.env.DB.prepare(`
-      SELECT DATE(created_at) as date, COUNT(DISTINCT visitor_id) as visitors
-      FROM analytics_page_views
-      WHERE DATE(created_at) >= DATE('now', '-${days} days')
-      GROUP BY DATE(created_at)
-      ORDER BY date ASC
-    `).all()
 
-    // Traffic sources
-    const trafficSources = await c.env.DB.prepare(`
-      SELECT 
-        CASE 
-          WHEN referrer IS NULL OR referrer = '' THEN 'Direct'
-          WHEN referrer LIKE '%google%' THEN 'Google'
-          WHEN referrer LIKE '%bing%' THEN 'Bing'
-          WHEN referrer LIKE '%facebook%' THEN 'Facebook'
-          ELSE 'Other'
-        END as source,
-        COUNT(DISTINCT visitor_id) as visitors
-      FROM analytics_page_views
-      WHERE DATE(created_at) >= DATE('now', '-${days} days')
-      GROUP BY source
-      ORDER BY visitors DESC
-    `).all()
-
-    // Geographic distribution
-    const geoDistribution = await c.env.DB.prepare(`
-      SELECT country, COUNT(DISTINCT visitor_id) as visitors
-      FROM analytics_page_views
-      WHERE country IS NOT NULL AND DATE(created_at) >= DATE('now', '-${days} days')
-      GROUP BY country
-      ORDER BY visitors DESC
-      LIMIT 10
-    `).all()
+    const [visitorsOverTime, trafficSources] = await Promise.all([
+      c.env.DB.prepare(`
+        SELECT DATE(created_at) as date, COUNT(*) as visitors
+        FROM analytics_page_views
+        WHERE DATE(created_at) >= DATE('now', '-${days} days')
+        GROUP BY DATE(created_at)
+        ORDER BY date ASC
+      `).all(),
+      c.env.DB.prepare(`
+        SELECT 
+          CASE 
+            WHEN referrer IS NULL OR referrer = '' THEN 'Direkt'
+            WHEN referrer LIKE '%google%' THEN 'Google'
+            WHEN referrer LIKE '%bing%' THEN 'Bing'
+            WHEN referrer LIKE '%facebook%' THEN 'Facebook'
+            ELSE 'Sonstige'
+          END as source,
+          COUNT(*) as visitors
+        FROM analytics_page_views
+        WHERE DATE(created_at) >= DATE('now', '-${days} days')
+        GROUP BY source
+        ORDER BY visitors DESC
+      `).all()
+    ])
 
     return c.json({
       success: true,
       data: {
         visitorsOverTime: visitorsOverTime.results,
         trafficSources: trafficSources.results,
-        geoDistribution: geoDistribution.results
+        geoDistribution: []
       }
     })
   } catch (error) {
@@ -4994,24 +4944,33 @@ app.get('/api/analytics/visitors', async (c) => {
 app.get('/api/analytics/products', async (c) => {
   try {
     const days = parseInt(c.req.query('days') || '30')
-    
-    const products = await c.env.DB.prepare(`
-      SELECT 
-        product_id, product_name, category,
-        SUM(views) as total_views,
-        SUM(add_to_cart) as total_add_to_cart,
-        SUM(purchases) as total_purchases,
-        SUM(revenue) as total_revenue
-      FROM analytics_products
-      WHERE DATE(date) >= DATE('now', '-${days} days')
-      GROUP BY product_id, product_name, category
-      ORDER BY total_revenue DESC
-    `).all()
+
+    const [products, topViewed] = await Promise.all([
+      c.env.DB.prepare(`
+        SELECT p.id as product_id, p.name as product_name, p.price,
+               COUNT(apv.id) as total_views
+        FROM products p
+        LEFT JOIN analytics_product_views apv ON apv.product_id = p.id
+          AND DATE(apv.created_at) >= DATE('now', '-${days} days')
+        GROUP BY p.id, p.name, p.price
+        ORDER BY total_views DESC
+        LIMIT 20
+      `).all(),
+      c.env.DB.prepare(`
+        SELECT product_id, COUNT(*) as views
+        FROM analytics_product_views
+        WHERE DATE(created_at) >= DATE('now', '-${days} days')
+        GROUP BY product_id
+        ORDER BY views DESC
+        LIMIT 10
+      `).all()
+    ])
 
     return c.json({
       success: true,
       data: {
-        products: products.results
+        products: products.results,
+        topViewed: topViewed.results
       }
     })
   } catch (error) {
@@ -5024,17 +4983,18 @@ app.get('/api/analytics/products', async (c) => {
 app.get('/api/analytics/devices', async (c) => {
   try {
     const days = parseInt(c.req.query('days') || '30')
-    
+
     const devices = await c.env.DB.prepare(`
       SELECT 
-        device_type, browser, os,
-        SUM(visitors) as total_visitors,
-        SUM(page_views) as total_page_views,
-        AVG(bounce_rate) as avg_bounce_rate,
-        AVG(avg_duration) as avg_duration
-      FROM analytics_devices
-      WHERE DATE(date) >= DATE('now', '-${days} days')
-      GROUP BY device_type, browser, os
+        CASE
+          WHEN user_agent LIKE '%Mobile%' OR user_agent LIKE '%Android%' OR user_agent LIKE '%iPhone%' THEN 'Mobil'
+          WHEN user_agent LIKE '%Tablet%' OR user_agent LIKE '%iPad%' THEN 'Tablet'
+          ELSE 'Desktop'
+        END as device_type,
+        COUNT(*) as total_visitors
+      FROM analytics_page_views
+      WHERE DATE(created_at) >= DATE('now', '-${days} days')
+      GROUP BY device_type
       ORDER BY total_visitors DESC
     `).all()
 
@@ -8057,11 +8017,18 @@ app.get('/api/admin/contact-messages', async (c) => {
     const countQuery = status ? 'SELECT COUNT(*) as count FROM contact_messages WHERE status = ?' : 'SELECT COUNT(*) as count FROM contact_messages'
     const countParams = status ? [status] : []
     const total = await db.db.prepare(countQuery).bind(...countParams).first()
-    
+    const totalCount = (total as any)?.count || 0
+
+    const statsRows = await db.db.prepare('SELECT status, COUNT(*) as count FROM contact_messages GROUP BY status').all()
+    const stats: any = { total: totalCount, new: 0, read: 0, replied: 0, archived: 0, in_progress: 0, resolved: 0 }
+    ;(statsRows.results || []).forEach((r: any) => { stats[r.status] = r.count })
+    stats.total = totalCount
+
     return c.json({ 
       success: true, 
       data: messages.results,
-      pagination: { page, limit, total: (total as any)?.count || 0 }
+      stats,
+      pagination: { page, limit, total: totalCount, from: offset + 1, to: Math.min(offset + limit, totalCount) }
     })
   } catch (error: any) {
     console.error('Error fetching contact messages:', error)
@@ -14027,7 +13994,7 @@ app.get('/admin/homepage', async (c) => {
   let sections: any[] = []
   try {
     const [sliderRes, sectionRes] = await Promise.all([
-      c.env.DB.prepare('SELECT * FROM hero_sliders ORDER BY sort_order ASC').all().catch(() => ({ results: [] })),
+      c.env.DB.prepare('SELECT * FROM homepage_hero_slides ORDER BY order_position ASC').all().catch(() => ({ results: [] })),
       c.env.DB.prepare('SELECT * FROM homepage_sections ORDER BY sort_order ASC').all().catch(() => ({ results: [] }))
     ])
     sliders = sliderRes.results as any[]
@@ -14535,11 +14502,7 @@ ${AdminSidebarAdvanced('/admin/footer')}
 // Email Templates
 // duplicate email-templates route removed - active route above at /admin/email-templates
 
-// Cookies Management
-app.get('/admin/cookies', (c) => {
-  const html = AdminCookies();
-  return c.html(html);
-})
+// Cookies Management - handled by route at line 13016
 
 // Settings
 // Enhanced Analytics & Reporting
@@ -30799,6 +30762,11 @@ app.get('/admin/*', async (c) => {
   const path = c.req.path;
   const config = adminPageConfigs[path];
 
+  // Special handling for /admin/cookies - render AdminCookies component directly
+  if (path === '/admin/cookies') {
+    return c.html(AdminCookies({}))
+  }
+
   // Special handling for pages/add - render a form (no config needed)
   if (path === '/admin/pages/add') {
     const formHtml = `<!DOCTYPE html>
@@ -31679,7 +31647,8 @@ ${AdminSidebarAdvanced('/admin/licenses/assignments')}
           try {
             const result = await env.DB.prepare(stat.query).first();
             const key = stat.label.toLowerCase().replace(/\s+/g, '_');
-            stats[key] = result?.count || result?.sum || 0;
+            const r = result as any;
+            stats[key] = r?.count ?? r?.sum ?? r?.avg ?? r?.total ?? r?.value ?? 0;
           } catch (e) {
             stats[stat.label.toLowerCase().replace(/\s+/g, '_')] = 0;
           }

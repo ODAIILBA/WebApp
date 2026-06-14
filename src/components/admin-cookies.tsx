@@ -1,4 +1,5 @@
 import type { FC } from 'hono/jsx'
+import { AdminSidebarAdvanced } from './admin-sidebar-advanced'
 
 export const AdminCookies: FC = () => {
   return (
@@ -338,18 +339,7 @@ export const AdminCookies: FC = () => {
         `}</style>
       </head>
       <body>
-        <div class="admin-sidebar">
-          <div style="padding: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
-            <h1 style="color: var(--gold); font-size: 1.25rem; font-weight: bold;">
-              <i class="fas fa-crown" style="margin-right: 0.5rem;"></i>
-              SOFTWAREKING24
-            </h1>
-            <p style="color: rgba(255,255,255,0.6); font-size: 0.875rem; margin-top: 0.25rem;">
-              Admin Panel
-            </p>
-          </div>
-          <div id="sidebar-nav"></div>
-        </div>
+        <div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/cookies')}} />
 
         <div class="admin-content">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
