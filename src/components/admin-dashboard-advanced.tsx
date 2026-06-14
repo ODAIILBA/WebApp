@@ -271,6 +271,20 @@ export const AdminDashboardAdvanced = () => {
             document.getElementById('stat-customers-total').textContent = stats.total_customers || 0;
             document.getElementById('stat-low-stock').textContent = stats.low_stock_count || 0;
             
+            // Orders change vs yesterday
+            const ordersChange = stats.orders_yesterday > 0
+              ? (((stats.orders_today - stats.orders_yesterday) / stats.orders_yesterday) * 100).toFixed(0)
+              : (stats.orders_today > 0 ? '100' : '0');
+            const ordersChangeEl = document.getElementById('stat-orders-change');
+            if (ordersChangeEl) ordersChangeEl.textContent = ordersChange + '%';
+            
+            // Revenue change vs yesterday
+            const revenueChange = stats.revenue_yesterday > 0
+              ? (((stats.revenue_today - stats.revenue_yesterday) / stats.revenue_yesterday) * 100).toFixed(0)
+              : (stats.revenue_today > 0 ? '100' : '0');
+            const revenueChangeEl = document.getElementById('stat-revenue-change');
+            if (revenueChangeEl) revenueChangeEl.textContent = revenueChange + '%';
+            
             // Load charts
             loadCharts();
             
@@ -342,20 +356,21 @@ export const AdminDashboardAdvanced = () => {
         async function loadRecentOrders() {
           try {
             const response = await axios.get('/api/admin/orders?limit=5&sort=created_at&order=desc');
-            const orders = response.data.data || [];
+            const orders = (response.data.data && response.data.data.orders) ? response.data.data.orders : (Array.isArray(response.data.data) ? response.data.data : []);
             
+            const statusColors = { 'completed': '#10b981', 'pending': '#f59e0b', 'cancelled': '#ef4444', 'processing': '#3b82f6' };
             const html = orders.length > 0 ? orders.map(order => \`
-              <div class="flex items-center justify-between py-3 border-b">
+              <div class="flex items-center justify-between py-3 border-b last:border-0">
                 <div class="flex-1">
-                  <div class="font-medium">\${order.order_number}</div>
-                  <div class="text-sm text-gray-600">\${order.customer_email}</div>
+                  <div class="font-medium text-gray-900">\${order.order_number || '#' + order.id}</div>
+                  <div class="text-sm text-gray-500">\${order.email || order.customer_email || ''}</div>
                 </div>
                 <div class="text-right">
-                  <div class="font-bold">€\${order.total_amount.toFixed(2)}</div>
-                  <div class="text-xs text-gray-600">\${new Date(order.created_at).toLocaleDateString('de-DE')}</div>
+                  <div class="font-bold text-gray-900">€\${parseFloat(order.total || order.total_amount || 0).toFixed(2)}</div>
+                  <span class="text-xs px-2 py-0.5 rounded-full" style="background: \${(statusColors[order.order_status] || '#6b7280') + '22'}; color: \${statusColors[order.order_status] || '#6b7280'}">\${order.order_status || 'pending'}</span>
                 </div>
               </div>
-            \`).join('') : '<div class="text-center py-8 text-gray-400">Keine Bestellungen</div>';
+            \`).join('') : '<div class="text-center py-8 text-gray-400"><i class="fas fa-inbox text-3xl mb-3 block"></i>Keine Bestellungen</div>';
             
             document.getElementById('recent-orders').innerHTML = html;
           } catch (error) {
