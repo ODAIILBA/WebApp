@@ -251,6 +251,18 @@ app.onError((error, c) => {
   return errorHandler(isDevelopment)(error, c)
 })
 
+// Serve SVG placeholder for missing product/brand images (BEFORE serveStatic so it takes priority)
+const placeholderSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120" viewBox="0 0 120 120"><rect width="120" height="120" fill="#f3f4f6" rx="8"/><rect x="30" y="25" width="60" height="45" rx="5" fill="#d1d5db"/><circle cx="45" cy="40" r="7" fill="#9ca3af"/><polygon points="30,70 52,48 68,62 84,42 90,70" fill="#9ca3af"/><rect x="20" y="78" width="80" height="9" rx="3" fill="#e5e7eb"/><rect x="30" y="93" width="60" height="7" rx="3" fill="#e5e7eb"/></svg>`
+const servePlaceholder = (c: any) => new Response(placeholderSvg, { headers: { 'Content-Type': 'image/svg+xml', 'Cache-Control': 'public, max-age=86400' } })
+app.get('/static/placeholder.png', servePlaceholder)
+app.get('/static/placeholder.svg', servePlaceholder)
+app.get('/static/no-image.png', servePlaceholder)
+// Catch-all for missing product/brand/category images — serve placeholder instead of 404
+app.get('/static/products/:filename', servePlaceholder)
+app.get('/static/brands/:filename', servePlaceholder)
+app.get('/static/categories/:filename', servePlaceholder)
+app.get('/static/uploads/:filename', servePlaceholder)
+
 // Serve static files
 app.use('/static/*', serveStatic({ root: './public' }))
 app.use('/index.html', serveStatic({ path: './index.html', root: './public' }))
@@ -6123,6 +6135,84 @@ app.post('/api/admin/products/bulk-update', async (c) => {
   }
 })
 
+// GET: Export products as CSV
+app.get('/api/admin/products/export', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const idsParam = c.req.query('ids')
+    let query = `SELECT p.id, p.name, p.sku, p.slug, p.category, p.price, p.sale_price, p.stock, p.is_active, p.is_featured, p.created_at FROM products p`
+    const params: any[] = []
+    if (idsParam) {
+      const ids = idsParam.split(',').map(Number).filter(Boolean)
+      if (ids.length > 0) {
+        query += ` WHERE p.id IN (${ids.map(() => '?').join(',')})`
+        params.push(...ids)
+      }
+    }
+    query += ` ORDER BY p.created_at DESC`
+    const products = await db.db.prepare(query).bind(...params).all()
+    const rows = products.results as any[]
+    const header = 'id,name,sku,slug,category,price,sale_price,stock,is_active,is_featured,created_at'
+    const csv = [header, ...rows.map(p =>
+      [p.id, `"${(p.name || '').replace(/"/g, '""')}"`, p.sku, p.slug, p.category, p.price, p.sale_price || '', p.stock, p.is_active, p.is_featured, p.created_at].join(',')
+    )].join('\n')
+    return new Response(csv, { headers: { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="products.csv"' } })
+  } catch (error) {
+    console.error('Error exporting products:', error)
+    return c.json({ success: false, error: 'Export failed' }, 500)
+  }
+})
+
+// POST: Duplicate a product
+app.post('/api/admin/products/:id/duplicate', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const productId = c.req.param('id')
+    const original = await db.db.prepare('SELECT * FROM products WHERE id = ?').bind(productId).first() as any
+    if (!original) return c.json({ success: false, error: 'Product not found' }, 404)
+    const newSku = `${original.sku || 'SKU'}-COPY-${Date.now().toString().slice(-5)}`
+    const newSlug = `${original.slug || 'product'}-copy-${Date.now().toString().slice(-5)}`
+    const result = await db.db.prepare(`
+      INSERT INTO products (name, sku, slug, category, category_id, brand_id, price, sale_price, stock, is_active, is_featured, image_url, short_description, description)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, ?, ?, ?)
+    `).bind(
+      `${original.name || 'Product'} (Kopie)`, newSku, newSlug,
+      original.category, original.category_id, original.brand_id,
+      original.price, original.sale_price, original.stock,
+      original.image_url, original.short_description, original.description
+    ).run()
+    return c.json({ success: true, data: { id: result.meta.last_row_id }, message: 'Product duplicated' })
+  } catch (error: any) {
+    console.error('Error duplicating product:', error)
+    return c.json({ success: false, error: error.message || 'Duplicate failed' }, 500)
+  }
+})
+
+// POST: Bulk status update for products
+app.post('/api/admin/products/bulk', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const { ids, action, status } = await c.req.json()
+    if (!ids || !Array.isArray(ids) || ids.length === 0) return c.json({ success: false, error: 'No IDs provided' }, 400)
+    const placeholders = ids.map(() => '?').join(',')
+    if (action === 'delete') {
+      await db.db.prepare(`DELETE FROM products WHERE id IN (${placeholders})`).bind(...ids).run()
+    } else if (action === 'activate') {
+      await db.db.prepare(`UPDATE products SET is_active = 1 WHERE id IN (${placeholders})`).bind(...ids).run()
+    } else if (action === 'deactivate') {
+      await db.db.prepare(`UPDATE products SET is_active = 0 WHERE id IN (${placeholders})`).bind(...ids).run()
+    } else if (action === 'status' && status !== undefined) {
+      await db.db.prepare(`UPDATE products SET is_active = ? WHERE id IN (${placeholders})`).bind(status, ...ids).run()
+    } else {
+      return c.json({ success: false, error: 'Unknown action' }, 400)
+    }
+    return c.json({ success: true, message: `Bulk ${action} applied to ${ids.length} products` })
+  } catch (error: any) {
+    console.error('Error bulk updating products:', error)
+    return c.json({ success: false, error: error.message || 'Bulk update failed' }, 500)
+  }
+})
+
 // GET: Single product by ID (for editing)
 app.get('/api/admin/products/:id', async (c) => {
   try {
@@ -6925,6 +7015,87 @@ app.post('/api/admin/licenses', async (c) => {
   }
 })
 
+// GET: List all licenses (must come before /:id wildcard)
+app.get('/api/admin/licenses', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const page = parseInt(c.req.query('page') || '1')
+    const limit = parseInt(c.req.query('limit') || '50')
+    const offset = (page - 1) * limit
+    const search = c.req.query('search') || ''
+    const status = c.req.query('status') || ''
+    const productId = c.req.query('product_id') || ''
+    let query = `SELECT lk.*, p.name as product_name, p.sku as product_sku FROM license_keys lk LEFT JOIN products p ON lk.product_id = p.id WHERE 1=1`
+    const params: any[] = []
+    if (search) { query += ` AND (lk.license_key LIKE ? OR p.name LIKE ?)`; params.push(`%${search}%`, `%${search}%`) }
+    if (status) { query += ` AND lk.status = ?`; params.push(status) }
+    if (productId) { query += ` AND lk.product_id = ?`; params.push(productId) }
+    const countQuery = query.replace('SELECT lk.*, p.name as product_name, p.sku as product_sku', 'SELECT COUNT(*) as c')
+    query += ` ORDER BY lk.created_at DESC LIMIT ? OFFSET ?`
+    params.push(limit, offset)
+    const [licenses, countRow] = await Promise.all([
+      db.db.prepare(query).bind(...params).all(),
+      db.db.prepare(countQuery).bind(...params.slice(0, -2)).first()
+    ])
+    return c.json({ success: true, data: licenses.results, pagination: { page, limit, total: Number(countRow?.c) || 0, totalPages: Math.ceil((Number(countRow?.c) || 0) / limit) } })
+  } catch (error) {
+    console.error('Error fetching licenses:', error)
+    return c.json({ success: false, error: 'Failed to fetch licenses' }, 500)
+  }
+})
+
+// GET: License stats (must come before /:id)
+app.get('/api/admin/licenses/stats', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const [total, available, used, expired, products] = await Promise.all([
+      db.db.prepare("SELECT COUNT(*) as c FROM license_keys").first(),
+      db.db.prepare("SELECT COUNT(*) as c FROM license_keys WHERE status = 'available'").first(),
+      db.db.prepare("SELECT COUNT(*) as c FROM license_keys WHERE status = 'used'").first(),
+      db.db.prepare("SELECT COUNT(*) as c FROM license_keys WHERE status = 'expired'").first(),
+      db.db.prepare("SELECT COUNT(DISTINCT product_id) as c FROM license_keys").first(),
+    ])
+    return c.json({ success: true, data: { total: Number(total?.c)||0, available: Number(available?.c)||0, used: Number(used?.c)||0, expired: Number(expired?.c)||0, products_with_keys: Number(products?.c)||0 } })
+  } catch (error) {
+    console.error('Error fetching license stats:', error)
+    return c.json({ success: false, error: 'Failed to fetch stats' }, 500)
+  }
+})
+
+// GET: Export all licenses as CSV (must come before /:id)
+app.get('/api/admin/licenses/export', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const licenses = await db.db.prepare(`SELECT lk.license_key, p.sku as product_sku, lk.key_type, lk.status, lk.activation_limit, lk.activation_count, lk.created_at FROM license_keys lk LEFT JOIN products p ON lk.product_id = p.id ORDER BY lk.created_at DESC`).all()
+    const headers = ['License Key', 'Product SKU', 'Type', 'Status', 'Activation Limit', 'Activations', 'Created']
+    const rows = [headers.join(','), ...(licenses.results as any[]).map((l: any) => [l.license_key, l.product_sku||'', l.key_type||'', l.status||'', l.activation_limit||'', l.activation_count||0, l.created_at||''].join(','))]
+    return new Response(rows.join('\n'), { headers: { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="licenses.csv"' } })
+  } catch (error) {
+    return c.json({ success: false, error: 'Export failed' }, 500)
+  }
+})
+
+// GET: Bulk export selected licenses as CSV (must come before /:id)
+app.get('/api/admin/licenses/bulk-export', async (c) => {
+  try {
+    const idsParam = c.req.query('ids')
+    const db = c.get('db') as DatabaseHelper
+    let query = `SELECT lk.license_key, p.sku as product_sku, lk.key_type, lk.status, lk.activation_limit, lk.activation_count, lk.created_at FROM license_keys lk LEFT JOIN products p ON lk.product_id = p.id`
+    const params: any[] = []
+    if (idsParam) {
+      const ids = idsParam.split(',').map(Number).filter(Boolean)
+      if (ids.length > 0) { query += ` WHERE lk.id IN (${ids.map(() => '?').join(',')})`; params.push(...ids) }
+    }
+    query += ` ORDER BY lk.created_at DESC`
+    const licenses = await db.db.prepare(query).bind(...params).all()
+    const headers = ['License Key', 'Product SKU', 'Type', 'Status', 'Activation Limit', 'Activations', 'Created']
+    const rows = [headers.join(','), ...(licenses.results as any[]).map((l: any) => [l.license_key, l.product_sku||'', l.key_type||'', l.status||'', l.activation_limit||'', l.activation_count||0, l.created_at||''].join(','))]
+    return new Response(rows.join('\n'), { headers: { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="licenses-export.csv"' } })
+  } catch (error) {
+    return c.json({ success: false, error: 'Bulk export failed' }, 500)
+  }
+})
+
 // READ: Get single license
 app.get('/api/admin/licenses/:id', async (c) => {
   try {
@@ -7087,6 +7258,46 @@ app.post('/api/admin/licenses/:id/activate', async (c) => {
 // ============================================
 // CATEGORIES & BRANDS CRUD API
 // ============================================
+
+// GET: List all categories
+app.get('/api/admin/categories', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const { search, status } = c.req.query()
+    let query = `SELECT c.*, COUNT(p.id) as product_count FROM categories c LEFT JOIN products p ON p.category_id = c.id WHERE 1=1`
+    const params: any[] = []
+    if (search) { query += ` AND c.name LIKE ?`; params.push(`%${search}%`) }
+    if (status === 'active') { query += ` AND c.is_active = 1` }
+    else if (status === 'inactive') { query += ` AND c.is_active = 0` }
+    query += ` GROUP BY c.id ORDER BY c.name ASC`
+    const categories = await db.db.prepare(query).bind(...params).all()
+    const total = await db.db.prepare('SELECT COUNT(*) as c FROM categories').first()
+    return c.json({ success: true, data: categories.results, total: Number(total?.c) || 0 })
+  } catch (error) {
+    console.error('Error fetching categories:', error)
+    return c.json({ success: false, error: 'Failed to fetch categories' }, 500)
+  }
+})
+
+// GET: List all brands
+app.get('/api/admin/brands', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const { search, status } = c.req.query()
+    let query = `SELECT b.*, COUNT(p.id) as product_count FROM brands b LEFT JOIN products p ON p.brand_id = b.id WHERE 1=1`
+    const params: any[] = []
+    if (search) { query += ` AND b.name LIKE ?`; params.push(`%${search}%`) }
+    if (status === 'active') { query += ` AND b.is_active = 1` }
+    else if (status === 'inactive') { query += ` AND b.is_active = 0` }
+    query += ` GROUP BY b.id ORDER BY b.name ASC`
+    const brands = await db.db.prepare(query).bind(...params).all()
+    const total = await db.db.prepare('SELECT COUNT(*) as c FROM brands').first()
+    return c.json({ success: true, data: brands.results, total: Number(total?.c) || 0 })
+  } catch (error) {
+    console.error('Error fetching brands:', error)
+    return c.json({ success: false, error: 'Failed to fetch brands' }, 500)
+  }
+})
 
 // Categories CRUD
 app.post('/api/admin/categories', async (c) => {
@@ -9571,6 +9782,33 @@ app.get('/api/admin/licenses/export', async (c) => {
     })
   } catch (error) {
     return c.json({ success: false, error: 'Failed to export licenses' }, 500)
+  }
+})
+
+// GET: Bulk export selected licenses as CSV
+app.get('/api/admin/licenses/bulk-export', async (c) => {
+  try {
+    const idsParam = c.req.query('ids')
+    const db = c.get('db') as DatabaseHelper
+    let query = `SELECT lk.license_key, p.sku as product_sku, lk.key_type, lk.status, lk.activation_limit, lk.activation_count, lk.created_at FROM license_keys lk LEFT JOIN products p ON lk.product_id = p.id`
+    const params: any[] = []
+    if (idsParam) {
+      const ids = idsParam.split(',').map(Number).filter(Boolean)
+      if (ids.length > 0) {
+        query += ` WHERE lk.id IN (${ids.map(() => '?').join(',')})`
+        params.push(...ids)
+      }
+    }
+    query += ` ORDER BY lk.created_at DESC`
+    const licenses = await db.db.prepare(query).bind(...params).all()
+    const headers = ['License Key', 'Product SKU', 'Type', 'Status', 'Activation Limit', 'Activations', 'Created']
+    const rows = [headers.join(','), ...(licenses.results as any[]).map((l: any) =>
+      [l.license_key, l.product_sku || '', l.key_type || '', l.status || '', l.activation_limit || '', l.activation_count || 0, l.created_at || ''].join(',')
+    )]
+    return new Response(rows.join('\n'), { headers: { 'Content-Type': 'text/csv', 'Content-Disposition': 'attachment; filename="licenses-export.csv"' } })
+  } catch (error) {
+    console.error('Error bulk-exporting licenses:', error)
+    return c.json({ success: false, error: 'Bulk export failed' }, 500)
   }
 })
 
@@ -12429,7 +12667,7 @@ app.get('/admin/products/seo', async (c) => {
   const { env } = c;
   let products = { results: [] };
   try {
-    products = await env.DB.prepare(`SELECT id, name, slug, seo_title, seo_description, seo_keywords, is_active FROM products ORDER BY name ASC LIMIT 100`).all();
+    products = await env.DB.prepare(`SELECT id, name, slug, meta_title AS seo_title, meta_description AS seo_description, is_active FROM products ORDER BY name ASC LIMIT 100`).all();
   } catch (e) {
   }
   return c.html(<html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Produkt SEO - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/></head><body class="bg-gray-50"><div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/products/seo')}} /><div style="margin-left: 280px; padding: 2rem;"><div class="mb-6 flex justify-between items-center"><div><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-search mr-3 text-pink-600"></i>Produkt-SEO</h1><p class="text-gray-600">SEO-Metadaten für Produkte verwalten</p></div><button class="bg-pink-600 hover:bg-pink-700 text-white px-6 py-3 rounded-lg"><i class="fas fa-magic mr-2"></i>Bulk SEO</button></div><div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Produkte</p><p class="text-2xl font-bold">{products.results?.length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Mit SEO-Titel</p><p class="text-2xl font-bold text-green-600">{products.results?.filter((p: any) => p.seo_title).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Mit Description</p><p class="text-2xl font-bold text-blue-600">{products.results?.filter((p: any) => p.seo_description).length || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Mit Keywords</p><p class="text-2xl font-bold text-purple-600">{products.results?.filter((p: any) => p.seo_keywords).length || 0}</p></div></div><div class="bg-white rounded-lg shadow"><div class="p-6 border-b"><h2 class="text-xl font-semibold">Produkt SEO-Übersicht</h2></div><table class="w-full"><thead class="bg-gray-50 border-b"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produkt</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">SEO-Titel</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Meta Description</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th></tr></thead><tbody>{products.results && products.results.length > 0 ? products.results.map((prod: any) => {const hasSeo = prod.seo_title && prod.seo_description; return (<tr class="hover:bg-gray-50 border-b"><td class="px-6 py-4"><div><div class="font-medium">{prod.name}</div><div class="text-sm text-gray-500">/{prod.slug}</div></div></td><td class="px-6 py-4"><div class="text-sm">{prod.seo_title ? <span class="text-gray-900">{prod.seo_title.substring(0, 40)}...</span> : <span class="text-gray-400 italic">Nicht gesetzt</span>}</div></td><td class="px-6 py-4"><div class="text-sm">{prod.seo_description ? <span class="text-gray-900">{prod.seo_description.substring(0, 50)}...</span> : <span class="text-gray-400 italic">Nicht gesetzt</span>}</div></td><td class="px-6 py-4">{hasSeo ? <span class="px-3 py-1 text-xs bg-green-100 text-green-800 rounded-full"><i class="fas fa-check-circle mr-1"></i>Optimiert</span> : <span class="px-3 py-1 text-xs bg-orange-100 text-orange-800 rounded-full"><i class="fas fa-exclamation-triangle mr-1"></i>Unvollständig</span>}</td><td class="px-6 py-4"><button class="text-blue-600 mr-3"><i class="fas fa-edit"></i></button><button class="text-gray-600"><i class="fas fa-chart-line"></i></button></td></tr>);}) : (<tr><td colspan="5" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-search text-6xl mb-4 text-gray-300"></i><p class="text-lg mb-4">Keine Produkte gefunden</p></td></tr>)}</tbody></table></div></div></body></html>);
@@ -14722,6 +14960,62 @@ app.delete('/api/admin/notifications/clear-all', async (c) => {
 // ============================================
 // API ROUTES: System Settings
 // ============================================
+
+// ============================================
+// API ROUTES: Reviews
+// ============================================
+
+app.get('/api/admin/reviews', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const page = parseInt(c.req.query('page') || '1')
+    const limit = parseInt(c.req.query('limit') || '20')
+    const offset = (page - 1) * limit
+    const status = c.req.query('status') || ''
+    const rating = c.req.query('rating') || ''
+    const search = c.req.query('search') || ''
+    let query = `SELECT r.*, p.name as product_name, u.email as user_email FROM reviews r LEFT JOIN products p ON r.product_id = p.id LEFT JOIN users u ON r.user_id = u.id WHERE 1=1`
+    const params: any[] = []
+    if (status === 'approved') { query += ` AND r.is_approved = 1` }
+    else if (status === 'pending') { query += ` AND r.is_approved = 0` }
+    if (rating) { query += ` AND r.rating = ?`; params.push(parseInt(rating)) }
+    if (search) { query += ` AND (r.title LIKE ? OR r.comment LIKE ? OR p.name LIKE ?)`; params.push(`%${search}%`, `%${search}%`, `%${search}%`) }
+    const countQuery = query.replace('SELECT r.*, p.name as product_name, u.email as user_email', 'SELECT COUNT(*) as c')
+    query += ` ORDER BY r.created_at DESC LIMIT ? OFFSET ?`
+    params.push(limit, offset)
+    const [reviews, countRow, stats] = await Promise.all([
+      db.db.prepare(query).bind(...params).all(),
+      db.db.prepare(countQuery).bind(...params.slice(0, -2)).first(),
+      db.db.prepare(`SELECT COUNT(*) as total, SUM(CASE WHEN is_approved=1 THEN 1 ELSE 0 END) as approved, SUM(CASE WHEN is_approved=0 THEN 1 ELSE 0 END) as pending, AVG(rating) as avg_rating FROM reviews`).first()
+    ])
+    return c.json({ success: true, data: reviews.results, pagination: { page, limit, total: Number(countRow?.c)||0, totalPages: Math.ceil((Number(countRow?.c)||0)/limit) }, stats })
+  } catch (error) {
+    console.error('Error fetching reviews:', error)
+    return c.json({ success: false, error: 'Failed to fetch reviews' }, 500)
+  }
+})
+
+app.patch('/api/admin/reviews/:id/approve', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+    await db.db.prepare('UPDATE reviews SET is_approved = 1 WHERE id = ?').bind(id).run()
+    return c.json({ success: true })
+  } catch (error) {
+    return c.json({ success: false, error: 'Failed to approve review' }, 500)
+  }
+})
+
+app.delete('/api/admin/reviews/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const id = c.req.param('id')
+    await db.db.prepare('DELETE FROM reviews WHERE id = ?').bind(id).run()
+    return c.json({ success: true })
+  } catch (error) {
+    return c.json({ success: false, error: 'Failed to delete review' }, 500)
+  }
+})
 
 app.get('/api/admin/settings', async (c) => {
   try {
@@ -24330,6 +24624,17 @@ app.get('/api/translations/count', async (c) => {
     return c.json({ success: true, count: 0 });
   }
 });
+
+// Get user language preference
+app.get('/api/user/language', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const defaultLang = await db.db.prepare("SELECT code FROM languages WHERE is_default = 1 LIMIT 1").first() as any
+    return c.json({ success: true, language: defaultLang?.code || 'de' })
+  } catch (error) {
+    return c.json({ success: true, language: 'de' })
+  }
+})
 
 // Save user language preference
 app.post('/api/user/language', async (c) => {
