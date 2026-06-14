@@ -32,7 +32,7 @@ export class DatabaseHelper {
       FROM products p
       LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = ?
       LEFT JOIN categories c ON p.category_id = c.id
-      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language_code = ?
+      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language = ?
       LEFT JOIN brands b ON p.brand_id = b.id
       WHERE p.slug = ?
       LIMIT 1
@@ -65,7 +65,7 @@ export class DatabaseHelper {
       FROM products p
       LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = ?
       LEFT JOIN categories c ON p.category_id = c.id
-      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language_code = ?
+      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language = ?
       LEFT JOIN brands b ON p.brand_id = b.id
       WHERE p.id = ?
       LIMIT 1
@@ -98,7 +98,7 @@ export class DatabaseHelper {
       FROM products p
       LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = ?
       LEFT JOIN categories c ON p.category_id = c.id
-      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language_code = ?
+      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language = ?
       LEFT JOIN brands b ON p.brand_id = b.id
       LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
       WHERE p.is_active = 1
@@ -120,7 +120,7 @@ export class DatabaseHelper {
       FROM products p
       LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = ?
       LEFT JOIN categories c ON p.category_id = c.id
-      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language_code = ?
+      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language = ?
       LEFT JOIN brands b ON p.brand_id = b.id
       LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
       WHERE p.is_featured = 1
@@ -142,7 +142,7 @@ export class DatabaseHelper {
       FROM products p
       LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = ?
       LEFT JOIN categories c ON p.category_id = c.id
-      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language_code = ?
+      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language = ?
       LEFT JOIN brands b ON p.brand_id = b.id
       LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
       WHERE p.is_bestseller = 1
@@ -164,7 +164,7 @@ export class DatabaseHelper {
       FROM products p
       LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = ?
       LEFT JOIN categories c ON p.category_id = c.id
-      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language_code = ?
+      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language = ?
       LEFT JOIN brands b ON p.brand_id = b.id
       LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1
       WHERE p.is_new = 1
@@ -201,7 +201,7 @@ export class DatabaseHelper {
       FROM products p
       LEFT JOIN product_translations pt ON p.id = pt.product_id AND pt.language = ?
       LEFT JOIN categories c ON p.category_id = c.id
-      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language_code = ?
+      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language = ?
       LEFT JOIN brands b ON p.brand_id = b.id
       WHERE c.slug = ? AND p.is_active = 1
       ORDER BY p.created_at DESC
@@ -245,7 +245,7 @@ export class DatabaseHelper {
         COALESCE(ct.name, c.name) as name,
         COALESCE(ct.description, c.description) as description
       FROM categories c
-      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language_code = ?
+      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language = ?
       WHERE c.is_active = 1
       ORDER BY c.sort_order ASC
     `).bind(language).all();
@@ -259,7 +259,7 @@ export class DatabaseHelper {
         c.*,
         ct.name, ct.description, ct.meta_title, ct.meta_description
       FROM categories c
-      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language_code = ?
+      LEFT JOIN category_translations ct ON c.id = ct.category_id AND ct.language = ?
       WHERE c.slug = ?
       LIMIT 1
     `).bind(language, slug).first();
@@ -521,7 +521,7 @@ export class DatabaseHelper {
     const existing = await this.db.prepare(`
       SELECT c.* FROM categories c
       JOIN category_translations ct ON c.id = ct.category_id
-      WHERE ct.name = ? AND ct.language_code = ?
+      WHERE ct.name = ? AND ct.language = ?
       LIMIT 1
     `).bind(name, language).first();
 
