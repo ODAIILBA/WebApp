@@ -6712,7 +6712,7 @@ app.delete('/api/admin/customers/:id', async (c) => {
       return c.json({ success: false, error: 'Customer not found' }, 404)
     }
 
-    await db.db.prepare(`UPDATE users SET order_status = 'deleted', updated_at = CURRENT_TIMESTAMP WHERE id = ?`).bind(customerId).run()
+    await db.db.prepare(`UPDATE users SET is_active = 0, updated_at = CURRENT_TIMESTAMP WHERE id = ?`).bind(customerId).run()
 
     return c.json({ success: true, message: 'Customer deleted successfully' })
   } catch (error: any) {
@@ -7204,7 +7204,7 @@ app.delete('/api/admin/licenses/:id', async (c) => {
       return c.json({ success: false, error: 'License not found' }, 404)
     }
 
-    await db.db.prepare(`UPDATE license_keys SET order_status = 'revoked', updated_at = CURRENT_TIMESTAMP WHERE id = ?`).bind(licenseId).run()
+    await db.db.prepare(`UPDATE license_keys SET status = 'revoked', updated_at = CURRENT_TIMESTAMP WHERE id = ?`).bind(licenseId).run()
 
     return c.json({ success: true, message: 'License revoked successfully' })
   } catch (error: any) {
@@ -10077,9 +10077,9 @@ app.get('/api/admin/licenses/stats', async (c) => {
     const stats = await c.env.DB.prepare(`
       SELECT 
         COUNT(*) as total,
-        SUM(CASE WHEN order_status = 'available' THEN 1 ELSE 0 END) as available,
-        SUM(CASE WHEN order_status = 'sold' THEN 1 ELSE 0 END) as sold,
-        SUM(CASE WHEN order_status = 'expired' THEN 1 ELSE 0 END) as expired
+        SUM(CASE WHEN status = 'available' THEN 1 ELSE 0 END) as available,
+        SUM(CASE WHEN status = 'sold' THEN 1 ELSE 0 END) as sold,
+        SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) as expired
       FROM license_keys
     `).first()
     
@@ -26044,6 +26044,14 @@ app.get('/api/shop/settings', async (c) => {
   try {
     const { env } = c;
     
+    await env.DB.prepare(`
+      CREATE TABLE IF NOT EXISTS shop_settings (
+        id INTEGER PRIMARY KEY,
+        settings_data TEXT NOT NULL,
+        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `).run();
+    
     const result = await env.DB.prepare(`
       SELECT settings_data FROM shop_settings WHERE id = 1
     `).first();
@@ -26150,7 +26158,7 @@ app.get('/api/shop/stats', async (c) => {
     const [products, customers, carts, revenue] = await Promise.all([
       env.DB.prepare('SELECT COUNT(*) as count FROM products').first(),
       env.DB.prepare('SELECT COUNT(*) as count FROM users').first(),
-      env.DB.prepare('SELECT COUNT(*) as count FROM carts WHERE updated_at >= date("now")').first(),
+      env.DB.prepare('SELECT COUNT(*) as count FROM shopping_carts WHERE updated_at >= date("now")').first(),
       env.DB.prepare(`SELECT SUM(total_amount) as sum FROM orders 
         WHERE created_at >= date("now") AND status = 'completed'`).first()
     ]);
