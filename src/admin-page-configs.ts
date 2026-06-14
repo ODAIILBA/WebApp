@@ -626,6 +626,54 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
     ]
   },
 
+  '/admin/payment-settings': {
+    path: '/admin/payment-settings',
+    title: 'Zahlungseinstellungen',
+    icon: 'credit-card',
+    iconColor: 'green',
+    description: 'Zahlungsanbieter und Checkout-Einstellungen konfigurieren',
+    dbQuery: `SELECT key, value, description, type FROM settings ORDER BY key ASC`,
+    statsCards: [
+      { label: 'Einstellungen', query: 'SELECT COUNT(*) as count FROM settings', color: 'text-green-600', icon: 'cog' },
+      { label: 'Währung', query: 'SELECT value as count FROM settings WHERE key = "currency"', color: 'text-blue-600', icon: 'euro-sign', format: 'text' },
+      { label: 'MwSt. (%)', query: 'SELECT value as count FROM settings WHERE key = "tax_rate"', color: 'text-orange-600', icon: 'percent', format: 'text' }
+    ],
+    tableColumns: [
+      { key: 'key', label: 'Einstellung' },
+      { key: 'value', label: 'Wert' },
+      { key: 'description', label: 'Beschreibung' },
+      { key: 'type', label: 'Typ' }
+    ],
+    actions: [
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ]
+  },
+
+  '/admin/vat': {
+    path: '/admin/vat',
+    title: 'MwSt. & Steuerklassen',
+    icon: 'percentage',
+    iconColor: 'orange',
+    description: 'Mehrwertsteuer-Sätze nach Land und Kategorie verwalten',
+    dbQuery: `SELECT id, name, code, rate, country_code, is_active FROM tax_rates ORDER BY country_code, rate DESC`,
+    statsCards: [
+      { label: 'Steuersätze', query: 'SELECT COUNT(*) as count FROM tax_rates', color: 'text-orange-600', icon: 'list' },
+      { label: 'Aktiv', query: 'SELECT COUNT(*) as count FROM tax_rates WHERE is_active = 1', color: 'text-green-600', icon: 'check' },
+      { label: 'Länder', query: 'SELECT COUNT(DISTINCT country_code) as count FROM tax_rates', color: 'text-blue-600', icon: 'globe' }
+    ],
+    tableColumns: [
+      { key: 'name', label: 'Name' },
+      { key: 'code', label: 'Code' },
+      { key: 'rate', label: 'Satz (%)', format: 'percentage' },
+      { key: 'country_code', label: 'Land' },
+      { key: 'is_active', label: 'Status', format: 'badge' }
+    ],
+    actions: [
+      { label: 'Neuer Steuersatz', icon: 'plus', color: 'orange', action: 'addNew()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ]
+  },
+
   // ============================================
   // PAYMENT SECTION (13 pages)
   // ============================================

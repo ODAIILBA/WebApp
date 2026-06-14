@@ -30079,6 +30079,429 @@ app.get('/admin/*', async (c) => {
     return c.html(formHtml);
   }
   
+  // Special handling for /admin/design - Design section hub page
+  if (path === '/admin/design') {
+    return c.html(`<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Design - Admin - SOFTWAREKING24</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/>
+</head>
+<body class="bg-gray-50">
+${AdminSidebarAdvanced('/admin/design')}
+<div style="margin-left:280px;padding:2rem;min-height:100vh;" class="admin-main-content">
+  <div class="mb-8">
+    <h1 class="text-3xl font-bold text-gray-800"><i class="fas fa-paint-brush mr-3 text-pink-500"></i>Design & Erscheinungsbild</h1>
+    <p class="text-gray-500 mt-1">Passen Sie das Aussehen Ihres Shops an</p>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <a href="/admin/themes" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-pink-200 transition-all group">
+      <div class="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-pink-200 transition-colors">
+        <i class="fas fa-palette text-pink-600 text-xl"></i>
+      </div>
+      <h3 class="text-lg font-bold text-gray-800 mb-1">Themes</h3>
+      <p class="text-sm text-gray-500">Design-Themes installieren und aktivieren</p>
+    </a>
+    <a href="/admin/sliders" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-blue-200 transition-all group">
+      <div class="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-blue-200 transition-colors">
+        <i class="fas fa-images text-blue-600 text-xl"></i>
+      </div>
+      <h3 class="text-lg font-bold text-gray-800 mb-1">Slider</h3>
+      <p class="text-sm text-gray-500">Hero-Slider und Banner verwalten</p>
+    </a>
+    <a href="/admin/homepage" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-green-200 transition-all group">
+      <div class="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-green-200 transition-colors">
+        <i class="fas fa-home text-green-600 text-xl"></i>
+      </div>
+      <h3 class="text-lg font-bold text-gray-800 mb-1">Homepage</h3>
+      <p class="text-sm text-gray-500">Startseite und Hero-Bereich bearbeiten</p>
+    </a>
+    <a href="/admin/homepage-sections" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-indigo-200 transition-all group">
+      <div class="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-indigo-200 transition-colors">
+        <i class="fas fa-th-large text-indigo-600 text-xl"></i>
+      </div>
+      <h3 class="text-lg font-bold text-gray-800 mb-1">Homepage-Sektionen</h3>
+      <p class="text-sm text-gray-500">Bereiche und Sektionen der Startseite</p>
+    </a>
+    <a href="/admin/footer" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-gray-200 transition-all group">
+      <div class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-gray-200 transition-colors">
+        <i class="fas fa-bars text-gray-600 text-xl"></i>
+      </div>
+      <h3 class="text-lg font-bold text-gray-800 mb-1">Footer</h3>
+      <p class="text-sm text-gray-500">Footer-Links und Spalten konfigurieren</p>
+    </a>
+    <a href="/admin/custom-css" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-purple-200 transition-all group">
+      <div class="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-purple-200 transition-colors">
+        <i class="fas fa-code text-purple-600 text-xl"></i>
+      </div>
+      <h3 class="text-lg font-bold text-gray-800 mb-1">Custom CSS</h3>
+      <p class="text-sm text-gray-500">Eigene Stile und CSS-Anpassungen</p>
+    </a>
+    <a href="/admin/custom-js" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-yellow-200 transition-all group">
+      <div class="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-yellow-200 transition-colors">
+        <i class="fas fa-file-code text-yellow-600 text-xl"></i>
+      </div>
+      <h3 class="text-lg font-bold text-gray-800 mb-1">Custom JavaScript</h3>
+      <p class="text-sm text-gray-500">Eigene Scripts und JS-Snippets</p>
+    </a>
+    <a href="/admin/pages" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-teal-200 transition-all group">
+      <div class="w-12 h-12 bg-teal-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-teal-200 transition-colors">
+        <i class="fas fa-file-alt text-teal-600 text-xl"></i>
+      </div>
+      <h3 class="text-lg font-bold text-gray-800 mb-1">Seiten</h3>
+      <p class="text-sm text-gray-500">CMS-Seiten und statische Inhalte</p>
+    </a>
+    <a href="/admin/legal-pages" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 hover:shadow-md hover:border-red-200 transition-all group">
+      <div class="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center mb-4 group-hover:bg-red-200 transition-colors">
+        <i class="fas fa-gavel text-red-600 text-xl"></i>
+      </div>
+      <h3 class="text-lg font-bold text-gray-800 mb-1">Rechtliche Seiten</h3>
+      <p class="text-sm text-gray-500">Impressum, Datenschutz, AGB</p>
+    </a>
+  </div>
+</div>
+</body>
+</html>`)
+  }
+
+  // Special handling for /admin/translations - show real translation strings from DB
+  if (path === '/admin/translations') {
+    let translations: any[] = []
+    let langs: string[] = []
+    let totalCount = 0
+    try {
+      const all = await c.env.DB.prepare('SELECT DISTINCT language_code FROM translations ORDER BY language_code').all()
+      langs = (all.results || []).map((r: any) => r.language_code)
+      const res = await c.env.DB.prepare('SELECT translation_key, translated_text, language_code FROM translations ORDER BY language_code, translation_key').all()
+      translations = res.results as any[]
+      totalCount = translations.length
+    } catch (e) {}
+    const byLang: Record<string, any[]> = {}
+    translations.forEach((t: any) => {
+      if (!byLang[t.language_code]) byLang[t.language_code] = []
+      byLang[t.language_code].push(t)
+    })
+    const activeLang = langs[0] || 'de'
+    return c.html(`<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Übersetzungen - Admin - SOFTWAREKING24</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/>
+</head>
+<body class="bg-gray-50">
+${AdminSidebarAdvanced('/admin/translations')}
+<div style="margin-left:280px;padding:2rem;min-height:100vh;" class="admin-main-content">
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-800"><i class="fas fa-language mr-3 text-purple-500"></i>Übersetzungen</h1>
+    <p class="text-gray-500 mt-1">Shop-Texte und Übersetzungen verwalten</p>
+  </div>
+  <div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+      <p class="text-gray-500 text-sm mb-1">Strings gesamt</p>
+      <p class="text-3xl font-bold text-gray-800">${totalCount}</p>
+    </div>
+    <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+      <p class="text-gray-500 text-sm mb-1">Sprachen</p>
+      <p class="text-3xl font-bold text-purple-600">${langs.length}</p>
+    </div>
+    <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+      <p class="text-gray-500 text-sm mb-1">Verfügbare Sprachen</p>
+      <p class="text-lg font-semibold text-gray-700">${langs.map(l => l.toUpperCase()).join(', ') || 'DE'}</p>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+    <div class="p-5 border-b border-gray-100 flex items-center justify-between">
+      <div class="flex gap-2">
+        ${langs.map(l => `<button onclick="showLang('${l}')" id="tab-${l}" class="px-4 py-2 rounded-lg font-semibold text-sm transition-colors ${l === activeLang ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}">${l.toUpperCase()}</button>`).join('')}
+      </div>
+      <div class="relative">
+        <input type="text" id="searchInput" placeholder="Suchen..." oninput="filterTable()" 
+          class="border border-gray-300 rounded-lg px-4 py-2 text-sm pl-8 focus:outline-none focus:ring-2 focus:ring-purple-400 w-64"/>
+        <i class="fas fa-search absolute left-2.5 top-2.5 text-gray-400 text-sm"></i>
+      </div>
+    </div>
+    ${langs.map(l => `
+    <div id="lang-${l}" class="${l === activeLang ? '' : 'hidden'}">
+      <div class="overflow-x-auto max-h-[600px] overflow-y-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 sticky top-0">
+            <tr>
+              <th class="px-5 py-3 text-left font-semibold text-gray-500 uppercase text-xs tracking-wider w-2/5">Schlüssel</th>
+              <th class="px-5 py-3 text-left font-semibold text-gray-500 uppercase text-xs tracking-wider">Übersetzung</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50">
+            ${(byLang[l] || []).length > 0 ? (byLang[l] || []).map((t: any) => `
+            <tr class="hover:bg-gray-50 translation-row" data-lang="${l}">
+              <td class="px-5 py-2.5 font-mono text-xs text-gray-500">${t.translation_key}</td>
+              <td class="px-5 py-2.5 text-gray-700">${t.translated_text || ''}</td>
+            </tr>`).join('') : `<tr><td colspan="2" class="text-center py-12 text-gray-400">Keine Übersetzungen</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </div>`).join('')}
+    ${langs.length === 0 ? `<div class="text-center py-16 text-gray-400"><i class="fas fa-language text-4xl mb-3"></i><p>Keine Übersetzungen gefunden</p></div>` : ''}
+  </div>
+</div>
+<script>
+  function showLang(lang) {
+    document.querySelectorAll('[id^="lang-"]').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('[id^="tab-"]').forEach(el => { el.className = 'px-4 py-2 rounded-lg font-semibold text-sm transition-colors bg-gray-100 text-gray-600 hover:bg-gray-200'; });
+    document.getElementById('lang-' + lang).classList.remove('hidden');
+    document.getElementById('tab-' + lang).className = 'px-4 py-2 rounded-lg font-semibold text-sm transition-colors bg-purple-600 text-white';
+  }
+  function filterTable() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    document.querySelectorAll('.translation-row').forEach(row => {
+      const text = row.textContent.toLowerCase();
+      row.style.display = text.includes(q) ? '' : 'none';
+    });
+  }
+</script>
+</body>
+</html>`)
+  }
+
+  // Special handling for /admin/system - show system settings and shop config from DB
+  if (path === '/admin/system') {
+    let settings: any[] = []
+    let systemInfo: any = {}
+    try {
+      const res = await c.env.DB.prepare('SELECT * FROM settings ORDER BY key ASC').all()
+      settings = res.results as any[]
+    } catch (e) {
+      try {
+        const res = await c.env.DB.prepare('SELECT * FROM system_settings ORDER BY setting_key ASC').all()
+        settings = res.results as any[]
+      } catch (e2) {}
+    }
+    const [prodCount, orderCount, userCount, licenseCount] = await Promise.all([
+      c.env.DB.prepare('SELECT COUNT(*) as c FROM products').first().catch(() => ({c: 0})),
+      c.env.DB.prepare('SELECT COUNT(*) as c FROM orders').first().catch(() => ({c: 0})),
+      c.env.DB.prepare('SELECT COUNT(*) as c FROM users').first().catch(() => ({c: 0})),
+      c.env.DB.prepare('SELECT COUNT(*) as c FROM license_keys').first().catch(() => ({c: 0})),
+    ])
+    return c.html(`<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>System - Admin - SOFTWAREKING24</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/>
+</head>
+<body class="bg-gray-50">
+${AdminSidebarAdvanced('/admin/system')}
+<div style="margin-left:280px;padding:2rem;min-height:100vh;" class="admin-main-content">
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-800"><i class="fas fa-server mr-3 text-gray-600"></i>System</h1>
+    <p class="text-gray-500 mt-1">Systemstatus und Shop-Konfiguration</p>
+  </div>
+  <div class="grid grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+      <p class="text-gray-500 text-sm mb-1">Produkte</p>
+      <p class="text-3xl font-bold text-blue-600">${(prodCount as any)?.c || 0}</p>
+    </div>
+    <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+      <p class="text-gray-500 text-sm mb-1">Bestellungen</p>
+      <p class="text-3xl font-bold text-green-600">${(orderCount as any)?.c || 0}</p>
+    </div>
+    <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+      <p class="text-gray-500 text-sm mb-1">Benutzer</p>
+      <p class="text-3xl font-bold text-purple-600">${(userCount as any)?.c || 0}</p>
+    </div>
+    <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+      <p class="text-gray-500 text-sm mb-1">Lizenzen</p>
+      <p class="text-3xl font-bold text-orange-600">${(licenseCount as any)?.c || 0}</p>
+    </div>
+  </div>
+  <div class="grid grid-cols-2 gap-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+      <div class="p-5 border-b border-gray-100">
+        <h2 class="text-lg font-bold text-gray-800"><i class="fas fa-cog mr-2 text-gray-500"></i>Shop-Einstellungen</h2>
+      </div>
+      <div class="divide-y divide-gray-50">
+        ${settings.length > 0 ? settings.map((s: any) => `
+        <div class="px-5 py-3 flex items-center justify-between hover:bg-gray-50">
+          <div>
+            <p class="font-medium text-gray-800 text-sm">${s.key || s.setting_key || ''}</p>
+            ${(s.description) ? `<p class="text-xs text-gray-400">${s.description}</p>` : ''}
+          </div>
+          <span class="px-3 py-1 bg-gray-100 text-gray-700 rounded text-sm font-mono">${s.value || s.setting_value || ''}</span>
+        </div>`).join('') : `<div class="px-5 py-8 text-center text-gray-400">Keine Einstellungen</div>`}
+      </div>
+    </div>
+    <div class="space-y-4">
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <h2 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-info-circle mr-2 text-blue-500"></i>System-Info</h2>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between py-2 border-b border-gray-50">
+            <span class="text-gray-500">Framework</span>
+            <span class="font-semibold text-gray-700">Hono v4 + Cloudflare D1</span>
+          </div>
+          <div class="flex justify-between py-2 border-b border-gray-50">
+            <span class="text-gray-500">Runtime</span>
+            <span class="font-semibold text-gray-700">Cloudflare Workers</span>
+          </div>
+          <div class="flex justify-between py-2 border-b border-gray-50">
+            <span class="text-gray-500">Datenbank</span>
+            <span class="font-semibold text-green-600"><i class="fas fa-circle text-xs mr-1"></i>D1 (SQLite)</span>
+          </div>
+          <div class="flex justify-between py-2 border-b border-gray-50">
+            <span class="text-gray-500">Umgebung</span>
+            <span class="font-semibold text-blue-600">Development</span>
+          </div>
+          <div class="flex justify-between py-2">
+            <span class="text-gray-500">Version</span>
+            <span class="font-semibold text-gray-700">1.0.0</span>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <h2 class="text-lg font-bold text-gray-800 mb-3"><i class="fas fa-link mr-2 text-indigo-500"></i>Schnelllinks</h2>
+        <div class="space-y-2">
+          <a href="/admin/settings" class="flex items-center p-2.5 rounded-lg hover:bg-gray-50 transition text-sm text-gray-700">
+            <i class="fas fa-sliders-h mr-3 text-gray-400 w-4"></i>Allgemeine Einstellungen
+          </a>
+          <a href="/admin/backup" class="flex items-center p-2.5 rounded-lg hover:bg-gray-50 transition text-sm text-gray-700">
+            <i class="fas fa-database mr-3 text-gray-400 w-4"></i>Backup & Wiederherstellung
+          </a>
+          <a href="/admin/security" class="flex items-center p-2.5 rounded-lg hover:bg-gray-50 transition text-sm text-gray-700">
+            <i class="fas fa-shield-alt mr-3 text-gray-400 w-4"></i>Sicherheit
+          </a>
+          <a href="/admin/logs" class="flex items-center p-2.5 rounded-lg hover:bg-gray-50 transition text-sm text-gray-700">
+            <i class="fas fa-list-alt mr-3 text-gray-400 w-4"></i>Audit-Logs
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>`)
+  }
+
+  // Special handling for /admin/licenses/assignments - show assigned licenses from DB
+  if (path === '/admin/licenses/assignments') {
+    let assignments: any[] = []
+    let stats = { total: 0, used: 0, available: 0, expired: 0 }
+    try {
+      const res = await c.env.DB.prepare(`
+        SELECT lk.id, lk.license_key, lk.status, lk.created_at, lk.updated_at,
+               p.name as product_name,
+               o.order_number, o.created_at as assigned_at,
+               u.email as assigned_to
+        FROM license_keys lk
+        LEFT JOIN products p ON lk.product_id = p.id
+        LEFT JOIN orders o ON lk.order_id = o.id
+        LEFT JOIN users u ON o.user_id = u.id
+        ORDER BY lk.updated_at DESC
+        LIMIT 100
+      `).all()
+      assignments = res.results as any[]
+      const s = await c.env.DB.prepare(`
+        SELECT 
+          COUNT(*) as total,
+          SUM(CASE WHEN status='used' THEN 1 ELSE 0 END) as used,
+          SUM(CASE WHEN status='available' THEN 1 ELSE 0 END) as available,
+          SUM(CASE WHEN status='expired' THEN 1 ELSE 0 END) as expired
+        FROM license_keys
+      `).first()
+      if (s) stats = { total: (s as any).total || 0, used: (s as any).used || 0, available: (s as any).available || 0, expired: (s as any).expired || 0 }
+    } catch (e) {}
+    return c.html(`<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lizenz-Zuweisungen - Admin - SOFTWAREKING24</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/>
+</head>
+<body class="bg-gray-50">
+${AdminSidebarAdvanced('/admin/licenses/assignments')}
+<div style="margin-left:280px;padding:2rem;min-height:100vh;" class="admin-main-content">
+  <div class="mb-6">
+    <h1 class="text-3xl font-bold text-gray-800"><i class="fas fa-user-tag mr-3 text-indigo-500"></i>Lizenz-Zuweisungen</h1>
+    <p class="text-gray-500 mt-1">Lizenzen und ihre Zuweisung an Kunden</p>
+  </div>
+  <div class="grid grid-cols-4 gap-4 mb-6">
+    <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+      <p class="text-gray-500 text-sm mb-1">Lizenzen gesamt</p>
+      <p class="text-3xl font-bold text-gray-800">${stats.total}</p>
+    </div>
+    <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+      <p class="text-gray-500 text-sm mb-1">Zugewiesen</p>
+      <p class="text-3xl font-bold text-indigo-600">${stats.used}</p>
+    </div>
+    <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+      <p class="text-gray-500 text-sm mb-1">Verfügbar</p>
+      <p class="text-3xl font-bold text-green-600">${stats.available}</p>
+    </div>
+    <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+      <p class="text-gray-500 text-sm mb-1">Abgelaufen</p>
+      <p class="text-3xl font-bold text-red-500">${stats.expired}</p>
+    </div>
+  </div>
+  <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+    <div class="p-5 border-b border-gray-100 flex items-center justify-between">
+      <h2 class="text-lg font-bold text-gray-800">Lizenz-Übersicht</h2>
+      <a href="/admin/licenses" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm rounded-lg transition-colors">
+        <i class="fas fa-key mr-2"></i>Alle Lizenzen verwalten
+      </a>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 border-b border-gray-100">
+          <tr>
+            <th class="px-5 py-3 text-left font-semibold text-gray-500 uppercase text-xs">Lizenzschlüssel</th>
+            <th class="px-5 py-3 text-left font-semibold text-gray-500 uppercase text-xs">Produkt</th>
+            <th class="px-5 py-3 text-left font-semibold text-gray-500 uppercase text-xs">Zugewiesen an</th>
+            <th class="px-5 py-3 text-left font-semibold text-gray-500 uppercase text-xs">Bestellung</th>
+            <th class="px-5 py-3 text-left font-semibold text-gray-500 uppercase text-xs">Status</th>
+            <th class="px-5 py-3 text-left font-semibold text-gray-500 uppercase text-xs">Datum</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          ${assignments.length > 0 ? assignments.map((a: any) => `
+          <tr class="hover:bg-gray-50">
+            <td class="px-5 py-3 font-mono text-xs text-gray-600">${(a.license_key || '').substring(0, 20)}${(a.license_key || '').length > 20 ? '...' : ''}</td>
+            <td class="px-5 py-3 text-gray-700">${a.product_name || 'N/A'}</td>
+            <td class="px-5 py-3 text-gray-700">${a.assigned_to || '<span class="text-gray-400 italic">Nicht zugewiesen</span>'}</td>
+            <td class="px-5 py-3 text-gray-500">${a.order_number || '—'}</td>
+            <td class="px-5 py-3">
+              <span class="px-2 py-1 text-xs rounded-full font-semibold ${
+                a.status === 'used' ? 'bg-indigo-100 text-indigo-800' :
+                a.status === 'available' ? 'bg-green-100 text-green-800' :
+                a.status === 'expired' ? 'bg-red-100 text-red-800' :
+                'bg-gray-100 text-gray-600'
+              }">${
+                a.status === 'used' ? 'Zugewiesen' :
+                a.status === 'available' ? 'Verfügbar' :
+                a.status === 'expired' ? 'Abgelaufen' :
+                (a.status || 'Unbekannt')
+              }</span>
+            </td>
+            <td class="px-5 py-3 text-gray-500">${a.assigned_at ? new Date(a.assigned_at).toLocaleDateString('de-DE') : (a.created_at ? new Date(a.created_at).toLocaleDateString('de-DE') : '—')}</td>
+          </tr>`).join('') : `
+          <tr><td colspan="6" class="text-center py-16 text-gray-400">
+            <i class="fas fa-key text-4xl mb-3 block"></i>Keine Lizenzen vorhanden
+          </td></tr>`}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+</body>
+</html>`)
+  }
+
   // If no config found, show placeholder
   if (!config) {
     const pathParts = path.split('/').filter(Boolean).slice(1);

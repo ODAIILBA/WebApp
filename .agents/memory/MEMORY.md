@@ -1,0 +1,3 @@
+- [Hono wildcard routing](hono-wildcard-routing.md) — SmartRouter prioritizes `/admin/*` wildcard over specific routes; fix by adding special cases BEFORE the `!config` check in the wildcard handler, or add dbQuery to adminPageConfigs entries.
+- [Admin wildcard handler](admin-wildcard-handler.md) — active handler is at ~line 29930 in index.tsx (file is 36k+ lines); special cases go before `!config` early-return; firewall, pages/add, design, translations, system, license-assignments are all handled this way.
+- [adminPageConfigs pattern](adminpage-configs-pattern.md) — add `dbQuery`, `statsCards[].query` fields to get real DB data via wildcard handler; badge format handles 1/0 → Aktiv/Inaktiv automatically.
