@@ -11638,6 +11638,19 @@ app.post('/api/admin/certificates/bulk-generate', async (c) => {
 import { AdminLayout, AdminDashboard } from './components/admin'
 import { AdminSidebarAdvanced } from './components/admin-sidebar-advanced'
 import { AdminPlaceholder } from './components/admin-placeholder'
+import { AdminSettingsEmailSmtp } from './components/admin-settings-email-smtp'
+import { AdminPaymentsOverview } from './components/admin-payments-overview'
+import { AdminCurrenciesPage } from './components/admin-currencies-page'
+import { AdminRolesPage } from './components/admin-roles-page'
+import { AdminSocialMediaSettings } from './components/admin-social-media-settings'
+import { AdminSettingsSubpage } from './components/admin-settings-subpage'
+import { AdminWebhooksPage } from './components/admin-webhooks-page'
+import { AdminSubscriptionsPage } from './components/admin-subscriptions-page'
+import { AdminManagersPage } from './components/admin-managers-page'
+import { AdminLoginActivities } from './components/admin-login-activities'
+import { AdminSupportSettings } from './components/admin-support-settings'
+import { AdminGeoRules } from './components/admin-geo-rules'
+import { AdminVatOss } from './components/admin-vat-oss'
 import { AdminTickets } from './components/admin-tickets'
 import AdminSupportHistory from './components/admin-support-history'
 import AdminLanguages from './components/admin-languages'
@@ -12527,6 +12540,191 @@ app.get('/admin/tax-settings', (c) => {
 app.get('/admin/shipping-methods', (c) => {
   const html = AdminShippingMethods()
   return c.html(html)
+})
+
+// Settings: Email & SMTP
+app.get('/admin/settings/email-smtp', async (c) => {
+  try {
+    const rows = await c.env.DB.prepare('SELECT key, value FROM settings WHERE key LIKE \'smtp_%\' OR key = \'email_enabled\'').all()
+    const settings: Record<string, string> = {}
+    ;(rows.results || []).forEach((r: any) => { settings[r.key] = r.value })
+    return c.html(AdminSettingsEmailSmtp(settings))
+  } catch(e) {
+    return c.html(AdminSettingsEmailSmtp({}))
+  }
+})
+
+// Payments Overview
+app.get('/admin/payments', async (c) => {
+  try {
+    const [statsR, byMethodR, ordersR] = await Promise.all([
+      c.env.DB.prepare(`SELECT
+        COUNT(*) as total,
+        SUM(CASE WHEN payment_status='completed' THEN 1 ELSE 0 END) as successful,
+        SUM(CASE WHEN payment_status='failed' THEN 1 ELSE 0 END) as failed,
+        SUM(CASE WHEN payment_status='pending' THEN 1 ELSE 0 END) as pending,
+        SUM(CASE WHEN payment_status='completed' THEN total ELSE 0 END) as total_amount
+        FROM orders`).first(),
+      c.env.DB.prepare(`SELECT payment_method, COUNT(*) as cnt, SUM(total) as amount FROM orders WHERE payment_method IS NOT NULL GROUP BY payment_method ORDER BY cnt DESC`).all(),
+      c.env.DB.prepare(`SELECT o.id, o.order_number, u.email, o.payment_method, o.total, o.payment_status, o.created_at FROM orders o LEFT JOIN users u ON o.user_id = u.id ORDER BY o.created_at DESC LIMIT 50`).all()
+    ])
+    const stats = {
+      total: (statsR as any)?.total || 0,
+      successful: (statsR as any)?.successful || 0,
+      failed: (statsR as any)?.failed || 0,
+      pending: (statsR as any)?.pending || 0,
+      total_amount: (statsR as any)?.total_amount || 0,
+      byMethod: (byMethodR.results || []) as any[]
+    }
+    return c.html(AdminPaymentsOverview(stats, [], (ordersR.results || []) as any[]))
+  } catch(e: any) {
+    return c.html(AdminPaymentsOverview({ total:0, successful:0, failed:0, pending:0, total_amount:0, byMethod:[] }, [], []))
+  }
+})
+
+// Currencies
+app.get('/admin/currencies', async (c) => {
+  try {
+    const [countR, revenueR, currencyR] = await Promise.all([
+      c.env.DB.prepare('SELECT COUNT(*) as cnt FROM orders').first(),
+      c.env.DB.prepare('SELECT SUM(total) as rev FROM orders WHERE payment_status=\'completed\'').first(),
+      c.env.DB.prepare('SELECT value FROM settings WHERE key=\'currency\'').first()
+    ])
+    return c.html(AdminCurrenciesPage(
+      (countR as any)?.cnt || 0,
+      (revenueR as any)?.rev || 0,
+      (currencyR as any)?.value || 'EUR'
+    ))
+  } catch(e) {
+    return c.html(AdminCurrenciesPage(0, 0, 'EUR'))
+  }
+})
+
+// Roles
+app.get('/admin/roles', async (c) => {
+  try {
+    const rows = await c.env.DB.prepare('SELECT * FROM roles ORDER BY id ASC').all()
+    const rolesList = (rows.results || []) as any[]
+    return c.html(AdminRolesPage(rolesList))
+  } catch(e: any) {
+    return c.html(AdminRolesPage([]))
+  }
+})
+
+// Social Media Settings
+app.get('/admin/social-media', async (c) => {
+  try {
+    const rows = await c.env.DB.prepare('SELECT key, value FROM settings WHERE key LIKE \'social_%\'').all()
+    const settings: Record<string, string> = {}
+    ;(rows.results || []).forEach((r: any) => { settings[r.key] = r.value })
+    return c.html(AdminSocialMediaSettings(settings))
+  } catch(e) {
+    return c.html(AdminSocialMediaSettings({}))
+  }
+})
+
+// Settings Sub-pages (general, address, contact, legal, slogan, system, timezone, import-export, payment, currency)
+const settingsSubpages = [
+  'general','address','contact','legal','slogan','system','timezone','import-export','languages','payment','currency'
+] as const
+
+for (const page of settingsSubpages) {
+  app.get(`/admin/settings/${page}`, async (c) => {
+    try {
+      const rows = await c.env.DB.prepare('SELECT key, value FROM settings').all()
+      const settings: Record<string, string> = {}
+      ;(rows.results || []).forEach((r: any) => { settings[r.key] = r.value })
+      return c.html(AdminSettingsSubpage(page as any, settings))
+    } catch(e) {
+      return c.html(AdminSettingsSubpage(page as any, {}))
+    }
+  })
+}
+
+// Webhooks
+app.get('/admin/webhooks', async (c) => {
+  return c.html(AdminWebhooksPage([]))
+})
+
+// Subscriptions
+app.get('/admin/subscriptions', async (c) => {
+  try {
+    const countR = await c.env.DB.prepare('SELECT COUNT(*) as cnt FROM newsletter_subscribers WHERE subscribed = 1').first().catch(() => null)
+    const stats = { active: (countR as any)?.cnt || 0, mrr: 0, new_this_month: 0, cancelled: 0, churn_rate: 0 }
+    return c.html(AdminSubscriptionsPage(stats, []))
+  } catch(e) {
+    return c.html(AdminSubscriptionsPage({}, []))
+  }
+})
+
+// Managers / Staff
+app.get('/admin/managers', async (c) => {
+  try {
+    const usersR = await c.env.DB.prepare('SELECT * FROM users WHERE is_admin = 1 ORDER BY created_at DESC').all()
+    const rolesR = await c.env.DB.prepare('SELECT * FROM roles ORDER BY id').all()
+    return c.html(AdminManagersPage((usersR.results || []) as any[], (rolesR.results || []) as any[]))
+  } catch(e) {
+    return c.html(AdminManagersPage([], []))
+  }
+})
+
+// Login Activities
+app.get('/admin/login-activities', async (c) => {
+  try {
+    const logsR = await c.env.DB.prepare('SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 200').all().catch(() => ({ results: [] }))
+    const activities = (logsR.results || []) as any[]
+    const today = new Date().toISOString().slice(0, 10)
+    const stats = {
+      today: activities.filter((a: any) => (a.created_at || '').startsWith(today)).length,
+      success: activities.filter((a: any) => a.status === 'success' || a.event_type === 'login_success').length,
+      failed: activities.filter((a: any) => a.status === 'failed' || a.event_type === 'login_failed').length,
+      suspicious: activities.filter((a: any) => a.status === 'blocked' || a.event_type === 'blocked').length,
+    }
+    return c.html(AdminLoginActivities(activities, stats))
+  } catch(e) {
+    return c.html(AdminLoginActivities([], {}))
+  }
+})
+
+// Support Settings
+app.get('/admin/support/settings', async (c) => {
+  try {
+    const rows = await c.env.DB.prepare("SELECT key, value FROM settings WHERE key LIKE 'support_%' OR key LIKE 'live_chat_%' OR key LIKE 'notif_%'").all()
+    const settings: Record<string, string> = {}
+    ;(rows.results || []).forEach((r: any) => { settings[r.key] = r.value })
+    const ticketStats = await c.env.DB.prepare("SELECT COUNT(*) as cnt FROM support_tickets WHERE status = 'open'").first().catch(() => null)
+    const stats = { open: (ticketStats as any)?.cnt || 0 }
+    return c.html(AdminSupportSettings(settings, stats))
+  } catch(e) {
+    return c.html(AdminSupportSettings({}, {}))
+  }
+})
+
+// Geo Rules
+app.get('/admin/geo-rules', async (c) => {
+  try {
+    const rows = await c.env.DB.prepare('SELECT * FROM geo_rules ORDER BY priority ASC, id ASC').all().catch(() => ({ results: [] }))
+    return c.html(AdminGeoRules((rows.results || []) as any[]))
+  } catch(e) {
+    return c.html(AdminGeoRules([]))
+  }
+})
+
+// VAT OSS
+app.get('/admin/vat/oss', async (c) => {
+  try {
+    const rows = await c.env.DB.prepare("SELECT key, value FROM settings WHERE key LIKE 'oss_%'").all()
+    const settings: Record<string, string> = {}
+    ;(rows.results || []).forEach((r: any) => { settings[r.key] = r.value })
+    return c.html(AdminVatOss(settings))
+  } catch(e) {
+    return c.html(AdminVatOss({}))
+  }
+})
+
+// Users Add (redirect to users page)
+app.get('/admin/users/add', (c) => {
+  return c.redirect('/admin/users?action=add', 302)
 })
 
 // Homepage Slider Management
@@ -34652,6 +34850,99 @@ app.get('/brand/*', (c) => {
   const brand = path.split('/').pop()?.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') || 'Marke';
   return c.html(FrontendPlaceholder(path, brand));
 });
+
+// ============================================
+// SETTINGS API ROUTES
+// ============================================
+
+app.put('/api/settings/:key', async (c) => {
+  try {
+    const key = c.req.param('key')
+    const { value, type = 'string', description = '' } = await c.req.json()
+    await c.env.DB.prepare(
+      `INSERT INTO settings (key, value, type, description, updated_at) VALUES (?, ?, ?, ?, datetime('now'))
+       ON CONFLICT(key) DO UPDATE SET value=excluded.value, type=excluded.type, updated_at=excluded.updated_at`
+    ).bind(key, String(value), type, description).run()
+    return c.json({ success: true, key, value })
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+app.get('/api/settings', async (c) => {
+  try {
+    const rows = await c.env.DB.prepare('SELECT key, value, type FROM settings ORDER BY key').all()
+    const map: Record<string, string> = {}
+    ;(rows.results || []).forEach((r: any) => { map[r.key] = r.value })
+    return c.json({ success: true, settings: map })
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+app.get('/api/settings/:key', async (c) => {
+  try {
+    const key = c.req.param('key')
+    const row = await c.env.DB.prepare('SELECT value, type FROM settings WHERE key = ?').bind(key).first()
+    if (!row) return c.json({ success: false, error: 'Not found' }, 404)
+    return c.json({ success: true, key, value: (row as any).value })
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// ============================================
+// ROLES API ROUTES
+// ============================================
+
+app.get('/api/roles', async (c) => {
+  try {
+    const rows = await c.env.DB.prepare('SELECT * FROM roles ORDER BY id ASC').all()
+    return c.json({ success: true, roles: rows.results || [] })
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+app.post('/api/roles', async (c) => {
+  try {
+    const { name, display_name, description = '', permissions = '[]' } = await c.req.json()
+    if (!name || !display_name) return c.json({ success: false, error: 'Name und Anzeigename erforderlich' }, 400)
+    const result = await c.env.DB.prepare(
+      `INSERT INTO roles (name, display_name, description, permissions, is_system, created_at, updated_at)
+       VALUES (?, ?, ?, ?, 0, datetime('now'), datetime('now'))`
+    ).bind(name, display_name, description, typeof permissions === 'string' ? permissions : JSON.stringify(permissions)).run()
+    return c.json({ success: true, id: result.meta?.last_row_id })
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+app.put('/api/roles/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const { display_name, description = '', permissions = '[]' } = await c.req.json()
+    await c.env.DB.prepare(
+      `UPDATE roles SET display_name=?, description=?, permissions=?, updated_at=datetime('now') WHERE id=?`
+    ).bind(display_name, description, typeof permissions === 'string' ? permissions : JSON.stringify(permissions), id).run()
+    return c.json({ success: true })
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+app.delete('/api/roles/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const role = await c.env.DB.prepare('SELECT is_system FROM roles WHERE id=?').bind(id).first()
+    if (!role) return c.json({ success: false, error: 'Rolle nicht gefunden' }, 404)
+    if ((role as any).is_system) return c.json({ success: false, error: 'System-Rollen können nicht gelöscht werden' }, 403)
+    await c.env.DB.prepare('DELETE FROM roles WHERE id=?').bind(id).run()
+    return c.json({ success: true })
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
 
 // ============================================
 // SCHEDULED EVENT HANDLER (Cloudflare Cron)
