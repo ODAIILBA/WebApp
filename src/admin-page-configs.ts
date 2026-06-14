@@ -3687,4 +3687,597 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
     ]
   },
 
+  // ============================================
+  // LICENSES — additional pages
+  // ============================================
+  '/admin/license-expiry': {
+    path: '/admin/license-expiry',
+    title: 'Ablauf & Verlängerung',
+    icon: 'calendar-alt',
+    iconColor: 'orange',
+    description: 'Ablaufende und abgelaufene Lizenzschlüssel im Blick behalten',
+    dbQuery: `SELECT lk.license_key, lk.status, lk.product_id, lk.order_id,
+              p.name as product_name, o.created_at as order_date
+              FROM license_keys lk
+              LEFT JOIN products p ON lk.product_id = p.id
+              LEFT JOIN orders o ON lk.order_id = o.id
+              ORDER BY o.created_at ASC
+              LIMIT 100`,
+    statsCards: [
+      { label: 'Alle Lizenzen', query: 'SELECT COUNT(*) as count FROM license_keys', color: 'text-blue-600', icon: 'key' },
+      { label: 'Verkauft', query: 'SELECT COUNT(*) as count FROM license_keys WHERE status = "sold"', color: 'text-orange-600', icon: 'calendar-alt' },
+      { label: 'Verfügbar', query: 'SELECT COUNT(*) as count FROM license_keys WHERE status = "available"', color: 'text-green-600', icon: 'check' }
+    ],
+    tableColumns: [
+      { key: 'license_key', label: 'Lizenzschlüssel' },
+      { key: 'product_name', label: 'Produkt' },
+      { key: 'status', label: 'Status', format: 'badge' },
+      { key: 'order_date', label: 'Bestellt am', format: 'date' }
+    ],
+    actions: [
+      { label: 'Exportieren', icon: 'download', color: 'green', action: 'exportData()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ]
+  },
+
+  '/admin/licenses/import-export': {
+    path: '/admin/licenses/import-export',
+    title: 'CSV Import / Export',
+    icon: 'file-csv',
+    iconColor: 'green',
+    description: 'Lizenzschlüssel per CSV importieren oder exportieren',
+    dbQuery: `SELECT lk.license_key, lk.status, p.name as product_name
+              FROM license_keys lk
+              LEFT JOIN products p ON lk.product_id = p.id
+              ORDER BY lk.id DESC LIMIT 100`,
+    statsCards: [
+      { label: 'Gesamt Lizenzen', query: 'SELECT COUNT(*) as count FROM license_keys', color: 'text-green-600', icon: 'key' },
+      { label: 'Verfügbar', query: 'SELECT COUNT(*) as count FROM license_keys WHERE status = "available"', color: 'text-blue-600', icon: 'check' },
+      { label: 'Produkte', query: 'SELECT COUNT(DISTINCT product_id) as count FROM license_keys', color: 'text-purple-600', icon: 'box' }
+    ],
+    tableColumns: [
+      { key: 'license_key', label: 'Lizenzschlüssel' },
+      { key: 'product_name', label: 'Produkt' },
+      { key: 'status', label: 'Status', format: 'badge' }
+    ],
+    actions: [
+      { label: 'CSV importieren', icon: 'upload', color: 'green', action: 'importCSV()' },
+      { label: 'CSV exportieren', icon: 'download', color: 'blue', action: 'exportData()' }
+    ]
+  },
+
+  '/admin/license-security': {
+    path: '/admin/license-security',
+    title: 'Sicherheitsstatus Lizenzen',
+    icon: 'shield-alt',
+    iconColor: 'red',
+    description: 'Sicherheit und Integrität der Lizenzschlüssel überwachen',
+    dbQuery: `SELECT lk.status, COUNT(*) as count,
+              COUNT(DISTINCT lk.product_id) as products
+              FROM license_keys lk
+              GROUP BY lk.status`,
+    statsCards: [
+      { label: 'Gesamt', query: 'SELECT COUNT(*) as count FROM license_keys', color: 'text-blue-600', icon: 'key' },
+      { label: 'Aktiv / Verkauft', query: 'SELECT COUNT(*) as count FROM license_keys WHERE status = "sold"', color: 'text-orange-600', icon: 'check-circle' },
+      { label: 'Verfügbar', query: 'SELECT COUNT(*) as count FROM license_keys WHERE status = "available"', color: 'text-green-600', icon: 'shield-alt' }
+    ],
+    tableColumns: [
+      { key: 'status', label: 'Status', format: 'badge' },
+      { key: 'count', label: 'Anzahl' },
+      { key: 'products', label: 'Produkte' }
+    ],
+    actions: [
+      { label: 'Scan starten', icon: 'shield-virus', color: 'red', action: 'securityScan()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ]
+  },
+
+  // ============================================
+  // MARKETING — missing pages
+  // ============================================
+  '/admin/retargeting': {
+    path: '/admin/retargeting',
+    title: 'Retargeting & Ads',
+    icon: 'bullseye',
+    iconColor: 'red',
+    description: 'Retargeting-Kampagnen und Werbeanzeigen verwalten',
+    dbQuery: `SELECT payment_method as channel,
+              COUNT(*) as conversions,
+              SUM(total) as revenue
+              FROM orders WHERE payment_status = 'paid'
+              GROUP BY payment_method
+              ORDER BY revenue DESC LIMIT 50`,
+    statsCards: [
+      { label: 'Bezahlte Bestellungen', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "paid"', color: 'text-red-600', icon: 'bullseye' },
+      { label: 'Umsatz gesamt', query: 'SELECT SUM(total) as sum FROM orders WHERE payment_status = "paid"', color: 'text-green-600', icon: 'euro-sign', format: 'currency' }
+    ],
+    tableColumns: [
+      { key: 'channel', label: 'Kanal' },
+      { key: 'conversions', label: 'Conversions' },
+      { key: 'revenue', label: 'Umsatz', format: 'currency' }
+    ],
+    actions: [
+      { label: 'Kampagne erstellen', icon: 'plus', color: 'red', action: 'addNew()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ]
+  },
+
+  '/admin/price-comparison': {
+    path: '/admin/price-comparison',
+    title: 'Preisvergleich',
+    icon: 'balance-scale',
+    iconColor: 'blue',
+    description: 'Produkte in Preisvergleichsportalen verwalten',
+    dbQuery: `SELECT name, price, stock_quantity as stock, category_id,
+              CASE WHEN stock_quantity > 0 THEN 'active' ELSE 'inactive' END as feed_status
+              FROM products ORDER BY price DESC LIMIT 100`,
+    statsCards: [
+      { label: 'Produkte im Feed', query: 'SELECT COUNT(*) as count FROM products WHERE stock_quantity > 0', color: 'text-blue-600', icon: 'list' },
+      { label: 'Alle Produkte', query: 'SELECT COUNT(*) as count FROM products', color: 'text-gray-600', icon: 'box' },
+      { label: 'Ø Preis', query: 'SELECT ROUND(AVG(price), 2) as count FROM products', color: 'text-green-600', icon: 'euro-sign' }
+    ],
+    tableColumns: [
+      { key: 'name', label: 'Produkt' },
+      { key: 'price', label: 'Preis', format: 'currency' },
+      { key: 'stock', label: 'Lager' },
+      { key: 'feed_status', label: 'Feed-Status', format: 'badge' }
+    ],
+    actions: [
+      { label: 'Feed exportieren', icon: 'download', color: 'blue', action: 'exportFeed()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ]
+  },
+
+  '/admin/social-media': {
+    path: '/admin/social-media',
+    title: 'Social Media',
+    icon: 'share-alt',
+    iconColor: 'blue',
+    description: 'Social-Media-Kanäle und Posts verwalten',
+    dbQuery: `SELECT name, price, created_at,
+              CASE WHEN stock_quantity > 0 THEN 'published' ELSE 'draft' END as social_status
+              FROM products ORDER BY created_at DESC LIMIT 50`,
+    statsCards: [
+      { label: 'Produkte', query: 'SELECT COUNT(*) as count FROM products', color: 'text-blue-600', icon: 'box' },
+      { label: 'Kategorien', query: 'SELECT COUNT(*) as count FROM categories', color: 'text-purple-600', icon: 'folder' },
+      { label: 'Aktiv', query: 'SELECT COUNT(*) as count FROM products WHERE is_active = 1', color: 'text-green-600', icon: 'check' }
+    ],
+    tableColumns: [
+      { key: 'name', label: 'Produkt' },
+      { key: 'price', label: 'Preis', format: 'currency' },
+      { key: 'social_status', label: 'Status', format: 'badge' },
+      { key: 'created_at', label: 'Erstellt', format: 'date' }
+    ],
+    actions: [
+      { label: 'Post erstellen', icon: 'plus', color: 'blue', action: 'createPost()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ]
+  },
+
+  '/admin/ab-tests': {
+    path: '/admin/ab-tests',
+    title: 'A/B-Tests',
+    icon: 'flask',
+    iconColor: 'purple',
+    description: 'A/B-Tests erstellen und auswerten',
+    dbQuery: `SELECT payment_status as variant,
+              COUNT(*) as visitors,
+              SUM(CASE WHEN payment_status = 'paid' THEN 1 ELSE 0 END) as conversions,
+              ROUND(SUM(CASE WHEN payment_status = 'paid' THEN 1.0 ELSE 0 END) / COUNT(*) * 100, 2) as conversion_rate
+              FROM orders GROUP BY payment_status ORDER BY conversions DESC`,
+    statsCards: [
+      { label: 'Bestellungen', query: 'SELECT COUNT(*) as count FROM orders', color: 'text-purple-600', icon: 'flask' },
+      { label: 'Conversions', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "paid"', color: 'text-green-600', icon: 'check' },
+      { label: 'Ø Bestellwert', query: 'SELECT ROUND(AVG(total), 2) as count FROM orders WHERE payment_status = "paid"', color: 'text-blue-600', icon: 'euro-sign' }
+    ],
+    tableColumns: [
+      { key: 'variant', label: 'Variante' },
+      { key: 'visitors', label: 'Besucher' },
+      { key: 'conversions', label: 'Conversions' },
+      { key: 'conversion_rate', label: 'Conv.-Rate (%)' }
+    ],
+    actions: [
+      { label: 'Neuer Test', icon: 'plus', color: 'purple', action: 'addNew()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ]
+  },
+
+  '/admin/affiliate': {
+    path: '/admin/affiliate',
+    title: 'Affiliate-Marketing',
+    icon: 'handshake',
+    iconColor: 'green',
+    description: 'Affiliate-Partner und Provisionen verwalten',
+    dbQuery: `SELECT campaign_code as affiliate_code,
+              COUNT(*) as conversions,
+              SUM(total) as revenue
+              FROM orders
+              WHERE campaign_code IS NOT NULL AND payment_status = 'paid'
+              GROUP BY campaign_code
+              ORDER BY revenue DESC LIMIT 50`,
+    statsCards: [
+      { label: 'Affiliate-Bestellungen', query: 'SELECT COUNT(*) as count FROM orders WHERE campaign_code IS NOT NULL', color: 'text-green-600', icon: 'handshake' },
+      { label: 'Affiliate-Umsatz', query: 'SELECT SUM(total) as sum FROM orders WHERE campaign_code IS NOT NULL AND payment_status = "paid"', color: 'text-blue-600', icon: 'euro-sign', format: 'currency' }
+    ],
+    tableColumns: [
+      { key: 'affiliate_code', label: 'Affiliate-Code' },
+      { key: 'conversions', label: 'Conversions' },
+      { key: 'revenue', label: 'Umsatz', format: 'currency' }
+    ],
+    actions: [
+      { label: 'Partner hinzufügen', icon: 'plus', color: 'green', action: 'addNew()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ]
+  },
+
+  '/admin/marketing/settings': {
+    path: '/admin/marketing/settings',
+    title: 'Marketing-Einstellungen',
+    icon: 'cog',
+    iconColor: 'gray',
+    description: 'Erweiterte Einstellungen für Marketing-Tools',
+    dbQuery: `SELECT key, value, description, type FROM settings ORDER BY key ASC`,
+    statsCards: [
+      { label: 'Einstellungen', query: 'SELECT COUNT(*) as count FROM settings', color: 'text-gray-600', icon: 'cog' },
+      { label: 'Kampagnen-Codes', query: 'SELECT COUNT(DISTINCT campaign_code) as count FROM orders WHERE campaign_code IS NOT NULL', color: 'text-blue-600', icon: 'tag' }
+    ],
+    tableColumns: [
+      { key: 'key', label: 'Einstellung' },
+      { key: 'value', label: 'Wert' },
+      { key: 'description', label: 'Beschreibung' },
+      { key: 'type', label: 'Typ' }
+    ],
+    actions: [
+      { label: 'Speichern', icon: 'save', color: 'green', action: 'saveSettings()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ]
+  },
+
+  // ============================================
+  // ANALYTICS — sub-pages
+  // ============================================
+  '/admin/analytics/products': {
+    path: '/admin/analytics/products',
+    title: 'Produkte & Kategorien Analytics',
+    icon: 'box-open',
+    iconColor: 'blue',
+    description: 'Meistverkaufte Produkte und Kategorien-Performance',
+    dbQuery: `SELECT p.name, p.price, p.category_id,
+              COUNT(oi.id) as order_count,
+              SUM(oi.quantity) as units_sold,
+              SUM(oi.price * oi.quantity) as revenue
+              FROM products p
+              LEFT JOIN order_items oi ON oi.product_id = p.id
+              LEFT JOIN orders o ON oi.order_id = o.id AND o.payment_status = 'paid'
+              GROUP BY p.id ORDER BY revenue DESC LIMIT 50`,
+    statsCards: [
+      { label: 'Produkte', query: 'SELECT COUNT(*) as count FROM products', color: 'text-blue-600', icon: 'box' },
+      { label: 'Verkaufte Einheiten', query: 'SELECT SUM(quantity) as count FROM order_items', color: 'text-green-600', icon: 'shopping-bag' },
+      { label: 'Umsatz', query: 'SELECT SUM(oi.price * oi.quantity) as sum FROM order_items oi JOIN orders o ON oi.order_id = o.id WHERE o.payment_status = "paid"', color: 'text-purple-600', icon: 'euro-sign', format: 'currency' }
+    ],
+    tableColumns: [
+      { key: 'name', label: 'Produkt' },
+      { key: 'units_sold', label: 'Verkaufte Einheiten' },
+      { key: 'order_count', label: 'Bestellungen' },
+      { key: 'revenue', label: 'Umsatz', format: 'currency' }
+    ],
+    actions: [
+      { label: 'Exportieren', icon: 'download', color: 'green', action: 'exportData()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ]
+  },
+
+  '/admin/analytics/checkout': {
+    path: '/admin/analytics/checkout',
+    title: 'Checkout & Abbrüche Analytics',
+    icon: 'shopping-cart',
+    iconColor: 'orange',
+    description: 'Checkout-Funnel und Abbruch-Analyse',
+    dbQuery: `SELECT payment_status as status,
+              payment_method,
+              COUNT(*) as count,
+              SUM(total) as revenue,
+              ROUND(AVG(total), 2) as avg_order_value
+              FROM orders
+              GROUP BY payment_status, payment_method
+              ORDER BY count DESC`,
+    statsCards: [
+      { label: 'Abgeschlossen', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "paid"', color: 'text-green-600', icon: 'check-circle' },
+      { label: 'Ausstehend', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "pending"', color: 'text-orange-600', icon: 'clock' },
+      { label: 'Abgebrochen', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "cancelled"', color: 'text-red-600', icon: 'times-circle' },
+      { label: 'Ø Bestellwert', query: 'SELECT ROUND(AVG(total), 2) as count FROM orders WHERE payment_status = "paid"', color: 'text-blue-600', icon: 'euro-sign' }
+    ],
+    tableColumns: [
+      { key: 'status', label: 'Status', format: 'badge' },
+      { key: 'payment_method', label: 'Zahlungsart' },
+      { key: 'count', label: 'Anzahl' },
+      { key: 'avg_order_value', label: 'Ø Bestellwert', format: 'currency' },
+      { key: 'revenue', label: 'Umsatz', format: 'currency' }
+    ],
+    actions: [
+      { label: 'Exportieren', icon: 'download', color: 'green', action: 'exportData()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ]
+  },
+
+  '/admin/analytics/marketing': {
+    path: '/admin/analytics/marketing',
+    title: 'Marketing-Performance Analytics',
+    icon: 'bullhorn',
+    iconColor: 'blue',
+    description: 'Kampagnen, Coupons und Marketing-Kanal-Performance',
+    dbQuery: `SELECT 
+              COALESCE(campaign_code, '(Direkt)') as campaign,
+              COUNT(*) as orders,
+              SUM(total) as revenue,
+              ROUND(AVG(total), 2) as avg_order
+              FROM orders
+              WHERE payment_status = 'paid'
+              GROUP BY campaign_code
+              ORDER BY revenue DESC
+              LIMIT 50`,
+    statsCards: [
+      { label: 'Kampagnen', query: 'SELECT COUNT(DISTINCT campaign_code) as count FROM orders WHERE campaign_code IS NOT NULL', color: 'text-blue-600', icon: 'bullhorn' },
+      { label: 'Kampagnen-Umsatz', query: 'SELECT SUM(total) as sum FROM orders WHERE campaign_code IS NOT NULL AND payment_status = "paid"', color: 'text-green-600', icon: 'euro-sign', format: 'currency' },
+      { label: 'Aktive Coupons', query: 'SELECT COUNT(*) as count FROM coupons WHERE is_active = 1', color: 'text-orange-600', icon: 'ticket-alt' }
+    ],
+    tableColumns: [
+      { key: 'campaign', label: 'Kampagne' },
+      { key: 'orders', label: 'Bestellungen' },
+      { key: 'avg_order', label: 'Ø Bestellwert', format: 'currency' },
+      { key: 'revenue', label: 'Umsatz', format: 'currency' }
+    ],
+    actions: [
+      { label: 'Exportieren', icon: 'download', color: 'green', action: 'exportData()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ]
+  },
+
+  '/admin/analytics/seo': {
+    path: '/admin/analytics/seo',
+    title: 'SEO-Performance Analytics',
+    icon: 'search',
+    iconColor: 'green',
+    description: 'Seitenperformance, Meta-Daten und organischer Traffic',
+    dbQuery: `SELECT slug, title, 
+              CASE WHEN is_published = 1 THEN 'published' ELSE 'draft' END as status,
+              meta_title, meta_description, created_at
+              FROM pages ORDER BY updated_at DESC LIMIT 50`,
+    statsCards: [
+      { label: 'Seiten', query: 'SELECT COUNT(*) as count FROM pages', color: 'text-green-600', icon: 'file-alt' },
+      { label: 'Veröffentlicht', query: 'SELECT COUNT(*) as count FROM pages WHERE is_published = 1', color: 'text-blue-600', icon: 'globe' },
+      { label: 'Produkte indexiert', query: 'SELECT COUNT(*) as count FROM products WHERE is_active = 1', color: 'text-purple-600', icon: 'box' }
+    ],
+    tableColumns: [
+      { key: 'title', label: 'Seitenname' },
+      { key: 'slug', label: 'URL-Slug' },
+      { key: 'meta_title', label: 'Meta-Titel' },
+      { key: 'status', label: 'Status', format: 'badge' }
+    ],
+    actions: [
+      { label: 'Sitemap generieren', icon: 'sitemap', color: 'green', action: 'generateSitemap()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ]
+  },
+
+  '/admin/analytics/regions': {
+    path: '/admin/analytics/regions',
+    title: 'Länder & Regionen Analytics',
+    icon: 'globe',
+    iconColor: 'blue',
+    description: 'Geografische Verteilung von Bestellungen und Kunden',
+    dbQuery: `SELECT o.country,
+              COUNT(DISTINCT o.user_id) as customers,
+              COUNT(o.id) as orders,
+              SUM(o.total) as revenue
+              FROM orders o
+              WHERE o.country IS NOT NULL AND o.payment_status = 'paid'
+              GROUP BY o.country
+              ORDER BY revenue DESC
+              LIMIT 50`,
+    statsCards: [
+      { label: 'Länder', query: 'SELECT COUNT(DISTINCT country) as count FROM orders WHERE country IS NOT NULL', color: 'text-blue-600', icon: 'globe' },
+      { label: 'EU-Bestellungen', query: 'SELECT COUNT(*) as count FROM orders WHERE country IN ("DE","AT","CH","FR","NL","IT","ES","PL","BE","CZ","SE","DK","FI","PT","GR","HU","RO","BG","SK","HR","SI","EE","LV","LT","LU","MT","CY","IE") AND payment_status = "paid"', color: 'text-indigo-600', icon: 'flag' },
+      { label: 'International', query: 'SELECT COUNT(*) as count FROM orders WHERE country NOT IN ("DE","AT","CH") AND country IS NOT NULL AND payment_status = "paid"', color: 'text-orange-600', icon: 'plane' }
+    ],
+    tableColumns: [
+      { key: 'country', label: 'Land' },
+      { key: 'customers', label: 'Kunden' },
+      { key: 'orders', label: 'Bestellungen' },
+      { key: 'revenue', label: 'Umsatz', format: 'currency' }
+    ],
+    actions: [
+      { label: 'Exportieren', icon: 'download', color: 'green', action: 'exportData()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ]
+  },
+
+  '/admin/analytics/events': {
+    path: '/admin/analytics/events',
+    title: 'Ereignisse & Ziele',
+    icon: 'flag-checkered',
+    iconColor: 'purple',
+    description: 'Tracked Events und Conversion-Ziele auswerten',
+    dbQuery: `SELECT payment_status as event_type,
+              COUNT(*) as count,
+              SUM(total) as value,
+              ROUND(AVG(total), 2) as avg_value
+              FROM orders
+              GROUP BY payment_status
+              ORDER BY count DESC`,
+    statsCards: [
+      { label: 'Bestellungen (Events)', query: 'SELECT COUNT(*) as count FROM orders', color: 'text-purple-600', icon: 'flag-checkered' },
+      { label: 'Erfolgreiche Käufe', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "paid"', color: 'text-green-600', icon: 'check' },
+      { label: 'Gesamtwert', query: 'SELECT SUM(total) as sum FROM orders WHERE payment_status = "paid"', color: 'text-blue-600', icon: 'euro-sign', format: 'currency' }
+    ],
+    tableColumns: [
+      { key: 'event_type', label: 'Ereignis' },
+      { key: 'count', label: 'Anzahl' },
+      { key: 'avg_value', label: 'Ø Wert', format: 'currency' },
+      { key: 'value', label: 'Gesamtwert', format: 'currency' }
+    ],
+    actions: [
+      { label: 'Exportieren', icon: 'download', color: 'green', action: 'exportData()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ]
+  },
+
+  '/admin/analytics/reports': {
+    path: '/admin/analytics/reports',
+    title: 'Berichte & Exporte',
+    icon: 'file-export',
+    iconColor: 'gray',
+    description: 'Berichte erstellen und als CSV/PDF exportieren',
+    dbQuery: `SELECT 
+              strftime('%Y-%m', o.created_at) as month,
+              COUNT(*) as orders,
+              SUM(o.total) as revenue,
+              COUNT(DISTINCT o.user_id) as customers
+              FROM orders o
+              WHERE o.payment_status = 'paid'
+              GROUP BY strftime('%Y-%m', o.created_at)
+              ORDER BY month DESC
+              LIMIT 24`,
+    statsCards: [
+      { label: 'Umsatz gesamt', query: 'SELECT SUM(total) as sum FROM orders WHERE payment_status = "paid"', color: 'text-green-600', icon: 'euro-sign', format: 'currency' },
+      { label: 'Bestellungen', query: 'SELECT COUNT(*) as count FROM orders WHERE payment_status = "paid"', color: 'text-blue-600', icon: 'list' },
+      { label: 'Kunden', query: 'SELECT COUNT(*) as count FROM users', color: 'text-purple-600', icon: 'users' }
+    ],
+    tableColumns: [
+      { key: 'month', label: 'Monat' },
+      { key: 'orders', label: 'Bestellungen' },
+      { key: 'customers', label: 'Kunden' },
+      { key: 'revenue', label: 'Umsatz', format: 'currency' }
+    ],
+    actions: [
+      { label: 'CSV exportieren', icon: 'download', color: 'green', action: 'exportData()' },
+      { label: 'PDF erstellen', icon: 'file-pdf', color: 'red', action: 'exportPDF()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ]
+  },
+
+  '/admin/analytics/gdpr': {
+    path: '/admin/analytics/gdpr',
+    title: 'Datenschutz & DSGVO Analytics',
+    icon: 'user-shield',
+    iconColor: 'indigo',
+    description: 'DSGVO-Compliance, Einwilligungen und Datenschutzanfragen',
+    dbQuery: `SELECT u.id, u.email,
+              u.first_name || ' ' || u.last_name as name,
+              u.created_at,
+              u.is_active,
+              'Einwilligung erteilt' as consent_status
+              FROM users u
+              ORDER BY u.created_at DESC
+              LIMIT 100`,
+    statsCards: [
+      { label: 'Registrierte Nutzer', query: 'SELECT COUNT(*) as count FROM users', color: 'text-indigo-600', icon: 'users' },
+      { label: 'Aktive Nutzer', query: 'SELECT COUNT(*) as count FROM users WHERE is_active = 1', color: 'text-green-600', icon: 'check' },
+      { label: 'Inaktive Nutzer', query: 'SELECT COUNT(*) as count FROM users WHERE is_active = 0', color: 'text-red-600', icon: 'times' }
+    ],
+    tableColumns: [
+      { key: 'email', label: 'E-Mail' },
+      { key: 'name', label: 'Name' },
+      { key: 'consent_status', label: 'Einwilligung' },
+      { key: 'created_at', label: 'Registriert', format: 'date' },
+      { key: 'is_active', label: 'Aktiv', format: 'badge' }
+    ],
+    actions: [
+      { label: 'DSGVO-Export', icon: 'download', color: 'indigo', action: 'gdprExport()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ]
+  },
+
+  // ============================================
+  // VAT — sub-pages
+  // ============================================
+  '/admin/vat/eu-countries': {
+    path: '/admin/vat/eu-countries',
+    title: 'EU-Länder MwSt.',
+    icon: 'flag',
+    iconColor: 'blue',
+    description: 'Mehrwertsteuersätze für EU-Länder verwalten',
+    dbQuery: `SELECT id, name, code, rate, country_code,
+              CASE WHEN is_active = 1 THEN 'active' ELSE 'inactive' END as status
+              FROM tax_rates
+              WHERE country_code IN ('AT','BE','BG','CY','CZ','DE','DK','EE','ES','FI','FR','GR','HR','HU','IE','IT','LT','LU','LV','MT','NL','PL','PT','RO','SE','SI','SK')
+              ORDER BY country_code, rate DESC`,
+    statsCards: [
+      { label: 'EU-Steuersätze', query: 'SELECT COUNT(*) as count FROM tax_rates WHERE country_code IN ("AT","BE","BG","CY","CZ","DE","DK","EE","ES","FI","FR","GR","HR","HU","IE","IT","LT","LU","LV","MT","NL","PL","PT","RO","SE","SI","SK")', color: 'text-blue-600', icon: 'flag' },
+      { label: 'EU-Länder', query: 'SELECT COUNT(DISTINCT country_code) as count FROM tax_rates WHERE country_code IN ("AT","BE","BG","CY","CZ","DE","DK","EE","ES","FI","FR","GR","HR","HU","IE","IT","LT","LU","LV","MT","NL","PL","PT","RO","SE","SI","SK")', color: 'text-indigo-600', icon: 'globe' },
+      { label: 'Aktiv', query: 'SELECT COUNT(*) as count FROM tax_rates WHERE is_active = 1', color: 'text-green-600', icon: 'check' }
+    ],
+    tableColumns: [
+      { key: 'country_code', label: 'Land' },
+      { key: 'name', label: 'Name' },
+      { key: 'code', label: 'Code' },
+      { key: 'rate', label: 'Satz (%)', format: 'percentage' },
+      { key: 'status', label: 'Status', format: 'badge' }
+    ],
+    actions: [
+      { label: 'Satz hinzufügen', icon: 'plus', color: 'blue', action: 'addNew()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ]
+  },
+
+  '/admin/vat/reverse-charge': {
+    path: '/admin/vat/reverse-charge',
+    title: 'Reverse Charge',
+    icon: 'exchange-alt',
+    iconColor: 'orange',
+    description: 'Reverse-Charge-Regelungen für B2B-Transaktionen',
+    dbQuery: `SELECT id, name, code, rate, country_code,
+              CASE WHEN is_active = 1 THEN 'active' ELSE 'inactive' END as status
+              FROM tax_rates
+              WHERE code LIKE '%REVERSE%' OR rate = 0
+              ORDER BY country_code`,
+    statsCards: [
+      { label: 'Reverse-Charge-Sätze', query: 'SELECT COUNT(*) as count FROM tax_rates WHERE rate = 0', color: 'text-orange-600', icon: 'exchange-alt' },
+      { label: 'Nullsatz-Regeln', query: 'SELECT COUNT(*) as count FROM tax_rates WHERE rate = 0 AND is_active = 1', color: 'text-green-600', icon: 'check' },
+      { label: 'Alle Steuersätze', query: 'SELECT COUNT(*) as count FROM tax_rates', color: 'text-blue-600', icon: 'list' }
+    ],
+    tableColumns: [
+      { key: 'country_code', label: 'Land' },
+      { key: 'name', label: 'Regel' },
+      { key: 'code', label: 'Code' },
+      { key: 'rate', label: 'Satz (%)', format: 'percentage' },
+      { key: 'status', label: 'Status', format: 'badge' }
+    ],
+    actions: [
+      { label: 'Regel hinzufügen', icon: 'plus', color: 'orange', action: 'addNew()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ]
+  },
+
+  '/admin/vat/validation': {
+    path: '/admin/vat/validation',
+    title: 'VAT-ID Prüfung',
+    icon: 'check-circle',
+    iconColor: 'green',
+    description: 'Automatische Validierung von USt-IdNr. über EU-VIES',
+    dbQuery: `SELECT o.country, o.company,
+              o.first_name || ' ' || o.last_name as name,
+              o.email, o.created_at
+              FROM orders o
+              WHERE o.country IS NOT NULL AND o.company IS NOT NULL
+              GROUP BY o.email
+              ORDER BY o.created_at DESC
+              LIMIT 100`,
+    statsCards: [
+      { label: 'B2B-Bestellungen', query: 'SELECT COUNT(*) as count FROM orders WHERE company IS NOT NULL AND company != ""', color: 'text-green-600', icon: 'check-circle' },
+      { label: 'EU-Länder', query: 'SELECT COUNT(DISTINCT country) as count FROM orders WHERE country IN ("DE","AT","CH","FR","NL","IT","ES","PL","BE","CZ","SE","DK","FI","PT","GR","HU","RO","BG","SK","HR","SI","EE","LV","LT","LU","MT","CY","IE")', color: 'text-blue-600', icon: 'flag' },
+      { label: 'Gesamt Kunden', query: 'SELECT COUNT(*) as count FROM users', color: 'text-gray-600', icon: 'users' }
+    ],
+    tableColumns: [
+      { key: 'name', label: 'Name' },
+      { key: 'email', label: 'E-Mail' },
+      { key: 'country', label: 'Land' },
+      { key: 'created_at', label: 'Registriert', format: 'date' }
+    ],
+    actions: [
+      { label: 'VAT-ID prüfen', icon: 'search', color: 'green', action: 'validateVAT()' },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ]
+  },
+
 }
