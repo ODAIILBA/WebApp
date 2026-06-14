@@ -11659,8 +11659,19 @@ app.get('/admin/tickets', async (c) => {
 
 // Admin Support History
 app.get('/admin/support-history', async (c) => {
-  const html = AdminSupportHistory()
-  return c.html(html)
+  const { env } = c
+  let tickets: any[] = []
+  let stats = { total: 0, closed: 0, pending: 0 }
+  try {
+    const r = await env.DB.prepare(`SELECT name FROM sqlite_master WHERE type='table' AND name='support_tickets'`).first()
+    if (r) {
+      const t = await env.DB.prepare(`SELECT * FROM support_tickets ORDER BY created_at DESC LIMIT 50`).all()
+      tickets = t.results || []
+      const s = await env.DB.prepare(`SELECT COUNT(*) as total, SUM(CASE WHEN status='closed' THEN 1 ELSE 0 END) as closed, SUM(CASE WHEN status!='closed' THEN 1 ELSE 0 END) as pending FROM support_tickets`).first()
+      if (s) stats = s as any
+    }
+  } catch(e) {}
+  return c.html(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Support-Historie - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"></head><body class="bg-gray-50">${AdminSidebarAdvanced('/admin/support-history')}<div style="margin-left:280px;padding:2rem"><div class="mb-6"><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-headset mr-3 text-blue-600"></i>Support-Historie</h1><p class="text-gray-600">Übersicht aller Support-Anfragen und Tickets</p></div><div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Tickets</p><p class="text-2xl font-bold">${(stats as any).total || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Abgeschlossen</p><p class="text-2xl font-bold text-green-600">${(stats as any).closed || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Offen</p><p class="text-2xl font-bold text-yellow-600">${(stats as any).pending || 0}</p></div></div><div class="bg-white rounded-lg shadow"><div class="p-6 border-b"><h2 class="text-xl font-semibold">Support-Tickets</h2></div>${tickets.length > 0 ? `<table class="w-full"><thead class="bg-gray-50 border-b"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ticket-ID</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kunde</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Betreff</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Datum</th></tr></thead><tbody>${tickets.map((t:any) => `<tr class="hover:bg-gray-50 border-b"><td class="px-6 py-4 font-mono text-sm">${t.id}</td><td class="px-6 py-4">${t.email || '-'}</td><td class="px-6 py-4">${t.subject || '-'}</td><td class="px-6 py-4"><span class="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">${t.status || '-'}</span></td><td class="px-6 py-4 text-sm text-gray-600">${t.created_at ? new Date(t.created_at).toLocaleDateString('de-DE') : '-'}</td></tr>`).join('')}</tbody></table>` : `<div class="p-12 text-center text-gray-500"><i class="fas fa-headset text-6xl mb-4 text-gray-300 block"></i><p class="text-lg font-medium mb-2">Keine Support-Tickets vorhanden</p><p class="text-sm text-gray-400">Kunden-Support-Anfragen erscheinen hier</p></div>`}</div></div></body></html>`)
 })
 
 // Admin Languages Management
@@ -11892,8 +11903,67 @@ app.get('/admin/support-staff', async (c) => {
 
 // Admin Customer Roles Management
 app.get('/admin/customer-roles', async (c) => {
-  const html = AdminCustomerRoles()
-  return c.html(html)
+  const { env } = c
+  let roleCounts: Record<string,number> = { customer: 0, admin: 0, staff: 0 }
+  let total = 0
+  try {
+    const r = await env.DB.prepare(`SELECT role, COUNT(*) as cnt FROM users GROUP BY role`).all()
+    if (r.results) {
+      r.results.forEach((row: any) => { roleCounts[row.role] = row.cnt; total += row.cnt })
+    }
+  } catch(e) {}
+  const roles = [
+    { key: 'customer', label: 'Standard Kunde', icon: 'user', color: 'blue', perms: ['Produkte kaufen', 'Bestellhistorie einsehen', 'Support-Tickets erstellen'] },
+    { key: 'staff', label: 'Mitarbeiter', icon: 'user-tie', color: 'purple', perms: ['Alle Kunden-Rechte', 'Bestellungen verwalten', 'Produkte bearbeiten'] },
+    { key: 'admin', label: 'Administrator', icon: 'user-shield', color: 'red', perms: ['Alle Rechte', 'Benutzer verwalten', 'Einstellungen ändern', 'System administrieren'] },
+  ]
+  return c.html(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Kundenrollen - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"></head><body class="bg-gray-50">${AdminSidebarAdvanced('/admin/customer-roles')}<div style="margin-left:280px;padding:2rem"><div class="mb-6"><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-user-tag mr-3 text-purple-600"></i>Kundenrollen</h1><p class="text-gray-600">Rollen und Berechtigungen verwalten</p></div><div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Benutzer gesamt</p><p class="text-2xl font-bold">${total}</p></div>${roles.map(r => `<div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">${r.label}</p><p class="text-2xl font-bold text-${r.color}-600">${roleCounts[r.key] || 0}</p></div>`).join('')}</div><div class="grid grid-cols-1 md:grid-cols-3 gap-6">${roles.map(r => `<div class="bg-white rounded-lg shadow p-6"><div class="flex items-center mb-4"><div class="p-3 bg-${r.color}-100 rounded-full mr-4"><i class="fas fa-${r.icon} text-${r.color}-600 text-xl"></i></div><div><h3 class="font-semibold text-lg">${r.label}</h3><p class="text-gray-500 text-sm">${roleCounts[r.key] || 0} Benutzer</p></div></div><ul class="space-y-2">${r.perms.map(p => `<li class="flex items-center text-sm text-gray-700"><i class="fas fa-check text-green-500 mr-2 text-xs"></i>${p}</li>`).join('')}</ul></div>`).join('')}</div></div></body></html>`)
+})
+
+// Customer Orders History
+app.get('/admin/customer-orders', async (c) => {
+  const { env } = c
+  let orders: any[] = []
+  let stats = { total: 0, revenue: 0, avg: 0 }
+  try {
+    const r = await env.DB.prepare(`
+      SELECT o.*, u.email, u.first_name, u.last_name
+      FROM orders o LEFT JOIN users u ON o.user_id = u.id
+      ORDER BY o.created_at DESC LIMIT 50
+    `).all()
+    orders = r.results || []
+    const s = await env.DB.prepare(`SELECT COUNT(*) as total, COALESCE(SUM(total),0) as revenue, COALESCE(AVG(total),0) as avg FROM orders`).first()
+    if (s) stats = s as any
+  } catch(e) {}
+  const statusBadge = (s: string) => {
+    const m: Record<string,string> = { pending:'bg-yellow-100 text-yellow-800', processing:'bg-blue-100 text-blue-800', completed:'bg-green-100 text-green-800', cancelled:'bg-red-100 text-red-800' }
+    return `<span class="px-2 py-1 text-xs rounded-full ${m[s]||'bg-gray-100 text-gray-800'}">${s}</span>`
+  }
+  return c.html(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Bestellhistorie - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"></head><body class="bg-gray-50">${AdminSidebarAdvanced('/admin/customer-orders')}<div style="margin-left:280px;padding:2rem"><div class="mb-6"><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-history mr-3 text-blue-600"></i>Bestellhistorie</h1><p class="text-gray-600">Alle Kundenbestellungen im Überblick</p></div><div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Bestellungen gesamt</p><p class="text-2xl font-bold">${(stats as any).total||0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamtumsatz</p><p class="text-2xl font-bold text-green-600">€${parseFloat((stats as any).revenue||0).toFixed(2)}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Ø Bestellwert</p><p class="text-2xl font-bold text-blue-600">€${parseFloat((stats as any).avg||0).toFixed(2)}</p></div></div><div class="bg-white rounded-lg shadow"><div class="p-6 border-b"><h2 class="text-xl font-semibold">Alle Bestellungen</h2></div><table class="w-full"><thead class="bg-gray-50 border-b"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bestell-Nr.</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kunde</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Betrag</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Datum</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th></tr></thead><tbody>${orders.length>0?orders.map((o:any)=>`<tr class="hover:bg-gray-50 border-b"><td class="px-6 py-4 font-mono text-sm font-medium">${o.order_number||o.id}</td><td class="px-6 py-4"><div class="font-medium">${o.first_name||''} ${o.last_name||''}</div><div class="text-sm text-gray-500">${o.email||''}</div></td><td class="px-6 py-4 font-semibold">€${parseFloat(o.total||0).toFixed(2)}</td><td class="px-6 py-4">${statusBadge(o.order_status||o.status||'pending')}</td><td class="px-6 py-4 text-sm text-gray-600">${o.created_at?new Date(o.created_at).toLocaleDateString('de-DE'):'-'}</td><td class="px-6 py-4"><a href="/admin/orders/${o.id}" class="text-blue-600 hover:text-blue-800"><i class="fas fa-eye"></i></a></td></tr>`).join(''):'<tr><td colspan="6" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-shopping-cart text-6xl mb-4 text-gray-300 block"></i><p class="text-lg">Keine Bestellungen vorhanden</p></td></tr>'}</tbody></table></div></div></body></html>`)
+})
+
+// Customer License Overview
+app.get('/admin/customer-licenses', async (c) => {
+  const { env } = c
+  let licenses: any[] = []
+  let stats = { total: 0, available: 0, used: 0 }
+  try {
+    const r = await env.DB.prepare(`
+      SELECT lk.*, p.name as product_name, u.email, u.first_name, u.last_name
+      FROM license_keys lk
+      LEFT JOIN products p ON lk.product_id = p.id
+      LEFT JOIN users u ON lk.assigned_to_user_id = u.id
+      ORDER BY lk.created_at DESC LIMIT 50
+    `).all()
+    licenses = r.results || []
+    const s = await env.DB.prepare(`SELECT COUNT(*) as total, SUM(CASE WHEN status='available' THEN 1 ELSE 0 END) as available, SUM(CASE WHEN status IN ('assigned','used') THEN 1 ELSE 0 END) as used FROM license_keys`).first()
+    if (s) stats = s as any
+  } catch(e) {}
+  const statusBadge = (s: string) => {
+    const m: Record<string,string> = { available:'bg-green-100 text-green-800', assigned:'bg-blue-100 text-blue-800', used:'bg-purple-100 text-purple-800', expired:'bg-red-100 text-red-800', revoked:'bg-gray-100 text-gray-800' }
+    return `<span class="px-2 py-1 text-xs rounded-full ${m[s]||'bg-gray-100 text-gray-800'}">${s}</span>`
+  }
+  return c.html(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Lizenzübersicht - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"></head><body class="bg-gray-50">${AdminSidebarAdvanced('/admin/customer-licenses')}<div style="margin-left:280px;padding:2rem"><div class="mb-6"><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-key mr-3 text-yellow-600"></i>Lizenzübersicht</h1><p class="text-gray-600">Alle Kundenlizenzen im Überblick</p></div><div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Lizenzen gesamt</p><p class="text-2xl font-bold">${(stats as any).total||0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Verfügbar</p><p class="text-2xl font-bold text-green-600">${(stats as any).available||0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Zugewiesen / Genutzt</p><p class="text-2xl font-bold text-blue-600">${(stats as any).used||0}</p></div></div><div class="bg-white rounded-lg shadow"><div class="p-6 border-b"><h2 class="text-xl font-semibold">Alle Lizenzen</h2></div><table class="w-full"><thead class="bg-gray-50 border-b"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Lizenzschlüssel</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Produkt</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kunde</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Erstellt</th></tr></thead><tbody>${licenses.length>0?licenses.map((l:any)=>`<tr class="hover:bg-gray-50 border-b"><td class="px-6 py-4 font-mono text-sm text-gray-700">${(l.license_key||'').substring(0,20)}${(l.license_key||'').length>20?'...':''}</td><td class="px-6 py-4 text-sm">${l.product_name||'-'}</td><td class="px-6 py-4"><div class="font-medium text-sm">${l.first_name||''} ${l.last_name||''}</div><div class="text-xs text-gray-500">${l.email||'Nicht zugewiesen'}</div></td><td class="px-6 py-4">${statusBadge(l.status||'available')}</td><td class="px-6 py-4 text-sm text-gray-600">${l.created_at?new Date(l.created_at).toLocaleDateString('de-DE'):'-'}</td></tr>`).join(''):'<tr><td colspan="5" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-key text-6xl mb-4 text-gray-300 block"></i><p class="text-lg">Keine Lizenzen vorhanden</p></td></tr>'}</tbody></table></div></div></body></html>`)
 })
 
 // Audit Log Management
