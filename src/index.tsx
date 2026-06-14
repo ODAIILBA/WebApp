@@ -12893,13 +12893,256 @@ app.get('/admin/products/add', (c) => {
   )
 })
 
-app.get('/admin/products/edit/:id', (c) => {
+app.get('/admin/products/edit/:id', async (c) => {
   const productId = c.req.param('id')
-  return c.html(
-    <AdminLayout title="Edit Product" currentUser={{ first_name: 'Admin' }}>
-      <AdminProductForm isEdit={true} productId={productId} />
-    </AdminLayout>
-  )
+  const { env } = c
+  let product: any = null
+  let categories: any[] = []
+  let brands: any[] = []
+  try {
+    product = await env.DB.prepare('SELECT * FROM products WHERE id = ?').bind(productId).first()
+    const catResult = await env.DB.prepare('SELECT id, name FROM categories ORDER BY name ASC').all()
+    categories = catResult.results as any[]
+  } catch (e) {}
+  try {
+    const brandResult = await env.DB.prepare('SELECT id, name FROM brands ORDER BY name ASC').all()
+    brands = brandResult.results as any[]
+  } catch (e) {}
+
+  if (!product) {
+    return c.html(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><script src="https://cdn.tailwindcss.com"></script></head><body class="bg-gray-50 flex items-center justify-center min-h-screen"><div class="text-center"><h1 class="text-2xl font-bold text-red-600">Produkt nicht gefunden</h1><a href="/admin/products" class="mt-4 inline-block text-blue-600 underline">← Zurück zur Übersicht</a></div></body></html>`, 404)
+  }
+
+  const p = product as any
+  const esc = (v: any) => String(v ?? '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const catOptions = categories.map((cat: any) =>
+    `<option value="${cat.id}" ${(p.category_id == cat.id || p.category == cat.slug) ? 'selected' : ''}>${esc(cat.name)}</option>`
+  ).join('')
+  const brandOptions = brands.map((b: any) =>
+    `<option value="${b.id}" ${p.brand_id == b.id ? 'selected' : ''}>${esc(b.name)}</option>`
+  ).join('')
+
+  return c.html(`<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>${esc(p.name)} bearbeiten - SOFTWAREKING24</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/>
+</head>
+<body class="bg-gray-50">
+${AdminSidebarAdvanced('/admin/products')}
+<div style="margin-left:280px;padding:2rem;min-height:100vh;">
+  <div class="max-w-5xl mx-auto">
+    <div class="mb-6 flex items-center justify-between">
+      <div>
+        <a href="/admin/products" class="text-sm text-gray-500 hover:text-blue-600 mb-1 inline-block"><i class="fas fa-arrow-left mr-1"></i>Zurück zu Produkte</a>
+        <h1 class="text-3xl font-bold text-gray-800"><i class="fas fa-edit mr-3 text-blue-500"></i>Produkt bearbeiten</h1>
+        <p class="text-gray-500 mt-1">${esc(p.name)} (ID: ${p.id})</p>
+      </div>
+      <div class="flex gap-3">
+        <a href="/products/${esc(p.slug)}" target="_blank" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50 text-sm"><i class="fas fa-eye mr-2"></i>Ansehen</a>
+        <button onclick="saveProduct()" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm"><i class="fas fa-save mr-2"></i>Speichern</button>
+      </div>
+    </div>
+
+    <div id="save-alert" class="hidden mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700"><i class="fas fa-check-circle mr-2"></i>Produkt erfolgreich gespeichert!</div>
+    <div id="error-alert" class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700"></div>
+
+    <form id="product-form" class="grid grid-cols-3 gap-6">
+      <!-- Hauptinhalt -->
+      <div class="col-span-2 space-y-6">
+        <!-- Basisinformationen -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-info-circle mr-2 text-blue-500"></i>Grunddaten</h2>
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Produktname *</label>
+            <input type="text" name="name" value="${esc(p.name)}" required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"/>
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">SKU *</label>
+            <input type="text" name="sku" value="${esc(p.sku)}" required
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"/>
+            <p class="text-xs text-gray-400 mt-1">Eindeutige Produkt-ID</p>
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">URL-Slug *</label>
+            <input type="text" name="slug" value="${esc(p.slug)}"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"/>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Grundpreis (€) *</label>
+              <input type="number" name="base_price" value="${p.base_price ?? p.price ?? ''}" step="0.01" min="0" required
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"/>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Rabattpreis (€)</label>
+              <input type="number" name="discount_price" value="${p.discount_price ?? p.sale_price ?? ''}" step="0.01" min="0"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Beschreibung -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-align-left mr-2 text-green-500"></i>Beschreibung</h2>
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Kurzbeschreibung</label>
+            <textarea name="short_description" rows="3"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">${esc(p.short_description)}</textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Vollständige Beschreibung</label>
+            <textarea name="description" rows="8"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">${esc(p.description)}</textarea>
+          </div>
+        </div>
+
+        <!-- SEO -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-search mr-2 text-purple-500"></i>SEO</h2>
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Meta-Titel</label>
+            <input type="text" name="meta_title" value="${esc(p.meta_title)}"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"/>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Meta-Beschreibung</label>
+            <textarea name="meta_description" rows="3"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">${esc(p.meta_description)}</textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seitenleiste -->
+      <div class="space-y-6">
+        <!-- Status -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-toggle-on mr-2 text-green-500"></i>Status</h2>
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Veröffentlichungsstatus</label>
+            <select name="is_active" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <option value="1" ${p.is_active == 1 ? 'selected' : ''}>Aktiv</option>
+              <option value="0" ${p.is_active == 0 ? 'selected' : ''}>Inaktiv</option>
+            </select>
+          </div>
+          <div class="mb-4">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" name="is_featured" value="1" ${p.is_featured == 1 ? 'checked' : ''} class="w-4 h-4 rounded text-blue-600"/>
+              <span class="text-sm font-semibold text-gray-700">Als Featured markieren</span>
+            </label>
+          </div>
+          <div class="mb-4">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" name="is_new" value="1" ${p.is_new == 1 ? 'checked' : ''} class="w-4 h-4 rounded text-blue-600"/>
+              <span class="text-sm font-semibold text-gray-700">Als Neu markieren</span>
+            </label>
+          </div>
+          <div>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" name="is_bestseller" value="1" ${p.is_bestseller == 1 ? 'checked' : ''} class="w-4 h-4 rounded text-blue-600"/>
+              <span class="text-sm font-semibold text-gray-700">Bestseller</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Kategorie & Marke -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-folder-open mr-2 text-orange-500"></i>Kategorie & Marke</h2>
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Kategorie</label>
+            <select name="category_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <option value="">– Keine Kategorie –</option>
+              ${catOptions}
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Marke</label>
+            <select name="brand_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+              <option value="">– Keine Marke –</option>
+              ${brandOptions}
+            </select>
+          </div>
+        </div>
+
+        <!-- Lager -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-warehouse mr-2 text-cyan-500"></i>Lager</h2>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Lagerbestand</label>
+            <input type="number" name="stock" value="${p.stock ?? 0}" min="0"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"/>
+          </div>
+        </div>
+
+        <!-- Bild -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-image mr-2 text-pink-500"></i>Produktbild</h2>
+          ${p.image_url && p.image_url !== '/static/placeholder.png' ? `<img src="${esc(p.image_url)}" class="w-full h-32 object-cover rounded-lg mb-3"/>` : '<div class="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center mb-3 text-gray-400"><i class="fas fa-image text-3xl"></i></div>'}
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Bild-URL</label>
+            <input type="text" name="image_url" value="${esc(p.image_url)}"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"/>
+          </div>
+        </div>
+
+        <!-- Speichern -->
+        <button type="button" onclick="saveProduct()"
+          class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl transition-colors">
+          <i class="fas fa-save mr-2"></i>Änderungen speichern
+        </button>
+        <a href="/admin/products" class="block text-center text-sm text-gray-500 hover:text-gray-700 mt-2">Abbrechen</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+async function saveProduct() {
+  const form = document.getElementById('product-form');
+  const formData = new FormData(form);
+  const data = {};
+  for (const [k, v] of formData.entries()) {
+    data[k] = v === '' ? null : v;
+  }
+  // Handle checkboxes that may be unchecked (not in FormData)
+  ['is_featured','is_new','is_bestseller'].forEach(f => {
+    if (!(f in data)) data[f] = 0;
+    else data[f] = 1;
+  });
+  // Numeric fields
+  ['base_price','discount_price','stock','category_id','brand_id','is_active'].forEach(f => {
+    if (data[f] !== null && data[f] !== undefined) data[f] = Number(data[f]) || data[f];
+  });
+
+  document.getElementById('save-alert').classList.add('hidden');
+  document.getElementById('error-alert').classList.add('hidden');
+
+  try {
+    const res = await fetch('/api/admin/products/${p.id}', {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+    const json = await res.json();
+    if (json.success !== false) {
+      document.getElementById('save-alert').classList.remove('hidden');
+      window.scrollTo(0, 0);
+    } else {
+      document.getElementById('error-alert').textContent = 'Fehler: ' + (json.error || 'Unbekannter Fehler');
+      document.getElementById('error-alert').classList.remove('hidden');
+    }
+  } catch(e) {
+    document.getElementById('error-alert').textContent = 'Netzwerkfehler: ' + e.message;
+    document.getElementById('error-alert').classList.remove('hidden');
+  }
+}
+</script>
+</body>
+</html>`)
 })
 
 // Product Import
@@ -30079,6 +30322,11 @@ app.get('/admin/*', async (c) => {
     return c.html(formHtml);
   }
   
+  // Special handling for /admin/settings - full tabbed settings UI
+  if (path === '/admin/settings') {
+    return c.html(AdminSettingsAdvanced())
+  }
+
   // Special handling for /admin/design - Design section hub page
   if (path === '/admin/design') {
     return c.html(`<!DOCTYPE html>
