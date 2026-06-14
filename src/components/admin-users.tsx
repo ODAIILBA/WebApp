@@ -1,3 +1,5 @@
+import { AdminSidebarAdvanced } from './admin-sidebar-advanced';
+
 export function AdminUsers() {
   return `
 <!DOCTYPE html>
@@ -53,6 +55,8 @@ export function AdminUsers() {
     </style>
 </head>
 <body>
+    ${AdminSidebarAdvanced('/admin/admins')}
+    <div class="ml-64">
     <div class="admin-header text-white p-6 mb-8">
         <div class="max-w-7xl mx-auto">
             <div class="flex items-center justify-between">
@@ -302,6 +306,7 @@ export function AdminUsers() {
         // Load admins on page load
         loadAdmins();
     </script>
+    </div>
 </body>
 </html>
   `;

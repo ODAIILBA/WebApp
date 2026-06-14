@@ -1,3 +1,5 @@
+import { AdminSidebarAdvanced } from './admin-sidebar-advanced';
+
 /**
  * Real-Time System Status Page - Complete HTML
  */
@@ -39,6 +41,7 @@ export function SystemStatusPage() {
         </style>
     </head>
     <body class="bg-gray-50">
+        ${AdminSidebarAdvanced('/admin/system-status')}
         <div class="ml-64 p-8">
             <!-- Header -->
             <div class="mb-8 flex justify-between items-center">

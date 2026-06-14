@@ -1,3 +1,5 @@
+import { AdminSidebarAdvanced } from './admin-sidebar-advanced';
+
 export function AdminMarketing() {
   return `
 <!DOCTYPE html>
@@ -43,6 +45,8 @@ export function AdminMarketing() {
     </style>
 </head>
 <body>
+    ${AdminSidebarAdvanced('/admin/marketing')}
+    <div class="ml-64">
     <div class="admin-header text-white p-6 mb-8">
         <div class="max-w-7xl mx-auto">
             <div class="flex items-center justify-between">
@@ -282,6 +286,7 @@ export function AdminMarketing() {
         // Load data
         loadNewsletterCount();
     </script>
+    </div>
 </body>
 </html>
   `;

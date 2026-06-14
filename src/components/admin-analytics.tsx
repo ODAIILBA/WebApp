@@ -1,3 +1,5 @@
+import { AdminSidebarAdvanced } from './admin-sidebar-advanced';
+
 export function AdminAnalytics() {
   return /* html */`
     <!DOCTYPE html>
@@ -159,7 +161,9 @@ export function AdminAnalytics() {
         }
       </style>
     </head>
-    <body class="p-6">
+    <body>
+      ${AdminSidebarAdvanced('/admin/analytics')}
+      <div class="ml-64 p-6">
       <div class="max-w-[1600px] mx-auto">
         <!-- Header -->
         <div class="flex justify-between items-center mb-6">
@@ -1627,6 +1631,7 @@ export function AdminAnalytics() {
           return icons[deviceType] || 'question';
         }
       </script>
+      </div>
     </body>
     </html>
   `;
