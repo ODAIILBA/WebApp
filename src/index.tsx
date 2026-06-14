@@ -11651,6 +11651,196 @@ app.get('/admin/orders', async (c) => {
   return c.html(html)
 })
 
+// Order detail page
+app.get('/admin/orders/:id', async (c) => {
+  const orderId = c.req.param('id')
+  const { env } = c
+  let order: any = null
+  let items: any[] = []
+  try {
+    order = await env.DB.prepare(`
+      SELECT o.*, u.email as user_email, u.first_name as user_first_name, u.last_name as user_last_name
+      FROM orders o LEFT JOIN users u ON o.user_id = u.id
+      WHERE o.id = ?
+    `).bind(orderId).first()
+    if (order) {
+      const r = await env.DB.prepare('SELECT * FROM order_items WHERE order_id = ?').bind(orderId).all()
+      items = r.results as any[]
+    }
+  } catch (e) {}
+
+  const esc = (v: any) => String(v ?? '-').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const fmt = (n: any) => parseFloat(n || 0).toFixed(2)
+  const statusColors: Record<string, string> = {
+    completed: 'green', paid: 'green', shipped: 'blue', processing: 'yellow',
+    pending: 'orange', cancelled: 'red', refunded: 'purple'
+  }
+  const statusLabels: Record<string, string> = {
+    completed: 'Abgeschlossen', paid: 'Bezahlt', shipped: 'Versendet',
+    processing: 'In Bearbeitung', pending: 'Ausstehend', cancelled: 'Storniert', refunded: 'Erstattet'
+  }
+  const badge = (s: string) => {
+    const c = statusColors[s] || 'gray'
+    const l = statusLabels[s] || s
+    return `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-${c}-100 text-${c}-800">${l}</span>`
+  }
+  const payLabels: Record<string, string> = { paypal: 'PayPal', credit_card: 'Kreditkarte', bank_transfer: 'Banküberweisung', stripe: 'Stripe' }
+
+  if (!order) {
+    return c.html(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><script src="https://cdn.tailwindcss.com"></script></head><body class="bg-gray-50 flex items-center justify-center min-h-screen"><div class="text-center"><h1 class="text-2xl font-bold text-red-600">Bestellung nicht gefunden</h1><a href="/admin/orders" class="mt-4 inline-block text-blue-600 underline">← Zurück</a></div></body></html>`, 404)
+  }
+
+  const o = order as any
+  return c.html(`<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bestellung ${esc(o.order_number)} - Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/>
+</head>
+<body class="bg-gray-50">
+${AdminSidebarAdvanced('/admin/orders')}
+<div style="margin-left:280px;padding:2rem;min-height:100vh;">
+  <div class="max-w-5xl mx-auto">
+    <div class="mb-6 flex items-center justify-between">
+      <div>
+        <a href="/admin/orders" class="text-sm text-gray-500 hover:text-blue-600 mb-1 inline-block"><i class="fas fa-arrow-left mr-1"></i>Zurück zu Bestellungen</a>
+        <h1 class="text-3xl font-bold text-gray-800"><i class="fas fa-receipt mr-3 text-blue-500"></i>Bestellung ${esc(o.order_number)}</h1>
+        <p class="text-gray-500 mt-1">Erstellt am ${new Date(o.created_at).toLocaleDateString('de-DE', {day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})}</p>
+      </div>
+      <div class="flex gap-3 items-center">
+        ${badge(o.order_status || 'pending')}
+        ${badge(o.payment_status || 'pending')}
+      </div>
+    </div>
+
+    <div id="save-alert" class="hidden mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700"><i class="fas fa-check-circle mr-2"></i>Status erfolgreich aktualisiert!</div>
+
+    <div class="grid grid-cols-3 gap-6">
+      <!-- Left: main info -->
+      <div class="col-span-2 space-y-6">
+        <!-- Order items -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-box mr-2 text-blue-500"></i>Bestellpositionen</h2>
+          <table class="w-full">
+            <thead class="bg-gray-50 border-b">
+              <tr>
+                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Produkt</th>
+                <th class="px-3 py-2 text-center text-xs font-semibold text-gray-500 uppercase">Menge</th>
+                <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Einzelpreis</th>
+                <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Gesamt</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.length > 0 ? items.map((item: any) => `
+                <tr class="border-b hover:bg-gray-50">
+                  <td class="px-3 py-3">
+                    <div class="font-medium text-sm">${esc(item.product_name)}</div>
+                    <div class="text-xs text-gray-400 font-mono">${esc(item.product_sku)}${item.license_key ? ` · <span class="text-green-600">${esc(item.license_key)}</span>` : ''}</div>
+                  </td>
+                  <td class="px-3 py-3 text-center text-sm">${item.quantity}</td>
+                  <td class="px-3 py-3 text-right text-sm">€${fmt(item.price)}</td>
+                  <td class="px-3 py-3 text-right text-sm font-semibold">€${fmt(item.subtotal)}</td>
+                </tr>
+              `).join('') : '<tr><td colspan="4" class="px-3 py-8 text-center text-gray-400 text-sm">Keine Positionen gefunden</td></tr>'}
+            </tbody>
+          </table>
+          <!-- Totals -->
+          <div class="mt-4 pt-4 border-t space-y-1">
+            <div class="flex justify-between text-sm text-gray-600"><span>Zwischensumme</span><span>€${fmt(o.subtotal)}</span></div>
+            ${o.discount > 0 ? `<div class="flex justify-between text-sm text-green-600"><span>Rabatt</span><span>-€${fmt(o.discount)}</span></div>` : ''}
+            <div class="flex justify-between text-sm text-gray-600"><span>MwSt.</span><span>€${fmt(o.tax)}</span></div>
+            <div class="flex justify-between text-sm text-gray-600"><span>Versand</span><span>${parseFloat(o.shipping || 0) === 0 ? 'Kostenlos' : '€' + fmt(o.shipping)}</span></div>
+            <div class="flex justify-between text-base font-bold text-gray-800 pt-2 border-t"><span>Gesamt</span><span>€${fmt(o.total)}</span></div>
+          </div>
+        </div>
+
+        <!-- Notes -->
+        ${o.notes ? `<div class="bg-amber-50 rounded-xl border border-amber-200 p-4"><h3 class="font-semibold text-amber-800 mb-1"><i class="fas fa-sticky-note mr-2"></i>Notiz</h3><p class="text-sm text-amber-700">${esc(o.notes)}</p></div>` : ''}
+      </div>
+
+      <!-- Right: sidebar -->
+      <div class="space-y-6">
+        <!-- Status update -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-edit mr-2 text-orange-500"></i>Status ändern</h2>
+          <div class="mb-3">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Bestellstatus</label>
+            <select id="order_status" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+              ${['pending','processing','shipped','completed','cancelled'].map(s =>
+                `<option value="${s}" ${o.order_status === s ? 'selected' : ''}>${statusLabels[s] || s}</option>`
+              ).join('')}
+            </select>
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Zahlungsstatus</label>
+            <select id="payment_status" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+              ${['pending','paid','refunded','cancelled'].map(s =>
+                `<option value="${s}" ${o.payment_status === s ? 'selected' : ''}>${statusLabels[s] || s}</option>`
+              ).join('')}
+            </select>
+          </div>
+          <button onclick="updateStatus()" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm transition-colors">
+            <i class="fas fa-save mr-2"></i>Aktualisieren
+          </button>
+        </div>
+
+        <!-- Customer info -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-user mr-2 text-green-500"></i>Kunde</h2>
+          <p class="font-semibold text-gray-800">${esc(o.first_name)} ${esc(o.last_name)}</p>
+          ${o.company ? `<p class="text-sm text-gray-500">${esc(o.company)}</p>` : ''}
+          <p class="text-sm text-blue-600 mt-1">${esc(o.email)}</p>
+          ${o.phone ? `<p class="text-sm text-gray-500">${esc(o.phone)}</p>` : ''}
+          ${o.user_id ? `<a href="/admin/customers/${o.user_id}" class="mt-3 inline-block text-xs text-blue-600 hover:underline"><i class="fas fa-external-link-alt mr-1"></i>Kundenprofil öffnen</a>` : ''}
+        </div>
+
+        <!-- Shipping address -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-lg font-bold text-gray-800 mb-3"><i class="fas fa-map-marker-alt mr-2 text-red-500"></i>Lieferadresse</h2>
+          <address class="not-italic text-sm text-gray-700 space-y-0.5">
+            <div>${esc(o.first_name)} ${esc(o.last_name)}</div>
+            <div>${esc(o.address)}</div>
+            <div>${esc(o.postcode)} ${esc(o.city)}</div>
+            <div>${esc(o.country)}</div>
+          </address>
+        </div>
+
+        <!-- Payment -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-lg font-bold text-gray-800 mb-3"><i class="fas fa-credit-card mr-2 text-purple-500"></i>Zahlung</h2>
+          <p class="text-sm text-gray-700"><span class="font-semibold">Methode:</span> ${payLabels[o.payment_method] || esc(o.payment_method)}</p>
+          <p class="text-sm text-gray-700 mt-1"><span class="font-semibold">Status:</span> ${badge(o.payment_status || 'pending')}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+async function updateStatus() {
+  const order_status = document.getElementById('order_status').value;
+  const payment_status = document.getElementById('payment_status').value;
+  try {
+    const res = await fetch('/api/admin/orders/${o.id}', {
+      method: 'PUT',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ status: order_status, payment_status })
+    });
+    const json = await res.json();
+    if (json.success !== false) {
+      document.getElementById('save-alert').classList.remove('hidden');
+      window.scrollTo(0, 0);
+      setTimeout(() => document.getElementById('save-alert').classList.add('hidden'), 4000);
+    }
+  } catch(e) { alert('Fehler: ' + e.message); }
+}
+</script>
+</body>
+</html>`)
+})
+
 // Admin Support Tickets
 app.get('/admin/tickets', async (c) => {
   const html = AdminTickets()
@@ -12573,6 +12763,206 @@ app.get('/admin/customers', (c) => {
   return c.html(html)
 })
 
+// Customer detail page
+app.get('/admin/customers/:id', async (c) => {
+  const customerId = c.req.param('id')
+  const { env } = c
+  let customer: any = null
+  let orders: any[] = []
+  let totalSpent = 0
+  try {
+    customer = await env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(customerId).first()
+    if (customer) {
+      const r = await env.DB.prepare(`
+        SELECT id, order_number, order_status, payment_status, total, created_at
+        FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 20
+      `).bind(customerId).all()
+      orders = r.results as any[]
+      totalSpent = orders.filter((o: any) => o.payment_status === 'paid').reduce((sum: number, o: any) => sum + parseFloat(o.total || 0), 0)
+    }
+  } catch (e) {}
+
+  if (!customer) {
+    return c.html(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><script src="https://cdn.tailwindcss.com"></script></head><body class="bg-gray-50 flex items-center justify-center min-h-screen"><div class="text-center"><h1 class="text-2xl font-bold text-red-600">Kunde nicht gefunden</h1><a href="/admin/customers" class="mt-4 inline-block text-blue-600 underline">← Zurück</a></div></body></html>`, 404)
+  }
+
+  const cu = customer as any
+  const esc = (v: any) => String(v ?? '').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const fmt = (n: any) => parseFloat(n || 0).toFixed(2)
+  const statusColors: Record<string, string> = { completed: 'green', paid: 'green', shipped: 'blue', processing: 'yellow', pending: 'orange', cancelled: 'red', refunded: 'purple', active: 'green', inactive: 'red' }
+  const statusLabels: Record<string, string> = { completed: 'Abgeschlossen', paid: 'Bezahlt', shipped: 'Versendet', processing: 'In Bearbeitung', pending: 'Ausstehend', cancelled: 'Storniert', refunded: 'Erstattet', admin: 'Admin', customer: 'Kunde' }
+  const badge = (s: string) => `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-${statusColors[s] || 'gray'}-100 text-${statusColors[s] || 'gray'}-800">${statusLabels[s] || s}</span>`
+
+  return c.html(`<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>${esc(cu.first_name)} ${esc(cu.last_name)} - Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/>
+</head>
+<body class="bg-gray-50">
+${AdminSidebarAdvanced('/admin/customers')}
+<div style="margin-left:280px;padding:2rem;min-height:100vh;">
+  <div class="max-w-5xl mx-auto">
+    <div class="mb-6">
+      <a href="/admin/customers" class="text-sm text-gray-500 hover:text-blue-600 mb-1 inline-block"><i class="fas fa-arrow-left mr-1"></i>Zurück zu Kunden</a>
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-4">
+          <div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-2xl font-bold text-blue-600">
+            ${(cu.first_name || '?')[0]}${(cu.last_name || '')[0]}
+          </div>
+          <div>
+            <h1 class="text-3xl font-bold text-gray-800">${esc(cu.first_name)} ${esc(cu.last_name)}</h1>
+            <p class="text-gray-500">${esc(cu.email)} · ${badge(cu.role || 'customer')} · ${cu.is_active ? badge('active') : badge('inactive')}</p>
+          </div>
+        </div>
+        <button onclick="saveCustomer()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm"><i class="fas fa-save mr-2"></i>Speichern</button>
+      </div>
+    </div>
+
+    <div id="save-alert" class="hidden mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700"><i class="fas fa-check-circle mr-2"></i>Kundendaten erfolgreich gespeichert!</div>
+
+    <!-- Stats row -->
+    <div class="grid grid-cols-3 gap-4 mb-6">
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center">
+        <p class="text-2xl font-bold text-gray-800">${orders.length}</p>
+        <p class="text-sm text-gray-500 mt-1">Bestellungen</p>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center">
+        <p class="text-2xl font-bold text-green-600">€${fmt(totalSpent)}</p>
+        <p class="text-sm text-gray-500 mt-1">Gesamtumsatz</p>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center">
+        <p class="text-2xl font-bold text-blue-600">${cu.email_verified ? '<i class="fas fa-check-circle text-green-500"></i>' : '<i class="fas fa-times-circle text-red-400"></i>'}</p>
+        <p class="text-sm text-gray-500 mt-1">E-Mail verifiziert</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-6">
+      <!-- Left: edit form -->
+      <div class="col-span-2 space-y-6">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-user-edit mr-2 text-blue-500"></i>Stammdaten bearbeiten</h2>
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Vorname</label>
+              <input id="f_first_name" type="text" value="${esc(cu.first_name)}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"/>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Nachname</label>
+              <input id="f_last_name" type="text" value="${esc(cu.last_name)}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"/>
+            </div>
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">E-Mail-Adresse</label>
+            <input id="f_email" type="email" value="${esc(cu.email)}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500"/>
+          </div>
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Status</label>
+              <select id="f_is_active" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                <option value="1" ${cu.is_active == 1 ? 'selected' : ''}>Aktiv</option>
+                <option value="0" ${cu.is_active == 0 ? 'selected' : ''}>Inaktiv</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Rolle</label>
+              <select id="f_role" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500">
+                <option value="customer" ${cu.role === 'customer' ? 'selected' : ''}>Kunde</option>
+                <option value="admin" ${cu.role === 'admin' ? 'selected' : ''}>Admin</option>
+              </select>
+            </div>
+          </div>
+          <div class="text-xs text-gray-400">Mitglied seit: ${new Date(cu.created_at).toLocaleDateString('de-DE', {day:'2-digit',month:'long',year:'numeric'})}</div>
+        </div>
+
+        <!-- Orders -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-shopping-bag mr-2 text-orange-500"></i>Bestellungen (${orders.length})</h2>
+          ${orders.length > 0 ? `
+          <table class="w-full text-sm">
+            <thead class="bg-gray-50 border-b">
+              <tr>
+                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Bestell-Nr.</th>
+                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
+                <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Betrag</th>
+                <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Datum</th>
+                <th class="px-3 py-2"></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${orders.map((o: any) => `
+                <tr class="border-b hover:bg-gray-50">
+                  <td class="px-3 py-3 font-mono font-medium">${esc(o.order_number || String(o.id))}</td>
+                  <td class="px-3 py-3">${badge(o.order_status || 'pending')}</td>
+                  <td class="px-3 py-3 text-right font-semibold">€${fmt(o.total)}</td>
+                  <td class="px-3 py-3 text-gray-500">${new Date(o.created_at).toLocaleDateString('de-DE')}</td>
+                  <td class="px-3 py-3 text-right"><a href="/admin/orders/${o.id}" class="text-blue-600 hover:text-blue-800 text-xs"><i class="fas fa-eye"></i></a></td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>` : '<div class="py-8 text-center text-gray-400"><i class="fas fa-shopping-cart text-4xl mb-3 block text-gray-200"></i><p>Keine Bestellungen vorhanden</p></div>'}
+        </div>
+      </div>
+
+      <!-- Right -->
+      <div class="space-y-6">
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-lg font-bold text-gray-800 mb-3"><i class="fas fa-info-circle mr-2 text-gray-500"></i>Konto-Info</h2>
+          <div class="space-y-2 text-sm">
+            <div class="flex justify-between"><span class="text-gray-500">ID</span><span class="font-mono">${cu.id}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Rolle</span><span>${badge(cu.role || 'customer')}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Status</span><span>${cu.is_active ? badge('active') : badge('inactive')}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">E-Mail verifiziert</span><span>${cu.email_verified ? '✅ Ja' : '❌ Nein'}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Erstellt</span><span>${new Date(cu.created_at).toLocaleDateString('de-DE')}</span></div>
+            <div class="flex justify-between"><span class="text-gray-500">Geändert</span><span>${new Date(cu.updated_at).toLocaleDateString('de-DE')}</span></div>
+          </div>
+        </div>
+
+        <div class="bg-red-50 rounded-xl border border-red-100 p-5">
+          <h3 class="font-bold text-red-800 mb-2 text-sm"><i class="fas fa-exclamation-triangle mr-2"></i>Gefahrenzone</h3>
+          <button onclick="if(confirm('Konto wirklich deaktivieren?')){deactivateCustomer()}" class="w-full py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold">
+            <i class="fas fa-ban mr-2"></i>Konto deaktivieren
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+async function saveCustomer() {
+  const data = {
+    first_name: document.getElementById('f_first_name').value,
+    last_name: document.getElementById('f_last_name').value,
+    email: document.getElementById('f_email').value,
+    is_active: parseInt(document.getElementById('f_is_active').value),
+    role: document.getElementById('f_role').value
+  };
+  try {
+    const res = await fetch('/api/admin/customers/${cu.id}', {
+      method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(data)
+    });
+    const json = await res.json();
+    if (json.success !== false) {
+      document.getElementById('save-alert').classList.remove('hidden');
+      window.scrollTo(0, 0);
+      setTimeout(() => document.getElementById('save-alert').classList.add('hidden'), 4000);
+    }
+  } catch(e) { alert('Fehler: ' + e.message); }
+}
+async function deactivateCustomer() {
+  await fetch('/api/admin/customers/${cu.id}', {
+    method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({is_active: 0})
+  });
+  location.reload();
+}
+</script>
+</body>
+</html>`)
+})
+
 // License Management
 app.get('/admin/licenses', (c) => {
   const html = AdminLicensesAdvanced()
@@ -12885,12 +13275,250 @@ app.get('/admin/products', (c) => {
   return c.html(html)
 })
 
-app.get('/admin/products/add', (c) => {
-  return c.html(
-    <AdminLayout title="Add New Product" currentUser={{ first_name: 'Admin' }}>
-      <AdminProductForm isEdit={false} />
-    </AdminLayout>
-  )
+app.get('/admin/products/add', async (c) => {
+  const { env } = c
+  let categories: any[] = []
+  let brands: any[] = []
+  try {
+    const cr = await env.DB.prepare('SELECT id, name FROM categories ORDER BY name ASC').all()
+    categories = cr.results as any[]
+  } catch (e) {}
+  try {
+    const br = await env.DB.prepare('SELECT id, name FROM brands ORDER BY name ASC').all()
+    brands = br.results as any[]
+  } catch (e) {}
+
+  const catOptions = categories.map((cat: any) =>
+    `<option value="${cat.id}">${String(cat.name).replace(/</g,'&lt;')}</option>`
+  ).join('')
+  const brandOptions = brands.map((b: any) =>
+    `<option value="${b.id}">${String(b.name).replace(/</g,'&lt;')}</option>`
+  ).join('')
+
+  return c.html(`<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Neues Produkt hinzufügen - SOFTWAREKING24</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/>
+</head>
+<body class="bg-gray-50">
+${AdminSidebarAdvanced('/admin/products')}
+<div style="margin-left:280px;padding:2rem;min-height:100vh;">
+  <div class="max-w-5xl mx-auto">
+    <div class="mb-6 flex items-center justify-between">
+      <div>
+        <a href="/admin/products" class="text-sm text-gray-500 hover:text-blue-600 mb-1 inline-block"><i class="fas fa-arrow-left mr-1"></i>Zurück zu Produkte</a>
+        <h1 class="text-3xl font-bold text-gray-800"><i class="fas fa-plus-circle mr-3 text-green-500"></i>Neues Produkt hinzufügen</h1>
+      </div>
+      <button onclick="createProduct()" class="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-semibold text-sm">
+        <i class="fas fa-save mr-2"></i>Produkt erstellen
+      </button>
+    </div>
+
+    <div id="success-alert" class="hidden mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700"><i class="fas fa-check-circle mr-2"></i>Produkt erfolgreich erstellt! <a id="edit-link" href="#" class="underline font-semibold ml-2">Produkt bearbeiten →</a></div>
+    <div id="error-alert" class="hidden mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700"></div>
+
+    <form id="product-form" class="grid grid-cols-3 gap-6">
+      <div class="col-span-2 space-y-6">
+        <!-- Grunddaten -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-info-circle mr-2 text-blue-500"></i>Grunddaten</h2>
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Produktname *</label>
+            <input type="text" name="name" required placeholder="z.B. Windows 11 Pro"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"/>
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">SKU *</label>
+            <input type="text" name="sku" required placeholder="z.B. WIN11-PRO-001"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"/>
+            <p class="text-xs text-gray-400 mt-1">Eindeutige Produktkennung</p>
+          </div>
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">URL-Slug *</label>
+            <input type="text" name="slug" required placeholder="z.B. windows-11-pro"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"/>
+            <p class="text-xs text-gray-400 mt-1">Wird automatisch aus dem Namen generiert</p>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Grundpreis (€) *</label>
+              <input type="number" name="base_price" step="0.01" min="0" required placeholder="0.00"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"/>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Rabattpreis (€)</label>
+              <input type="number" name="discount_price" step="0.01" min="0" placeholder="0.00"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"/>
+            </div>
+          </div>
+        </div>
+
+        <!-- Beschreibung -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-align-left mr-2 text-green-500"></i>Beschreibung</h2>
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Kurzbeschreibung</label>
+            <textarea name="short_description" rows="3" placeholder="Kurze Produktbeschreibung..."
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Vollständige Beschreibung</label>
+            <textarea name="description" rows="8" placeholder="Ausführliche Produktbeschreibung..."
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"></textarea>
+          </div>
+        </div>
+
+        <!-- SEO -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-search mr-2 text-purple-500"></i>SEO</h2>
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Meta-Titel</label>
+            <input type="text" name="meta_title" placeholder="Seitentitel für Suchmaschinen"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"/>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Meta-Beschreibung</label>
+            <textarea name="meta_description" rows="3" placeholder="Kurzbeschreibung für Suchmaschinen (max. 160 Zeichen)"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seitenleiste -->
+      <div class="space-y-6">
+        <!-- Status -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-toggle-on mr-2 text-green-500"></i>Veröffentlichung</h2>
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Status</label>
+            <select name="is_active" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+              <option value="1">Aktiv (sofort sichtbar)</option>
+              <option value="0">Inaktiv (Entwurf)</option>
+            </select>
+          </div>
+          <div class="space-y-2">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" name="is_featured" value="1" class="w-4 h-4 rounded text-green-600"/>
+              <span class="text-sm font-medium text-gray-700">Als Featured markieren</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" name="is_new" value="1" checked class="w-4 h-4 rounded text-green-600"/>
+              <span class="text-sm font-medium text-gray-700">Als Neu markieren</span>
+            </label>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" name="is_bestseller" value="1" class="w-4 h-4 rounded text-green-600"/>
+              <span class="text-sm font-medium text-gray-700">Bestseller</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- Kategorie & Marke -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-folder-open mr-2 text-orange-500"></i>Kategorie & Marke</h2>
+          <div class="mb-4">
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Kategorie</label>
+            <select name="category_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+              <option value="">– Keine Kategorie –</option>
+              ${catOptions}
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Marke</label>
+            <select name="brand_id" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+              <option value="">– Keine Marke –</option>
+              ${brandOptions}
+            </select>
+          </div>
+        </div>
+
+        <!-- Lager -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-warehouse mr-2 text-cyan-500"></i>Lager</h2>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Lagerbestand</label>
+            <input type="number" name="stock" value="0" min="0"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"/>
+          </div>
+        </div>
+
+        <!-- Bild -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+          <h2 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-image mr-2 text-pink-500"></i>Produktbild</h2>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Bild-URL</label>
+            <input type="text" name="image_url" placeholder="/static/products/bild.png"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"/>
+          </div>
+        </div>
+
+        <button type="button" onclick="createProduct()"
+          class="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-bold rounded-xl transition-colors">
+          <i class="fas fa-plus mr-2"></i>Produkt erstellen
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+<script>
+// Auto-generate slug from name
+document.querySelector('input[name="name"]').addEventListener('input', function() {
+  const slug = this.value.toLowerCase()
+    .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  document.querySelector('input[name="slug"]').value = slug;
+});
+
+async function createProduct() {
+  const form = document.getElementById('product-form');
+  const formData = new FormData(form);
+  const data = {};
+  for (const [k, v] of formData.entries()) {
+    data[k] = v === '' ? null : v;
+  }
+  // Unchecked checkboxes
+  ['is_featured','is_new','is_bestseller'].forEach(f => {
+    if (!(f in data)) data[f] = 0; else data[f] = 1;
+  });
+  // Numeric fields
+  ['base_price','discount_price','stock','category_id','brand_id','is_active'].forEach(f => {
+    if (data[f] !== null && data[f] !== undefined) data[f] = Number(data[f]) || 0;
+  });
+  // price = base_price for compatibility
+  data.price = data.base_price;
+  data.sale_price = data.discount_price;
+
+  document.getElementById('success-alert').classList.add('hidden');
+  document.getElementById('error-alert').classList.add('hidden');
+
+  try {
+    const res = await fetch('/api/admin/products', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify(data)
+    });
+    const json = await res.json();
+    if (json.success !== false && (json.id || json.data?.id)) {
+      const newId = json.id || json.data?.id;
+      document.getElementById('success-alert').classList.remove('hidden');
+      document.getElementById('edit-link').href = '/admin/products/edit/' + newId;
+      window.scrollTo(0, 0);
+      form.reset();
+    } else {
+      document.getElementById('error-alert').textContent = 'Fehler: ' + (json.error || JSON.stringify(json));
+      document.getElementById('error-alert').classList.remove('hidden');
+    }
+  } catch(e) {
+    document.getElementById('error-alert').textContent = 'Netzwerkfehler: ' + e.message;
+    document.getElementById('error-alert').classList.remove('hidden');
+  }
+}
+</script>
+</body>
+</html>`)
 })
 
 app.get('/admin/products/edit/:id', async (c) => {
@@ -30322,6 +30950,236 @@ app.get('/admin/*', async (c) => {
     return c.html(formHtml);
   }
   
+  // Special handling for /admin/orders/:id - order detail page
+  const orderDetailMatch = path.match(/^\/admin\/orders\/(\d+)$/)
+  if (orderDetailMatch) {
+    const orderId = orderDetailMatch[1]
+    let order: any = null
+    let items: any[] = []
+    try {
+      order = await c.env.DB.prepare(`SELECT o.*, u.email as user_email FROM orders o LEFT JOIN users u ON o.user_id = u.id WHERE o.id = ?`).bind(orderId).first()
+      if (order) {
+        const r = await c.env.DB.prepare('SELECT * FROM order_items WHERE order_id = ?').bind(orderId).all()
+        items = r.results as any[]
+      }
+    } catch (e) {}
+    const esc2 = (v: any) => String(v ?? '-').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    const fmt2 = (n: any) => parseFloat(n || 0).toFixed(2)
+    const sColors: Record<string,string> = { completed:'green', paid:'green', shipped:'blue', processing:'yellow', pending:'orange', cancelled:'red', refunded:'purple' }
+    const sLabels: Record<string,string> = { completed:'Abgeschlossen', paid:'Bezahlt', shipped:'Versendet', processing:'In Bearbeitung', pending:'Ausstehend', cancelled:'Storniert', refunded:'Erstattet' }
+    const badge2 = (s: string) => `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-${sColors[s]||'gray'}-100 text-${sColors[s]||'gray'}-800">${sLabels[s]||s}</span>`
+    const payLabels: Record<string,string> = { paypal:'PayPal', credit_card:'Kreditkarte', bank_transfer:'Banküberweisung', stripe:'Stripe' }
+    if (!order) return c.html(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><script src="https://cdn.tailwindcss.com"></script></head><body class="bg-gray-50 flex items-center justify-center min-h-screen"><div class="text-center"><h1 class="text-2xl font-bold text-red-600">Bestellung nicht gefunden</h1><a href="/admin/orders" class="mt-4 inline-block text-blue-600 underline">← Zurück</a></div></body></html>`, 404)
+    const o = order as any
+    return c.html(`<!DOCTYPE html>
+<html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Bestellung ${esc2(o.order_number)} - Admin</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/>
+</head><body class="bg-gray-50">
+${AdminSidebarAdvanced('/admin/orders')}
+<div style="margin-left:280px;padding:2rem;min-height:100vh;"><div class="max-w-5xl mx-auto">
+<div class="mb-6 flex items-center justify-between">
+  <div>
+    <a href="/admin/orders" class="text-sm text-gray-500 hover:text-blue-600 mb-1 inline-block"><i class="fas fa-arrow-left mr-1"></i>Zurück zu Bestellungen</a>
+    <h1 class="text-3xl font-bold text-gray-800"><i class="fas fa-receipt mr-3 text-blue-500"></i>Bestellung ${esc2(o.order_number)}</h1>
+    <p class="text-gray-500 mt-1">Erstellt am ${new Date(o.created_at).toLocaleDateString('de-DE', {day:'2-digit',month:'long',year:'numeric'})}</p>
+  </div>
+  <div class="flex gap-2">${badge2(o.order_status||'pending')} ${badge2(o.payment_status||'pending')}</div>
+</div>
+<div id="save-alert" class="hidden mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700"><i class="fas fa-check-circle mr-2"></i>Status erfolgreich aktualisiert!</div>
+<div class="grid grid-cols-3 gap-6">
+  <div class="col-span-2 space-y-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <h2 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-box mr-2 text-blue-500"></i>Bestellpositionen</h2>
+      <table class="w-full"><thead class="bg-gray-50 border-b"><tr>
+        <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Produkt</th>
+        <th class="px-3 py-2 text-center text-xs font-semibold text-gray-500 uppercase">Menge</th>
+        <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Preis</th>
+        <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Gesamt</th>
+      </tr></thead><tbody>
+      ${items.length > 0 ? items.map((item:any) => `<tr class="border-b hover:bg-gray-50">
+        <td class="px-3 py-3"><div class="font-medium text-sm">${esc2(item.product_name)}</div>
+        <div class="text-xs text-gray-400 font-mono">${esc2(item.product_sku)}${item.license_key?` · <span class="text-green-600">${esc2(item.license_key)}</span>`:''}</div></td>
+        <td class="px-3 py-3 text-center text-sm">${item.quantity}</td>
+        <td class="px-3 py-3 text-right text-sm">€${fmt2(item.price)}</td>
+        <td class="px-3 py-3 text-right text-sm font-semibold">€${fmt2(item.subtotal)}</td>
+      </tr>`).join('') : '<tr><td colspan="4" class="px-3 py-8 text-center text-gray-400 text-sm">Keine Positionen gefunden</td></tr>'}
+      </tbody></table>
+      <div class="mt-4 pt-4 border-t space-y-1">
+        <div class="flex justify-between text-sm text-gray-600"><span>Zwischensumme</span><span>€${fmt2(o.subtotal)}</span></div>
+        ${parseFloat(o.discount||0)>0?`<div class="flex justify-between text-sm text-green-600"><span>Rabatt</span><span>-€${fmt2(o.discount)}</span></div>`:''}
+        <div class="flex justify-between text-sm text-gray-600"><span>MwSt.</span><span>€${fmt2(o.tax)}</span></div>
+        <div class="flex justify-between text-base font-bold text-gray-800 pt-2 border-t"><span>Gesamt</span><span>€${fmt2(o.total)}</span></div>
+      </div>
+    </div>
+    ${o.notes?`<div class="bg-amber-50 rounded-xl border border-amber-200 p-4"><h3 class="font-semibold text-amber-800 mb-1"><i class="fas fa-sticky-note mr-2"></i>Notiz</h3><p class="text-sm text-amber-700">${esc2(o.notes)}</p></div>`:''}
+  </div>
+  <div class="space-y-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <h2 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-edit mr-2 text-orange-500"></i>Status ändern</h2>
+      <div class="mb-3"><label class="block text-sm font-semibold text-gray-700 mb-1">Bestellstatus</label>
+      <select id="order_status" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+        ${['pending','processing','shipped','completed','cancelled'].map(s=>`<option value="${s}" ${o.order_status===s?'selected':''}>${sLabels[s]||s}</option>`).join('')}
+      </select></div>
+      <div class="mb-4"><label class="block text-sm font-semibold text-gray-700 mb-1">Zahlungsstatus</label>
+      <select id="payment_status" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+        ${['pending','paid','refunded','cancelled'].map(s=>`<option value="${s}" ${o.payment_status===s?'selected':''}>${sLabels[s]||s}</option>`).join('')}
+      </select></div>
+      <button onclick="updateStatus()" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg text-sm"><i class="fas fa-save mr-2"></i>Aktualisieren</button>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <h2 class="text-lg font-bold text-gray-800 mb-3"><i class="fas fa-user mr-2 text-green-500"></i>Kunde</h2>
+      <p class="font-semibold">${esc2(o.first_name)} ${esc2(o.last_name)}</p>
+      ${o.company?`<p class="text-sm text-gray-500">${esc2(o.company)}</p>`:''}
+      <p class="text-sm text-blue-600 mt-1">${esc2(o.email)}</p>
+      ${o.phone?`<p class="text-sm text-gray-500">${esc2(o.phone)}</p>`:''}
+      ${o.user_id?`<a href="/admin/customers/${o.user_id}" class="mt-2 inline-block text-xs text-blue-600 hover:underline"><i class="fas fa-external-link-alt mr-1"></i>Kundenprofil öffnen</a>`:''}
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <h2 class="text-lg font-bold text-gray-800 mb-3"><i class="fas fa-map-marker-alt mr-2 text-red-500"></i>Lieferadresse</h2>
+      <address class="not-italic text-sm text-gray-700 space-y-0.5">
+        <div>${esc2(o.first_name)} ${esc2(o.last_name)}</div>
+        <div>${esc2(o.address)}</div>
+        <div>${esc2(o.postcode)} ${esc2(o.city)}</div>
+        <div>${esc2(o.country)}</div>
+      </address>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <h2 class="text-lg font-bold text-gray-800 mb-3"><i class="fas fa-credit-card mr-2 text-purple-500"></i>Zahlung</h2>
+      <p class="text-sm"><span class="font-semibold">Methode:</span> ${payLabels[o.payment_method]||esc2(o.payment_method)}</p>
+      <p class="text-sm mt-1"><span class="font-semibold">Status:</span> ${badge2(o.payment_status||'pending')}</p>
+    </div>
+  </div>
+</div></div></div>
+<script>
+async function updateStatus(){
+  const res=await fetch('/api/admin/orders/${o.id}',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({status:document.getElementById('order_status').value,payment_status:document.getElementById('payment_status').value})});
+  const j=await res.json();
+  if(j.success!==false){document.getElementById('save-alert').classList.remove('hidden');window.scrollTo(0,0);setTimeout(()=>document.getElementById('save-alert').classList.add('hidden'),4000);}
+}
+</script>
+</body></html>`)
+  }
+
+  // Special handling for /admin/customers/:id - customer detail page
+  const customerDetailMatch = path.match(/^\/admin\/customers\/(\d+)$/)
+  if (customerDetailMatch) {
+    const customerId = customerDetailMatch[1]
+    let customer: any = null
+    let custOrders: any[] = []
+    let totalSpent = 0
+    try {
+      customer = await c.env.DB.prepare('SELECT * FROM users WHERE id = ?').bind(customerId).first()
+      if (customer) {
+        const r = await c.env.DB.prepare('SELECT id, order_number, order_status, payment_status, total, created_at FROM orders WHERE user_id = ? ORDER BY created_at DESC LIMIT 20').bind(customerId).all()
+        custOrders = r.results as any[]
+        totalSpent = custOrders.filter((o:any)=>o.payment_status==='completed'||o.payment_status==='paid').reduce((s:number,o:any)=>s+parseFloat(o.total||0),0)
+      }
+    } catch (e) {}
+    if (!customer) return c.html(`<!DOCTYPE html><html><head><meta charset="UTF-8"/><script src="https://cdn.tailwindcss.com"></script></head><body class="bg-gray-50 flex items-center justify-center min-h-screen"><div class="text-center"><h1 class="text-2xl font-bold text-red-600">Kunde nicht gefunden</h1><a href="/admin/customers" class="mt-4 inline-block text-blue-600 underline">← Zurück</a></div></body></html>`, 404)
+    const cu = customer as any
+    const esc3 = (v:any) => String(v??'').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    const fmt3 = (n:any) => parseFloat(n||0).toFixed(2)
+    const sc3: Record<string,string> = { completed:'green', paid:'green', shipped:'blue', processing:'yellow', pending:'orange', cancelled:'red', refunded:'purple', active:'green', inactive:'red' }
+    const sl3: Record<string,string> = { completed:'Abgeschlossen', paid:'Bezahlt', shipped:'Versendet', processing:'In Bearbeitung', pending:'Ausstehend', cancelled:'Storniert', refunded:'Erstattet' }
+    const badge3 = (s:string) => `<span class="px-2 py-1 text-xs font-semibold rounded-full bg-${sc3[s]||'gray'}-100 text-${sc3[s]||'gray'}-800">${sl3[s]||s}</span>`
+    return c.html(`<!DOCTYPE html>
+<html lang="de"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>${esc3(cu.first_name)} ${esc3(cu.last_name)} - Admin</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/>
+</head><body class="bg-gray-50">
+${AdminSidebarAdvanced('/admin/customers')}
+<div style="margin-left:280px;padding:2rem;min-height:100vh;"><div class="max-w-5xl mx-auto">
+  <div class="mb-6">
+    <a href="/admin/customers" class="text-sm text-gray-500 hover:text-blue-600 mb-1 inline-block"><i class="fas fa-arrow-left mr-1"></i>Zurück zu Kunden</a>
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-4">
+        <div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-2xl font-bold text-blue-600">${(cu.first_name||'?')[0]}${(cu.last_name||'')[0]}</div>
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800">${esc3(cu.first_name)} ${esc3(cu.last_name)}</h1>
+          <p class="text-gray-500 text-sm mt-1">${esc3(cu.email)} · ${cu.is_active?'<span class="text-green-600 font-medium">Aktiv</span>':'<span class="text-red-500 font-medium">Inaktiv</span>'} · ${cu.role==='admin'?'<span class="text-purple-600 font-medium">Admin</span>':'<span class="text-blue-600 font-medium">Kunde</span>'}</p>
+        </div>
+      </div>
+      <button onclick="saveCustomer()" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold text-sm"><i class="fas fa-save mr-2"></i>Speichern</button>
+    </div>
+  </div>
+  <div id="save-alert" class="hidden mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700"><i class="fas fa-check-circle mr-2"></i>Kundendaten erfolgreich gespeichert!</div>
+  <div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center"><p class="text-2xl font-bold text-gray-800">${custOrders.length}</p><p class="text-sm text-gray-500 mt-1">Bestellungen</p></div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center"><p class="text-2xl font-bold text-green-600">€${fmt3(totalSpent)}</p><p class="text-sm text-gray-500 mt-1">Gesamtumsatz</p></div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 text-center"><p class="text-xl font-bold">${cu.email_verified?'✅':'❌'}</p><p class="text-sm text-gray-500 mt-1">E-Mail verifiziert</p></div>
+  </div>
+  <div class="grid grid-cols-3 gap-6">
+    <div class="col-span-2 space-y-6">
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h2 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-user-edit mr-2 text-blue-500"></i>Stammdaten bearbeiten</h2>
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div><label class="block text-sm font-semibold text-gray-700 mb-1">Vorname</label><input id="f_first_name" type="text" value="${esc3(cu.first_name)}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"/></div>
+          <div><label class="block text-sm font-semibold text-gray-700 mb-1">Nachname</label><input id="f_last_name" type="text" value="${esc3(cu.last_name)}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"/></div>
+        </div>
+        <div class="mb-4"><label class="block text-sm font-semibold text-gray-700 mb-1">E-Mail</label><input id="f_email" type="email" value="${esc3(cu.email)}" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"/></div>
+        <div class="grid grid-cols-2 gap-4">
+          <div><label class="block text-sm font-semibold text-gray-700 mb-1">Status</label>
+          <select id="f_is_active" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+            <option value="1" ${cu.is_active==1?'selected':''}>Aktiv</option>
+            <option value="0" ${cu.is_active==0?'selected':''}>Inaktiv</option>
+          </select></div>
+          <div><label class="block text-sm font-semibold text-gray-700 mb-1">Rolle</label>
+          <select id="f_role" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+            <option value="customer" ${cu.role==='customer'?'selected':''}>Kunde</option>
+            <option value="admin" ${cu.role==='admin'?'selected':''}>Admin</option>
+          </select></div>
+        </div>
+        <p class="text-xs text-gray-400 mt-3">Mitglied seit: ${new Date(cu.created_at).toLocaleDateString('de-DE',{day:'2-digit',month:'long',year:'numeric'})}</p>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h2 class="text-lg font-bold text-gray-800 mb-4"><i class="fas fa-shopping-bag mr-2 text-orange-500"></i>Bestellungen (${custOrders.length})</h2>
+        ${custOrders.length>0?`<table class="w-full text-sm"><thead class="bg-gray-50 border-b"><tr>
+          <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Bestell-Nr.</th>
+          <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
+          <th class="px-3 py-2 text-right text-xs font-semibold text-gray-500 uppercase">Betrag</th>
+          <th class="px-3 py-2 text-left text-xs font-semibold text-gray-500 uppercase">Datum</th>
+          <th class="px-3 py-2"></th>
+        </tr></thead><tbody>${custOrders.map((o:any)=>`<tr class="border-b hover:bg-gray-50">
+          <td class="px-3 py-3 font-mono font-medium text-xs">${esc3(o.order_number||String(o.id))}</td>
+          <td class="px-3 py-3">${badge3(o.order_status||'pending')}</td>
+          <td class="px-3 py-3 text-right font-semibold">€${fmt3(o.total)}</td>
+          <td class="px-3 py-3 text-gray-500 text-xs">${new Date(o.created_at).toLocaleDateString('de-DE')}</td>
+          <td class="px-3 py-3 text-right"><a href="/admin/orders/${o.id}" class="text-blue-600 hover:text-blue-800"><i class="fas fa-eye text-xs"></i></a></td>
+        </tr>`).join('')}</tbody></table>`:'<div class="py-8 text-center text-gray-400"><i class="fas fa-shopping-cart text-4xl mb-3 block text-gray-200"></i><p>Keine Bestellungen vorhanden</p></div>'}
+      </div>
+    </div>
+    <div class="space-y-6">
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <h2 class="text-lg font-bold text-gray-800 mb-3"><i class="fas fa-info-circle mr-2 text-gray-500"></i>Konto-Info</h2>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between"><span class="text-gray-500">ID</span><span class="font-mono">${cu.id}</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Status</span><span>${cu.is_active?'<span class="text-green-600 font-medium">Aktiv</span>':'<span class="text-red-500 font-medium">Inaktiv</span>'}</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">E-Mail</span><span>${cu.email_verified?'✅ Ja':'❌ Nein'}</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Erstellt</span><span>${new Date(cu.created_at).toLocaleDateString('de-DE')}</span></div>
+        </div>
+      </div>
+      <div class="bg-red-50 rounded-xl border border-red-100 p-5">
+        <h3 class="font-bold text-red-800 mb-2 text-sm"><i class="fas fa-exclamation-triangle mr-2"></i>Gefahrenzone</h3>
+        <button onclick="if(confirm('Konto wirklich deaktivieren?')){deactivate()}" class="w-full py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold"><i class="fas fa-ban mr-2"></i>Konto deaktivieren</button>
+      </div>
+    </div>
+  </div>
+</div></div>
+<script>
+async function saveCustomer(){
+  const data={first_name:document.getElementById('f_first_name').value,last_name:document.getElementById('f_last_name').value,email:document.getElementById('f_email').value,is_active:parseInt(document.getElementById('f_is_active').value),role:document.getElementById('f_role').value};
+  const res=await fetch('/api/admin/customers/${cu.id}',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  const j=await res.json();
+  if(j.success!==false){document.getElementById('save-alert').classList.remove('hidden');window.scrollTo(0,0);setTimeout(()=>document.getElementById('save-alert').classList.add('hidden'),4000);}
+}
+async function deactivate(){await fetch('/api/admin/customers/${cu.id}',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({is_active:0})});location.reload();}
+</script>
+</body></html>`)
+  }
+
   // Special handling for /admin/settings - full tabbed settings UI
   if (path === '/admin/settings') {
     return c.html(AdminSettingsAdvanced())
