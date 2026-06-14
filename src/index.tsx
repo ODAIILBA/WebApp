@@ -8118,6 +8118,93 @@ app.get('/api/admin/contact-messages/stats', async (c) => {
 // END CONTACT MESSAGES CRUD API
 // ============================================
 
+// ============================================
+// AFFILIATES API
+// ============================================
+app.get('/api/admin/affiliates', async (c) => {
+  try {
+    const rows = await c.env.DB.prepare('SELECT * FROM affiliates ORDER BY total_revenue DESC').all()
+    return c.json({ success: true, data: rows.results })
+  } catch(e: any) { return c.json({ success: false, error: e.message }, 500) }
+})
+
+app.post('/api/admin/affiliates', async (c) => {
+  try {
+    const body = await c.req.json() as any
+    if (!body.name || !body.code) return c.json({ success: false, error: 'Name und Code erforderlich' }, 400)
+    await c.env.DB.prepare(
+      'INSERT INTO affiliates (name, code, email, website, commission_rate, notes) VALUES (?, ?, ?, ?, ?, ?)'
+    ).bind(body.name, body.code.toUpperCase(), body.email || null, body.website || null, body.commission_rate || 10, body.notes || null).run()
+    return c.json({ success: true })
+  } catch(e: any) { return c.json({ success: false, error: e.message }, 500) }
+})
+
+app.put('/api/admin/affiliates/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    const body = await c.req.json() as any
+    await c.env.DB.prepare(
+      'UPDATE affiliates SET name=?, code=?, email=?, website=?, commission_rate=?, notes=?, updated_at=CURRENT_TIMESTAMP WHERE id=?'
+    ).bind(body.name, body.code.toUpperCase(), body.email || null, body.website || null, body.commission_rate || 10, body.notes || null, id).run()
+    return c.json({ success: true })
+  } catch(e: any) { return c.json({ success: false, error: e.message }, 500) }
+})
+
+app.patch('/api/admin/affiliates/:id/toggle', async (c) => {
+  try {
+    const id = c.req.param('id')
+    await c.env.DB.prepare('UPDATE affiliates SET is_active = CASE WHEN is_active=1 THEN 0 ELSE 1 END, updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(id).run()
+    return c.json({ success: true })
+  } catch(e: any) { return c.json({ success: false, error: e.message }, 500) }
+})
+
+app.delete('/api/admin/affiliates/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    await c.env.DB.prepare('DELETE FROM affiliates WHERE id=?').bind(id).run()
+    return c.json({ success: true })
+  } catch(e: any) { return c.json({ success: false, error: e.message }, 500) }
+})
+
+// ============================================
+// GIFT CARDS API
+// ============================================
+app.get('/api/admin/gift-cards', async (c) => {
+  try {
+    const rows = await c.env.DB.prepare('SELECT * FROM gift_cards ORDER BY created_at DESC').all()
+    return c.json({ success: true, data: rows.results })
+  } catch(e: any) { return c.json({ success: false, error: e.message }, 500) }
+})
+
+app.post('/api/admin/gift-cards', async (c) => {
+  try {
+    const body = await c.req.json() as any
+    if (!body.code || !body.initial_amount) return c.json({ success: false, error: 'Code und Betrag erforderlich' }, 400)
+    await c.env.DB.prepare(
+      'INSERT INTO gift_cards (code, initial_amount, remaining_amount, expires_at, recipient_name, recipient_email, message) VALUES (?, ?, ?, ?, ?, ?, ?)'
+    ).bind(body.code.toUpperCase(), body.initial_amount, body.initial_amount, body.expires_at || null, body.recipient_name || null, body.recipient_email || null, body.message || null).run()
+    return c.json({ success: true })
+  } catch(e: any) { return c.json({ success: false, error: e.message }, 500) }
+})
+
+app.patch('/api/admin/gift-cards/:id/deactivate', async (c) => {
+  try {
+    const id = c.req.param('id')
+    await c.env.DB.prepare('UPDATE gift_cards SET is_active=0, updated_at=CURRENT_TIMESTAMP WHERE id=?').bind(id).run()
+    return c.json({ success: true })
+  } catch(e: any) { return c.json({ success: false, error: e.message }, 500) }
+})
+
+app.delete('/api/admin/gift-cards/:id', async (c) => {
+  try {
+    const id = c.req.param('id')
+    await c.env.DB.prepare('DELETE FROM gift_cards WHERE id=?').bind(id).run()
+    return c.json({ success: true })
+  } catch(e: any) { return c.json({ success: false, error: e.message }, 500) }
+})
+
+// ============================================
+
 app.get('/api/products/featured', async (c) => {
   try {
     const limit = parseInt(c.req.query('limit') || '8')
@@ -11577,6 +11664,9 @@ import { FrontendPlaceholder } from './components/frontend-placeholder'
 import { AdminProducts, AdminProductForm } from './components/admin-products'
 import { AdminProductImport } from './components/admin-product-import'
 import { AdminSliders } from './components/admin-sliders'
+import { AdminAffiliate } from './components/admin-affiliate'
+import { AdminWishlist } from './components/admin-wishlist'
+import { AdminGiftCards } from './components/admin-gift-cards'
 import { AdminHomepageSectionsAdvanced } from './components/admin-homepage-sections-advanced'
 import { adminPageConfigs, type AdminPageConfig } from './admin-page-configs'
 import { AdminLicenses, AdminLicenseImport } from './components/admin-licenses'
@@ -31574,6 +31664,63 @@ ${AdminSidebarAdvanced('/admin/licenses/assignments')}
 </div>
 </body>
 </html>`)
+  }
+
+  // ── Affiliate-Marketing ──────────────────────────
+  if (path === '/admin/affiliate') {
+    let affiliates: any[] = []
+    let stats = { total: 0, active: 0, revenue: 0, commission: 0 }
+    try {
+      const [rows, s] = await Promise.all([
+        c.env.DB.prepare('SELECT * FROM affiliates ORDER BY total_revenue DESC').all(),
+        c.env.DB.prepare('SELECT COUNT(*) as total, SUM(CASE WHEN is_active=1 THEN 1 ELSE 0 END) as active, SUM(total_revenue) as revenue, SUM(total_commission) as commission FROM affiliates').first()
+      ])
+      affiliates = (rows.results || []) as any[]
+      if (s) stats = { total: (s as any).total || 0, active: (s as any).active || 0, revenue: (s as any).revenue || 0, commission: (s as any).commission || 0 }
+    } catch(e) { console.error('Affiliate page error:', e) }
+    return c.html(AdminAffiliate(affiliates, stats))
+  }
+
+  // ── Wishlist ──────────────────────────────────────
+  if (path === '/admin/wishlist') {
+    let items: any[] = []
+    let stats = { total: 0, unique_products: 0, unique_customers: 0, top_product: '' }
+    try {
+      const [rows, s, top] = await Promise.all([
+        c.env.DB.prepare(`
+          SELECT w.id, w.user_id, w.product_id, w.created_at,
+                 p.name as product_name, p.base_price as price, p.image_url, p.slug,
+                 c.name as category,
+                 u.first_name || ' ' || u.last_name as customer_name,
+                 u.email as customer_email
+          FROM wishlists w
+          LEFT JOIN products p ON w.product_id = p.id
+          LEFT JOIN categories c ON p.category_id = c.id
+          LEFT JOIN users u ON w.user_id = u.id
+          ORDER BY w.created_at DESC
+        `).all(),
+        c.env.DB.prepare('SELECT COUNT(*) as total, COUNT(DISTINCT product_id) as unique_products, COUNT(DISTINCT user_id) as unique_customers FROM wishlists').first(),
+        c.env.DB.prepare('SELECT p.name, COUNT(*) as cnt FROM wishlists w JOIN products p ON w.product_id=p.id GROUP BY w.product_id ORDER BY cnt DESC LIMIT 1').first()
+      ])
+      items = (rows.results || []) as any[]
+      if (s) stats = { total: (s as any).total || 0, unique_products: (s as any).unique_products || 0, unique_customers: (s as any).unique_customers || 0, top_product: (top as any)?.name || '' }
+    } catch(e) { console.error('Wishlist page error:', e) }
+    return c.html(AdminWishlist(items, stats))
+  }
+
+  // ── Gift Cards ────────────────────────────────────
+  if (path === '/admin/gift-cards') {
+    let cards: any[] = []
+    let stats = { total: 0, active: 0, total_value: 0, redeemed: 0 }
+    try {
+      const [rows, s] = await Promise.all([
+        c.env.DB.prepare('SELECT * FROM gift_cards ORDER BY created_at DESC').all(),
+        c.env.DB.prepare('SELECT COUNT(*) as total, SUM(CASE WHEN is_active=1 THEN 1 ELSE 0 END) as active, SUM(initial_amount) as total_value, SUM(initial_amount - remaining_amount) as redeemed FROM gift_cards').first()
+      ])
+      cards = (rows.results || []) as any[]
+      if (s) stats = { total: (s as any).total || 0, active: (s as any).active || 0, total_value: (s as any).total_value || 0, redeemed: (s as any).redeemed || 0 }
+    } catch(e) { console.error('Gift cards page error:', e) }
+    return c.html(AdminGiftCards(cards, stats))
   }
 
   // If no config found, show placeholder
