@@ -4222,7 +4222,7 @@ app.get('/api/translations/:languageCode', async (c) => {
       if (env.DB) {
         const result = await env.DB.prepare(`
           SELECT * FROM translations 
-          WHERE language = ?
+          WHERE language_code = ?
           ORDER BY translation_key ASC
         `).bind(languageCode).all()
         translationsArray = result.results || [];
@@ -5827,8 +5827,8 @@ app.get('/api/admin/products/stats', async (c) => {
       SELECT
         COUNT(*) as total,
         SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active,
-        SUM(CASE WHEN available_licenses <= 5 AND available_licenses > 0 THEN 1 ELSE 0 END) as low_stock,
-        SUM(CASE WHEN base_price > 0 THEN base_price ELSE 0 END) as total_value
+        SUM(CASE WHEN stock <= 5 AND stock > 0 THEN 1 ELSE 0 END) as low_stock,
+        SUM(CASE WHEN base_price > 0 THEN base_price ELSE CASE WHEN price > 0 THEN price ELSE 0 END END) as total_value
       FROM products
     `).first()
 
@@ -7471,15 +7471,14 @@ app.get('/api/admin/pages', async (c) => {
     const offset = (page - 1) * limit
     
     const pages = await db.db.prepare(`
-      SELECT p.*, COUNT(pt.id) as translation_count
-      FROM cms_pages p
-      LEFT JOIN cms_page_translations pt ON p.id = pt.page_id
-      GROUP BY p.id
+      SELECT p.*, pt.title, pt.content
+      FROM pages p
+      LEFT JOIN page_translations pt ON p.slug = pt.page_slug AND pt.language_code = 'de'
       ORDER BY p.updated_at DESC
       LIMIT ? OFFSET ?
     `).bind(limit, offset).all()
     
-    const total = await db.db.prepare('SELECT COUNT(*) as count FROM cms_pages').first()
+    const total = await db.db.prepare('SELECT COUNT(*) as count FROM pages').first()
     
     return c.json({ 
       success: true, 
@@ -9527,10 +9526,9 @@ app.get('/api/admin/licenses', async (c) => {
     const db = c.get('db') as DatabaseHelper
     
     const licenses = await c.env.DB.prepare(`
-      SELECT lk.*, p.sku, pt.name as product_name
+      SELECT lk.*, p.sku, p.name as product_name
       FROM license_keys lk
       LEFT JOIN products p ON lk.product_id = p.id
-      
       ORDER BY lk.created_at DESC
       LIMIT 100
     `).all()
@@ -11377,9 +11375,9 @@ app.get('/api/admin/languages', async (c) => {
     `).all();
     
     const translations = await env.DB.prepare(`
-      SELECT COUNT(*) as count, language 
+      SELECT COUNT(*) as count, language_code 
       FROM translations 
-      GROUP BY language
+      GROUP BY language_code
     `).all();
     
     return c.json({
@@ -14524,16 +14522,16 @@ app.get('/api/admin/settings', async (c) => {
     const db = c.get('db') as DatabaseHelper
     const { category } = c.req.query()
     
-    // Use system_settings table
-    let query = 'SELECT * FROM system_settings WHERE 1=1'
+    // Use settings table
+    let query = 'SELECT * FROM settings WHERE 1=1'
     const params: any[] = []
     
     if (category) {
-      query += ' AND category = ?'
-      params.push(category)
+      query += ' AND key LIKE ?'
+      params.push(category + '%')
     }
     
-    query += ' ORDER BY category, setting_key'
+    query += ' ORDER BY key'
     
     const settings = await db.db.prepare(query).bind(...params).all()
     
@@ -14558,11 +14556,11 @@ app.post('/api/admin/settings', async (c) => {
     // Update or insert each setting
     for (const setting of settings) {
       await db.db.prepare(`
-        INSERT INTO system_settings (setting_key, setting_value, setting_type, updated_at)
+        INSERT INTO settings (key, value, type, updated_at)
         VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-        ON CONFLICT(setting_key) DO UPDATE SET
-          setting_value = excluded.setting_value,
-          setting_type = excluded.setting_type,
+        ON CONFLICT(key) DO UPDATE SET
+          value = excluded.value,
+          type = excluded.type,
           updated_at = CURRENT_TIMESTAMP
       `).bind(setting.key, setting.value, setting.type || 'string').run()
     }
@@ -14978,9 +14976,9 @@ app.patch('/api/admin/settings/:key', async (c) => {
     const body = await c.req.json()
     
     await db.db.prepare(`
-      UPDATE system_settings
-      SET setting_value = ?, updated_at = CURRENT_TIMESTAMP
-      WHERE setting_key = ?
+      UPDATE settings
+      SET value = ?, updated_at = CURRENT_TIMESTAMP
+      WHERE key = ?
     `).bind(body.setting_value, key).run()
     
     return c.json({ success: true, message: 'Setting updated successfully' })
@@ -17795,6 +17793,8 @@ app.get('/admin/security/blocked-ips', async (c) => {
     const { env } = c;
     let blockedIps: any = { results: [] };
     
+    let stats: any = { total_blocked: 0, auto_blocks: 0, manual_blocks: 0, active_blocks: 0 };
+
     // Try to get blocked IPs from database
     try {
       if (env.DB) {
@@ -17814,7 +17814,7 @@ app.get('/admin/security/blocked-ips', async (c) => {
     `).all()
 
         // Get statistics
-        const stats = await env.DB.prepare(`
+        stats = await env.DB.prepare(`
           SELECT 
             COUNT(*) as total_blocked,
             SUM(CASE WHEN block_type = 'automatic' THEN 1 ELSE 0 END) as auto_blocks,
@@ -25307,7 +25307,7 @@ app.get('/api/tracking/:id', async (c) => {
         o.order_number,
         o.total,
         u.email as customer_email,
-        u.name as customer_name
+        (COALESCE(u.first_name, '') || ' ' || COALESCE(u.last_name, '')) as customer_name
       FROM tracking_numbers tn
       LEFT JOIN orders o ON tn.order_id = o.id
       LEFT JOIN users u ON o.user_id = u.id
@@ -26561,7 +26561,7 @@ app.get('/api/invoices', async (c) => {
     const status = c.req.query('status');
     
     let query = `
-      SELECT i.*, u.email as customer_email, u.name as customer_name
+      SELECT i.*, u.email as customer_email, (COALESCE(u.first_name, '') || ' ' || COALESCE(u.last_name, '')) as customer_name
       FROM invoices i
       LEFT JOIN users u ON i.user_id = u.id
       WHERE 1=1
@@ -26589,7 +26589,7 @@ app.get('/api/invoices/:id', async (c) => {
     const id = c.req.param('id');
     
     const invoice = await env.DB.prepare(`
-      SELECT i.*, u.email as customer_email, u.name as customer_name, u.address
+      SELECT i.*, u.email as customer_email, (COALESCE(u.first_name, '') || ' ' || COALESCE(u.last_name, '')) as customer_name
       FROM invoices i
       LEFT JOIN users u ON i.user_id = u.id
       WHERE i.id = ?

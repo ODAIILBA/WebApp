@@ -195,18 +195,21 @@ export function LanguageSwitcher(currentLang = 'de') {
       // Load Available Languages
       async function loadAvailableLanguages() {
         try {
-          const response = await axios.get('/api/languages/active');
-          availableLanguages = response.data.languages || [];
+          const res = await fetch('/api/languages/active');
+          const data = await res.json();
+          availableLanguages = data.languages || [];
           renderLanguageOptions();
         } catch (error) {
           console.error('Error loading languages:', error);
-          document.getElementById('languageOptions').innerHTML = '<div class="loading-lang" style="color: #ef4444;"><i class="fas fa-exclamation-circle"></i> Error</div>';
+          const el = document.getElementById('languageOptions');
+          if (el) el.innerHTML = '<div class="loading-lang" style="color: #ef4444;"><i class="fas fa-exclamation-circle"></i> Error</div>';
         }
       }
       
       // Render Language Options
       function renderLanguageOptions() {
         const container = document.getElementById('languageOptions');
+        if (!container) return;
         
         if (availableLanguages.length === 0) {
           container.innerHTML = '<div class="loading-lang">No languages</div>';
@@ -232,18 +235,21 @@ export function LanguageSwitcher(currentLang = 'de') {
           localStorage.setItem('language', code); // For admin i18n compatibility
           
           // Save to backend
-          await axios.post('/api/user/language', { language_code: code });
+          await fetch('/api/user/language', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ language_code: code }) });
           
           // Load translations for the new language
-          const translationsResponse = await axios.get(\`/api/translations/\${code}\`);
-          if (translationsResponse.data.success) {
-            localStorage.setItem('translations', JSON.stringify(translationsResponse.data.translations));
+          const translationsRes = await fetch(\`/api/translations/\${code}\`);
+          const translationsResponse = await translationsRes.json();
+          if (translationsResponse.success) {
+            localStorage.setItem('translations', JSON.stringify(translationsResponse.translations));
             localStorage.setItem('currentLanguage', code);
           }
           
           // Update UI
-          document.getElementById('currentLangFlag').textContent = flag;
-          document.getElementById('currentLangCode').textContent = code.toUpperCase();
+          const flagEl2 = document.getElementById('currentLangFlag');
+          const codeEl2 = document.getElementById('currentLangCode');
+          if (flagEl2) flagEl2.textContent = flag;
+          if (codeEl2) codeEl2.textContent = code.toUpperCase();
           currentLanguage = code;
           
           // Close dropdown
@@ -266,7 +272,7 @@ export function LanguageSwitcher(currentLang = 'de') {
           }
           
           // Apply translations immediately
-          applyTranslations(translationsResponse.data.translations);
+          if (translationsResponse.translations) applyTranslations(translationsResponse.translations);
           
           // Dispatch custom event for admin panel i18n
           window.dispatchEvent(new CustomEvent('languageChanged', { 
@@ -315,21 +321,25 @@ export function LanguageSwitcher(currentLang = 'de') {
           const savedLang = localStorage.getItem('selectedLanguage') || 'de';
           
           // Load translations from API
-          const translationsResponse = await axios.get(\`/api/translations/\${savedLang}\`);
-          if (translationsResponse.data.success) {
-            localStorage.setItem('translations', JSON.stringify(translationsResponse.data.translations));
+          const translationsRes = await fetch(\`/api/translations/\${savedLang}\`);
+          const translationsData = await translationsRes.json();
+          if (translationsData.success) {
+            localStorage.setItem('translations', JSON.stringify(translationsData.translations));
             localStorage.setItem('currentLanguage', savedLang);
-            applyTranslations(translationsResponse.data.translations);
+            applyTranslations(translationsData.translations);
           }
           
           // Load language info
-          const response = await axios.get('/api/languages/active');
-          const languages = response.data.languages || [];
+          const langRes = await fetch('/api/languages/active');
+          const langData = await langRes.json();
+          const languages = langData.languages || [];
           const lang = languages.find(l => l.code === savedLang) || languages.find(l => l.is_default) || languages[0];
           
           if (lang) {
-            document.getElementById('currentLangFlag').textContent = lang.flag_emoji || '🇩🇪';
-            document.getElementById('currentLangCode').textContent = lang.code.toUpperCase();
+            const flagEl = document.getElementById('currentLangFlag');
+            const codeEl = document.getElementById('currentLangCode');
+            if (flagEl) flagEl.textContent = lang.flag_emoji || '🇩🇪';
+            if (codeEl) codeEl.textContent = lang.code.toUpperCase();
             currentLanguage = lang.code;
           }
         } catch (error) {
