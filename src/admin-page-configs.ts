@@ -215,6 +215,31 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
     ]
   },
 
+  '/admin/legal-pages': {
+    path: '/admin/legal-pages',
+    title: 'Rechtliche Seiten',
+    icon: 'gavel',
+    iconColor: 'red',
+    description: 'Impressum, Datenschutz, AGB und weitere Pflichtseiten verwalten',
+    dbQuery: `SELECT id, title, slug, template, is_published, created_at FROM pages ORDER BY created_at DESC LIMIT 50`,
+    statsCards: [
+      { label: 'Seiten gesamt', query: 'SELECT COUNT(*) as count FROM pages', color: 'text-indigo-600', icon: 'file-alt' },
+      { label: 'Veröffentlicht', query: 'SELECT COUNT(*) as count FROM pages WHERE is_published = 1', color: 'text-green-600', icon: 'check' },
+      { label: 'Entwürfe', query: 'SELECT COUNT(*) as count FROM pages WHERE is_published = 0', color: 'text-yellow-600', icon: 'edit' }
+    ],
+    tableColumns: [
+      { key: 'title', label: 'Titel' },
+      { key: 'slug', label: 'Slug / URL' },
+      { key: 'template', label: 'Template' },
+      { key: 'is_published', label: 'Status', format: 'badge' },
+      { key: 'created_at', label: 'Erstellt', format: 'date' }
+    ],
+    actions: [
+      { label: 'Neue Seite erstellen', icon: 'plus', color: 'green', action: "window.location.href='/admin/pages/add'" },
+      { label: 'Aktualisieren', icon: 'sync', color: 'blue', action: 'refreshPage()' }
+    ]
+  },
+
   // ============================================
   // ORDERS SECTION
   // ============================================
@@ -565,15 +590,16 @@ export const adminPageConfigs: Record<string, AdminPageConfig> = {
     icon: 'file-alt',
     iconColor: 'teal',
     description: 'E-Mail-Templates verwalten',
+    dbQuery: 'SELECT id, name, subject, category, is_active FROM email_templates ORDER BY category ASC, name ASC',
     statsCards: [
-      { label: 'Templates', color: 'text-teal-600', icon: 'file-alt' },
-      { label: 'Aktiv', color: 'text-green-600', icon: 'check' }
+      { label: 'Templates', color: 'text-teal-600', icon: 'file-alt', query: 'SELECT COUNT(*) as count FROM email_templates' },
+      { label: 'Aktiv', color: 'text-green-600', icon: 'check', query: 'SELECT COUNT(*) as count FROM email_templates WHERE is_active = 1' }
     ],
     tableColumns: [
       { key: 'name', label: 'Template-Name' },
       { key: 'subject', label: 'Betreff' },
-      { key: 'type', label: 'Typ' },
-      { key: 'status', label: 'Status', format: 'badge' }
+      { key: 'category', label: 'Kategorie' },
+      { key: 'is_active', label: 'Status', format: 'badge' }
     ],
     actions: [
       { label: 'Neue Vorlage', icon: 'plus', color: 'green', action: 'addNew()' }

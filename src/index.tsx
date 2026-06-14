@@ -12355,8 +12355,115 @@ app.get('/admin/custom-css/preview/:id', async (c) => {
 
 // Custom JavaScript Management
 app.get('/admin/custom-js', async (c) => {
-  const html = AdminCustomJS()
-  return c.html(html)
+  let scripts: any[] = []
+  try {
+    const result = await c.env.DB.prepare('SELECT * FROM custom_js ORDER BY priority ASC, created_at DESC').all()
+    scripts = result.results as any[]
+  } catch (e) {}
+  const total = scripts.length
+  const active = scripts.filter((s: any) => s.is_active).length
+  const header = scripts.filter((s: any) => s.placement === 'header').length
+  const footer = scripts.filter((s: any) => s.placement === 'footer').length
+  return c.html(`<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Custom JavaScript - Admin - SOFTWAREKING24</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gray-50">
+${AdminSidebarAdvanced('/admin/custom-js')}
+<div style="margin-left:280px;padding:2rem;min-height:100vh;" class="admin-main-content">
+  <div class="max-w-6xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-800"><i class="fas fa-code mr-3 text-yellow-500"></i>Custom JavaScript verwalten</h1>
+        <p class="text-gray-500 mt-1">Fügen Sie benutzerdefiniertes JavaScript hinzu: Analytics, Widgets, Tracking & mehr</p>
+      </div>
+      <a href="/admin/custom-js/new" class="bg-yellow-500 hover:bg-yellow-600 text-white px-5 py-2 rounded-lg font-semibold transition-colors">
+        <i class="fas fa-plus mr-2"></i>Neues JS hinzufügen
+      </a>
+    </div>
+    <div class="grid grid-cols-4 gap-4 mb-6">
+      <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+        <div class="text-gray-500 text-sm mb-1">Gesamt Scripts</div>
+        <div class="text-3xl font-bold text-gray-800">${total}</div>
+        <i class="fas fa-code text-gray-300 text-2xl mt-2"></i>
+      </div>
+      <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+        <div class="text-gray-500 text-sm mb-1">Aktive Scripts</div>
+        <div class="text-3xl font-bold text-green-600">${active}</div>
+        <i class="fas fa-check-circle text-green-200 text-2xl mt-2"></i>
+      </div>
+      <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+        <div class="text-gray-500 text-sm mb-1">Header Scripts</div>
+        <div class="text-3xl font-bold text-blue-600">${header}</div>
+        <i class="fas fa-arrow-up text-blue-200 text-2xl mt-2"></i>
+      </div>
+      <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+        <div class="text-gray-500 text-sm mb-1">Footer Scripts</div>
+        <div class="text-3xl font-bold text-purple-600">${footer}</div>
+        <i class="fas fa-arrow-down text-purple-200 text-2xl mt-2"></i>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+      <div class="p-5 border-b border-gray-100">
+        <h2 class="text-lg font-semibold text-gray-800"><i class="fas fa-list mr-2 text-gray-400"></i>JavaScript Snippets</h2>
+      </div>
+      ${scripts.length === 0 ? `
+      <div class="text-center py-16 text-gray-400">
+        <i class="fas fa-code text-5xl mb-4"></i>
+        <p class="text-lg">Noch keine JavaScript-Snippets vorhanden</p>
+        <p class="text-sm mt-2">Fügen Sie Analytics, Tracking oder Widget-Skripte hinzu</p>
+      </div>` : `
+      <div class="overflow-x-auto">
+        <table class="w-full">
+          <thead class="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
+            <tr>
+              <th class="px-6 py-3 text-left">Name</th>
+              <th class="px-6 py-3 text-left">Platzierung</th>
+              <th class="px-6 py-3 text-left">Ausführung</th>
+              <th class="px-6 py-3 text-left">Priorität</th>
+              <th class="px-6 py-3 text-left">Status</th>
+              <th class="px-6 py-3 text-left">Aktionen</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-50">
+            ${scripts.map((s: any) => `
+            <tr class="hover:bg-gray-50 transition-colors">
+              <td class="px-6 py-4">
+                <div class="font-semibold text-gray-800">${s.name || ''}</div>
+                <div class="text-xs text-gray-400">${s.description || ''}</div>
+              </td>
+              <td class="px-6 py-4">
+                <span class="px-2 py-1 rounded text-xs font-medium ${s.placement === 'header' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'}">
+                  ${s.placement === 'header' ? '↑ Header' : '↓ Footer'}
+                </span>
+              </td>
+              <td class="px-6 py-4 text-sm text-gray-600">${s.execution_type || 'immediate'}</td>
+              <td class="px-6 py-4 text-sm text-gray-600">${s.priority || 50}</td>
+              <td class="px-6 py-4">
+                <span class="px-2 py-1 rounded-full text-xs font-semibold ${s.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}">
+                  ${s.is_active ? 'Aktiv' : 'Inaktiv'}
+                </span>
+              </td>
+              <td class="px-6 py-4">
+                <div class="flex gap-2">
+                  <a href="/admin/custom-js/${s.id}/edit" class="text-blue-500 hover:text-blue-700 text-sm"><i class="fas fa-edit"></i></a>
+                  <a href="/admin/custom-js/preview/${s.id}" target="_blank" class="text-yellow-500 hover:text-yellow-700 text-sm"><i class="fas fa-eye"></i></a>
+                </div>
+              </td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>`}
+    </div>
+  </div>
+</div>
+</body>
+</html>`)
 })
 
 // Custom JavaScript Preview - Full page preview of a specific JS snippet
@@ -12485,9 +12592,74 @@ app.get('/admin/notifications', (c) => {
 })
 
 // Email Templates
-app.get('/admin/email-templates', (c) => {
-  const html = AdminEmailTemplates()
-  return c.html(html)
+app.get('/admin/email-templates', async (c) => {
+  let templates: any[] = []
+  try {
+    const result = await c.env.DB.prepare('SELECT * FROM email_templates ORDER BY category ASC, name ASC').all()
+    templates = result.results as any[]
+  } catch (e) {}
+  const categories = [...new Set(templates.map((t: any) => t.category).filter(Boolean))]
+  return c.html(`<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>E-Mail-Vorlagen - Admin - SOFTWAREKING24</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gray-50">
+${AdminSidebarAdvanced('/admin/email-templates')}
+<div style="margin-left:280px;padding:2rem;min-height:100vh;" class="admin-main-content">
+  <div class="max-w-5xl mx-auto">
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-gray-800"><i class="fas fa-envelope mr-3 text-blue-500"></i>E-Mail-Vorlagen verwalten</h1>
+      <p class="text-gray-500 mt-1">Bearbeiten Sie E-Mail-Vorlagen mit Live-Vorschau</p>
+    </div>
+    <div class="grid grid-cols-3 gap-4 mb-6">
+      <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+        <div class="text-gray-500 text-sm mb-1">Vorlagen gesamt</div>
+        <div class="text-3xl font-bold text-gray-800">${templates.length}</div>
+      </div>
+      <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+        <div class="text-gray-500 text-sm mb-1">Aktiv</div>
+        <div class="text-3xl font-bold text-green-600">${templates.filter((t: any) => t.is_active).length}</div>
+      </div>
+      <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+        <div class="text-gray-500 text-sm mb-1">Kategorien</div>
+        <div class="text-3xl font-bold text-blue-600">${categories.length}</div>
+      </div>
+    </div>
+    ${templates.length === 0 ? `
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 text-center py-16 text-gray-400">
+      <i class="fas fa-envelope-open text-5xl mb-4"></i>
+      <p class="text-lg">Keine E-Mail-Vorlagen gefunden</p>
+    </div>` : `
+    <div class="space-y-4">
+      ${templates.map((t: any) => `
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 hover:shadow-md transition-shadow">
+        <div class="flex items-start justify-between">
+          <div class="flex-1">
+            <div class="flex items-center gap-3 mb-2">
+              <h3 class="text-lg font-semibold text-gray-800">${t.name || ''}</h3>
+              ${t.is_active ? '<span class="px-2 py-0.5 bg-green-100 text-green-700 text-xs rounded-full font-semibold">Aktiv</span>' : '<span class="px-2 py-0.5 bg-gray-100 text-gray-500 text-xs rounded-full font-semibold">Inaktiv</span>'}
+              ${t.category ? `<span class="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">${t.category}</span>` : ''}
+            </div>
+            ${t.description ? `<p class="text-sm text-gray-500 mb-2">${t.description}</p>` : ''}
+            <div class="text-sm text-gray-600"><i class="fas fa-envelope mr-2 text-gray-400"></i><strong>Betreff:</strong> ${t.subject || ''}</div>
+            <div class="text-xs text-gray-400 mt-1"><i class="fas fa-code mr-2"></i>${t.body_html ? (t.body_html.length / 1000).toFixed(1) + 'KB HTML-Inhalt' : 'Kein Inhalt'}</div>
+          </div>
+          <div class="flex gap-2 ml-4">
+            <a href="/admin/email-templates/${t.id}/edit" class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded-lg transition-colors"><i class="fas fa-edit mr-1"></i>Bearbeiten</a>
+          </div>
+        </div>
+        ${t.variables ? `<div class="mt-3 p-3 bg-gray-50 rounded-lg text-xs text-gray-500"><i class="fas fa-brackets-curly mr-2"></i>Variablen: ${t.variables}</div>` : ''}
+      </div>`).join('')}
+    </div>`}
+  </div>
+</div>
+</body>
+</html>`)
 })
 
 // Cookies Management
@@ -12888,13 +13060,198 @@ app.get('/admin/sliders', (c) => {
 })
 
 // Admin Homepage Sections Management
-app.get('/admin/homepage-sections', (c) => {
-  return c.html(<AdminHomepageSectionsAdvanced />)
+app.get('/admin/homepage-sections', async (c) => {
+  let sections: any[] = []
+  try {
+    const result = await c.env.DB.prepare('SELECT * FROM homepage_sections ORDER BY sort_order ASC').all()
+    sections = result.results as any[]
+  } catch (e) {}
+  const active = sections.filter((s: any) => s.is_enabled).length
+  return c.html(`<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Homepage-Sektionen - Admin - SOFTWAREKING24</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gray-50">
+${AdminSidebarAdvanced('/admin/homepage-sections')}
+<div style="margin-left:280px;padding:2rem;min-height:100vh;" class="admin-main-content">
+  <div class="max-w-5xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-800"><i class="fas fa-th-large mr-3 text-yellow-500"></i>Homepage-Sektionen</h1>
+        <p class="text-gray-500 mt-1">Gestalten Sie die Startseite mit Drag &amp; Drop</p>
+      </div>
+      <div class="flex gap-3">
+        <button onclick="window.location.reload()" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg text-sm font-semibold transition-colors">
+          <i class="fas fa-check mr-2"></i>Alle aktivieren
+        </button>
+        <button onclick="window.location.href='/admin/homepage'" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-semibold transition-colors">
+          <i class="fas fa-home mr-2"></i>Zur Homepage
+        </button>
+      </div>
+    </div>
+    <div class="grid grid-cols-4 gap-4 mb-6">
+      <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+        <div class="text-gray-500 text-sm mb-1">Gesamt</div>
+        <div class="text-3xl font-bold text-gray-800">${sections.length}</div>
+      </div>
+      <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+        <div class="text-gray-500 text-sm mb-1">Aktiv</div>
+        <div class="text-3xl font-bold text-green-600">${active}</div>
+      </div>
+      <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+        <div class="text-gray-500 text-sm mb-1">Inaktiv</div>
+        <div class="text-3xl font-bold text-gray-400">${sections.length - active}</div>
+      </div>
+      <div class="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+        <div class="text-gray-500 text-sm mb-1">Produkte</div>
+        <div class="text-3xl font-bold text-blue-600">0</div>
+      </div>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+      <div class="p-5 border-b border-gray-100 flex items-center justify-between">
+        <h2 class="text-lg font-semibold text-gray-800"><i class="fas fa-list mr-2 text-gray-400"></i>Sektionen</h2>
+        <button class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white text-sm rounded-lg font-semibold transition-colors">
+          <i class="fas fa-plus mr-2"></i>Neue Sektion
+        </button>
+      </div>
+      ${sections.length === 0 ? `
+      <div class="text-center py-16 text-gray-400">
+        <i class="fas fa-inbox text-5xl mb-4"></i>
+        <p class="text-lg">Keine Sektionen vorhanden</p>
+        <p class="text-sm mt-2">Erstellen Sie Ihre erste Homepage-Sektion</p>
+      </div>` : `
+      <div class="divide-y divide-gray-50">
+        ${sections.map((s: any, i: number) => `
+        <div class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
+          <div class="text-gray-300 cursor-move"><i class="fas fa-grip-vertical text-xl"></i></div>
+          <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center text-yellow-600 font-bold text-sm">${i + 1}</div>
+          <div class="flex-1">
+            <div class="font-semibold text-gray-800">${s.title || s.section_key || ''}</div>
+            <div class="text-sm text-gray-500">${s.subtitle || s.section_key || ''}</div>
+          </div>
+          <span class="px-2 py-1 rounded-full text-xs font-semibold ${s.is_enabled ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}">
+            ${s.is_enabled ? 'Aktiv' : 'Inaktiv'}
+          </span>
+          <div class="flex gap-2">
+            <button class="text-blue-500 hover:text-blue-700 text-sm px-2 py-1"><i class="fas fa-edit"></i></button>
+            <button class="text-gray-400 hover:text-gray-600 text-sm px-2 py-1"><i class="fas fa-toggle-on"></i></button>
+          </div>
+        </div>`).join('')}
+      </div>`}
+    </div>
+  </div>
+</div>
+</body>
+</html>`)
 })
 
 // Admin Homepage Manager (Dynamic Content)
-app.get('/admin/homepage', (c) => {
-  return c.html(<AdminHomepageManager />)
+app.get('/admin/homepage', async (c) => {
+  let sliders: any[] = []
+  let sections: any[] = []
+  try {
+    const [sliderRes, sectionRes] = await Promise.all([
+      c.env.DB.prepare('SELECT * FROM hero_sliders ORDER BY sort_order ASC').all().catch(() => ({ results: [] })),
+      c.env.DB.prepare('SELECT * FROM homepage_sections ORDER BY sort_order ASC').all().catch(() => ({ results: [] }))
+    ])
+    sliders = sliderRes.results as any[]
+    sections = sectionRes.results as any[]
+  } catch (e) {}
+  return c.html(`<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Homepage Verwaltung - Admin - SOFTWAREKING24</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gray-50">
+${AdminSidebarAdvanced('/admin/homepage')}
+<div style="margin-left:280px;padding:2rem;min-height:100vh;" class="admin-main-content">
+  <div class="max-w-6xl mx-auto">
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold text-gray-800"><i class="fas fa-home mr-3 text-yellow-500"></i>Homepage Verwaltung</h1>
+      <p class="text-gray-500 mt-1">Verwalten Sie Hero-Slides, Navigation, Produkt-Sektionen und mehr</p>
+    </div>
+    <div class="flex gap-2 mb-6 bg-white rounded-xl shadow-sm border border-gray-100 p-2">
+      <button onclick="showTab('slides')" id="tab-slides" class="tab-btn px-4 py-2 rounded-lg font-semibold text-sm bg-blue-600 text-white">
+        <i class="fas fa-images mr-2"></i>Hero Slides
+      </button>
+      <button onclick="showTab('sections')" id="tab-sections" class="tab-btn px-4 py-2 rounded-lg font-semibold text-sm text-gray-500 hover:bg-gray-50">
+        <i class="fas fa-th-large mr-2"></i>Sektionen
+      </button>
+    </div>
+    <div id="pane-slides">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-gray-800"><i class="fas fa-images mr-2 text-blue-500"></i>Hero Slides</h2>
+        <a href="/admin/sliders" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-semibold transition-colors">
+          <i class="fas fa-external-link-alt mr-2"></i>Slider-Manager öffnen
+        </a>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100">
+        <div class="overflow-x-auto">
+          <table class="w-full">
+            <thead class="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
+              <tr>
+                <th class="px-6 py-3 text-left">Titel</th>
+                <th class="px-6 py-3 text-left">CTA Text</th>
+                <th class="px-6 py-3 text-left">Farbe</th>
+                <th class="px-6 py-3 text-left">Status</th>
+                <th class="px-6 py-3 text-left">Aktionen</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+              ${sliders.length === 0 ? `<tr><td colspan="5" class="px-6 py-12 text-center text-gray-400">Keine Slides vorhanden. <a href="/admin/sliders" class="text-blue-500 hover:underline">Slider-Manager öffnen</a></td></tr>` :
+              sliders.map((s: any) => `
+              <tr class="hover:bg-gray-50">
+                <td class="px-6 py-4 font-medium text-gray-800">${s.title || ''}</td>
+                <td class="px-6 py-4 text-sm text-gray-600">${s.cta_text || '-'}</td>
+                <td class="px-6 py-4"><div class="w-6 h-6 rounded" style="background:${s.overlay_color || '#000'}"></div></td>
+                <td class="px-6 py-4"><span class="px-2 py-1 rounded-full text-xs font-semibold ${s.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}">${s.is_active ? 'Aktiv' : 'Inaktiv'}</span></td>
+                <td class="px-6 py-4"><a href="/admin/sliders/${s.id}/edit" class="text-blue-500 text-sm"><i class="fas fa-edit"></i></a></td>
+              </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div id="pane-sections" style="display:none">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold text-gray-800"><i class="fas fa-th-large mr-2 text-yellow-500"></i>Homepage-Sektionen</h2>
+        <a href="/admin/homepage-sections" class="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-sm font-semibold transition-colors">
+          <i class="fas fa-external-link-alt mr-2"></i>Sektionen-Manager
+        </a>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 divide-y divide-gray-50">
+        ${sections.length === 0 ? `<div class="text-center py-12 text-gray-400"><i class="fas fa-inbox text-4xl mb-3"></i><p>Keine Sektionen vorhanden</p></div>` :
+        sections.map((s: any) => `
+        <div class="flex items-center gap-4 p-4 hover:bg-gray-50">
+          <div class="flex-1"><div class="font-medium text-gray-800">${s.title || s.section_key || ''}</div><div class="text-sm text-gray-500">${s.subtitle || ''}</div></div>
+          <span class="px-2 py-1 rounded-full text-xs font-semibold ${s.is_enabled ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}">${s.is_enabled ? 'Aktiv' : 'Inaktiv'}</span>
+        </div>`).join('')}
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  function showTab(tab) {
+    document.getElementById('pane-slides').style.display = tab === 'slides' ? 'block' : 'none';
+    document.getElementById('pane-sections').style.display = tab === 'sections' ? 'block' : 'none';
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('bg-blue-600','text-white'));
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.add('text-gray-500'));
+    const active = document.getElementById('tab-' + tab);
+    active.classList.add('bg-blue-600','text-white');
+    active.classList.remove('text-gray-500');
+  }
+</script>
+</body>
+</html>`)
 })
 
 // Import API endpoint (no auth for now - accessed from admin panel)
@@ -13232,8 +13589,70 @@ app.get('/admin/notifications', (c) => {
 })
 
 // Footer Management
-app.get('/admin/footer', (c) => {
-  return c.html(AdminFooterSettings())
+app.get('/admin/footer', async (c) => {
+  let settings: any[] = []
+  try {
+    const result = await c.env.DB.prepare('SELECT * FROM footer_settings WHERE is_active = 1 ORDER BY sort_order ASC').all()
+    settings = result.results as any[]
+  } catch (e) {}
+  return c.html(`<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Footer-Einstellungen - Admin - SOFTWAREKING24</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet" />
+</head>
+<body class="bg-gray-50">
+${AdminSidebarAdvanced('/admin/footer')}
+<div style="margin-left:280px;padding:2rem;min-height:100vh;" class="admin-main-content">
+  <div class="max-w-5xl mx-auto">
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h1 class="text-3xl font-bold text-gray-800"><i class="fas fa-shoe-prints mr-3 text-yellow-500"></i>Footer-Einstellungen</h1>
+        <p class="text-gray-500 mt-1">Verwalten Sie Footer-Sektionen, Links und Inhalte</p>
+      </div>
+      <button onclick="alert('Gespeichert!')" class="px-5 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-semibold transition-colors">
+        <i class="fas fa-save mr-2"></i>Alle speichern
+      </button>
+    </div>
+    <div class="space-y-4">
+      ${settings.map((s: any) => {
+        let links: any[] = []
+        try { links = JSON.parse(s.links || '[]') } catch(e) {}
+        return `
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold text-gray-800">
+            <i class="fas fa-columns mr-2 text-yellow-500"></i>${s.section_title}
+          </h2>
+          <span class="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">${s.section_key}</span>
+        </div>
+        ${s.content ? `<p class="text-gray-600 text-sm mb-3 p-3 bg-gray-50 rounded-lg">${s.content}</p>` : ''}
+        ${links.length > 0 ? `
+        <div>
+          <div class="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Links</div>
+          <div class="space-y-2">
+            ${links.map((l: any) => `
+            <div class="flex items-center gap-3 p-2 bg-gray-50 rounded-lg">
+              <i class="fas fa-link text-gray-400 text-xs"></i>
+              <span class="text-sm font-medium text-gray-700">${l.label}</span>
+              <span class="text-xs text-gray-400">${l.url}</span>
+            </div>`).join('')}
+          </div>
+        </div>` : ''}
+      </div>`}).join('')}
+    </div>
+    ${settings.length === 0 ? `
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 text-center py-16 text-gray-400">
+      <i class="fas fa-shoe-prints text-5xl mb-4"></i>
+      <p class="text-lg">Keine Footer-Sektionen gefunden</p>
+    </div>` : ''}
+  </div>
+</div>
+</body>
+</html>`)
 })
 
 // Pages Management
@@ -13243,10 +13662,7 @@ app.get('/admin/footer', (c) => {
 // })
 
 // Email Templates
-app.get('/admin/email-templates', (c) => {
-  const html = AdminEmailTemplates();
-  return c.html(html);
-})
+// duplicate email-templates route removed - active route above at /admin/email-templates
 
 // Cookies Management
 app.get('/admin/cookies', (c) => {
@@ -29511,6 +29927,157 @@ app.get('/admin/themes', async (c) => {
 app.get('/admin/*', async (c) => {
   const path = c.req.path;
   const config = adminPageConfigs[path];
+
+  // Special handling for pages/add - render a form (no config needed)
+  if (path === '/admin/pages/add') {
+    const formHtml = `<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Neue Seite erstellen - Admin - SOFTWAREKING24</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"/>
+</head>
+<body class="bg-gray-50">
+  ${AdminSidebarAdvanced('/admin/pages/add')}
+  <div style="margin-left:280px;padding:2rem;min-height:100vh;" class="admin-main-content">
+    <div class="max-w-3xl mx-auto">
+      <div class="mb-6 flex items-center justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800"><i class="fas fa-plus-circle mr-3 text-green-500"></i>Neue Seite erstellen</h1>
+          <p class="text-gray-500 mt-1">CMS-Seite hinzufügen</p>
+        </div>
+        <a href="/admin/pages" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors text-sm">
+          <i class="fas fa-arrow-left mr-2"></i>Zurück zu Seiten
+        </a>
+      </div>
+      <div id="alert" class="hidden mb-4 p-4 rounded-lg text-sm font-semibold"></div>
+      <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+        <form id="pageForm" class="space-y-5">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Titel <span class="text-red-500">*</span></label>
+            <input type="text" name="title" id="title" required
+              class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-gray-800"
+              placeholder="z.B. Impressum" oninput="generateSlug()"/>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Slug / URL <span class="text-red-500">*</span></label>
+            <div class="flex items-center gap-2">
+              <span class="text-gray-400 text-sm">/</span>
+              <input type="text" name="slug" id="slug" required
+                class="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-gray-800"
+                placeholder="z.B. impressum"/>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Template</label>
+              <select name="template" id="template"
+                class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-gray-800">
+                <option value="standard">Standard</option>
+                <option value="legal">Rechtlich (legal)</option>
+                <option value="landing">Landing Page</option>
+                <option value="minimal">Minimal</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Status</label>
+              <select name="is_published" id="is_published"
+                class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-gray-800">
+                <option value="0">Entwurf</option>
+                <option value="1">Veröffentlicht</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1">Inhalt (HTML)</label>
+            <textarea name="content" id="content" rows="12"
+              class="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-gray-800 font-mono text-sm"
+              placeholder="HTML-Inhalt der Seite..."></textarea>
+          </div>
+          <div class="border-t border-gray-100 pt-5">
+            <h3 class="text-sm font-semibold text-gray-700 mb-3"><i class="fas fa-search mr-2 text-gray-400"></i>SEO-Einstellungen (optional)</h3>
+            <div class="space-y-3">
+              <div>
+                <label class="block text-sm text-gray-600 mb-1">Meta-Titel</label>
+                <input type="text" name="meta_title" id="meta_title"
+                  class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-gray-800 text-sm"
+                  placeholder="SEO-Titel der Seite"/>
+              </div>
+              <div>
+                <label class="block text-sm text-gray-600 mb-1">Meta-Beschreibung</label>
+                <textarea name="meta_description" id="meta_description" rows="2"
+                  class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-400 text-gray-800 text-sm"
+                  placeholder="Kurze Beschreibung für Suchmaschinen (max. 160 Zeichen)"></textarea>
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-3 pt-2">
+            <button type="submit"
+              class="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-colors">
+              <i class="fas fa-save mr-2"></i>Seite speichern
+            </button>
+            <a href="/admin/pages" class="px-6 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg transition-colors">
+              Abbrechen
+            </a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <script>
+    function generateSlug() {
+      const title = document.getElementById('title').value;
+      const slug = title.toLowerCase()
+        .replace(/[äöüß]/g, c => ({'ä':'ae','ö':'oe','ü':'ue','ß':'ss'}[c]))
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      document.getElementById('slug').value = slug;
+    }
+    document.getElementById('pageForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const alertEl = document.getElementById('alert');
+      const btn = e.target.querySelector('button[type="submit"]');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Speichern...';
+      const data = {
+        title: document.getElementById('title').value,
+        slug: document.getElementById('slug').value,
+        content: document.getElementById('content').value,
+        template: document.getElementById('template').value,
+        meta_title: document.getElementById('meta_title').value || null,
+        meta_description: document.getElementById('meta_description').value || null,
+        is_published: parseInt(document.getElementById('is_published').value)
+      };
+      try {
+        const res = await fetch('/api/admin/pages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const json = await res.json();
+        if (res.ok || json.success) {
+          alertEl.className = 'mb-4 p-4 rounded-lg text-sm font-semibold bg-green-100 text-green-800';
+          alertEl.textContent = 'Seite erfolgreich erstellt!';
+          alertEl.classList.remove('hidden');
+          setTimeout(() => { window.location.href = '/admin/pages'; }, 1200);
+        } else {
+          throw new Error(json.error || json.message || 'Fehler beim Speichern');
+        }
+      } catch (err) {
+        alertEl.className = 'mb-4 p-4 rounded-lg text-sm font-semibold bg-red-100 text-red-800';
+        alertEl.textContent = 'Fehler: ' + err.message;
+        alertEl.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save mr-2"></i>Seite speichern';
+      }
+    });
+  </script>
+</body>
+</html>`;
+    return c.html(formHtml);
+  }
   
   // If no config found, show placeholder
   if (!config) {
@@ -29566,7 +30133,7 @@ app.get('/admin/*', async (c) => {
 
       return c.html(html);
     }
-    
+
     let data: any[] = [];
     let stats: any = {};
 
