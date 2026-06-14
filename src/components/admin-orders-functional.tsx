@@ -301,15 +301,15 @@ export function AdminOrdersFunctional() {
                 });
 
                 if (search) params.append('search', search);
-                if (status) params.append('order_status', status);
+                if (status) params.append('status', status);
                 if (paymentStatus) params.append('payment_status', paymentStatus);
 
                 const response = await AdminUtils.get(\`/api/admin/orders?\${params.toString()}\`);
                 
                 if (response.success) {
-                    allOrders = response.data || [];
+                    allOrders = response.data?.orders || [];
                     renderOrders(allOrders);
-                    renderPagination(response.pagination);
+                    renderPagination(response.data?.pagination);
                 } else {
                     AdminNotify.error(response.error || 'Fehler beim Laden der Bestellungen');
                 }

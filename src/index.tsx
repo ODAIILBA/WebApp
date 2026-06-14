@@ -6401,6 +6401,75 @@ app.get('/api/admin/orders', async (c) => {
   }
 })
 
+// Orders stats summary (BEFORE /:id to avoid wildcard capture)
+app.get('/api/admin/orders/stats', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const stats = await db.db.prepare(`
+      SELECT
+        COUNT(*) as total,
+        SUM(CASE WHEN order_status = 'pending' THEN 1 ELSE 0 END) as pending,
+        SUM(CASE WHEN order_status = 'processing' THEN 1 ELSE 0 END) as processing,
+        SUM(CASE WHEN order_status = 'completed' THEN 1 ELSE 0 END) as completed,
+        SUM(CASE WHEN order_status = 'cancelled' THEN 1 ELSE 0 END) as cancelled,
+        COALESCE(SUM(CASE WHEN payment_status = 'completed' THEN total ELSE 0 END), 0) as total_revenue,
+        COALESCE(AVG(total), 0) as avg_order_value
+      FROM orders
+    `).first()
+    return c.json({ success: true, data: stats || {} })
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// Orders CSV export (BEFORE /:id to avoid wildcard capture)
+app.get('/api/admin/orders/export', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const orders = await db.db.prepare(`
+      SELECT order_number, email, first_name, last_name, country,
+             order_status, payment_status, payment_method,
+             subtotal, tax, discount, total, created_at
+      FROM orders ORDER BY created_at DESC LIMIT 5000
+    `).all()
+    const rows = orders.results || []
+    const header = 'Bestellnummer,E-Mail,Vorname,Nachname,Land,Status,Zahlung,Zahlungsmethode,Netto,MwSt,Rabatt,Gesamt,Datum'
+    const csv = [header, ...rows.map((o: any) =>
+      [o.order_number, o.email, o.first_name, o.last_name, o.country,
+       o.order_status, o.payment_status, o.payment_method,
+       o.subtotal, o.tax, o.discount, o.total, o.created_at].map(v => `"${v ?? ''}"`).join(',')
+    )].join('\n')
+    return new Response(csv, { headers: {
+      'Content-Type': 'text/csv; charset=utf-8',
+      'Content-Disposition': `attachment; filename="orders_${new Date().toISOString().split('T')[0]}.csv"`
+    }})
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
+// PATCH order status (used by sub-pages; PUT already exists for full update)
+app.patch('/api/admin/orders/:id', async (c) => {
+  try {
+    const db = c.get('db') as DatabaseHelper
+    const orderId = c.req.param('id')
+    const body: any = await c.req.json()
+    const fields: string[] = []
+    const params: any[] = []
+    if (body.order_status !== undefined) { fields.push('order_status = ?'); params.push(body.order_status) }
+    if (body.payment_status !== undefined) { fields.push('payment_status = ?'); params.push(body.payment_status) }
+    if (body.status !== undefined) { fields.push('order_status = ?'); params.push(body.status) }
+    if (body.notes !== undefined) { fields.push('notes = ?'); params.push(body.notes) }
+    if (fields.length === 0) return c.json({ success: false, error: 'No fields to update' }, 400)
+    fields.push('updated_at = CURRENT_TIMESTAMP')
+    params.push(orderId)
+    await db.db.prepare(`UPDATE orders SET ${fields.join(', ')} WHERE id = ?`).bind(...params).run()
+    return c.json({ success: true, message: 'Order updated' })
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500)
+  }
+})
+
 // READ: Get single order
 app.get('/api/admin/orders/:id', async (c) => {
   try {
@@ -13027,9 +13096,34 @@ app.get('/admin/licenses/import', (c) => {
 })
 
 // Invoice Management
-app.get('/admin/invoices', (c) => {
-  const html = AdminInvoices()
-  return c.html(html)
+app.get('/admin/invoices', async (c) => {
+  const { env } = c
+  let invoices: any[] = []
+  let stats = { total: 0, pending: 0, paid: 0, total_amount: 0 }
+  try {
+    const r = await env.DB.prepare(`
+      SELECT i.*, o.order_number, u.email, u.first_name, u.last_name
+      FROM invoices i
+      LEFT JOIN orders o ON i.order_id = o.id
+      LEFT JOIN users u ON i.user_id = u.id
+      ORDER BY i.created_at DESC LIMIT 50
+    `).all()
+    invoices = r.results || []
+    const s = await env.DB.prepare(`
+      SELECT COUNT(*) as total,
+        SUM(CASE WHEN status IN ('draft','sent') THEN 1 ELSE 0 END) as pending,
+        SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as paid,
+        COALESCE(SUM(total), 0) as total_amount
+      FROM invoices
+    `).first()
+    if (s) stats = s as any
+  } catch(e) {}
+  const statusBadge = (s: string) => {
+    const m: Record<string,string> = { draft: 'bg-gray-100 text-gray-800', sent: 'bg-blue-100 text-blue-800', paid: 'bg-green-100 text-green-800', overdue: 'bg-red-100 text-red-800', cancelled: 'bg-gray-100 text-gray-800' }
+    const l: Record<string,string> = { draft: 'Entwurf', sent: 'Versendet', paid: 'Bezahlt', overdue: 'Überfällig', cancelled: 'Storniert' }
+    return `<span class="px-2 py-1 text-xs rounded-full ${m[s] || 'bg-gray-100 text-gray-800'}">${l[s] || s}</span>`
+  }
+  return c.html(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Rechnungen - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"></head><body class="bg-gray-50">${AdminSidebarAdvanced('/admin/invoices')}<div style="margin-left:280px;padding:2rem"><div class="mb-6 flex justify-between items-center"><div><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-file-invoice mr-3 text-indigo-600"></i>Rechnungen</h1><p class="text-gray-600">Alle Rechnungen verwalten</p></div><button onclick="window.print()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"><i class="fas fa-print mr-2"></i>Drucken</button></div><div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Rechnungen</p><p class="text-2xl font-bold">${(stats as any).total || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Ausstehend</p><p class="text-2xl font-bold text-yellow-600">${(stats as any).pending || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Bezahlt</p><p class="text-2xl font-bold text-green-600">${(stats as any).paid || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt Betrag</p><p class="text-2xl font-bold text-indigo-600">€${parseFloat((stats as any).total_amount || 0).toFixed(2)}</p></div></div><div class="bg-white rounded-lg shadow"><div class="p-6 border-b"><h2 class="text-xl font-semibold">Alle Rechnungen</h2></div><table class="w-full"><thead class="bg-gray-50 border-b"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Rechnungsnr.</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bestellnr.</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kunde</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Datum</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Betrag</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Aktionen</th></tr></thead><tbody>${invoices.length > 0 ? invoices.map((inv: any) => `<tr class="hover:bg-gray-50 border-b"><td class="px-6 py-4 font-mono text-sm font-medium">${inv.invoice_number}</td><td class="px-6 py-4 text-sm text-gray-600">${inv.order_number || '-'}</td><td class="px-6 py-4"><div class="font-medium">${inv.first_name || ''} ${inv.last_name || ''}</div><div class="text-sm text-gray-500">${inv.email || ''}</div></td><td class="px-6 py-4 text-sm text-gray-600">${inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString('de-DE') : '-'}</td><td class="px-6 py-4 font-semibold">€${parseFloat(inv.total || 0).toFixed(2)}</td><td class="px-6 py-4">${statusBadge(inv.status)}</td><td class="px-6 py-4"><a href="/admin/invoices/${inv.id}/preview" class="text-blue-600 hover:text-blue-800 mr-3" target="_blank"><i class="fas fa-eye"></i></a></td></tr>`).join('') : '<tr><td colspan="7" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-file-invoice text-6xl mb-4 text-gray-300 block"></i><p class="text-lg">Keine Rechnungen vorhanden</p></td></tr>'}</tbody></table></div></div></body></html>`)
 })
 
 // Reports & Analytics
@@ -16157,6 +16251,35 @@ app.get('/admin/customer-profiles', async (c) => {
   `)
 })
 
+// SHIPPING STATUS (Digital delivery tracking overview)
+app.get('/admin/shipping-status', async (c) => {
+  const { env } = c
+  let stats = { total: 0, pending: 0, sent: 0, delivered: 0 }
+  let recentOrders: any[] = []
+  try {
+    const s = await env.DB.prepare(`
+      SELECT
+        COUNT(*) as total,
+        SUM(CASE WHEN order_status = 'pending' THEN 1 ELSE 0 END) as pending,
+        SUM(CASE WHEN order_status = 'processing' THEN 1 ELSE 0 END) as sent,
+        SUM(CASE WHEN order_status = 'completed' THEN 1 ELSE 0 END) as delivered
+      FROM orders
+    `).first()
+    if (s) stats = s as any
+    const r = await env.DB.prepare(`
+      SELECT id, order_number, email, first_name, last_name, order_status, payment_status, total, created_at
+      FROM orders ORDER BY created_at DESC LIMIT 20
+    `).all()
+    recentOrders = r.results || []
+  } catch(e) {}
+  const statusBadge = (s: string) => {
+    const m: Record<string,string> = { pending: 'bg-yellow-100 text-yellow-800', processing: 'bg-blue-100 text-blue-800', completed: 'bg-green-100 text-green-800', cancelled: 'bg-red-100 text-red-800' }
+    const l: Record<string,string> = { pending: 'Ausstehend', processing: 'Versendet', completed: 'Geliefert', cancelled: 'Storniert' }
+    return `<span class="px-2 py-1 text-xs rounded-full ${m[s] || 'bg-gray-100 text-gray-800'}">${l[s] || s}</span>`
+  }
+  return c.html(`<!DOCTYPE html><html lang="de"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Versandstatus - Admin</title><script src="https://cdn.tailwindcss.com"></script><link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet"></head><body class="bg-gray-50"><div>${AdminSidebarAdvanced('/admin/shipping-status')}</div><div style="margin-left:280px;padding:2rem"><div class="mb-6 flex justify-between items-center"><div><h1 class="text-3xl font-bold text-gray-800 mb-2"><i class="fas fa-truck mr-3 text-indigo-600"></i>Versandstatus (Digital)</h1><p class="text-gray-600">Digitale Lieferungen und Bestellstatus verwalten</p></div><a href="/admin/orders" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700"><i class="fas fa-list mr-2"></i>Alle Bestellungen</a></div><div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6"><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Gesamt</p><p class="text-2xl font-bold">${(stats as any).total || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Ausstehend</p><p class="text-2xl font-bold text-yellow-600">${(stats as any).pending || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">In Bearbeitung</p><p class="text-2xl font-bold text-blue-600">${(stats as any).sent || 0}</p></div><div class="bg-white rounded-lg shadow p-6"><p class="text-gray-500 text-sm">Abgeschlossen</p><p class="text-2xl font-bold text-green-600">${(stats as any).delivered || 0}</p></div></div><div class="bg-white rounded-lg shadow"><div class="p-6 border-b flex justify-between items-center"><h2 class="text-xl font-semibold">Aktuelle Bestellungen</h2><p class="text-sm text-gray-500">Digitale Produkte werden sofort nach Zahlungseingang geliefert</p></div><table class="w-full"><thead class="bg-gray-50 border-b"><tr><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Bestellnr.</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Kunde</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Betrag</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Zahlung</th><th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Datum</th></tr></thead><tbody>${recentOrders.length > 0 ? recentOrders.map((o: any) => `<tr class="hover:bg-gray-50 border-b"><td class="px-6 py-4 font-mono text-sm">${o.order_number || '-'}</td><td class="px-6 py-4"><div class="font-medium">${o.first_name || ''} ${o.last_name || ''}</div><div class="text-sm text-gray-500">${o.email}</div></td><td class="px-6 py-4 font-semibold">€${parseFloat(o.total || 0).toFixed(2)}</td><td class="px-6 py-4">${statusBadge(o.order_status)}</td><td class="px-6 py-4">${o.payment_status === 'completed' ? '<span class="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">Bezahlt</span>' : '<span class="px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-800">Ausstehend</span>'}</td><td class="px-6 py-4 text-sm text-gray-600">${new Date(o.created_at).toLocaleDateString('de-DE')}</td></tr>`).join('') : '<tr><td colspan="6" class="px-6 py-12 text-center text-gray-500"><i class="fas fa-truck text-6xl mb-4 text-gray-300"></i><p class="text-lg">Keine Bestellungen vorhanden</p></td></tr>'}</tbody></table></div></div></body></html>`)
+})
+
 // REFUNDS MANAGEMENT PAGE
 app.get('/admin/refunds', async (c) => {
   const db = c.get('db') as DatabaseHelper
@@ -16182,7 +16305,7 @@ app.get('/admin/refunds', async (c) => {
         <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
     </head>
     <body class="bg-gray-50">
-        $<div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced('/admin/refunds')}} />
+        ${AdminSidebarAdvanced('/admin/refunds')}
         <div class="ml-64 p-8">
             <div class="mb-8">
                 <h1 class="text-3xl font-bold text-gray-900 mb-2">
@@ -25707,10 +25830,10 @@ app.get('/api/reports/export', async (c) => {
       const headers = ['Order ID', 'Customer', 'Email', 'Total', 'Status', 'Date', 'Items'];
       const rows = (orders.results || []).map((o: any) => [
         o.id,
-        o.customer_name,
-        o.customer_email,
-        o.total_amount,
-        o.status,
+        `${o.first_name || ''} ${o.last_name || ''}`.trim() || o.email,
+        o.email,
+        o.total,
+        o.order_status,
         o.created_at,
         o.items
       ]);
