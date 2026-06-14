@@ -14494,11 +14494,7 @@ app.get('/admin/invoices', async (c) => {
 
 // Reports & Analytics
 app.get('/admin/reports', (c) => {
-  return c.html(
-    <AdminLayout title="Reports & Analytics" currentUser={{ first_name: 'Admin' }}>
-      <AdminReports />
-    </AdminLayout>
-  )
+  return c.html(AdminReports())
 })
 
 // Contact Messages Management
