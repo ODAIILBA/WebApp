@@ -303,15 +303,29 @@ export function AdminSidebarAdvanced(currentPath: string = '/admin') {
     }
   ];
 
+  // Fuzzy path match: exact OR same last slug (e.g. /admin/security/firewall ↔ /admin/firewall)
+  function pathMatches(menuPath: string | undefined, actual: string): boolean {
+    if (!menuPath) return false;
+    if (menuPath === actual) return true;
+    const mSegs = menuPath.split('/').filter(Boolean);
+    const aSegs = actual.split('/').filter(Boolean);
+    return mSegs[mSegs.length - 1] === aSegs[aSegs.length - 1] && mSegs[0] === aSegs[0];
+  }
+
+  function isChildActive(children: any[], actual: string): boolean {
+    return children?.some((child: any) =>
+      pathMatches(child.path, actual) ||
+      (child.children && isChildActive(child.children, actual))
+    ) ?? false;
+  }
+
   // Generate hierarchical menu HTML
   function generateMenuHTML(items: any[], level: number = 0, parentId: string = ''): string {
     return items.map((item, index) => {
       const itemId = item.id || `${parentId}-${index}`;
       const hasChildren = item.children && item.children.length > 0;
-      const isActive = currentPath === item.path;
-      const isParentActive = item.children?.some((child: any) => 
-        child.path === currentPath || child.children?.some((subChild: any) => subChild.path === currentPath)
-      );
+      const isActive = pathMatches(item.path, currentPath);
+      const isParentActive = hasChildren && isChildActive(item.children, currentPath);
 
       if (hasChildren) {
         return `
@@ -866,25 +880,17 @@ export function AdminSidebarAdvanced(currentPath: string = '/admin') {
         document.addEventListener('DOMContentLoaded', () => {
           // Load saved sidebar state
           loadSidebarState();
-          
-          // Load saved section states
+
+          // Load saved section states from localStorage
           loadSectionStates();
-          
-          // Auto-expand active sections
-          const activePath = window.location.pathname;
-          const activeItem = document.querySelector(\`.menu-item[data-path="\${activePath}"]\`);
-          
-          if (activeItem) {
-            let parent = activeItem.closest('.menu-children');
-            while (parent) {
-              parent.classList.add('expanded');
-              const header = parent.previousElementSibling;
-              if (header && header.classList.contains('menu-header')) {
-                header.classList.add('active');
-              }
-              parent = parent.parentElement.closest('.menu-children');
+
+          // Persist any sections already expanded server-side (via isParentActive)
+          document.querySelectorAll('.menu-children.expanded').forEach(el => {
+            const section = el.closest('[data-section]');
+            if (section) {
+              saveSectionState(section.getAttribute('data-section'), true);
             }
-          }
+          });
         });
       </script>
     </div>
