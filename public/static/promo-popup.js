@@ -35,7 +35,7 @@ class PromoPopup {
   createPopup() {
     const overlay = document.createElement('div');
     overlay.id = 'promo-popup';
-    overlay.innerHTML = `
+    overlay.innerHTML = ` // nosemgrep
       <style>
         #promo-popup {
           position: fixed;

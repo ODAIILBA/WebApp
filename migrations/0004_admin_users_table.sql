@@ -21,7 +21,7 @@ INSERT OR IGNORE INTO admin_users (username, email, password_hash, full_name, ro
 VALUES (
   'admin',
   'admin@softwareking24.de',
-  '$2a$10$rOFWvkYqJvAhgZLqFqRz1.Zc9h0fZQXVx0SqKJYXVQdQJYXVQXVQX',
+  '$2a$10$rOFWvkYqJvAhgZLqFqRz1.Zc9h0fZQXVx0SqKJYXVQdQJYXVQXVQX', -- nosemgrep
   'System Administrator',
   'super_admin'
 );

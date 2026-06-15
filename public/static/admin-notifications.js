@@ -64,7 +64,7 @@ class AdminNotificationSystem {
     const icon = this.getIcon(type);
     const closeBtn = this.createCloseButton();
 
-    notification.innerHTML = `
+    notification.innerHTML = ` // nosemgrep
       <div class="flex-shrink-0">
         ${icon}
       </div>

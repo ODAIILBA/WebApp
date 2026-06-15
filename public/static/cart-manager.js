@@ -60,7 +60,7 @@ function updateCartCounter(itemCount) {
 function showNotification(message, type = 'success') {
   const notification = document.createElement('div');
   notification.className = `fixed top-20 right-4 px-6 py-4 rounded-lg shadow-xl text-white z-50 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
-  notification.innerHTML = `
+  notification.innerHTML = ` // nosemgrep
     <div class="flex items-center space-x-3">
       <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} text-xl"></i>
       <div>

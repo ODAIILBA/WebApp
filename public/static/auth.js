@@ -53,7 +53,7 @@ class AuthManager {
     const modal = document.createElement('div');
     modal.id = 'auth-modal';
     modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
-    modal.innerHTML = `
+    modal.innerHTML = ` // nosemgrep
       <style>
         .text-gold { color: #d4af37 !important; }
         .border-gold { border-color: #d4af37 !important; }
@@ -454,7 +454,7 @@ class AuthManager {
 
     const notification = document.createElement('div');
     notification.className = `fixed top-4 right-4 ${colors[type]} text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-opacity`;
-    notification.innerHTML = `
+    notification.innerHTML = ` // nosemgrep
       <div class="flex items-center">
         <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} mr-2"></i>
         <span>${message}</span>

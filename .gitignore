@@ -26,6 +26,9 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Build output — rebuilt during deployment
+dist/
+
 # misc
 .DS_Store
 

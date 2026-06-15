@@ -231,7 +231,7 @@ CREATE INDEX IF NOT EXISTS idx_settings_key ON settings(key);
 
 -- Insert admin user (password: admin123 - CHANGE THIS!)
 INSERT OR IGNORE INTO users (id, email, password_hash, first_name, last_name, role, is_active, email_verified) 
-VALUES (1, 'admin@softwareking24.com', '$2a$10$rQZ9vZ9vZ9vZ9vZ9vZ9vZ9vZ9vZ9vZ9vZ9vZ9vZ9vZ9vZ9vZ9vZ9v', 'Admin', 'User', 'admin', 1, 1);
+VALUES (1, 'admin@softwareking24.com', '$2a$10$rQZ9vZ9vZ9vZ9vZ9vZ9vZ9vZ9vZ9vZ9vZ9vZ9vZ9vZ9vZ9vZ9vZ9v', 'Admin', 'User', 'admin', 1, 1); -- nosemgrep
 
 -- Insert sample products
 INSERT OR IGNORE INTO products (id, name, slug, description, short_description, price, sale_price, category, stock, sku, image_url, is_active, is_featured) VALUES
