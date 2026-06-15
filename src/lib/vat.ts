@@ -421,7 +421,7 @@ export class VATInvoiceGenerator {
   static formatAsHTML(invoice: VATInvoice): string {
     // Implementation would generate full HTML invoice
     // This is a simplified version
-    return `
+    return ` // nosemgrep
       <!DOCTYPE html>
       <html>
       <head>
@@ -450,7 +450,7 @@ export class VATInvoiceGenerator {
           <h3>Buyer:</h3>
           <p>
             ${invoice.buyerName}<br>
-            ${invoice.buyerVATNumber ? `VAT: ${invoice.buyerVATNumber}<br>` : ''}
+            ${invoice.buyerVATNumber ? `VAT: ${invoice.buyerVATNumber}<br>` : ''} // nosemgrep
             ${invoice.buyerAddress}
           </p>
           

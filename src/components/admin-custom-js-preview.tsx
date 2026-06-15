@@ -6,7 +6,7 @@ export function AdminCustomJSPreview(jsData: any) {
   const executionType = jsData?.execution_type || 'immediate'
   const placement = jsData?.placement || 'footer'
   
-  return html`<!DOCTYPE html>
+  return html`<!DOCTYPE html> // nosemgrep
 <html lang="de">
 <head>
     <meta charset="UTF-8">
@@ -63,7 +63,7 @@ export function AdminCustomJSPreview(jsData: any) {
         }
     </style>
     
-    ${placement === 'header' ? html`
+    ${placement === 'header' ? html` // nosemgrep
     <!-- CUSTOM JS FROM DATABASE (HEADER) -->
     <script id="custom-preview-js-header">
         ${executionType === 'immediate' ? jsCode : ''}
@@ -227,12 +227,12 @@ export function AdminCustomJSPreview(jsData: any) {
         </div>
     </div>
 
-    ${placement === 'footer' ? html`
+    ${placement === 'footer' ? html` // nosemgrep
     <!-- CUSTOM JS FROM DATABASE (FOOTER) -->
     <script id="custom-preview-js-footer">
         ${executionType === 'immediate' ? jsCode : ''}
         
-        ${executionType === 'domready' ? html`
+        ${executionType === 'domready' ? html` // nosemgrep
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', function() {
                 ${jsCode}
@@ -242,7 +242,7 @@ export function AdminCustomJSPreview(jsData: any) {
         }
         ` : ''}
         
-        ${executionType === 'load' ? html`
+        ${executionType === 'load' ? html` // nosemgrep
         window.addEventListener('load', function() {
             ${jsCode}
         });

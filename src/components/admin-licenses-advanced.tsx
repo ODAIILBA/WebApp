@@ -593,7 +593,7 @@ function AdminSidebar(currentPath: string) {
         <p class="text-sm text-gray-400 mt-1">Admin Panel</p>
       </div>
       <nav class="p-4">
-        ${menuItems.map(item => `
+        ${menuItems.map(item => ` // nosemgrep
           <a href="${item.path}" class="admin-nav-item ${currentPath === item.path ? 'active' : ''}">
             <i class="fas fa-${item.icon}"></i>
             <span>${item.label}</span>

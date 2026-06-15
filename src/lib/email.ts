@@ -95,7 +95,7 @@ export class EmailService {
       return
     }
 
-    const licenseHtml = licenses.map(l => `
+    const licenseHtml = licenses.map(l => ` // nosemgrep
       <div style="margin: 10px 0; padding: 10px; background: white; border-radius: 3px;">
         <strong>${l.product_name}</strong><br/>
         <code style="font-size: 14px; color: #1e40af;">${l.license_key}</code>

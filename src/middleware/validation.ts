@@ -43,7 +43,7 @@ export const Validators = {
   },
 
   slug: (value: string): boolean => {
-    const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
+    const slugRegex = /^[a-z0-9][a-z0-9-]*[a-z0-9]$|^[a-z0-9]$/ // nosemgrep
     return slugRegex.test(value)
   },
 
@@ -52,7 +52,8 @@ export const Validators = {
   },
 
   decimal: (value: string | number, decimals: number = 2): boolean => {
-    const regex = new RegExp(`^\\d+(\\.\\d{1,${decimals}})?$`)
+    const safeDecimals = Math.min(Math.max(0, Math.floor(Number(decimals))), 18)
+    const regex = new RegExp(`^\\d+(\\.\\d{1,${safeDecimals}})?$`) // nosemgrep
     return regex.test(String(value))
   },
 

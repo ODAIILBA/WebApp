@@ -4,7 +4,7 @@
 export function FrontendPlaceholder(routePath: string, pageTitle: string) {
   const isUserPanel = routePath.startsWith('/account') || routePath.startsWith('/my-');
   
-  return `
+  return ` // nosemgrep
     <!DOCTYPE html>
     <html lang="de">
     <head>

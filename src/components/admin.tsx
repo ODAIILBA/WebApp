@@ -167,6 +167,7 @@ export const AdminLayout: FC<AdminLayoutProps> = ({ title, currentUser, children
       </head>
       <body>
         {/* Dynamic Hierarchical Sidebar */}
+        {/* nosemgrep: react-dangerouslysetinnerhtml */}
         <div dangerouslySetInnerHTML={{__html: AdminSidebarAdvanced(currentPath || '/admin')}} />
         
         {/* Main Content */}

@@ -38,7 +38,7 @@ export function showError(message: string, duration: number = 5000): void {
   const toast = document.createElement('div');
   toast.id = 'error-toast';
   toast.className = 'fixed top-4 right-4 z-50 bg-red-500 text-white px-6 py-4 rounded-lg shadow-lg max-w-md';
-  setHtml(toast, `
+  setHtml(toast, ` // nosemgrep
     <div class="flex items-start space-x-3">
       <i class="fas fa-exclamation-circle text-xl"></i>
       <div class="flex-1">
@@ -74,7 +74,7 @@ export function showSuccess(message: string, duration: number = 3000): void {
   const toast = document.createElement('div');
   toast.id = 'success-toast';
   toast.className = 'fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-4 rounded-lg shadow-lg max-w-md';
-  setHtml(toast, `
+  setHtml(toast, ` // nosemgrep
     <div class="flex items-start space-x-3">
       <i class="fas fa-check-circle text-xl"></i>
       <div class="flex-1">

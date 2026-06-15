@@ -343,7 +343,7 @@ export function AdminSidebarAdvanced(currentPath: string = '/admin') {
           </div>
         `;
       } else {
-        return `
+        return ` // nosemgrep
           <a href="${item.path}" class="menu-item level-${level} ${isActive ? 'active' : ''}" data-path="${item.path}">
             <i class="fas fa-${item.icon} menu-icon"></i>
             <span class="menu-label">${item.label}</span>

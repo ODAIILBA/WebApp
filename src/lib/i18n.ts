@@ -518,7 +518,11 @@ export function t(key: string, lang: Language = DEFAULT_LANGUAGE, params?: Recor
   let value: any = translations[lang];
   
   for (const k of keys) {
-    value = value?.[k];
+    if (!k || k === '__proto__' || k === 'constructor' || k === 'prototype') {
+      console.warn(`Translation missing: ${key} (${lang})`);
+      return key;
+    }
+    value = value?.[k]; // nosemgrep
     if (value === undefined) {
       console.warn(`Translation missing: ${key} (${lang})`);
       return key;

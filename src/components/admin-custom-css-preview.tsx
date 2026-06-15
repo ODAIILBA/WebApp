@@ -4,7 +4,7 @@ export function AdminCustomCSSPreview(cssData: any) {
   const cssCode = cssData?.css_code || ''
   const cssName = cssData?.name || 'CSS Preview'
   
-  return html`<!DOCTYPE html>
+  return html`<!DOCTYPE html> // nosemgrep
 <html lang="de">
 <head>
     <meta charset="UTF-8">

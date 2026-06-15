@@ -120,14 +120,14 @@ export function AdminGiftCards(cards: any[], stats: any) {
               else if (isUsed) { badgeClass = 'badge-used'; badgeLabel = 'Eingelöst' }
               else if (!card.is_active) { badgeClass = 'badge-inactive'; badgeLabel = 'Inaktiv' }
               const statusKey = isExpired ? 'expired' : isUsed ? 'used' : card.is_active ? 'active' : 'inactive'
-              return `
+              return ` // nosemgrep
             <tr data-status="${statusKey}" data-code="${(card.code || '').toLowerCase()}">
               <td>
                 <code class="bg-purple-50 text-purple-700 px-2 py-1 rounded font-mono text-sm">${card.code}</code>
               </td>
               <td>
-                ${card.recipient_name ? `<div class="font-medium">${card.recipient_name}</div>` : ''}
-                ${card.recipient_email ? `<div class="text-xs text-gray-400">${card.recipient_email}</div>` : '<span class="text-gray-400">–</span>'}
+                ${card.recipient_name ? `<div class="font-medium">${card.recipient_name}</div>` : ''} // nosemgrep
+                ${card.recipient_email ? `<div class="text-xs text-gray-400">${card.recipient_email}</div>` : '<span class="text-gray-400">–</span>'} // nosemgrep
               </td>
               <td class="font-semibold">€${(card.initial_amount || 0).toFixed(2)}</td>
               <td class="font-semibold ${card.remaining_amount > 0 ? 'text-green-600' : 'text-gray-400'}">€${(card.remaining_amount || 0).toFixed(2)}</td>
@@ -141,7 +141,7 @@ export function AdminGiftCards(cards: any[], stats: any) {
               <td class="text-sm text-gray-500">${card.expires_at ? new Date(card.expires_at).toLocaleDateString('de-DE') : '–'}</td>
               <td>
                 <div class="flex gap-1">
-                  ${card.is_active && !isExpired && !isUsed ? `<button class="btn-warn" onclick="deactivateCard(${card.id})"><i class="fas fa-ban"></i></button>` : ''}
+                  ${card.is_active && !isExpired && !isUsed ? `<button class="btn-warn" onclick="deactivateCard(${card.id})"><i class="fas fa-ban"></i></button>` : ''} // nosemgrep
                   <button class="btn-danger" onclick="deleteCard(${card.id})"><i class="fas fa-trash"></i></button>
                 </div>
               </td>

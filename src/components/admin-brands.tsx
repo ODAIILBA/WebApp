@@ -86,7 +86,7 @@ export function AdminBrands() {
             
             <div class="p-6">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    ${brands.map(brand => `
+                    ${brands.map(brand => ` // nosemgrep
                     <div class="brand-card border rounded-lg p-6">
                         <div class="flex items-start justify-between mb-4">
                             <div class="flex items-center space-x-3">

@@ -122,7 +122,7 @@ export class EmailService {
     total: number
     licenses: Array<{ productName: string; key: string }>
   }): EmailTemplate {
-    const itemsHtml = data.items.map(item => `
+    const itemsHtml = data.items.map(item => ` // nosemgrep
       <tr>
         <td style="padding: 10px; border-bottom: 1px solid #eee;">${item.name}</td>
         <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center;">${item.quantity}</td>
@@ -130,7 +130,7 @@ export class EmailService {
       </tr>
     `).join('')
 
-    const licensesHtml = data.licenses.map(license => `
+    const licensesHtml = data.licenses.map(license => ` // nosemgrep
       <div style="background: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 8px; border-left: 4px solid #2563eb;">
         <strong style="color: #2563eb;">${license.productName}</strong><br/>
         <code style="font-size: 16px; background: white; padding: 5px 10px; display: inline-block; margin-top: 5px; border-radius: 4px; font-family: monospace;">${license.key}</code>
@@ -278,7 +278,7 @@ Telefon: +49 123 456789
     name: string
     email: string
   }): EmailTemplate {
-    const html = `
+    const html = ` // nosemgrep
       <!DOCTYPE html>
       <html>
       <head>

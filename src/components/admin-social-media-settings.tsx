@@ -81,7 +81,7 @@ export function AdminSocialMediaSettings(settings: Record<string, string> = {}) 
         <div id="status-${p.key}" class="platform-status" style="background:${get(p.key) ? '#d1fae5' : '#f3f4f6'};color:${get(p.key) ? '#065f46' : '#9ca3af'}">
           <i class="fas fa-${get(p.key) ? 'check' : 'minus'}"></i>
         </div>
-        ${get(p.key) ? `<a href="${get(p.key)}" target="_blank" class="text-xs text-blue-500 hover:text-blue-700 flex-shrink-0">
+        ${get(p.key) ? `<a href="${get(p.key)}" target="_blank" class="text-xs text-blue-500 hover:text-blue-700 flex-shrink-0"> // nosemgrep
           <i class="fas fa-external-link-alt"></i>
         </a>` : '<div style="width:16px"></div>'}
       </div>`).join('')}

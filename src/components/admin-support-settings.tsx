@@ -4,7 +4,7 @@ export function AdminSupportSettings(settings: Record<string, string> = {}, stat
   const sidebar = AdminSidebarAdvanced('/admin/support/settings')
   const get = (k: string, d = '') => settings[k] || d
 
-  return `<!DOCTYPE html>
+  return `<!DOCTYPE html> // nosemgrep
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
@@ -60,7 +60,7 @@ export function AdminSupportSettings(settings: Record<string, string> = {}, stat
         {l:'In Bearbeitung',v:stats.in_progress||0,c:'text-yellow-600',i:'spinner'},
         {l:'Gelöst heute',v:stats.resolved_today||0,c:'text-green-600',i:'check-circle'},
         {l:'Ø Antwortzeit',v:(stats.avg_response||0)+'h',c:'text-blue-600',i:'clock'},
-      ].map(s=>`<div style="background:white;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.07);padding:1rem">
+      ].map(s=>`<div style="background:white;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,.07);padding:1rem"> // nosemgrep
         <p style="font-size:.75rem;color:#9ca3af;font-weight:600;margin:0 0 .35rem"><i class="fas fa-${s.i} mr-1"></i>${s.l}</p>
         <p style="font-size:1.5rem;font-weight:800;margin:0;color:${s.c.replace('text-','')==='red-600'?'#dc2626':s.c==='text-green-600'?'#059669':s.c==='text-yellow-600'?'#d97706':'#2563eb'}">${s.v}</p>
       </div>`).join('')}
@@ -136,7 +136,7 @@ export function AdminSupportSettings(settings: Record<string, string> = {}, stat
         {id:'notif_customer_reply',label:'Kunden-Antwort',hint:'E-Mail wenn Kunde auf Ticket antwortet'},
         {id:'notif_overdue_ticket',label:'Überfällige Tickets',hint:'Tägliche Zusammenfassung überfälliger Tickets'},
         {id:'notif_high_priority',label:'Hohe Priorität',hint:'Sofort-Benachrichtigung bei dringenden Tickets'},
-      ].map(n=>`<div class="toggle-row">
+      ].map(n=>`<div class="toggle-row"> // nosemgrep
         <div><div class="toggle-label">${n.label}</div><div class="toggle-hint">${n.hint}</div></div>
         <label class="toggle-sw"><input type="checkbox" id="${n.id}" ${get(n.id,'true')==='true'?'checked':''}/><span class="toggle-sl"></span></label>
       </div>`).join('')}

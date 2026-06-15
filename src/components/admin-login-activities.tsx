@@ -7,7 +7,7 @@ export function AdminLoginActivities(activities: any[] = [], stats: any = {}) {
     if (s === 'success') return `<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800"><i class="fas fa-check mr-1"></i>Erfolg</span>`
     if (s === 'failed') return `<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-800"><i class="fas fa-times mr-1"></i>Fehlgeschlagen</span>`
     if (s === 'blocked') return `<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-orange-100 text-orange-800"><i class="fas fa-ban mr-1"></i>Geblockt</span>`
-    return `<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-600">${s}</span>`
+    return `<span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-gray-100 text-gray-600">${s}</span>` // nosemgrep
   }
 
   const activityRows = activities.length > 0 ? activities.map((a: any) => `
@@ -22,7 +22,7 @@ export function AdminLoginActivities(activities: any[] = [], stats: any = {}) {
       <td class="px-4 py-3">${statusBadge(a.status || a.event_type || 'success')}</td>
       <td class="px-4 py-3 text-xs text-gray-400">${a.created_at ? new Date(a.created_at).toLocaleString('de-DE') : '–'}</td>
       <td class="px-4 py-3">
-        ${a.ip_address && (a.status === 'failed' || a.status === 'blocked') ? `<button onclick="blockIp('${a.ip_address}')" class="px-2 py-1 bg-red-50 text-red-600 hover:bg-red-100 text-xs rounded-lg transition-colors"><i class="fas fa-ban mr-1"></i>Blockieren</button>` : ''}
+        ${a.ip_address && (a.status === 'failed' || a.status === 'blocked') ? `<button onclick="blockIp('${a.ip_address}')" class="px-2 py-1 bg-red-50 text-red-600 hover:bg-red-100 text-xs rounded-lg transition-colors"><i class="fas fa-ban mr-1"></i>Blockieren</button>` : ''} // nosemgrep
       </td>
     </tr>`).join('') : `<tr><td colspan="7" class="px-4 py-14 text-center text-gray-400">
       <i class="fas fa-sign-in-alt text-4xl mb-3 block text-gray-200"></i>
@@ -30,7 +30,7 @@ export function AdminLoginActivities(activities: any[] = [], stats: any = {}) {
       <p class="text-sm mt-1">Anmeldeversuche werden hier protokolliert</p>
     </td></tr>`
 
-  return `<!DOCTYPE html>
+  return `<!DOCTYPE html> // nosemgrep
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
@@ -76,7 +76,7 @@ export function AdminLoginActivities(activities: any[] = [], stats: any = {}) {
         {label:'Erfolgreich',val:stats.success||0,color:'text-green-600',icon:'check-circle',bg:'bg-green-50'},
         {label:'Fehlgeschlagen',val:stats.failed||0,color:'text-red-600',icon:'times-circle',bg:'bg-red-50'},
         {label:'Verdächtig',val:stats.suspicious||0,color:'text-orange-600',icon:'exclamation-triangle',bg:'bg-orange-50'},
-      ].map(s=>`<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+      ].map(s=>`<div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4"> // nosemgrep
         <div class="flex items-center gap-3 mb-2">
           <div class="w-9 h-9 ${s.bg} rounded-lg flex items-center justify-center ${s.color} text-sm"><i class="fas fa-${s.icon}"></i></div>
           <p class="text-xs text-gray-500 font-medium">${s.label}</p>

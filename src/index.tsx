@@ -10740,7 +10740,6 @@ app.get('/api/marketing/performance', async (c) => {
     const siteUrl = 'https://softwareking24.de' // Can be made configurable
     
     // Use Google PageSpeed Insights API (public, no auth required)
-    const apiKey = 'AIzaSyDummyKeyForDemo' // Replace with actual API key in production
     const apiUrl = `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url=${encodeURIComponent(siteUrl)}&strategy=mobile&category=performance`
     
     try {

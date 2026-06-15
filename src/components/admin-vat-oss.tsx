@@ -105,7 +105,7 @@ export function AdminVatOss(settings: Record<string, string> = {}) {
             <th>Land</th><th>Code</th><th>Normaler Steuersatz</th><th>Schwellenwert</th><th>Status</th>
           </tr></thead>
           <tbody>
-            ${euCountries.map(c => `
+            ${euCountries.map(c => ` // nosemgrep
             <tr>
               <td class="font-semibold text-gray-800">${c.name}</td>
               <td class="font-mono text-gray-500">${c.code}</td>

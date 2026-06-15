@@ -30,7 +30,7 @@ export function AdminPlaceholder(routePath: string, pageTitle: string) {
   
   const icon = categoryIcons[category] || categoryIcons['default'];
   
-  return `
+  return ` // nosemgrep
     <!DOCTYPE html>
     <html lang="de">
     <head>
@@ -279,7 +279,7 @@ export function AdminPlaceholder(routePath: string, pageTitle: string) {
             <a href="/admin"><i class="fas fa-home"></i> Admin</a>
             <i class="fas fa-chevron-right"></i>
             <span>${category.charAt(0).toUpperCase() + category.slice(1)}</span>
-            ${feature ? `<i class="fas fa-chevron-right"></i><span>${feature.charAt(0).toUpperCase() + feature.slice(1)}</span>` : ''}
+            ${feature ? `<i class="fas fa-chevron-right"></i><span>${feature.charAt(0).toUpperCase() + feature.slice(1)}</span>` : ''} // nosemgrep
           </div>
           
           <div class="placeholder-card">

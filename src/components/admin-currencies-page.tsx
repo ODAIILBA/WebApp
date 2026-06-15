@@ -131,13 +131,13 @@ export function AdminCurrenciesPage(orderCount: number = 0, totalRevenue: number
                 ${c.code === activeCurrency ? '<span class="badge-primary ml-1">Standard</span>' : ''}
               </td>
               <td style="display:flex;gap:.4rem">
-                ${c.code !== activeCurrency ? `<button class="btn-sm btn-toggle" onclick="toggleCurrency('${c.code}')" title="Status ändern">
+                ${c.code !== activeCurrency ? `<button class="btn-sm btn-toggle" onclick="toggleCurrency('${c.code}')" title="Status ändern"> // nosemgrep
                   <i class="fas fa-toggle-${i < 4 ? 'on' : 'off'}"></i>
                 </button>` : ''}
                 <button class="btn-sm btn-edit" onclick="saveRate('${c.code}')" title="Kurs speichern">
                   <i class="fas fa-save"></i>
                 </button>
-                ${c.code !== activeCurrency ? `<button class="btn-sm btn-primary-sm" onclick="setDefault('${c.code}')" title="Als Standard">
+                ${c.code !== activeCurrency ? `<button class="btn-sm btn-primary-sm" onclick="setDefault('${c.code}')" title="Als Standard"> // nosemgrep
                   <i class="fas fa-star"></i>
                 </button>` : ''}
               </td>

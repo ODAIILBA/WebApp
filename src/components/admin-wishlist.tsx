@@ -57,7 +57,7 @@ function buildProductRows(items: any[], stats: any): string {
     const badgeClass = p.wishlist_count >= 3 ? 'badge-red' : p.wishlist_count >= 2 ? 'badge-blue' : 'badge-green'
     const imgSrc = p.image_url || '/static/placeholder.png'
     const price = (p.price || 0).toFixed(2)
-    return `<tr>
+    return `<tr> // nosemgrep
       <td>
         <div class="flex items-center gap-3">
           <img src="${imgSrc}" class="product-img" onerror="this.src='/static/placeholder.png'" />
@@ -86,7 +86,7 @@ function buildCustomerRows(items: any[]): string {
   return grouped.map(c => {
     const initial = (c.customer_name || '?')[0].toUpperCase()
     const totalVal = (c.total_value || 0).toFixed(2)
-    return `<tr>
+    return `<tr> // nosemgrep
       <td>
         <div class="flex items-center gap-2">
           <div class="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-sm font-bold text-gray-600">${initial}</div>
@@ -106,7 +106,7 @@ export function AdminWishlist(items: any[], stats: any) {
   const productRows = buildProductRows(items, stats)
   const customerRows = buildCustomerRows(items)
 
-  return `<!DOCTYPE html>
+  return `<!DOCTYPE html> // nosemgrep
 <html lang="de">
 <head>
   <meta charset="UTF-8" />

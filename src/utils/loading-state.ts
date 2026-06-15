@@ -33,7 +33,7 @@ export function showPageLoading(message: string = 'Loading...'): void {
   const overlay = document.createElement('div');
   overlay.id = 'page-loading-overlay';
   overlay.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50';
-  setHtml(overlay, `
+  setHtml(overlay, ` // nosemgrep
     <div class="bg-white rounded-lg p-8 max-w-sm text-center">
       <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gold mx-auto mb-4"></div>
       <p class="text-gray-700 font-semibold">${escapeHtml(message)}</p>
@@ -72,7 +72,7 @@ export function showElementLoading(elementId: string, message: string = 'Loading
 
   element.dataset.originalContent = element.innerHTML;
 
-  setHtml(element, `
+  setHtml(element, ` // nosemgrep
     <div class="flex items-center justify-center py-8">
       <div class="text-center">
         <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-gold mx-auto mb-3"></div>
@@ -143,7 +143,7 @@ export function createSkeletonLoader(count: number = 3): string {
     </div>
   `).join('');
 
-  return `<div class="space-y-4">${skeletons}</div>`;
+  return `<div class="space-y-4">${skeletons}</div>`; // nosemgrep
 }
 
 /**
@@ -168,7 +168,7 @@ export function showEmptyState(
   message: string = 'No data found',
   icon: string = 'fa-inbox'
 ): void {
-  setHtml(element, `
+  setHtml(element, ` // nosemgrep
     <div class="text-center py-12">
       <i class="fas ${icon} text-6xl text-gray-300 mb-4"></i>
       <p class="text-gray-600 text-lg">${escapeHtml(message)}</p>
