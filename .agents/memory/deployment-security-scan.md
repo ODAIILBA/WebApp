@@ -3,6 +3,10 @@ name: Deployment security scan blockers
 description: Two independent security scans block Replit autoscale publish — semgrep SAST and npm dep audit. Both must pass.
 ---
 
+## Package firewall — native binary modules
+
+`better-sqlite3` (and similar native modules that download prebuilt platform binaries) will be flagged or blocked by the package firewall during the deployment security scan, causing silent 4-line failures. **Always remove unused native deps before deploying.** Check with `grep -r "better-sqlite3" src/` — if no hits, remove it.
+
 ## The two scanners
 
 The Replit autoscale deployment runs a security scan before building. It silently fails with only 4 log lines ("Running Security Scan" → "Security Scan Complete") if either scanner finds HIGH findings. The `runSastScan()` and `runDependencyAudit()` sandbox callbacks reflect the same checks.
