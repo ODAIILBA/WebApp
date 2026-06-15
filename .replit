@@ -42,5 +42,5 @@ externalPort = 80
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["npx", "wrangler", "pages", "dev", "dist", "--d1=webapp-production", "--local", "--ip", "0.0.0.0", "--port", "5000"]
-build = ["npm", "run", "build"]
+run = ["npx", "--yes", "wrangler", "pages", "dev", "dist", "--d1=webapp-production", "--local", "--ip", "0.0.0.0", "--port", "5000"]
+build = ["bash", "-c", "echo 'Using pre-built dist'"]

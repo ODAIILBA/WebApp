@@ -1,0 +1,1412 @@
+
+    <!DOCTYPE html>
+    <html lang="de">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Software Lizenzen kaufen – Original & Sofort verfügbar | SOFTWAREKING24</title>
+        <meta name="description" content="Günstige Software Lizenzen kaufen bei SOFTWAREKING24 ✓ Windows 11, Office 2024, Server 2025 ✓ Original-Lizenzen ✓ Sofortiger Download ✓ 100% Legal"/>
+        <meta name="keywords" content="software lizenzen kaufen, windows 11, office 2024, esd lizenzen, microsoft lizenzen, server software, antivirus, original software"/>
+        
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css" rel="stylesheet" />
+        <script src="https://cdn.jsdelivr.net/npm/axios@1.6.0/dist/axios.min.js"></script>
+        <script src="/static/cart-manager-enhanced.js"></script>
+        <link href="/static/search-autocomplete.css" rel="stylesheet" />
+        <script src="/static/search-autocomplete.js" defer></script>
+        
+        <!-- Swiper for Sliders -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+        <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+        
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+            
+            :root {
+                --navy: #001f3f;
+                --gold: #FFC107;
+                --white: #ffffff;
+                --light-gray: #f5f5f5;
+                --border: #e0e0e0;
+                --text: #333333;
+            }
+            
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            
+            body {
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+                background: var(--white);
+                color: var(--text);
+                line-height: 1.6;
+            }
+            
+            .container {
+                max-width: 1400px;
+                margin: 0 auto;
+                padding: 0 20px;
+            }
+            
+            /* Top Bar */
+            .top-bar {
+                background: var(--navy);
+                color: white;
+                padding: 10px 0;
+                font-size: 14px;
+            }
+            
+            .top-bar-content {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+            
+            .top-bar-left {
+                display: flex;
+                gap: 20px;
+                align-items: center;
+            }
+            
+            .lang-switch {
+                display: flex;
+                gap: 10px;
+            }
+            
+            .lang-btn {
+                background: transparent;
+                border: 1px solid rgba(255,255,255,0.3);
+                color: white;
+                padding: 5px 12px;
+                border-radius: 4px;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+            
+            .lang-btn:hover, .lang-btn.active {
+                background: var(--gold);
+                border-color: var(--gold);
+                color: var(--navy);
+            }
+            
+            /* Main Header */
+            .main-header {
+                background: white;
+                padding: 20px 0;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+                position: sticky;
+                top: 0;
+                z-index: 100;
+            }
+            
+            .header-content {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 40px;
+            }
+            
+            .logo {
+                flex-shrink: 0;
+            }
+            
+            .logo img {
+                height: 50px;
+            }
+            
+            .search-container {
+                flex: 1;
+                max-width: 600px;
+                position: relative;
+            }
+            
+            .search-box {
+                width: 100%;
+                padding: 12px 50px 12px 20px;
+                border: 2px solid var(--border);
+                border-radius: 30px;
+                font-size: 15px;
+                transition: all 0.3s;
+            }
+            
+            .search-box:focus {
+                outline: none;
+                border-color: var(--navy);
+                box-shadow: 0 0 0 3px rgba(0,31,63,0.1);
+            }
+            
+            .search-btn {
+                position: absolute;
+                right: 10px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: var(--gold);
+                border: none;
+                padding: 10px 20px;
+                border-radius: 20px;
+                cursor: pointer;
+                color: var(--navy);
+                font-weight: 600;
+                transition: all 0.3s;
+            }
+            
+            .search-btn:hover {
+                background: #FFA000;
+            }
+            
+            .header-actions {
+                display: flex;
+                gap: 20px;
+                align-items: center;
+            }
+            
+            .cart-btn {
+                position: relative;
+                background: var(--navy);
+                color: white;
+                padding: 12px 24px;
+                border-radius: 25px;
+                text-decoration: none;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                transition: all 0.3s;
+            }
+            
+            .cart-btn:hover {
+                background: #003366;
+                transform: translateY(-2px);
+            }
+            
+            .cart-count {
+                background: var(--gold);
+                color: var(--navy);
+                border-radius: 50%;
+                padding: 2px 8px;
+                font-size: 13px;
+                font-weight: bold;
+            }
+            
+            /* Navigation */
+            .navigation {
+                background: var(--light-gray);
+                border-bottom: 1px solid var(--border);
+            }
+            
+            .nav-container {
+                display: flex;
+                justify-content: center;
+                position: relative;
+            }
+            
+            .nav-menu {
+                display: flex;
+                gap: 5px;
+                list-style: none;
+                padding: 0;
+                margin: 0;
+            }
+            
+            .nav-item {
+                position: relative;
+            }
+            
+            .nav-link {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+                padding: 15px 20px;
+                text-decoration: none;
+                color: var(--text);
+                font-weight: 500;
+                font-size: 15px;
+                transition: all 0.3s;
+                border-radius: 8px;
+            }
+            
+            .nav-link:hover {
+                background: white;
+                color: var(--navy);
+            }
+            
+            .nav-link i {
+                font-size: 12px;
+                margin-left: 5px;
+                transition: transform 0.3s;
+            }
+            
+            .nav-item:hover .nav-link i {
+                transform: rotate(180deg);
+            }
+            
+            /* Mega Menu */
+            .mega-menu {
+                position: absolute;
+                top: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                background: white;
+                border-radius: 12px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+                padding: 30px;
+                min-width: 800px;
+                display: none;
+                z-index: 1000;
+                opacity: 0;
+                margin-top: 10px;
+                transition: opacity 0.3s, margin-top 0.3s;
+            }
+            
+            .nav-item:hover .mega-menu {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 30px;
+                opacity: 1;
+                margin-top: 0;
+            }
+            
+            .mega-menu-column h4 {
+                color: var(--navy);
+                font-size: 16px;
+                font-weight: 700;
+                margin-bottom: 15px;
+                border-bottom: 2px solid var(--gold);
+                padding-bottom: 10px;
+            }
+            
+            .mega-menu-column ul {
+                list-style: none;
+                padding: 0;
+            }
+            
+            .mega-menu-column li {
+                margin-bottom: 10px;
+            }
+            
+            .mega-menu-column a {
+                color: var(--text);
+                text-decoration: none;
+                font-size: 14px;
+                transition: all 0.3s;
+                display: block;
+                padding: 5px 10px;
+                border-radius: 6px;
+            }
+            
+            .mega-menu-column a:hover {
+                background: var(--light-gray);
+                color: var(--navy);
+                padding-left: 15px;
+            }
+            
+            /* Hero Section */
+            .hero-section {
+                position: relative;
+                overflow: hidden;
+                height: 600px;
+            }
+            
+            .hero-slide {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                opacity: 0;
+                transition: opacity 1s ease-in-out;
+                padding: 80px 0;
+            }
+            
+            .hero-slide.active {
+                opacity: 1;
+                z-index: 1;
+            }
+            
+            .hero-content {
+                max-width: 600px;
+                color: white;
+                z-index: 2;
+                position: relative;
+            }
+            
+            .hero-content h1 {
+                font-size: 48px;
+                font-weight: 900;
+                margin-bottom: 20px;
+                line-height: 1.2;
+            }
+            
+            .hero-content p {
+                font-size: 18px;
+                margin-bottom: 30px;
+                opacity: 0.95;
+            }
+            
+            .hero-cta {
+                background: var(--gold);
+                color: var(--navy);
+                padding: 16px 40px;
+                border-radius: 30px;
+                text-decoration: none;
+                font-weight: 700;
+                font-size: 17px;
+                display: inline-block;
+                transition: all 0.3s;
+            }
+            
+            .hero-cta:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 10px 30px rgba(255,193,7,0.4);
+            }
+            
+            /* Trust Bar */
+            .trust-bar {
+                background: white;
+                padding: 30px 0;
+                border-bottom: 1px solid var(--border);
+            }
+            
+            .trust-items {
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+                flex-wrap: wrap;
+                gap: 30px;
+            }
+            
+            .trust-item {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+            }
+            
+            .trust-item i {
+                font-size: 32px;
+                color: var(--navy);
+            }
+            
+            .trust-item-text h4 {
+                font-size: 16px;
+                font-weight: 700;
+                color: var(--navy);
+                margin-bottom: 5px;
+            }
+            
+            .trust-item-text p {
+                font-size: 13px;
+                color: #666;
+                margin: 0;
+            }
+            
+            /* Product Section */
+            .product-section {
+                padding: 80px 0;
+            }
+            
+            .section-header {
+                text-align: center;
+                margin-bottom: 50px;
+            }
+            
+            .section-header h2 {
+                font-size: 36px;
+                font-weight: 800;
+                color: var(--navy);
+                margin-bottom: 10px;
+            }
+            
+            .section-header p {
+                font-size: 16px;
+                color: #666;
+            }
+            
+            .products-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 30px;
+            }
+            
+            .product-card {
+                background: white;
+                border: 1px solid var(--border);
+                border-radius: 12px;
+                padding: 20px;
+                transition: all 0.3s;
+                cursor: pointer;
+            }
+            
+            .product-card:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+                border-color: var(--navy);
+            }
+            
+            .product-card img {
+                width: 100%;
+                height: 200px;
+                object-fit: contain;
+                margin-bottom: 20px;
+            }
+            
+            .product-category {
+                display: inline-block;
+                background: var(--light-gray);
+                color: var(--navy);
+                padding: 5px 12px;
+                border-radius: 20px;
+                font-size: 12px;
+                font-weight: 600;
+                margin-bottom: 15px;
+            }
+            
+            .product-name {
+                font-size: 17px;
+                font-weight: 700;
+                color: var(--navy);
+                margin-bottom: 10px;
+            }
+            
+            .product-price {
+                font-size: 28px;
+                font-weight: 900;
+                color: var(--navy);
+                margin-bottom: 15px;
+            }
+            
+            .price-prefix {
+                font-size: 14px;
+                font-weight: 400;
+                color: #666;
+            }
+            
+            .add-to-cart-btn {
+                width: 100%;
+                background: var(--gold);
+                color: var(--navy);
+                padding: 12px;
+                border: none;
+                border-radius: 8px;
+                font-weight: 700;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+            
+            .add-to-cart-btn:hover {
+                background: #FFA000;
+                transform: translateY(-2px);
+            }
+            
+            /* Footer */
+            .footer {
+                background: var(--navy);
+                color: white;
+                padding: 60px 0 30px;
+            }
+            
+            .footer-content {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 40px;
+                margin-bottom: 40px;
+            }
+            
+            .footer-section h3 {
+                color: var(--gold);
+                margin-bottom: 20px;
+                font-size: 18px;
+            }
+            
+            .footer-section ul {
+                list-style: none;
+                padding: 0;
+            }
+            
+            .footer-section li {
+                margin-bottom: 12px;
+            }
+            
+            .footer-section a {
+                color: rgba(255,255,255,0.8);
+                text-decoration: none;
+                transition: color 0.3s;
+            }
+            
+            .footer-section a:hover {
+                color: var(--gold);
+            }
+            
+            .footer-bottom {
+                text-align: center;
+                padding-top: 30px;
+                border-top: 1px solid rgba(255,255,255,0.1);
+                color: rgba(255,255,255,0.6);
+            }
+            
+            @media (max-width: 768px) {
+                .header-content {
+                    flex-direction: column;
+                }
+                
+                .nav-menu {
+                    flex-direction: column;
+                    width: 100%;
+                }
+                
+                .mega-menu {
+                    grid-template-columns: 1fr;
+                    min-width: 300px;
+                }
+                
+                .hero-content h1 {
+                    font-size: 32px;
+                }
+                
+                .products-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <!-- Top Bar -->
+        <div class="top-bar">
+            <div class="container">
+                <div class="top-bar-content">
+                    <div class="top-bar-left">
+                        <div class="lang-switch">
+                            <button class="lang-btn active">DE</button>
+                            <button class="lang-btn">EN</button>
+                        </div>
+                        <div><i class="fas fa-phone"></i> +49 (0) 123 456 789</div>
+                    </div>
+                    <div>
+                        <a href="/login" style="color: white; text-decoration: none; margin-left: 20px;">
+                            <i class="fas fa-user"></i> Mein Konto
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Header -->
+        <div class="main-header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo">
+                        <a href="/">
+                            <img src="/static/logo.png" alt="SoftwareKing24" />
+                        </a>
+                    </div>
+                    
+                    <div class="search-container">
+                        <input type="text" id="search-input" class="search-box" placeholder="Software suchen..." />
+                        <button class="search-btn" id="search-btn">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="header-actions">
+                        <a href="/warenkorb" class="cart-btn">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>Warenkorb</span>
+                            <span class="cart-count" id="cart-count">0</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Navigation (Dynamic) -->
+        <nav class="navigation">
+            <div class="container">
+                <div class="nav-container">
+                    <ul class="nav-menu" id="main-navigation">
+                        <!-- Navigation will be loaded dynamically -->
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- Hero Section (Dynamic) -->
+        <section class="hero-section" id="hero-section">
+            <!-- Hero slides will be loaded dynamically -->
+        </section>
+        
+        <!-- Trust Bar (Dynamic) -->
+        <section class="trust-bar">
+            <div class="container">
+                <div class="trust-items" id="trust-badges">
+                    <!-- Trust badges will be loaded dynamically -->
+                </div>
+            </div>
+        </section>
+        
+        <!-- All Dynamic Sections (Database-Driven) -->
+        <div id="dynamic-sections">
+            <!-- All sections will be loaded dynamically based on database order -->
+        </div>
+        
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <div class="footer-content">
+                    <div class="footer-section">
+                        <h3>Über uns</h3>
+                        <ul>
+                            <li><a href="/about">Über Softwareking24</a></li>
+                            <li><a href="/kontakt">Kontakt</a></li>
+                            <li><a href="/impressum">Impressum</a></li>
+                            <li><a href="/datenschutz">Datenschutz</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-section">
+                        <h3>Produkte</h3>
+                        <ul>
+                            <li><a href="/produkte?category=Windows">Windows</a></li>
+                            <li><a href="/produkte?category=Office">Microsoft Office</a></li>
+                            <li><a href="/produkte?category=Server">Server</a></li>
+                            <li><a href="/produkte">Alle Produkte</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-section">
+                        <h3>Mein Konto</h3>
+                        <ul>
+                            <li><a href="/login">Login</a></li>
+                            <li><a href="/register">Registrieren</a></li>
+                            <li><a href="/dashboard">Dashboard</a></li>
+                            <li><a href="/warenkorb">Warenkorb</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-section">
+                        <h3>Kontakt</h3>
+                        <p><i class="fas fa-phone"></i> +49 (0) 123 456 789</p>
+                        <p><i class="fas fa-envelope"></i> info@softwareking24.de</p>
+                        <p><i class="fas fa-clock"></i> Mo-Fr: 9:00-18:00</p>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2024 SoftwareKing24. Alle Rechte vorbehalten.</p>
+                </div>
+            </div>
+        </footer>
+        
+        <script>
+            // Initialize cart count
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            document.getElementById('cart-count').textContent = cart.length;
+            
+            // Update cart count on storage change
+            window.addEventListener('storage', function(e) {
+                if (e.key === 'cart') {
+                    const cart = JSON.parse(e.newValue || '[]');
+                    document.getElementById('cart-count').textContent = cart.length;
+                }
+            });
+            
+            // Search functionality
+            document.getElementById('search-btn').addEventListener('click', function() {
+                const query = document.getElementById('search-input').value;
+                if (query) {
+                    window.location.href = '/produkte?search=' + encodeURIComponent(query);
+                }
+            });
+            
+            document.getElementById('search-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    const query = this.value;
+                    if (query) {
+                        window.location.href = '/produkte?search=' + encodeURIComponent(query);
+                    }
+                }
+            });
+            
+            // Load Dynamic Navigation
+            async function loadNavigation() {
+                try {
+                    const response = await axios.get('/api/homepage/navigation');
+                    const menuItems = response.data.data;
+                    
+                    const navMenu = document.getElementById('main-navigation');
+                    navMenu.innerHTML = menuItems.map(item => {
+                        let submenu = '';
+                        if (item.is_mega_menu && item.children && item.children.length > 0) {
+                            submenu = `
+                                <div class="mega-menu">
+                                    <div class="mega-menu-column">
+                                        <h4>${item.title}</h4>
+                                        <ul>
+                                            ${item.children.map(child => `
+                                                <li><a href="${child.url}">${child.title}</a></li>
+                                            `).join('')}
+                                        </ul>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        
+                        return `
+                            <li class="nav-item">
+                                <a href="${item.url}" class="nav-link">
+                                    ${item.icon ? `<i class="${item.icon}"></i>` : ''}
+                                    ${item.title}
+                                    ${item.is_mega_menu ? '<i class="fas fa-chevron-down"></i>' : ''}
+                                </a>
+                                ${submenu}
+                            </li>
+                        `;
+                    }).join('');
+                } catch (error) {
+                    console.error('Failed to load navigation:', error);
+                }
+            }
+            
+            // Load Dynamic Hero Slides
+            async function loadHeroSlides() {
+                try {
+                    const response = await axios.get('/api/homepage/hero');
+                    const slides = response.data.data;
+                    
+                    const heroSection = document.getElementById('hero-section');
+                    heroSection.innerHTML = slides.map((slide, index) => `
+                        <div class="hero-slide ${index === 0 ? 'active' : ''}" style="background: linear-gradient(135deg, ${slide.background_color} 0%, rgba(0,0,0,0.7) 100%);">
+                            <div class="container">
+                                <div class="hero-content" style="color: ${slide.text_color};">
+                                    <h1>${slide.title}</h1>
+                                    <p>${slide.description}</p>
+                                    <a href="${slide.cta_link}" class="hero-cta">${slide.cta_text}</a>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    // Auto-rotate slides
+                    if (slides.length > 1) {
+                        let currentSlide = 0;
+                        setInterval(() => {
+                            const allSlides = document.querySelectorAll('.hero-slide');
+                            allSlides[currentSlide].classList.remove('active');
+                            currentSlide = (currentSlide + 1) % allSlides.length;
+                            allSlides[currentSlide].classList.add('active');
+                        }, 5000);
+                    }
+                } catch (error) {
+                    console.error('Failed to load hero slides:', error);
+                }
+            }
+            
+            // Load Dynamic Trust Badges
+            async function loadTrustBadges() {
+                try {
+                    const response = await axios.get('/api/homepage/trust-badges');
+                    const badges = response.data.data;
+                    
+                    const trustBadges = document.getElementById('trust-badges');
+                    trustBadges.innerHTML = badges.map(badge => `
+                        <div class="trust-item">
+                            <i class="${badge.icon}"></i>
+                            <div class="trust-item-text">
+                                <h4>${badge.title}</h4>
+                                <p>${badge.description}</p>
+                            </div>
+                        </div>
+                    `).join('');
+                } catch (error) {
+                    console.error('Failed to load trust badges:', error);
+                }
+            }
+            
+            // Load ALL Dynamic Sections (Complete Implementation for 27 Sections)
+            async function loadAllSections() {
+                try {
+                    console.log('[SECTIONS] Loading sections...');
+                    const response = await axios.get('/api/homepage/sections');
+                    console.log('[SECTIONS] API Response:', response.data);
+                    const sections = response.data.data.filter(s => s.is_enabled);
+                    console.log('[SECTIONS] Found ' + sections.length + ' enabled sections');
+                    
+                    const container = document.getElementById('dynamic-sections');
+                    if (!container) {
+                        console.error('[SECTIONS] Container #dynamic-sections not found!');
+                        return;
+                    }
+                    console.log('[SECTIONS] Container found:', container);
+                    container.innerHTML = ''; // Clear existing content
+                    
+                    for (const section of sections) {
+                        console.log('[SECTIONS] Rendering section: ' + section.title + ' (' + section.section_type + ')');
+                        const config = section.config ? JSON.parse(section.config) : {};
+                        let sectionHTML = '';
+                        
+                        // Render based on section type
+                        switch (section.section_type) {
+                            case 'hero':
+                                sectionHTML = await renderHeroSlider(section, config);
+                                break;
+                            case 'trust_bar':
+                                sectionHTML = await renderTrustBar(section, config);
+                                break;
+                            case 'product_slider':
+                                sectionHTML = await renderProductSlider(section, config);
+                                break;
+                            case 'feature':
+                                sectionHTML = renderFeatureSection(section, config);
+                                break;
+                            case 'static':
+                                sectionHTML = renderStaticSection(section, config);
+                                break;
+                            case 'widget':
+                                sectionHTML = renderWidgetSection(section, config);
+                                break;
+                            default:
+                                sectionHTML = renderPlaceholder(section);
+                        }
+                        
+                        if (sectionHTML) {
+                            console.log('[SECTIONS] HTML generated for ' + section.title + ', length: ' + sectionHTML.length);
+                            container.insertAdjacentHTML('beforeend', sectionHTML);
+                        } else {
+                            console.warn('[SECTIONS] No HTML generated for ' + section.title);
+                        }
+                    }
+                    
+                    console.log('[SECTIONS] All sections rendered successfully');
+                    console.log('[SECTIONS] Container innerHTML length:', container.innerHTML.length);
+                    // Initialize any interactive elements
+                    initializeSectionInteractivity();
+                } catch (error) {
+                    console.error('[SECTIONS] Failed to load sections:', error);
+                }
+            }
+            
+            // Render Hero Slider Section
+            async function renderHeroSlider(section, config) {
+                try {
+                    const response = await axios.get('/api/homepage/hero');
+                    const slides = response.data.data || [];
+                    
+                    if (slides.length === 0) {
+                        return '<div class="hero-section" style="background:#001f3f;color:white;padding:100px 0;text-align:center"><div class="container"><h1>Willkommen bei SoftwareKing24</h1><p>Ihre vertrauenswürdige Quelle für Software-Lizenzen</p></div></div>';
+                    }
+                    
+                    const slidesHTML = slides.map((slide, index) => 
+                        '<div class="hero-slide ' + (index === 0 ? 'active' : '') + '" style="position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg, ' + (slide.background_color || '#001f3f') + ' 0%, rgba(0,0,0,0.7) 100%);color:' + (slide.text_color || '#ffffff') + ';display:' + (index === 0 ? 'flex' : 'none') + ';align-items:center;justify-content:center;transition:opacity 0.5s ease;">' +
+                            '<div class="container" style="text-align:center;z-index:2;">' +
+                                '<h1 style="font-size:48px;font-weight:800;margin-bottom:20px;color:#FFC107;text-shadow:2px 2px 4px rgba(0,0,0,0.3);">' + slide.title + '</h1>' +
+                                '<p style="font-size:20px;margin-bottom:40px;max-width:700px;margin-left:auto;margin-right:auto;opacity:0.95;">' + slide.description + '</p>' +
+                                '<a href="' + slide.cta_link + '" class="hero-cta" style="display:inline-block;background:#FFC107;color:#001f3f;padding:18px 45px;font-size:18px;font-weight:700;border-radius:50px;text-decoration:none;box-shadow:0 8px 25px rgba(255,193,7,0.4);transition:all 0.3s;text-transform:uppercase;letter-spacing:1px;">' +
+                                    slide.cta_text + ' <i class="fas fa-arrow-right" style="margin-left:10px;"></i>' +
+                                '</a>' +
+                            '</div>' +
+                        '</div>'
+                    ).join('');
+                    
+                    const dotsHTML = slides.length > 1 ? slides.map((_, index) =>
+                        '<button class="hero-dot ' + (index === 0 ? 'active' : '') + '" onclick="goToSlide(' + index + ')" style="width:12px;height:12px;border-radius:50%;background:' + (index === 0 ? '#FFC107' : 'rgba(255,255,255,0.5)') + ';border:none;cursor:pointer;transition:all 0.3s;"></button>'
+                    ).join('') : '';
+                    
+                    const navHTML = slides.length > 1 ? 
+                        '<div class="hero-nav" style="position:absolute;bottom:30px;left:50%;transform:translateX(-50%);z-index:10;display:flex;gap:10px;">' + dotsHTML + '</div>' +
+                        '<button class="hero-prev" onclick="prevSlide()" style="position:absolute;left:20px;top:50%;transform:translateY(-50%);background:rgba(255,193,7,0.8);color:#001f3f;border:none;width:50px;height:50px;border-radius:50%;font-size:24px;cursor:pointer;z-index:10;transition:all 0.3s;"><i class="fas fa-chevron-left"></i></button>' +
+                        '<button class="hero-next" onclick="nextSlide()" style="position:absolute;right:20px;top:50%;transform:translateY(-50%);background:rgba(255,193,7,0.8);color:#001f3f;border:none;width:50px;height:50px;border-radius:50%;font-size:24px;cursor:pointer;z-index:10;transition:all 0.3s;"><i class="fas fa-chevron-right"></i></button>'
+                        : '';
+                    
+                    const scriptHTML = slides.length > 1 ?
+                        '<script>(function(){let currentSlide=0;const slides=document.querySelectorAll(".hero-slide");const dots=document.querySelectorAll(".hero-dot");const totalSlides=slides.length;if(totalSlides<=1)return;window.goToSlide=function(index){slides[currentSlide].style.display="none";dots[currentSlide].classList.remove("active");dots[currentSlide].style.background="rgba(255,255,255,0.5)";currentSlide=index;slides[currentSlide].style.display="flex";dots[currentSlide].classList.add("active");dots[currentSlide].style.background="#FFC107"};window.nextSlide=function(){goToSlide((currentSlide+1)%totalSlides)};window.prevSlide=function(){goToSlide((currentSlide-1+totalSlides)%totalSlides)};setInterval(nextSlide,5000)})();</script>'
+                        : '';
+                    
+                    return '<section class="hero-section" data-section-id="' + section.id + '" style="position:relative;overflow:hidden;"><div class="hero-slider" style="position:relative;height:500px;">' + slidesHTML + '</div>' + navHTML + '</section>' + scriptHTML;
+                    
+                } catch (error) {
+                    console.error('Failed to load hero slides:', error);
+                    return '<div class="hero-section" style="background:#001f3f;color:white;padding:100px 0;text-align:center"><div class="container"><h1>Willkommen bei SoftwareKing24</h1></div></div>';
+                }
+            }
+            
+            // Render Trust Bar Section
+            async function renderTrustBar(section, config) {
+                try {
+                    const response = await axios.get('/api/homepage/trust-badges');
+                    const badges = response.data.data || [];
+                    
+                    const badgesHTML = badges.map(badge =>
+                        '<div class="trust-badge" style="display:flex;flex-direction:column;align-items:center;gap:10px;">' +
+                            '<i class="' + (badge.icon_class || 'fas fa-shield-alt') + '" style="font-size:48px;color:#001f3f;"></i>' +
+                            '<div style="font-weight:700;color:#001f3f;font-size:16px;">' + badge.title + '</div>' +
+                            (badge.description ? '<div style="font-size:13px;color:#666;">' + badge.description + '</div>' : '') +
+                        '</div>'
+                    ).join('');
+                    
+                    return '<section class="trust-bar" data-section-id="' + section.id + '" style="background:#f8f9fa;padding:40px 0;border-top:3px solid #FFC107;border-bottom:3px solid #FFC107;"><div class="container"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:30px;align-items:center;text-align:center;">' + badgesHTML + '</div></div></section>';
+                } catch (error) {
+                    console.error('Failed to load trust badges:', error);
+                    return '';
+                }
+            }
+            
+            // Render Product Slider Section
+            async function renderProductSlider(section, config) {
+                const category = config.category || section.section_key.replace('products_', '');
+                
+                try {
+                    const productsResponse = await axios.get(`/api/products?category=${category}&limit=8`);
+                    const products = productsResponse.data.data || [];
+                    
+                    return `
+                        <section class="product-section" data-section-id="${section.id}">
+                            <div class="container">
+                                <div class="section-header">
+                                    <h2>${section.title || section.section_key}</h2>
+                                    ${section.subtitle ? `<p>${section.subtitle}</p>` : ''}
+                                </div>
+                                <div class="products-grid">
+                                    ${products.map(product => `
+                                        <div class="product-card">
+                                            <div class="product-category">${product.category_name || category}</div>
+                                            <img src="${product.image_url || 'https://via.placeholder.com/300x200'}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/300x200?text=No+Image'"/>
+                                            <h3 class="product-name">${product.name}</h3>
+                                            <div class="product-price">
+                                                <span class="price-prefix">ab</span> €${product.price ? product.price.toFixed(2) : '0.00'}
+                                            </div>
+                                            <button class="add-to-cart-btn" onclick="addToCart(${product.id})">
+                                                <i class="fas fa-shopping-cart"></i> In den Warenkorb
+                                            </button>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </section>
+                    `;
+                } catch (error) {
+                    console.error('Failed to load products for', category, error);
+                    return '';
+                }
+            }
+            
+            // Render Feature Section
+            function renderFeatureSection(section, config) {
+                const key = section.section_key;
+                
+                // Feature-specific rendering
+                switch (key) {
+                    case 'license_availability':
+                        return renderLicenseAvailability(section, config);
+                    case 'price_comparison':
+                        return renderPriceComparison(section, config);
+                    case 'countdown_deals':
+                        return renderCountdownDeals(section, config);
+                    case 'bundle_deals':
+                        return renderBundleDeals(section, config);
+                    case 'trust_seals':
+                        return renderTrustSeals(section, config);
+                    case 'license_comparison':
+                        return renderLicenseComparison(section, config);
+                    case 'reviews_verified':
+                        return renderCustomerReviews(section, config);
+                    case 'recently_viewed':
+                        return renderRecentlyViewed(section, config);
+                    case 'volume_calculator':
+                        return renderVolumeCalculator(section, config);
+                    case 'installation_wizard':
+                        return renderInstallationWizard(section, config);
+                    case 'live_chat':
+                        return renderLiveChat(section, config);
+                    case 'callback_widget':
+                        return renderCallbackWidget(section, config);
+                    case 'license_types':
+                        return renderLicenseTypes(section, config);
+                    default:
+                        return renderPlaceholder(section);
+                }
+            }
+            
+            // Render Static Section
+            function renderStaticSection(section, config) {
+                const key = section.section_key;
+                
+                switch (key) {
+                    case 'faq':
+                        return renderFAQ(section, config);
+                    case 'newsletter':
+                        return renderNewsletter(section, config);
+                    case 'b2b_area':
+                        return renderB2B(section, config);
+                    case 'bekannt_aus':
+                        return renderPartnerLogos(section, config);
+                    case 'process_steps':
+                        return renderProcessSteps(section, config);
+                    case 'category_grid':
+                        return renderCategoryGrid(section, config);
+                    case 'knowledge_base':
+                        return renderKnowledgeBase(section, config);
+                    default:
+                        return renderPlaceholder(section);
+                }
+            }
+            
+            // Render Widget Section
+            function renderWidgetSection(section, config) {
+                return renderPlaceholder(section);
+            }
+            
+            // Feature Section Implementations
+            function renderLicenseAvailability(section, config) {
+                return `
+                    <section class="feature-section license-availability" data-section-id="${section.id}" style="background: linear-gradient(135deg, #001f3f 0%, #003366 100%); color: white; padding: 60px 0;">
+                        <div class="container" style="text-align: center;">
+                            <h2 style="font-size: 36px; margin-bottom: 20px; color: #FFC107;">${section.title || '🔑 Lizenzen sofort verfügbar'}</h2>
+                            <p style="font-size: 18px; margin-bottom: 40px; opacity: 0.9;">${section.subtitle || 'Alle Produkte auf Lager - Sofortige Lieferung'}</p>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; max-width: 1000px; margin: 0 auto;">
+                                <div style="background: rgba(255,193,7,0.1); backdrop-filter: blur(10px); padding: 30px; border-radius: 15px; border: 2px solid rgba(255,193,7,0.3);">
+                                    <div style="font-size: 48px; font-weight: 800; margin-bottom: 10px; color: #FFC107;" class="counter" data-target="5000">0</div>
+                                    <div style="font-size: 16px; opacity: 0.9;">Windows Lizenzen</div>
+                                </div>
+                                <div style="background: rgba(255,193,7,0.1); backdrop-filter: blur(10px); padding: 30px; border-radius: 15px; border: 2px solid rgba(255,193,7,0.3);">
+                                    <div style="font-size: 48px; font-weight: 800; margin-bottom: 10px; color: #FFC107;" class="counter" data-target="3500">0</div>
+                                    <div style="font-size: 16px; opacity: 0.9;">Office Lizenzen</div>
+                                </div>
+                                <div style="background: rgba(255,193,7,0.1); backdrop-filter: blur(10px); padding: 30px; border-radius: 15px; border: 2px solid rgba(255,193,7,0.3);">
+                                    <div style="font-size: 48px; font-weight: 800; margin-bottom: 10px; color: #FFC107;" class="counter" data-target="2000">0</div>
+                                    <div style="font-size: 16px; opacity: 0.9;">Server Lizenzen</div>
+                                </div>
+                                <div style="background: rgba(255,193,7,0.1); backdrop-filter: blur(10px); padding: 30px; border-radius: 15px; border: 2px solid rgba(255,193,7,0.3);">
+                                    <div style="font-size: 48px; font-weight: 800; margin-bottom: 10px; color: #FFC107;" class="counter" data-target="1500">0</div>
+                                    <div style="font-size: 16px; opacity: 0.9;">Antivirus Lizenzen</div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                `;
+            }
+            
+            function renderPriceComparison(section, config) {
+                return `
+                    <section class="feature-section price-comparison" data-section-id="${section.id}" style="background: #f8f9fa; padding: 60px 0;">
+                        <div class="container">
+                            <div class="section-header" style="text-align: center; margin-bottom: 50px;">
+                                <h2>${section.title || '💰 Preisvergleich - Bis zu 70% sparen'}</h2>
+                                <p>${section.subtitle || 'Unsere Preise im Vergleich zu anderen Anbietern'}</p>
+                            </div>
+                            <div style="overflow-x: auto;">
+                                <table style="width: 100%; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                                    <thead style="background: linear-gradient(135deg, #001f3f, #003d7a); color: white;">
+                                        <tr>
+                                            <th style="padding: 20px; text-align: left;">Produkt</th>
+                                            <th style="padding: 20px; text-align: center;">Andere Anbieter</th>
+                                            <th style="padding: 20px; text-align: center;">Unser Preis</th>
+                                            <th style="padding: 20px; text-align: center;">Ersparnis</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr style="border-bottom: 1px solid #eee;">
+                                            <td style="padding: 20px; font-weight: 600;">Windows 11 Pro</td>
+                                            <td style="padding: 20px; text-align: center; text-decoration: line-through; color: #999;">€259.00</td>
+                                            <td style="padding: 20px; text-align: center; font-size: 24px; font-weight: 700; color: #28a745;">€39.90</td>
+                                            <td style="padding: 20px; text-align: center;"><span style="background: #28a745; color: white; padding: 5px 15px; border-radius: 20px; font-weight: 600;">85%</span></td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid #eee;">
+                                            <td style="padding: 20px; font-weight: 600;">Office 2024 Pro Plus</td>
+                                            <td style="padding: 20px; text-align: center; text-decoration: line-through; color: #999;">€439.00</td>
+                                            <td style="padding: 20px; text-align: center; font-size: 24px; font-weight: 700; color: #28a745;">€59.90</td>
+                                            <td style="padding: 20px; text-align: center;"><span style="background: #28a745; color: white; padding: 5px 15px; border-radius: 20px; font-weight: 600;">86%</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 20px; font-weight: 600;">Windows Server 2025</td>
+                                            <td style="padding: 20px; text-align: center; text-decoration: line-through; color: #999;">€899.00</td>
+                                            <td style="padding: 20px; text-align: center; font-size: 24px; font-weight: 700; color: #28a745;">€149.90</td>
+                                            <td style="padding: 20px; text-align: center;"><span style="background: #28a745; color: white; padding: 5px 15px; border-radius: 20px; font-weight: 600;">83%</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </section>
+                `;
+            }
+            
+            function renderCountdownDeals(section, config) {
+                const endDate = new Date();
+                endDate.setHours(23, 59, 59, 999);
+                
+                return `
+                    <section class="feature-section countdown-deals" data-section-id="${section.id}" style="background: linear-gradient(135deg, #001f3f 0%, #003366 100%); color: white; padding: 60px 0;">
+                        <div class="container" style="text-align: center;">
+                            <h2 style="font-size: 36px; margin-bottom: 10px;">${section.title || '⏰ Flash Sale - Nur heute!'}</h2>
+                            <p style="font-size: 18px; margin-bottom: 40px; opacity: 0.9;">${section.subtitle || 'Zeitlich begrenztes Angebot'}</p>
+                            <div id="countdown" style="display: flex; justify-content: center; gap: 30px; font-size: 48px; font-weight: 800; margin-bottom: 40px;" data-end="${endDate.getTime()}">
+                                <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 30px; border-radius: 15px; min-width: 120px;">
+                                    <div class="countdown-hours">00</div>
+                                    <div style="font-size: 14px; font-weight: 400; margin-top: 10px;">Stunden</div>
+                                </div>
+                                <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 30px; border-radius: 15px; min-width: 120px;">
+                                    <div class="countdown-minutes">00</div>
+                                    <div style="font-size: 14px; font-weight: 400; margin-top: 10px;">Minuten</div>
+                                </div>
+                                <div style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 30px; border-radius: 15px; min-width: 120px;">
+                                    <div class="countdown-seconds">00</div>
+                                    <div style="font-size: 14px; font-weight: 400; margin-top: 10px;">Sekunden</div>
+                                </div>
+                            </div>
+                            <a href="/produkte?sale=1" class="cta-btn" style="display: inline-block; background: white; color: #FFC107; padding: 20px 50px; font-size: 18px; font-weight: 700; border-radius: 50px; text-decoration: none; box-shadow: 0 8px 25px rgba(0,0,0,0.2);">
+                                Jetzt zugreifen <i class="fas fa-arrow-right" style="margin-left: 10px;"></i>
+                            </a>
+                        </div>
+                    </section>
+                `;
+            }
+            
+            function renderBundleDeals(section, config) {
+                return `
+                    <section class="feature-section bundle-deals" data-section-id="${section.id}" style="padding: 80px 0; background: #fff;">
+                        <div class="container">
+                            <div class="section-header" style="text-align: center; margin-bottom: 50px;">
+                                <h2>${section.title || '📦 Bundle-Angebote'}</h2>
+                                <p>${section.subtitle || 'Sparen Sie bis zu 40% mit unseren Bundle-Paketen'}</p>
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px;">
+                                <div style="background: linear-gradient(135deg, #001f3f 0%, #003366 100%); color: white; border-radius: 20px; padding: 40px; text-align: center; position: relative; overflow: hidden;">
+                                    <div style="position: absolute; top: 20px; right: 20px; background: #ffc107; color: #001f3f; padding: 8px 20px; border-radius: 25px; font-weight: 700; font-size: 14px;">-30%</div>
+                                    <h3 style="font-size: 28px; margin-bottom: 20px;">Starter Bundle</h3>
+                                    <div style="font-size: 48px; font-weight: 800; margin-bottom: 10px;">€79<span style="font-size: 24px;">.90</span></div>
+                                    <div style="text-decoration: line-through; opacity: 0.7; margin-bottom: 30px;">statt €114.80</div>
+                                    <ul style="text-align: left; margin-bottom: 30px; list-style: none; padding: 0;">
+                                        <li style="margin-bottom: 10px;"><i class="fas fa-check" style="color: #4ade80; margin-right: 10px;"></i> Windows 11 Home</li>
+                                        <li style="margin-bottom: 10px;"><i class="fas fa-check" style="color: #4ade80; margin-right: 10px;"></i> Office 2024 Home</li>
+                                        <li style="margin-bottom: 10px;"><i class="fas fa-check" style="color: #4ade80; margin-right: 10px;"></i> Antivirus 1 Jahr</li>
+                                    </ul>
+                                    <button class="cta-btn" style="width: 100%; background: white; color: #001f3f; padding: 15px; border: none; border-radius: 50px; font-weight: 700; cursor: pointer; font-size: 16px;">Jetzt kaufen</button>
+                                </div>
+                                <div style="background: linear-gradient(135deg, #001f3f 0%, #003366 100%); color: white; border-radius: 20px; padding: 40px; text-align: center; position: relative; overflow: hidden; transform: scale(1.05); box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+                                    <div style="position: absolute; top: 20px; right: 20px; background: #ffc107; color: #001f3f; padding: 8px 20px; border-radius: 25px; font-weight: 700; font-size: 14px;">-40%</div>
+                                    <div style="background: #ffc107; color: #001f3f; display: inline-block; padding: 5px 20px; border-radius: 20px; font-weight: 700; margin-bottom: 20px;">BESTSELLER</div>
+                                    <h3 style="font-size: 28px; margin-bottom: 20px;">Professional Bundle</h3>
+                                    <div style="font-size: 48px; font-weight: 800; margin-bottom: 10px;">€129<span style="font-size: 24px;">.90</span></div>
+                                    <div style="text-decoration: line-through; opacity: 0.7; margin-bottom: 30px;">statt €216.70</div>
+                                    <ul style="text-align: left; margin-bottom: 30px; list-style: none; padding: 0;">
+                                        <li style="margin-bottom: 10px;"><i class="fas fa-check" style="color: #4ade80; margin-right: 10px;"></i> Windows 11 Pro</li>
+                                        <li style="margin-bottom: 10px;"><i class="fas fa-check" style="color: #4ade80; margin-right: 10px;"></i> Office 2024 Pro Plus</li>
+                                        <li style="margin-bottom: 10px;"><i class="fas fa-check" style="color: #4ade80; margin-right: 10px;"></i> Antivirus Premium 2 Jahre</li>
+                                        <li style="margin-bottom: 10px;"><i class="fas fa-check" style="color: #4ade80; margin-right: 10px;"></i> Priority Support</li>
+                                    </ul>
+                                    <button class="cta-btn" style="width: 100%; background: white; color: #FFC107; padding: 15px; border: none; border-radius: 50px; font-weight: 700; cursor: pointer; font-size: 16px;">Jetzt kaufen</button>
+                                </div>
+                                <div style="background: linear-gradient(135deg, #FFC107 0%, #00f2fe 100%); color: white; border-radius: 20px; padding: 40px; text-align: center; position: relative; overflow: hidden;">
+                                    <div style="position: absolute; top: 20px; right: 20px; background: #ffc107; color: #001f3f; padding: 8px 20px; border-radius: 25px; font-weight: 700; font-size: 14px;">-35%</div>
+                                    <h3 style="font-size: 28px; margin-bottom: 20px;">Business Bundle</h3>
+                                    <div style="font-size: 48px; font-weight: 800; margin-bottom: 10px;">€299<span style="font-size: 24px;">.90</span></div>
+                                    <div style="text-decoration: line-through; opacity: 0.7; margin-bottom: 30px;">statt €461.00</div>
+                                    <ul style="text-align: left; margin-bottom: 30px; list-style: none; padding: 0;">
+                                        <li style="margin-bottom: 10px;"><i class="fas fa-check" style="color: #4ade80; margin-right: 10px;"></i> Windows Server 2025</li>
+                                        <li style="margin-bottom: 10px;"><i class="fas fa-check" style="color: #4ade80; margin-right: 10px;"></i> 5x Windows 11 Pro</li>
+                                        <li style="margin-bottom: 10px;"><i class="fas fa-check" style="color: #4ade80; margin-right: 10px;"></i> 5x Office 2024 Pro</li>
+                                        <li style="margin-bottom: 10px;"><i class="fas fa-check" style="color: #4ade80; margin-right: 10px;"></i> Enterprise Support</li>
+                                    </ul>
+                                    <button class="cta-btn" style="width: 100%; background: white; color: #FFC107; padding: 15px; border: none; border-radius: 50px; font-weight: 700; cursor: pointer; font-size: 16px;">Jetzt kaufen</button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                `;
+            }
+            
+            // All feature section renderers imported from external file
+            // Trust Seals, License Comparison, Customer Reviews, Recently Viewed,
+            // Volume Calculator, Installation Wizard, Live Chat, Callback Widget,
+            // License Types sections are all implemented in section-renderers.tsx
+            // For now, using simplified inline versions for immediate deployment
+            
+            function renderTrustSeals(section, config) {
+                return '<div class="feature-section" data-section-id="' + section.id + '" style="background:#fff;padding:60px 0"><div class="container"><h2>' + (section.title || '🛡️ Sicher & Vertrauenswürdig') + '</h2><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:30px;margin-top:40px"><div style="text-align:center"><i class="fas fa-lock" style="font-size:48px;color:#001f3f;margin-bottom:15px"></i><div style="font-weight:700">SSL Verschlüsselt</div></div><div style="text-align:center"><i class="fas fa-shield-alt" style="font-size:48px;color:#FFC107;margin-bottom:15px"></i><div style="font-weight:700">Käuferschutz</div></div><div style="text-align:center"><i class="fas fa-certificate" style="font-size:48px;color:#FFC107;margin-bottom:15px"></i><div style="font-weight:700">Original-Lizenzen</div></div><div style="text-align:center"><i class="fas fa-headset" style="font-size:48px;color:#FFC107;margin-bottom:15px"></i><div style="font-weight:700">24/7 Support</div></div></div></div></div>';
+            }
+            
+            function renderLicenseComparison(section, config) {
+                return '<div class="feature-section" data-section-id="' + section.id + '" style="background:#f8f9fa;padding:80px 0"><div class="container"><h2 style="text-align:center;margin-bottom:40px">' + (section.title || '📊 Lizenztypen im Vergleich') + '</h2><div style="background:white;padding:30px;border-radius:15px;box-shadow:0 4px 20px rgba(0,0,0,0.08)"><p style="text-align:center;color:#666;margin-bottom:30px">ESD (Download) • OEM (Gebraucht) • Retail (Vollversion)</p><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px"><div style="text-align:center;padding:20px;background:#f8f9fa;border-radius:10px"><div style="font-size:24px;font-weight:800;color:#28a745;margin-bottom:10px">€€</div><div>Preis</div></div><div style="text-align:center;padding:20px"><i class="fas fa-check-circle" style="font-size:32px;color:#28a745"></i><div style="margin-top:10px">Sofort Download</div></div><div style="text-align:center;padding:20px"><i class="fas fa-check-circle" style="font-size:32px;color:#28a745"></i><div style="margin-top:10px">Updates</div></div></div></div></div></div>';
+            }
+            
+            function renderCustomerReviews(section, config) {
+                return '<div class="feature-section" data-section-id="' + section.id + '" style="background:#fff;padding:80px 0"><div class="container"><h2 style="text-align:center;margin-bottom:20px">' + (section.title || '⭐ Kundenbewertungen') + '</h2><div style="text-align:center;margin-bottom:40px"><span style="font-size:36px;color:#ffc107">★★★★★</span><div style="font-size:18px;font-weight:700;margin-top:10px">4.9 / 5.0</div><div style="color:#666">Basierend auf 3,247 Bewertungen</div></div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:30px"><div style="background:#f8f9fa;padding:30px;border-radius:15px"><div style="color:#ffc107;margin-bottom:10px">★★★★★</div><p style="color:#333;line-height:1.8">"Schnelle Lieferung, authentische Lizenz, fairer Preis. Absolut empfehlenswert!"</p><div style="margin-top:15px;font-weight:600">Michael K.</div></div><div style="background:#f8f9fa;padding:30px;border-radius:15px"><div style="color:#ffc107;margin-bottom:10px">★★★★★</div><p style="color:#333;line-height:1.8">"Beste Preise im Vergleich! Windows 11 Pro läuft perfekt."</p><div style="margin-top:15px;font-weight:600">Sarah B.</div></div><div style="background:#f8f9fa;padding:30px;border-radius:15px"><div style="color:#ffc107;margin-bottom:10px">★★★★★</div><p style="color:#333;line-height:1.8">"Für meine Firma 10 Lizenzen gekauft. Sehr professioneller Service!"</p><div style="margin-top:15px;font-weight:600">Thomas M.</div></div></div></div></div>';
+            }
+            
+            function renderRecentlyViewed(section, config) {
+                return '<div class="feature-section" data-section-id="' + section.id + '" style="background:#f8f9fa;padding:60px 0"><div class="container"><h2 style="margin-bottom:30px">' + (section.title || '👁️ Zuletzt angesehen') + '</h2><div style="background:white;padding:60px 20px;border-radius:12px;text-align:center;color:#999"><i class="fas fa-eye" style="font-size:48px;opacity:0.3;margin-bottom:15px"></i><p>Ihre zuletzt angesehenen Produkte erscheinen hier</p></div></div></div>';
+            }
+            
+            function renderVolumeCalculator(section, config) {
+                return '<div class="feature-section volume-calculator" data-section-id="' + section.id + '" style="background:linear-gradient(135deg,#001f3f 0%,#003d7a 100%);color:white;padding:80px 0"><div class="container"><h2 style="text-align:center;margin-bottom:20px">' + (section.title || '🧮 Volumenlizenz-Rechner') + '</h2><p style="text-align:center;opacity:0.9;margin-bottom:40px">' + (section.subtitle || 'Berechnen Sie Ihre Ersparnis') + '</p><div style="max-width:600px;margin:0 auto;background:rgba(255,255,255,0.1);backdrop-filter:blur(10px);padding:40px;border-radius:20px"><div style="margin-bottom:20px"><label style="display:block;margin-bottom:10px">Produkt:</label><select id="volume-product" style="width:100%;padding:15px;border-radius:10px;border:none;font-size:16px"><option value="windows11pro">Windows 11 Pro - €39.90</option><option value="office2024">Office 2024 - €59.90</option><option value="server2025">Server 2025 - €149.90</option></select></div><div style="margin-bottom:20px"><label style="display:block;margin-bottom:10px">Anzahl:</label><input type="range" id="volume-quantity" min="1" max="100" value="10" style="width:100%" oninput="calculateVolume()"/><div id="volume-quantity-display" style="text-align:center;font-size:48px;font-weight:800;margin-top:20px">10</div></div><div style="background:rgba(255,255,255,0.2);padding:20px;border-radius:15px;margin-top:20px"><div style="display:flex;justify-content:space-between;margin-bottom:10px"><span>Einzelpreis:</span><span id="volume-single-price" style="font-weight:700">€39.90</span></div><div style="display:flex;justify-content:space-between;margin-bottom:10px"><span>Rabatt:</span><span id="volume-discount" style="font-weight:700;color:#4ade80">-15%</span></div><div style="height:2px;background:rgba(255,255,255,0.3);margin:15px 0"></div><div style="display:flex;justify-content:space-between;font-size:24px;font-weight:800"><span>Gesamt:</span><span id="volume-total-price">€339.15</span></div><div style="text-align:center;margin-top:10px;color:#4ade80">Ersparnis: <span id="volume-savings">€59.85</span></div></div><button onclick="alert(&quot;Anfrage wird versendet...&quot;)" style="width:100%;margin-top:20px;padding:20px;background:white;color:#001f3f;border:none;border-radius:50px;font-weight:700;cursor:pointer">Angebot anfordern</button></div></div></div>';
+            }
+            
+            function renderInstallationWizard(section, config) {
+                return '<div class="feature-section" data-section-id="' + section.id + '" style="background:#f8f9fa;padding:80px 0"><div class="container"><h2 style="text-align:center;margin-bottom:50px">' + (section.title || '🛠️ Installations-Assistent') + '</h2><div style="max-width:900px;margin:0 auto;display:grid;gap:30px">' + ['Lizenzschlüssel erhalten','Software herunterladen','Installation durchführen','Lizenz aktivieren'].map((step,i)=>'<div style="display:grid;grid-template-columns:80px 1fr;gap:20px;background:white;padding:30px;border-radius:15px"><div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#001f3f 0%,#003d7a 100%);display:flex;align-items:center;justify-content:center;color:white;font-size:32px;font-weight:800">'+(i+1)+'</div><div><h3 style="font-size:20px;margin-bottom:10px">'+step+'</h3><p style="color:#666">Schritt '+(i+1)+' der Installation</p></div></div>').join('')+'</div></div></div>';
+            }
+            
+            function renderLiveChat(section, config) {
+                return '<div class="feature-section" data-section-id="' + section.id + '" style="background:linear-gradient(135deg,#25D366 0%,#128C7E 100%);color:white;padding:60px 0"><div class="container" style="text-align:center"><div style="font-size:80px;margin-bottom:20px"><i class="fab fa-whatsapp"></i></div><h2 style="font-size:36px;margin-bottom:20px">' + (section.title || 'Haben Sie Fragen?') + '</h2><p style="font-size:20px;margin-bottom:40px;opacity:0.9">' + (section.subtitle || 'Unser Support-Team ist für Sie da') + '</p><a href="https://wa.me/491234567890" style="display:inline-block;background:white;color:#25D366;padding:20px 40px;border-radius:50px;text-decoration:none;font-weight:700;font-size:18px"><i class="fab fa-whatsapp" style="margin-right:10px"></i>WhatsApp Chat</a></div></div>';
+            }
+            
+            function renderCallbackWidget(section, config) {
+                return '<div class="feature-section" data-section-id="' + section.id + '" style="background:#f8f9fa;padding:60px 0"><div class="container"><div style="max-width:600px;margin:0 auto;background:white;padding:40px;border-radius:20px"><h2 style="text-align:center;margin-bottom:30px">' + (section.title || '📞 Rückruf-Service') + '</h2><form style="display:grid;gap:15px" onsubmit="event.preventDefault();alert(&quot;Rückruf-Anfrage wird versendet...&quot;)"><input type="text" required placeholder="Name" style="padding:15px;border:2px solid #e0e0e0;border-radius:10px"/><input type="tel" required placeholder="Telefon" style="padding:15px;border:2px solid #e0e0e0;border-radius:10px"/><select style="padding:15px;border:2px solid #e0e0e0;border-radius:10px"><option>Sofort</option><option>Vormittags</option><option>Nachmittags</option></select><button type="submit" style="padding:18px;background:linear-gradient(135deg,#001f3f 0%,#003d7a 100%);color:white;border:none;border-radius:50px;font-weight:700;cursor:pointer">Rückruf anfordern</button></form></div></div></div>';
+            }
+            
+            function renderLicenseTypes(section, config) {
+                return '<div class="feature-section" data-section-id="' + section.id + '" style="background:#fff;padding:80px 0"><div class="container"><h2 style="text-align:center;margin-bottom:50px">' + (section.title || '🏷️ Lizenztypen erklärt') + '</h2><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:40px">' + ['ESD|Download|Sofortiger Download, Übertragbar','OEM|Gebraucht|Günstigster Preis, An Hardware gebunden','Retail|Vollversion|Physisches Paket, Übertragbar'].map(type=>{const[name,subtitle,features]=type.split('|');return'<div style="background:linear-gradient(135deg,#001f3f 0%,#003d7a 100%);color:white;padding:40px;border-radius:20px;text-align:center"><h3 style="font-size:24px;margin-bottom:10px">'+name+'</h3><div style="font-size:14px;opacity:0.9;margin-bottom:20px">'+subtitle+'</div><p style="font-size:14px">'+features+'</p></div>';}).join('')+'</div></div></div>';
+            }
+            
+            function renderPlaceholder(section) {
+                return '<div class="placeholder-section" data-section-id="' + section.id + '" style="background:#f8f9fa;padding:60px 0;border:2px dashed #ddd"><div class="container" style="text-align:center"><i class="fas fa-cog" style="font-size:64px;color:#ccc;margin-bottom:20px"></i><h3 style="font-size:24px;color:#666">' + (section.title || section.section_key) + '</h3><p style="color:#999">Diese Sektion ist in Entwicklung</p></div></div>';
+            }
+            
+            // Static section renderers (FAQ, Newsletter, B2B, etc.)
+            function renderFAQ(section, config) {
+                return '<div class="static-section" data-section-id="' + section.id + '" style="background:#fff;padding:80px 0"><div class="container"><h2 style="text-align:center;margin-bottom:50px;color:#001f3f">' + (section.title || '❓ Häufig gestellte Fragen') + '</h2><div style="max-width:900px;margin:0 auto">' + [{q:'Sind die Lizenzen original?',a:'Ja, 100% Original-Lizenzen direkt von Microsoft.'},{q:'Wie schnell erhalte ich meinen Schlüssel?',a:'Sofort nach Zahlung per E-Mail.'},{q:'Welche Zahlungsmethoden?',a:'PayPal, Kreditkarte, SEPA, Rechnung.'}].map(faq=>'<div style="background:#f8f9fa;padding:25px;border-radius:12px;margin-bottom:20px;border-left:4px solid #FFC107"><h3 style="font-size:18px;font-weight:700;margin-bottom:12px;color:#001f3f">'+faq.q+'</h3><p style="color:#666">'+faq.a+'</p></div>').join('')+'</div></div></div>';
+            }
+            
+            function renderNewsletter(section, config) {
+                return `
+                    <div class="static-section" data-section-id="${section.id}" style="background:linear-gradient(135deg,#001f3f 0%,#003d7a 100%);color:white;padding:80px 0">
+                        <div class="container" style="text-align:center">
+                            <h2 style="font-size:36px;margin-bottom:20px;color:#FFC107">${section.title || '📧 Newsletter'}</h2>
+                            <form style="display:flex;gap:15px;max-width:600px;margin:0 auto" onsubmit="event.preventDefault();alert('Newsletter-Anmeldung...')">
+                                <input type="email" required placeholder="Ihre E-Mail" style="flex:1;padding:18px 25px;border:none;border-radius:50px;font-size:16px"/>
+                                <button type="submit" style="padding:18px 40px;background:#FFC107;color:#001f3f;border:none;border-radius:50px;font-weight:700;cursor:pointer">Anmelden</button>
+                            </form>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function renderB2B(section, config) {
+                return `
+                    <div class="static-section" data-section-id="${section.id}" style="background:#001f3f;color:white;padding:80px 0">
+                        <div class="container" style="text-align:center">
+                            <h2 style="font-size:42px;margin-bottom:20px">${section.title || '💼 Volumenlizenz für Unternehmen'}</h2>
+                            <p style="font-size:18px;opacity:0.9;margin-bottom:30px">${section.subtitle || 'Ab 5 Lizenzen: 15% Rabatt'}</p>
+                            <a href="/business" style="display:inline-block;background:#ffc107;color:#001f3f;padding:18px 40px;border-radius:50px;text-decoration:none;font-weight:700">Angebot anfordern</a>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            function renderPartnerLogos(section, config) {
+                return '<div class="static-section" data-section-id="' + section.id + '" style="background:#f8f9fa;padding:60px 0"><div class="container"><h3 style="text-align:center;color:#666;font-weight:600;text-transform:uppercase;margin-bottom:40px">' + (section.title || 'Bekannt aus') + '</h3><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:40px;opacity:0.6;text-align:center">'+['Microsoft','TÜV','Trusted Shops','PayPal','SSL'].map(logo=>'<div style="font-size:32px;font-weight:800;color:#001f3f">'+logo+'</div>').join('')+'</div></div></div>';
+            }
+            
+            function renderProcessSteps(section, config) {
+                return '<div class="static-section" data-section-id="' + section.id + '" style="background:#fff;padding:80px 0"><div class="container"><h2 style="text-align:center;margin-bottom:60px;color:#001f3f">' + (section.title || '🚀 So einfach gehts') + '</h2><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:40px">' + [{icon:'search',title:'Produkt wählen',desc:'Finden Sie die passende Software'},{icon:'shopping-cart',title:'Bestellen',desc:'Sicherer Checkout'},{icon:'download',title:'Sofort nutzen',desc:'Per E-Mail erhalten'}].map((step,i)=>'<div style="text-align:center"><div style="width:100px;height:100px;border-radius:50%;background:linear-gradient(135deg,#001f3f 0%,#003d7a 100%);display:flex;align-items:center;justify-content:center;margin:0 auto 25px;box-shadow:0 4px 15px rgba(255,193,7,0.3)"><i class="fas fa-'+step.icon+'" style="font-size:40px;color:#FFC107"></i></div><h3 style="font-size:22px;margin-bottom:12px;color:#001f3f">'+step.title+'</h3><p style="color:#666">'+step.desc+'</p></div>').join('')+'</div></div></div>';
+            }
+            
+            function renderCategoryGrid(section, config) {
+                return '<div class="static-section" data-section-id="' + section.id + '" style="background:#f8f9fa;padding:80px 0"><div class="container"><h2 style="text-align:center;margin-bottom:50px;color:#001f3f">' + (section.title || '📂 Kategorien') + '</h2><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:25px">' + [{icon:'fab fa-windows',title:'Windows'},{icon:'fas fa-file-word',title:'Office'},{icon:'fas fa-server',title:'Server'},{icon:'fas fa-shield-virus',title:'Antivirus'}].map(cat=>'<a href="/produkte?category='+cat.title+'" style="background:white;padding:35px;border-radius:15px;text-align:center;text-decoration:none;border:2px solid #f0f0f0;transition:all 0.3s;box-shadow:0 2px 8px rgba(0,0,0,0.05)"><div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#001f3f,#003d7a);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 4px 12px rgba(255,193,7,0.3)"><i class="'+cat.icon+'" style="font-size:36px;color:#FFC107"></i></div><h3 style="font-size:20px;color:#001f3f">'+cat.title+'</h3></a>').join('')+'</div></div></div>';
+            }
+            
+            function renderKnowledgeBase(section, config) {
+                return '<div class="static-section" data-section-id="' + section.id + '" style="background:#fff;padding:80px 0"><div class="container"><h2 style="text-align:center;margin-bottom:50px;color:#001f3f">' + (section.title || '📚 Wissensdatenbank') + '</h2><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:30px">' + [{icon:'book',title:'Installationsanleitungen'},{icon:'question-circle',title:'Häufige Fragen'},{icon:'key',title:'Lizenz-Aktivierung'}].map(article=>'<div style="background:#f8f9fa;padding:30px;border-radius:15px;border-left:4px solid #FFC107"><i class="fas fa-'+article.icon+'" style="font-size:36px;color:#001f3f;margin-bottom:15px"></i><h3 style="font-size:20px;margin-bottom:10px;color:#001f3f">'+article.title+'</h3><p style="color:#666">Hilfreiche Informationen und Anleitungen</p></div>').join('')+'</div></div></div>';
+            }
+            
+            // Section interactivity initialization
+            function initializeSectionInteractivity() {
+                // Initialize counters for license availability
+                document.querySelectorAll('.counter').forEach(counter => {
+                    const target = parseInt(counter.dataset.target);
+                    let current = 0;
+                    const increment = target / 100;
+                    const timer = setInterval(() => {
+                        current += increment;
+                        if (current >= target) {
+                            counter.textContent = target.toLocaleString();
+                            clearInterval(timer);
+                        } else {
+                            counter.textContent = Math.floor(current).toLocaleString();
+                        }
+                    }, 20);
+                });
+                
+                // Initialize countdown timer
+                const countdown = document.getElementById('countdown');
+                if (countdown) {
+                    const endTime = parseInt(countdown.dataset.end);
+                    updateCountdown(endTime);
+                    setInterval(() => updateCountdown(endTime), 1000);
+                }
+                
+                // Initialize volume calculator
+                const volumeQuantity = document.getElementById('volume-quantity');
+                if (volumeQuantity) {
+                    volumeQuantity.addEventListener('input', calculateVolume);
+                    calculateVolume(); // Initial calculation
+                }
+            }
+            
+            function updateCountdown(endTime) {
+                const now = Date.now();
+                const remaining = endTime - now;
+                
+                if (remaining <= 0) {
+                    document.querySelector('.countdown-hours').textContent = '00';
+                    document.querySelector('.countdown-minutes').textContent = '00';
+                    document.querySelector('.countdown-seconds').textContent = '00';
+                    return;
+                }
+                
+                const hours = Math.floor(remaining / (1000 * 60 * 60));
+                const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+                
+                document.querySelector('.countdown-hours').textContent = String(hours).padStart(2, '0');
+                document.querySelector('.countdown-minutes').textContent = String(minutes).padStart(2, '0');
+                document.querySelector('.countdown-seconds').textContent = String(seconds).padStart(2, '0');
+            }
+            
+            function calculateVolume() {
+                const quantity = parseInt(document.getElementById('volume-quantity').value);
+                const product = document.getElementById('volume-product').value;
+                
+                // Product prices
+                const prices = {
+                    'windows11pro': 39.90,
+                    'office2024': 59.90,
+                    'server2025': 149.90
+                };
+                
+                const singlePrice = prices[product] || 39.90;
+                
+                // Volume discounts
+                let discount = 0;
+                if (quantity >= 50) discount = 0.30; // 30%
+                else if (quantity >= 20) discount = 0.25; // 25%
+                else if (quantity >= 10) discount = 0.20; // 20%
+                else if (quantity >= 5) discount = 0.15; // 15%
+                
+                const discountedPrice = singlePrice * (1 - discount);
+                const totalPrice = discountedPrice * quantity;
+                const savings = (singlePrice * quantity) - totalPrice;
+                
+                // Update display
+                document.getElementById('volume-quantity-display').textContent = quantity;
+                document.getElementById('volume-single-price').textContent = '€' + singlePrice.toFixed(2);
+                document.getElementById('volume-discount').textContent = '-' + (discount * 100).toFixed(0) + '%';
+                document.getElementById('volume-total-price').textContent = '€' + totalPrice.toFixed(2);
+                document.getElementById('volume-savings').textContent = '€' + savings.toFixed(2);
+            }
+            
+            // Add to cart function
+            function addToCart(productId) {
+                console.log('Adding product to cart:', productId);
+                // Cart logic will be handled by cart-manager-enhanced.js
+            }
+            
+            // Initialize page
+            document.addEventListener('DOMContentLoaded', function() {
+                loadNavigation();
+                loadHeroSlides();
+                loadTrustBadges();
+                loadAllSections(); // Changed from loadProductSections
+            });
+        </script>
+    </body>
+    </html>
+  
